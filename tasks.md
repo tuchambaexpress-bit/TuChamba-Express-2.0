@@ -24,10 +24,23 @@ implement changes → si hay observaciones, se corrige antes de archivar
 ## SPRINT 0 — DISEÑO DE API INTERNA (API-first desde el día 1)
 > **Objetivo:** Documentar los endpoints que cualquier humano o agente futuro (Cline, Claude Code, OpenClaw) va a necesitar — antes de escribir el primer Edge Function real. Esto es lo que hace al sistema "preparado para autonomía" sin construir autonomía todavía.
 
-- [ ] 0.1 Crear carpeta `supabase/functions/` con un archivo `API.md` documentando cada endpoint planeado (ver plan.md §10): método, ruta, input esperado, output esperado.
-- [ ] 0.2 Definir el esquema de autenticación por API key para los endpoints internos (header `Authorization: Bearer <key>`).
-- [ ] 0.3 Crear `CLAUDE.md` en la raíz del proyecto con las reglas permanentes (ver plantilla en este documento, sección final).
-- [ ] 0.4 Auditar el código existente en la carpeta del proyecto (`registro-agencia`, `dashboard` mockup) contra spec.md — decidir explícitamente: se reescribe, se descarta a backup, o se conserva parcialmente.
+- [X] 0.1 Crear carpeta `supabase/functions/` con un archivo `API.md` documentando cada endpoint planeado (ver plan.md §10): método, ruta, input esperado, output esperado.
+- [X] 0.2 Definir el esquema de autenticación por API key para los endpoints internos (header `Authorization: Bearer <key>`).
+- [X] 0.3 Crear `CLAUDE.md` en la raíz del proyecto con las reglas permanentes (ver plantilla en este documento, sección final).
+- [X] 0.4 Auditar el código existente en la carpeta del proyecto (`registro-agencia`, `dashboard` mockup) contra spec.md — decidir explícitamente: se reescribe, se descarta a backup, o se conserva parcialmente.
+
+  **Decisión registrada (2026-06-29):** Se REESCRIBE desde cero.
+  Motivo: Supabase se confirmó completamente limpio (sin tabla
+  `agencias` previa), por lo que el código viejo apuntaba a una
+  estructura de datos que ya no existe. Además, ese formulario era
+  autoregistro libre sin token de invitación — incompatible con el
+  sistema de invitación con aprobación admin definido en spec.md §8.
+  El `dashboard` viejo era solo un mockup visual sin lógica real
+  (sidebar con `<div>` no navegables, sin conexión a Supabase).
+  No hay pérdida real: ambas pantallas se reconstruyen correctamente
+  en Sprint 3 (`/invitacion/[token]`) y Sprint 5 (`/coordinador/dashboard`).
+  El diseño visual del sidebar puede inspirar la versión nueva,
+  pero el código en sí no se reutiliza.
 
 **✓ Criterio de avance:** `API.md` documentado, `CLAUDE.md` en la raíz, decisión tomada y registrada sobre el código preexistente.
 
@@ -36,29 +49,29 @@ implement changes → si hay observaciones, se corrige antes de archivar
 ## SPRINT 1 — CIMIENTOS SUPABASE
 > **Objetivo:** Base de datos funcionando con RLS activado. Sin esto no existe ningún otro sprint.
 
-- [ ] 1.1 Crear proyecto en Supabase (o confirmar el ya existente). Copiar `SUPABASE_URL`, `SUPABASE_ANON_KEY` y `SUPABASE_SERVICE_ROLE_KEY` a `.env.local`.
-- [ ] 1.2 Verificar `.gitignore` con `.env.local` incluido. Confirmar con `git status` que NO aparece como archivo trackeado.
-- [ ] 1.3 Tabla `agencias` (con `status`, `invitacion_id`, `aprobado_por`, `aprobado_at` — ver spec.md §8).
-- [ ] 1.4 Tabla `coordinadores` (con `status` — ver spec.md §8).
-- [ ] 1.5 Tabla `reclutadores`.
-- [ ] 1.6 Tabla `reclutador_agencia` con UNIQUE(reclutador_id, agencia_id).
-- [ ] 1.7 Tabla `negocios`.
-- [ ] 1.8 Tabla `vacantes` con todos los campos (capa pública + logística + operativo + ATS + comercial).
-- [ ] 1.9 Tabla `candidatos`.
-- [ ] 1.10 Tabla `postulaciones` (incluyendo `score`).
-- [ ] 1.11 Tabla `historial_etapas` (trazabilidad del ATS).
-- [ ] 1.12 Tabla `documentos_candidato`.
-- [ ] 1.13 Tabla `chats` (sistema unificado — 4 tipos de conversación).
-- [ ] 1.14 Tabla `mensajes` (sistema unificado).
-- [ ] 1.15 Tabla `faqs_vacante`.
-- [ ] 1.16 Tabla `invitaciones`.
-- [ ] 1.17 Tabla `alertas`.
-- [ ] 1.18 Tabla `cortes_semana` con UNIQUE(agencia_id, semana).
-- [ ] 1.19 Tabla `trafico_referidos`.
-- [ ] 1.20 Activar Realtime en: `mensajes`, `chats`, `alertas`.
-- [ ] 1.21 Activar RLS en TODAS las tablas. Crear políticas de plan.md §5 (incluyendo la regla de que coordinador nunca edita/elimina su propia agencia).
-- [ ] 1.22 Insertar datos de prueba: 1 agencia activa, 1 coordinador activo, 2 reclutadores, 2 negocios, 3 vacantes vigentes.
-- [ ] 1.23 Verificar desde Supabase Table Editor que los datos se ven correctamente y que RLS bloquea acceso no autorizado.
+- [X] 1.1 Crear proyecto en Supabase (o confirmar el ya existente). Copiar `SUPABASE_URL`, `SUPABASE_ANON_KEY` y `SUPABASE_SERVICE_ROLE_KEY` a `.env.local`.
+- [X] 1.2 Verificar `.gitignore` con `.env.local` incluido. Confirmar con `git status` que NO aparece como archivo trackeado.
+- [X] 1.3 Tabla `agencias` (con `status`, `invitacion_id`, `aprobado_por`, `aprobado_at` — ver spec.md §8).
+- [X] 1.4 Tabla `coordinadores` (con `status` — ver spec.md §8).
+- [X] 1.5 Tabla `reclutadores`.
+- [X] 1.6 Tabla `reclutador_agencia` con UNIQUE(reclutador_id, agencia_id).
+- [X] 1.7 Tabla `negocios`.
+- [X] 1.8 Tabla `vacantes` con todos los campos (capa pública + logística + operativo + ATS + comercial).
+- [X] 1.9 Tabla `candidatos`.
+- [X] 1.10 Tabla `postulaciones` (incluyendo `score`).
+- [X] 1.11 Tabla `historial_etapas` (trazabilidad del ATS).
+- [X] 1.12 Tabla `documentos_candidato`.
+- [X] 1.13 Tabla `chats` (sistema unificado — 4 tipos de conversación).
+- [X] 1.14 Tabla `mensajes` (sistema unificado).
+- [X] 1.15 Tabla `faqs_vacante`.
+- [X] 1.16 Tabla `invitaciones`.
+- [X] 1.17 Tabla `alertas`.
+- [X] 1.18 Tabla `cortes_semana` con UNIQUE(agencia_id, semana).
+- [X] 1.19 Tabla `trafico_referidos`.
+- [X] 1.20 Activar Realtime en: `mensajes`, `chats`, `alertas`.
+- [X] 1.21 Activar RLS en TODAS las tablas. Crear políticas de plan.md §5 (incluyendo la regla de que coordinador nunca edita/elimina su propia agencia).
+- [X] 1.22 Insertar datos de prueba: 1 agencia activa, 1 coordinador activo, 2 reclutadores, 2 negocios, 3 vacantes vigentes.
+- [X] 1.23 Verificar desde Supabase Table Editor que los datos se ven correctamente y que RLS bloquea acceso no autorizado.
 
 **✓ Criterio de avance:** Las 3 vacantes de prueba son visibles desde una query pública (anon key). Las tablas operativas no son accesibles sin autenticación correspondiente.
 
@@ -152,23 +165,34 @@ implement changes → si hay observaciones, se corrige antes de archivar
 - [ ] 5.1 `app/coordinador/login/page.tsx`: email + password con Supabase Auth.
 - [ ] 5.2 Middleware de ruta: redirige a login si no hay sesión, y a "en revisión" si `status != 'activo'`.
 - [ ] 5.3 `app/coordinador/vacantes/page.tsx`: listado de vacantes de la agencia, filtros de status y prioridad.
-- [ ] 5.4 `VacanteForm` — Bloque 1: Identidad (título, negocio, visibilidad empresa).
-- [ ] 5.5 `VacanteForm` — Bloque 2: Ubicación y modalidad.
-- [ ] 5.6 `VacanteForm` — Bloque 3: Condiciones laborales.
-- [ ] 5.7 `VacanteForm` — Bloque 4: Descripción operativa (requisitos, beneficios como listas).
-- [ ] 5.8 `VacanteForm` — Bloque 5: Logística especial (rutas, zonas, ruta para entrevista, estacionamiento, comedor, uniforme).
-- [ ] 5.9 `VacanteForm` — Bloque 6: Letras chiquitas (texto libre, visible al candidato).
-- [ ] 5.10 `VacanteForm` — Bloque 7: Parámetros de reclutamiento (posiciones, reclutadores asignados, garantía, comisión base, promoción, deadline, prioridad).
-- [ ] 5.11 `VacanteForm` — Bloque 8: Proceso de selección (etapas personalizadas drag-to-reorder, documentos, examen médico, estudio socioeconómico, contacto RRHH).
-- [ ] 5.12 Botón "Generar con IA ✨" que invoca `agente-descripcion-vacante` para autocompletar descripción/beneficios/letras chiquitas desde los datos básicos.
-- [ ] 5.13 Al guardar vacante: trigger de sincronización de sitemap (`sync-sitemap` Edge Function).
-- [ ] 5.14 `app/coordinador/reclutadores/page.tsx`: CRUD de reclutadores de la agencia.
-- [ ] 5.15 `app/coordinador/pipeline/page.tsx`: Kanban global de la agencia (filtrable por vacante/reclutador).
-- [ ] 5.16 `app/coordinador/faq/page.tsx`: preguntas escaladas (Nivel 3) sin responder con alerta visual, formulario de respuesta, toggle "Publicar en FAQ".
-- [ ] 5.17 Chat coordinador↔reclutador (tipo `reclutador_coordinador`): lista de conversaciones, contextuales por vacante o generales.
-- [ ] 5.18 Trigger de alerta proactiva: al cambiar `vacantes.status`, notificar a todos los reclutadores con postulaciones activas en esa vacante (ver spec.md CA-07.6).
-- [ ] 5.19 `app/coordinador/corte-semanal/page.tsx`: resumen automático por reclutador (efectivos, no efectivos, total a pagar).
-- [ ] 5.20 Botón "Marcar semana como pagada": actualiza `cortes_semana.pagado` y `postulaciones.pagado`, genera resumen descargable.
+- [ ] 5.4 Construir `components/forms/EditableList.tsx` — componente reutilizable de lista editable (agregar, editar in-line, borrar, reordenar con `@dnd-kit`). Ver código de referencia en plan.md §11. Este componente se construye UNA vez y se reutiliza en requisitos, beneficios, documentos_requeridos, zonas_ruta y tags.
+- [ ] 5.5 `VacanteModal` — un solo modal completo con secciones colapsables (accordion), no wizard de pasos. Usa `EditableList` para requisitos, beneficios, documentos requeridos y zonas de ruta. Estructura interna:
+  - Sección 1: Identidad (título, negocio/agencia externa, visibilidad empresa)
+  - Sección 2: Ubicación y modalidad
+  - Sección 3: Condiciones laborales (salario, jornada, horario)
+  - Sección 4: Descripción operativa (requisitos, beneficios como listas)
+  - Sección 5: Logística especial (rutas, zonas, ruta para entrevista, estacionamiento, comedor, uniforme)
+  - Sección 6: Letras chiquitas (texto libre, visible al candidato)
+  - Sección 7: Parámetros de reclutamiento (posiciones, reclutadores asignados, garantía, comisión base, promoción, deadline, prioridad)
+  - Sección 8: Proceso de selección (etapas personalizadas drag-to-reorder, documentos, examen médico, estudio socioeconómico, contacto RRHH)
+- [ ] 5.6 Validación de campos obligatorios por sección antes de permitir guardar (título, ciudad, estado, jornada, dias_garantia, comision_base_mxn son siempre requeridos).
+- [ ] 5.7 Botón "Generar con IA ✨" que invoca `agente-descripcion-vacante` para autocompletar descripción/beneficios/letras chiquitas desde los datos básicos.
+- [ ] 5.8 Al guardar vacante: trigger de sincronización de sitemap (`sync-sitemap` Edge Function).
+- [ ] 5.9 **Importación masiva de vacantes vía Excel** (prioridad MVP):
+  - Botón "Importar desde Excel" en `app/coordinador/vacantes/page.tsx`
+  - Plantilla descargable con las columnas: TÍTULO, EMPRESA, MOSTRAR EMPRESA, ESTADO, MUNICIPIO, ZONA, SALARIO, DESCRIPCIÓN, JORNADA, REQUISITOS, BENEFICIOS, CONTACTO, ESTATUS, DÍAS DE GARANTÍA, COMISIÓN, IMPULSAR
+  - Parser que separa REQUISITOS y BENEFICIOS por el delimitador `|` en arrays jsonb (solo para importación masiva — el alta manual usa `EditableList`, ítem por ítem)
+  - Parser de SALARIO en texto libre ("De $3,360 a $5,600 Semanales") → `salario_min`, `salario_max`, `salario_tipo`
+  - Cada fila se vincula automáticamente a la `agencia_id` del coordinador que importa
+  - Reporte post-importación: cuántas vacantes se crearon, cuántas fallaron y por qué (fila + motivo)
+  - Modo "actualizar existentes": si el título+empresa ya existe para esa agencia, actualiza en vez de duplicar
+- [ ] 5.10 `app/coordinador/reclutadores/page.tsx`: CRUD de reclutadores de la agencia.
+- [ ] 5.11 `app/coordinador/pipeline/page.tsx`: Kanban global de la agencia (filtrable por vacante/reclutador).
+- [ ] 5.12 `app/coordinador/faq/page.tsx`: preguntas escaladas (Nivel 3) sin responder con alerta visual, formulario de respuesta, toggle "Publicar en FAQ".
+- [ ] 5.13 Chat coordinador↔reclutador (tipo `reclutador_coordinador`): lista de conversaciones, contextuales por vacante o generales.
+- [ ] 5.14 Trigger de alerta proactiva: al cambiar `vacantes.status`, notificar a todos los reclutadores con postulaciones activas en esa vacante (ver spec.md CA-07.6).
+- [ ] 5.15 `app/coordinador/corte-semanal/page.tsx`: resumen automático por reclutador (efectivos, no efectivos, total a pagar).
+- [ ] 5.16 Botón "Marcar semana como pagada": actualiza `cortes_semana.pagado` y `postulaciones.pagado`, genera resumen descargable.
 
 **✓ Criterio de avance:** Coordinador crea una vacante completa (8 bloques), la IA ayuda a redactar la descripción, el sitemap se sincroniza, el reclutador la ve en su ficha, y el FAQ resuelve dudas en cascada.
 
@@ -242,8 +266,8 @@ implement changes → si hay observaciones, se corrige antes de archivar
 
 | Sprint | Fecha inicio | Fecha cierre | Status |
 |--------|-------------|-------------|--------|
-| Sprint 0 — Diseño de API | — | — | Pendiente |
-| Sprint 1 — Supabase | — | — | Pendiente |
+| Sprint 0 — Diseño de API | 2026-06-29 | 2026-06-29 | Completo |
+| Sprint 1 — Supabase | 2026-06-29 | 2026-06-29 | Completo |
 | Sprint 2 — Next.js + Deploy | — | — | Pendiente |
 | Sprint 3 — Candidato + Invitación | — | — | Pendiente |
 | Sprint 4 — Reclutador + ATS | — | — | Pendiente |

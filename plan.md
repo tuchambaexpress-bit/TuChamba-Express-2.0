@@ -166,6 +166,10 @@ tuchamba-v2/
     │   └── KanbanCard.tsx
     ├── seo/
     │   └── JobPostingSchema.tsx   ← JSON-LD como Server Component
+    ├── forms/
+    │   └── EditableList.tsx        ← Componente reusable: requisitos,
+    │                                  beneficios, documentos_requeridos,
+    │                                  zonas_ruta, tags (ver §13)
     └── ui/                          ← Shadcn/ui components
 └── lib/
     ├── supabase/
@@ -633,7 +637,131 @@ AGENTES
 
 ---
 
-## 11. ROADMAP DE 6 MESES
+## 11. COMPONENTE REUTILIZABLE — EditableList
+
+> Origen: TuChamba V1 ya permitía agregar requisitos/beneficios uno por
+> uno (input + botón "+"), pero no permitía editar o borrar un ítem
+> individual después de creado. Este componente resuelve eso, y se
+> reutiliza en TODOS los campos tipo array del modelo de datos:
+> `requisitos`, `beneficios`, `documentos_requeridos`, `zonas_ruta`, `tags`.
+
+### Comportamiento esperado
+```
+[ Input para escribir nuevo ítem ]  [+ Agregar]
+
+┌─────────────────────────────────────────┐
+│ Ítem existente 1              ✏️   🗑️  │
+│ Ítem existente 2              ✏️   🗑️  │
+│ Ítem existente 3              ✏️   🗑️  │
+└─────────────────────────────────────────┘
+```
+- **✏️ Editar:** convierte ese renglón en un input editable in-line.
+  Enter o blur guarda el cambio. Escape cancela.
+- **🗑️ Borrar:** elimina ese ítem específico al instante, sin
+  confirmación adicional (la lista completa sigue siendo editable,
+  no hay pérdida irreversible de datos del formulario completo).
+- **Reordenar (opcional, mismo patrón que etapas personalizadas):**
+  drag handle a la izquierda de cada ítem, usando `@dnd-kit` —
+  mismo paquete que ya usamos para el Kanban, cero dependencia nueva.
+
+### Código de referencia
+```typescript
+// components/forms/EditableList.tsx
+'use client'
+import { useState } from 'react'
+import { Pencil, Trash2, Plus, GripVertical } from 'lucide-react'
+
+interface EditableListProps {
+  items: string[]
+  onChange: (items: string[]) => void
+  placeholder?: string
+}
+
+export function EditableList({ items, onChange, placeholder = 'Agregar ítem...' }: EditableListProps) {
+  const [nuevoItem, setNuevoItem] = useState('')
+  const [editandoIndex, setEditandoIndex] = useState<number | null>(null)
+  const [valorEditado, setValorEditado] = useState('')
+
+  function agregar() {
+    if (!nuevoItem.trim()) return
+    onChange([...items, nuevoItem.trim()])
+    setNuevoItem('')
+  }
+
+  function borrar(index: number) {
+    onChange(items.filter((_, i) => i !== index))
+  }
+
+  function guardarEdicion(index: number) {
+    if (!valorEditado.trim()) return
+    const copia = [...items]
+    copia[index] = valorEditado.trim()
+    onChange(copia)
+    setEditandoIndex(null)
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex gap-2">
+        <input
+          value={nuevoItem}
+          onChange={(e) => setNuevoItem(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && agregar()}
+          placeholder={placeholder}
+          className="flex-1 border rounded-md p-2"
+        />
+        <button onClick={agregar} className="bg-blue-600 text-white px-3 rounded-md">
+          <Plus className="w-4 h-4" />
+        </button>
+      </div>
+
+      <ul className="space-y-1">
+        {items.map((item, index) => (
+          <li key={index} className="flex items-center gap-2 bg-gray-50 rounded-md p-2">
+            <GripVertical className="w-4 h-4 text-gray-400 cursor-grab" />
+            {editandoIndex === index ? (
+              <input
+                autoFocus
+                value={valorEditado}
+                onChange={(e) => setValorEditado(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && guardarEdicion(index)}
+                onBlur={() => guardarEdicion(index)}
+                className="flex-1 border rounded-md p-1"
+              />
+            ) : (
+              <span className="flex-1">{item}</span>
+            )}
+            <button onClick={() => { setEditandoIndex(index); setValorEditado(item) }}>
+              <Pencil className="w-4 h-4 text-gray-500" />
+            </button>
+            <button onClick={() => borrar(index)}>
+              <Trash2 className="w-4 h-4 text-red-500" />
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+```
+
+### Uso dentro del VacanteModal
+```tsx
+<EditableList
+  items={vacante.requisitos}
+  onChange={(nuevos) => setVacante({ ...vacante, requisitos: nuevos })}
+  placeholder="Ej. Secundaria terminada"
+/>
+```
+
+> El mismo componente, sin modificar nada, sirve para `beneficios`,
+> `documentos_requeridos`, `zonas_ruta` y `tags` — solo cambia qué
+> array del estado se le pasa. Esto es exactamente la ventaja de
+> haberlos modelado como `jsonb` arrays desde spec.md §3.
+
+---
+
+## 12. ROADMAP DE 6 MESES
 
 ```
 MES 1 — Cimientos: Sprint 0-2 (Supabase, Next.js, Deploy base)
@@ -656,7 +784,7 @@ FASE 3 — OpenClaw o agente propio (autonomía avanzada),
 
 ---
 
-## 12. PROTOCOLO DE CONTINGENCIA (Troubleshooting)
+## 13. PROTOCOLO DE CONTINGENCIA (Troubleshooting)
 
 ### Síntomas de Prompt Drifting — detener y corregir cuando:
 - La IA sugiere cambiar el stack (Firebase, MongoDB, Vite en vez de Next.js, etc.)
