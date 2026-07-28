@@ -19,5 +19,10 @@ export default async function Home() {
     .order('destacada', { ascending: false })
     .order('created_at', { ascending: false })
 
-  return <VacantesPortal vacantes={vacantes ?? []} />
+  const vacantesFormateadas = (vacantes ?? []).map(v => ({
+    ...v,
+    negocios: Array.isArray(v.negocios) ? v.negocios[0] ?? null : v.negocios
+  }))
+
+  return <VacantesPortal vacantes={vacantesFormateadas} />
 }
