@@ -80,19 +80,19 @@ implement changes → si hay observaciones, se corrige antes de archivar
 ## SPRINT 2 — PROYECTO NEXT.JS + DEPLOY BASE
 > **Objetivo:** App Next.js en Vercel, conectada a Supabase, con `.env.local` correcto.
 
-- [ ] 2.1 Decisión sobre código existente del Sprint 0.4 ya ejecutada: crear proyecto con `npx create-next-app@latest tuchamba-v2 --typescript --tailwind --app` (o adaptar el existente según lo decidido).
-- [ ] 2.2 Instalar dependencias: `@supabase/ssr`, `@supabase/supabase-js`, `lucide-react`, `@dnd-kit/core`, `@dnd-kit/sortable`, `recharts`.
-- [ ] 2.3 Instalar y configurar Shadcn/ui (`npx shadcn-ui@latest init`).
-- [ ] 2.4 Crear `lib/supabase/client.ts` y `lib/supabase/server.ts` (ver plan.md §4).
-- [ ] 2.5 Crear `lib/utils.ts` con `getSemanaISO`, `calcularComision`, `calcularGarantiaFin`, `generarTokenInvitacion`.
-- [ ] 2.6 Crear estructura de carpetas `app/` según plan.md §2 (rutas vacías por ahora, solo el esqueleto).
-- [ ] 2.7 Crear `public/robots.txt` y `public/manifest.json` base.
-- [ ] 2.8 Configurar Sentry (`npx @sentry/wizard@latest -i nextjs`).
-- [ ] 2.9 Configurar PostHog (instalar `posthog-js`, inicializar en root layout).
-- [ ] 2.10 Subir a GitHub. Verificar que `.env.local` NO está en el repositorio.
-- [ ] 2.11 Conectar repositorio a Vercel. Configurar variables de entorno en Vercel Dashboard (incluyendo las que NO llevan `NEXT_PUBLIC_`).
-- [ ] 2.12 Verificar que el deploy en Vercel carga sin errores de consola.
-- [ ] 2.13 Query de prueba a Supabase desde un Server Component, confirmar que devuelve las 3 vacantes de prueba.
+- [X] 2.1 Decisión sobre código existente del Sprint 0.4 ya ejecutada: crear proyecto con `npx create-next-app@latest tuchamba-v2 --typescript --tailwind --app` (o adaptar el existente según lo decidido).
+- [X] 2.2 Instalar dependencias: `@supabase/ssr`, `@supabase/supabase-js`, `lucide-react`, `@dnd-kit/core`, `@dnd-kit/sortable`, `recharts`.
+- [X] 2.3 Instalar y configurar Shadcn/ui (`npx shadcn-ui@latest init`).
+- [X] 2.4 Crear `lib/supabase/client.ts` y `lib/supabase/server.ts` (ver plan.md §4).
+- [X] 2.5 Crear `lib/utils.ts` con `getSemanaISO`, `calcularComision`, `calcularGarantiaFin`, `generarTokenInvitacion`.
+- [X] 2.6 Crear estructura de carpetas `app/` según plan.md §2 (rutas vacías por ahora, solo el esqueleto).
+- [X] 2.7 Crear `public/robots.txt` y `public/manifest.json` base.
+- [X] 2.8 Configurar Sentry (`npx @sentry/wizard@latest -i nextjs`).
+- [X] 2.9 Configurar PostHog (instalar `posthog-js`, inicializar en root layout).
+- [X] 2.10 Subir a GitHub. Verificar que `.env.local` NO está en el repositorio.
+- [X] 2.11 Conectar repositorio a Vercel. Configurar variables de entorno en Vercel Dashboard (incluyendo las que NO llevan `NEXT_PUBLIC_`).
+- [X] 2.12 Verificar que el deploy en Vercel carga sin errores de consola.
+- [X] 2.13 Query de prueba a Supabase desde un Server Component, confirmar que devuelve las 3 vacantes de prueba.
 
 **✓ Criterio de avance:** URL de Vercel carga, Server Component trae las 3 vacantes, `.env.local` no está en GitHub, Sentry y PostHog reciben al menos un evento de prueba.
 
@@ -268,7 +268,7 @@ implement changes → si hay observaciones, se corrige antes de archivar
 |--------|-------------|-------------|--------|
 | Sprint 0 — Diseño de API | 2026-06-29 | 2026-06-29 | Completo |
 | Sprint 1 — Supabase | 2026-06-29 | 2026-06-29 | Completo |
-| Sprint 2 — Next.js + Deploy | — | — | Pendiente |
+| Sprint 2 — Next.js + Deploy | 2026-07-17 | 2026-07-27 | Completo |
 | Sprint 3 — Candidato + Invitación | — | — | Pendiente |
 | Sprint 4 — Reclutador + ATS | — | — | Pendiente |
 | Sprint 5 — Coordinador + Alta vacante | — | — | Pendiente |
