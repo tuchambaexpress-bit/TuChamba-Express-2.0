@@ -96,7 +96,7 @@ export default function VacanteCard({ vacante, seleccionada, onClick }: Props) {
       </div>
 
       {/* Días publicada */}
-      <p className="text-gray-400 text-xs mt-2">
+      <p className="text-gray-500 text-xs mt-2">
         {diasPublicada === 0 ? 'Hoy' : `Hace ${diasPublicada} día${diasPublicada !== 1 ? 's' : ''}`}
       </p>
     </div>
