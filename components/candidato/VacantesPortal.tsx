@@ -4,6 +4,7 @@ import { useState } from 'react'
 import VacanteCard from './VacanteCard'
 import VacanteDetalle from './VacanteDetalle'
 import { useReferido } from '@/hooks/useReferido'
+import { useTrafico } from '@/hooks/useTrafico'
 
 interface Vacante {
   id: string
@@ -50,6 +51,7 @@ export default function VacantesPortal({ vacantes }: Props) {
   const [filtroCiudad, setFiltroCiudad] = useState('')
   const [pagina, setPagina] = useState(1)
   useReferido()
+  useTrafico()
 
   const normalizar = (texto: string) =>
     texto.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
