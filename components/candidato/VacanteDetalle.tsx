@@ -1,3 +1,8 @@
+'use client'
+
+import { useState } from 'react'
+import ChatModal from './ChatModal'
+
 interface Vacante {
   id: string
   titulo: string
@@ -33,9 +38,11 @@ interface Props {
   vacante: Vacante
   onClose: () => void
   esModal: boolean
+  reclutadorId?: string | null
 }
 
-export default function VacanteDetalle({ vacante, onClose, esModal }: Props) {
+export default function VacanteDetalle({ vacante, onClose, esModal, reclutadorId }: Props) {
+  const [chatAbierto, setChatAbierto] = useState(false)
   const empresa = vacante.empresa_visible
     ? vacante.negocios?.nombre ?? 'Empresa'
     : 'Empresa Confidencial'
@@ -64,9 +71,21 @@ export default function VacanteDetalle({ vacante, onClose, esModal }: Props) {
       </div>
 
       {/* Botón postular */}
-      <button className="w-full bg-[#1A6B3C] hover:bg-[#155c33] text-white font-semibold py-3 px-6 rounded-xl mb-6 transition-colors text-sm">
+      <button
+        onClick={() => setChatAbierto(true)}
+        className="w-full bg-[#1A6B3C] hover:bg-[#155c33] text-white font-semibold py-3 px-6 rounded-xl mb-6 transition-colors text-sm"
+      >
         💬 Postularme / Iniciar Chat
       </button>
+
+      {chatAbierto && (
+        <ChatModal
+          vacanteId={vacante.id}
+          vacanteTitulo={vacante.titulo}
+          reclutadorId={reclutadorId}
+          onClose={() => setChatAbierto(false)}
+        />
+      )}
 
       {/* Info rápida */}
       <div className="grid grid-cols-2 gap-3 mb-6">
