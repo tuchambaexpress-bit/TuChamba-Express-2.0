@@ -28,11 +28,12 @@ export default function ChatModal({ vacanteId, vacanteTitulo, reclutadorId, onCl
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          nombre: nombre.trim(),
-          telefono: telefono.trim(),
-          vacanteId,
-          reclutadorId: reclutadorId ?? null
-        })
+        nombre: nombre.trim(),
+        telefono: telefono.trim(),
+        vacanteId,
+        reclutadorId: reclutadorId ?? null,
+        codigoRef: localStorage.getItem('ref_codigo') ?? null
+      })
       })
 
       const data = await res.json()

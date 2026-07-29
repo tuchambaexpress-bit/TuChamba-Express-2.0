@@ -43,6 +43,9 @@ interface Props {
 
 export default function VacanteDetalle({ vacante, onClose, esModal, reclutadorId }: Props) {
   const [chatAbierto, setChatAbierto] = useState(false)
+const codigoRef = typeof window !== 'undefined'
+  ? localStorage.getItem('ref_codigo')
+  : null
   const empresa = vacante.empresa_visible
     ? vacante.negocios?.nombre ?? 'Empresa'
     : 'Empresa Confidencial'

@@ -6,7 +6,18 @@ export async function POST(request: Request) {
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
-  const { nombre, telefono, vacanteId, reclutadorId } = await request.json()
+  const { nombre, telefono, vacanteId, reclutadorId, codigoRef } = await request.json()
+
+  // Si no viene reclutadorId pero sí codigoRef, buscar por código
+  let reclutadorIdFinal = reclutadorId ?? null
+  if (!reclutadorIdFinal && codigoRef) {
+    const { data: reclutador, error: errorRef } = await supabase
+      .from('reclutadores')
+      .select('id')
+      .eq('codigo', codigoRef.toUpperCase())
+      .single()
+    if (reclutador) reclutadorIdFinal = reclutador.id
+  }
 
   // Validaciones básicas
   if (!nombre || !telefono || !vacanteId) {
@@ -70,7 +81,7 @@ export async function POST(request: Request) {
     .insert({
       candidato_id: candidatoId,
       vacante_id: vacanteId,
-      reclutador_id: reclutadorId ?? null,
+      reclutador_id: reclutadorIdFinal ?? null,
       agencia_id: vacante.agencia_id,
       etapa_actual: 'Aplicado',
       es_manual: false
@@ -89,7 +100,7 @@ export async function POST(request: Request) {
     .insert({
       tipo: 'candidato_reclutador',
       candidato_id: candidatoId,
-      reclutador_id: reclutadorId ?? null,
+      reclutador_id: reclutadorIdFinal ?? null,
       vacante_id: vacanteId,
       postulacion_id: postulacion.id,
       agencia_id: vacante.agencia_id,

@@ -78,6 +78,29 @@ Un reclutador puede pertenecer a más de una agencia. La clave única es `reclut
 | Iniciar chat con candidato | — | — | ✓ | ✓ |
 | Chat coordinador↔reclutador | ✓ | ✓ | ✓ | ✗ |
 
+### Matriz de permisos detallada — campos de `vacantes`
+
+> Basada en el análisis real del proceso de TuChamba V1 (129 vacantes operadas a través de la agencia RH CONNECT). Confirma que una "agencia externa fuente de vacantes" (ej. RH CONNECT) **no es un concepto nuevo** — es una fila más en la tabla `agencias`, con su propio coordinador y sus propias vacantes vinculadas por `agencia_id`. No existe un campo separado de "fuente externa"; el modelo multi-agencia ya cubre este caso de uso desde el diseño original.
+
+| Campo / Bloque | Candidato (público) | Reclutador | Coordinador | Admin |
+|---|---|---|---|---|
+| **Alta de vacante (crear)** | ❌ | ❌ | ✅ | ✅ |
+| Título, descripción, requisitos, beneficios | 👁️ Ver | 👁️ Ver | ✏️ Editar | ✏️ Editar |
+| Salario | 👁️ Ver (si `salario_visible=true`) | 👁️ Ver siempre | ✏️ Editar | ✏️ Editar |
+| Empresa (nombre) | 👁️ Ver (si `empresa_visible=true`) | 👁️ Ver siempre | ✏️ Editar | ✏️ Editar |
+| Rutas de transporte | 👁️ Ver (si existen) | 👁️ Ver | ✏️ Editar | ✏️ Editar |
+| Letras chiquitas | 👁️ Ver | 👁️ Ver | ✏️ Editar | ✏️ Editar |
+| Contacto RRHH (tel/nombre interno) | ❌ Nunca | 👁️ Ver | ✏️ Editar | ✏️ Editar |
+| Comisión / garantía / promociones | ❌ Nunca | 👁️ Ver | ✏️ Editar | ✏️ Editar |
+| Status (vigente/pausada/cerrada) | 👁️ Ve solo vigentes | 👁️ Ve todas las de su agencia | ✏️ Cambia | ✏️ Cambia |
+| Pausar / dar de baja vacante | ❌ | ❌ | ✅ | ✅ |
+| Eliminar vacante (borrado físico) | ❌ | ❌ | ❌ | ✅ Solo Admin |
+| Impulsar / destacar (`destacada`) | 👁️ Ve el resultado | 👁️ Ve cuál está impulsada | ✏️ Activa/desactiva | ✏️ Activa/desactiva |
+| Importar vacantes (Excel masivo) | ❌ | ❌ | ✅ | ✅ |
+| FAQ de la vacante | ❌ Nunca | 👁️ Ve, 📝 Pregunta | ✏️ Responde | ✏️ Responde |
+
+**Regla de oro:** el coordinador tiene control operativo total de SU agencia. El reclutador nunca edita una vacante — solo la trabaja. El candidato nunca ve nada comercial ni interno.
+
 ---
 
 ## 3. MODELO DE DATOS
@@ -107,10 +130,16 @@ id uuid PK
 nombre text NOT NULL
 codigo text UNIQUE NOT NULL  -- para login y sistema de referidos
 email text
+lada text DEFAULT '+52'      -- prefijo internacional: +52 México, +1 USA/CAN, +54 Argentina, etc.
 telefono text
+pais text DEFAULT 'México'   -- país de operación del reclutador
 activo bool DEFAULT true
 created_at timestamptz DEFAULT now()
 ```
+> **Nota:** El campo `lada` es obligatorio para reclutadores internacionales.
+> Confirmado por caso real: hay reclutadores argentinos (+54) operando
+> en el sistema. El formato de teléfono mostrado en UI es `{lada} {telefono}`.
+> Ej: "+54 11 1234 5678"
 
 ### reclutador_agencia (membresía — soporta multi-agencia)
 ```sql
@@ -204,11 +233,15 @@ updated_at timestamptz DEFAULT now()
 ```sql
 id uuid PK
 nombre text NOT NULL
+lada text DEFAULT '+52'      -- prefijo internacional para el teléfono
 telefono text NOT NULL
 email text
 cv_url text
 created_at timestamptz DEFAULT now()
 ```
+> El selector de LADA aparece en el modal de postulación junto al campo
+> de teléfono. Opciones mínimas: +52 (México), +1 (USA/Canadá), +54 (Argentina).
+> El candidato puede escribir cualquier LADA manualmente.
 
 ### postulaciones
 ```sql
@@ -493,11 +526,108 @@ NIVEL 3 — Escalación al coordinador
 
 **CA-07.5:** Pregunta de reclutador sin respuesta por más de 24 horas → alerta al coordinador.
 
-**CA-07.6 — Alerta proactiva de cambio de status (elimina la pregunta antes de que nazca):** Dado que el coordinador cambia el `status` de una vacante (vigente → pausada → cerrada), cuando confirma el cambio, entonces el sistema notifica automáticamente a todos los reclutadores con postulaciones activas en esa vacante, sin que tengan que preguntar. Esto cubre exactamente la duda más común de reclutadores nuevos: *"¿esta vacante todavía está disponible?"*
+**CA-07.6 — Alerta proactiva de cambios críticos en vacante (elimina la pregunta antes de que nazca):**
+
+Basado en análisis real del grupo de WhatsApp de reclutadores HR CONNECT: las preguntas más frecuentes son "¿cuánto es la comisión?", "¿sigue vigente?", "¿cuántos días de garantía?" — todas respondibles con datos ya existentes en el sistema.
+
+Dado que el coordinador modifica cualquiera de estos campos en una vacante:
+- `status` (vigente → pausada → cerrada)
+- `comision_base_mxn`
+- `dias_garantia`
+- `tiene_promocion` / `promocion_monto_mxn` / `promocion_fin`
+- `tiene_ruta` / `zonas_ruta`
+
+Cuando confirma el cambio, entonces el sistema genera automáticamente una alerta para TODOS los reclutadores de la agencia con un mensaje que especifica exactamente qué cambió y el valor nuevo. Ejemplos reales:
+
+- *"⚠️ FEMSA actualizada: Comisión cambió de $2,500 → $3,000. Garantía: sigue en 30 días."*
+- *"⚠️ Hyundai Glovis: Vacante PAUSADA. No envíes más candidatos hasta nuevo aviso."*
+- *"⚠️ Indalum: Garantía modificada de 30 → 1 día. Bono especial activo hasta el viernes."*
+
+**Esto reemplaza completamente el uso del grupo de WhatsApp para comunicar cambios operativos.**
+
+**CA-07.7 — Notificación de bono/promoción nueva:**
+Dado que el coordinador activa `tiene_promocion = true` en una vacante, cuando guarda los cambios, entonces el sistema envía una alerta destacada (distinta visualmente de las alertas normales) a todos los reclutadores de la agencia: *"🔥 ¡Bono especial en [empresa]! $[monto] por ingreso. Válido hasta [fecha]. ¡Dale con todo!"*
+
+**CA-07.8 — Alerta de vacante sin citas disponibles:**
+Dado que el coordinador marca una vacante como `status = 'pausada'` con nota "sin citas hasta nuevo aviso", cuando lo confirma, entonces los reclutadores que tenían candidatos en proceso para esa vacante reciben una alerta específica indicando que deben pausar el envío — no solo que la vacante cambió de status.
 
 ---
 
-## 5. REGLAS DE NEGOCIO DE COMISIONES
+### HU-08: Importación masiva de vacantes vía Excel
+**Como** coordinador, **quiero** subir un archivo Excel con múltiples vacantes a la vez, **para** no tener que dar de alta una por una cuando manejo decenas de vacantes simultáneas (patrón confirmado en TuChamba V1: 129 vacantes operadas en conjunto a través de una sola agencia).
+
+**CA-08.1 (numeración independiente de §8 — Sistema de Invitación):** El sistema provee una plantilla `.xlsx` descargable con las columnas: `TÍTULO`, `EMPRESA`, `MOSTRAR EMPRESA`, `ESTADO`, `MUNICIPIO`, `ZONA`, `SALARIO`, `DESCRIPCIÓN`, `JORNADA`, `REQUISITOS`, `BENEFICIOS`, `CONTACTO`, `ESTATUS`, `DÍAS DE GARANTÍA`, `COMISIÓN`, `IMPULSAR`.
+
+**CA-08.2:** Dado que el coordinador sube un archivo con la plantilla correcta, cuando el sistema lo procesa, entonces separa `REQUISITOS` y `BENEFICIOS` usando el delimitador `|` en arrays jsonb — el mismo formato que ya usa José en su proceso actual, sin requerir que cambie su forma de trabajar.
+
+**CA-08.3:** El campo `SALARIO` en texto libre (ej. *"De $3,360 a $5,600 Semanales"*) se interpreta automáticamente para poblar `salario_min`, `salario_max` y `salario_tipo`. Si el formato no se puede interpretar con confianza, la fila se marca para revisión manual en el reporte post-importación, sin bloquear el resto de la carga.
+
+**CA-08.4:** Toda vacante importada se vincula automáticamente a la `agencia_id` del coordinador que realiza la importación — nunca queda huérfana ni sin agencia asignada.
+
+**CA-08.5:** Dado que el título y la empresa de una fila ya existen como vacante activa de esa misma agencia, cuando se importa de nuevo, entonces el sistema actualiza el registro existente en lugar de crear un duplicado.
+
+**CA-08.6:** Al finalizar la importación, el coordinador recibe un reporte con: número de vacantes creadas, número de vacantes actualizadas, y el detalle de cualquier fila que falló (número de fila + motivo del error) — nunca un fallo silencioso.
+
+---
+
+### HU-09: Onboarding de reclutador nuevo
+**Como** reclutador nuevo, **quiero** entender cómo funciona el sistema y qué vacantes puedo trabajar desde el primer día, **para** no depender de que el coordinador me explique todo por WhatsApp.
+
+> *Origen: Irene Romero en el chat de HR CONNECT: "Tu dame una pauta, yo por primera vez me voy por tus indicaciones". Yuli: "más o menos si ya la ubique pero en si no sé cuál es la que se debe copiar y enviar". Maribel: "me llegan candidatos pero justo cuando brindo información ya no les agrada o no sé qué pasa".*
+
+**CA-09.1:** Dado que un reclutador accede por primera vez a su portal (después de ser aprobado por el coordinador), cuando carga su dashboard, entonces ve una guía de inicio rápido con 4 pasos: (1) Cómo ver las vacantes activas, (2) Cómo compartir una vacante con candidatos, (3) Cómo registrar un candidato, (4) Cómo dar seguimiento y cobrar tu comisión.
+
+**CA-09.2:** La ficha operativa de cada vacante incluye una sección **"Qué decirle al candidato"** — un texto pregenerado por el coordinador (o sugerido por IA) con la información mínima que el reclutador necesita comunicar: salario, horario, punto de reunión, qué llevar, con quién preguntar. Esto resuelve directamente el dolor de reclutadores que no saben qué información dar y pierden al candidato en el proceso.
+
+**CA-09.3:** El sistema incluye un indicador de "Nivel de completitud" de la ficha de vacante — si faltan campos críticos (contacto RRHH, punto de reunión, documentos requeridos), el coordinador ve un badge de advertencia antes de publicarla.
+
+---
+
+### HU-10: Retroalimentación al candidato descartado
+**Como** reclutador, **quiero** poder enviarle un mensaje de retroalimentación al candidato cuando lo descarto, **para** que entienda por qué no continuó en el proceso y no quede en incertidumbre.
+
+> *Origen: Pain point documentado por HR CONNECT. Los candidatos quedan sin respuesta después de aplicar — eso genera desconfianza y candidatos que no regresan a la plataforma.*
+
+**CA-10.1:** Dado que el reclutador mueve un candidato a "Descartado", cuando confirma el motivo en el modal, entonces el sistema le ofrece la opción de enviar un mensaje de retroalimentación al candidato — con plantillas predefinidas según el motivo o texto libre.
+
+**CA-10.2:** Plantillas predefinidas de retroalimentación:
+- *Renuncia:* "Gracias por tu interés. Si en el futuro cambias de opinión, con gusto podemos reactivar tu postulación."
+- *No cumple perfil:* "Revisamos tu perfil y en este momento no es el match ideal para esta posición. Te invitamos a revisar otras vacantes en TuChamba."
+- *No se presentó:* "Notamos que no pudiste asistir a tu cita. Si deseas reagendar, escríbenos."
+- *Empresa no lo aceptó:* "La empresa tomó otra decisión en esta ocasión. Seguimos trabajando para encontrarte una oportunidad."
+
+**CA-10.3:** El mensaje de retroalimentación se envía como mensaje de sistema en el chat del candidato (tipo `es_sistema = true`) — no aparece como mensaje personal del reclutador, sino como notificación oficial de la plataforma. Esto protege al reclutador de confrontaciones directas.
+
+**CA-10.4:** El candidato descartado puede seguir viendo su historial de chat pero no puede enviar nuevos mensajes en esa conversación — el chat queda en modo "solo lectura" con un mensaje que dice "Esta postulación ha sido cerrada. Puedes aplicar a otras vacantes en TuChamba."
+
+---
+
+### HU-11: Soporte de LADA internacional para candidatos y reclutadores
+**Como** candidato o reclutador desde fuera de México, **quiero** poder registrar mi número telefónico con el prefijo de mi país, **para** que el sistema pueda contactarme correctamente.
+
+> *Origen: Caso real confirmado — hay reclutadores argentinos (+54) operando
+> activamente en el sistema junto con reclutadores mexicanos (+52).*
+
+**CA-11.1:** El modal de postulación del candidato incluye un selector de LADA antes del campo de teléfono. Opciones predefinidas: +52 (México 🇲🇽), +1 (USA/Canadá 🇺🇸), +54 (Argentina 🇦🇷), +34 (España 🇪🇸). El candidato puede escribir cualquier otro prefijo manualmente.
+
+**CA-11.2:** El formulario de alta de reclutador (portal coordinador y admin) incluye el mismo selector de LADA. El campo `lada` se guarda en la tabla `reclutadores` con el valor seleccionado.
+
+**CA-11.3:** En toda la UI donde se muestra un número de teléfono de reclutador o candidato, se muestra el formato completo: `{lada} {telefono}`. Ejemplo: "+54 11 1234 5678".
+
+**CA-11.4:** El campo `telefono` sigue siendo la clave única de búsqueda para candidatos — si el mismo número existe con diferente LADA, se considera candidato diferente. Esto previene duplicados entre candidatos internacionales y nacionales.
+
+---
+
+### HU-12: Gestión de reclutadores multiplataforma (PC y Android)
+**Como** coordinador, **quiero** poder gestionar mis reclutadores tanto desde mi computadora como desde mi celular, **para** dar de alta, editar o desactivar reclutadores sin depender de estar en la oficina.
+
+**CA-12.1:** El portal del coordinador es completamente responsivo — todas las funciones de gestión de reclutadores (alta, edición, activar/desactivar) funcionan correctamente en pantallas de 360px (móvil) hasta 1920px (desktop).
+
+**CA-12.2:** El alta de un reclutador desde el portal coordinador requiere: nombre, código único (el sistema sugiere uno automáticamente basado en el nombre), LADA, teléfono, email (opcional) y agencia. El coordinador puede editarlo después.
+
+**CA-12.3:** Un reclutador desactivado (`activo = false`) no puede iniciar sesión en su portal, pero su historial de postulaciones, chats y comisiones se conserva íntegro — nunca se borra, solo se suspende el acceso.
+
+**CA-12.4:** El coordinador puede ver en su panel la lista de reclutadores con: nombre, código, país/LADA, vacantes activas que trabajan, candidatos en proceso, y fecha de último acceso al sistema.
 
 ### 5.1 Cálculo de comisión al cierre
 Al mover candidato a "Contratado":
