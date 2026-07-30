@@ -15,7 +15,10 @@ export default function InvitacionesPage() {
     setLoading(true)
     setInvitacion(null)
 
-    const res = await fetch('/api/invitaciones', { method: 'POST' })
+    const res = await fetch('/api/invitaciones', {
+      method: 'POST',
+      headers: { 'x-admin-key': process.env.NEXT_PUBLIC_ADMIN_KEY ?? '' }
+    })
     const data = await res.json()
 
     if (res.ok) {
