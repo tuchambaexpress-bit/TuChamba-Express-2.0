@@ -14,10 +14,11 @@ interface Mensaje {
 interface Props {
   chatId: string
   nombreCandidato: string
+  etapaActual?: string
   onClose: () => void
 }
 
-export default function ChatWindow({ chatId, nombreCandidato, onClose }: Props) {
+export default function ChatWindow({ chatId, nombreCandidato, etapaActual, onClose }: Props) {
   const [mensajes, setMensajes] = useState<Mensaje[]>([])
   const [texto, setTexto] = useState('')
   const [enviando, setEnviando] = useState(false)
@@ -86,7 +87,14 @@ export default function ChatWindow({ chatId, nombreCandidato, onClose }: Props) 
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+        <div>
         <p className="text-sm font-medium text-gray-700">💬 Chat con el reclutador</p>
+        {etapaActual && (
+          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+            {etapaActual}
+          </span>
+        )}
+      </div>
         <button
           onClick={onClose}
           className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 text-sm"

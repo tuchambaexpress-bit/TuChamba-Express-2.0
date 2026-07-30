@@ -11,6 +11,29 @@
 
 ---
 
+## PRINCIPIOS DE DISEÑO UX — NO NEGOCIABLES
+
+> Estos principios aplican a TODAS las pantallas, flows y decisiones de UI del sistema. Cualquier feature nueva que se proponga debe evaluarse contra estos tres ejes antes de construirse.
+
+### 1. Intuitivo
+El usuario nunca debe preguntarse "¿qué hago aquí?" — la acción correcta debe ser obvia sin necesidad de instrucciones. Si algo requiere un tutorial para entenderse, hay que rediseñarlo.
+
+### 2. Sin fricción (Cero fricción)
+Ningún proceso debe pedir más información de la estrictamente necesaria. El candidato se postula con nombre y teléfono — nada más. El reclutador gestiona sin burocracia. Cada campo de formulario que se elimina es una fricción menos que puede costar una colocación.
+
+### 3. Generador de confianza
+Cada elemento de la UI debe comunicar profesionalismo y transparencia:
+- El candidato siempre sabe con quién habla (nombre del reclutador visible)
+- Las letras chiquitas están a la vista, no escondidas
+- El estado de la postulación es visible en todo momento
+- Las notificaciones son oportunas — el silencio genera desconfianza
+- El chat interno reemplaza al WhatsApp personal — la conversación es profesional y trazable
+
+### Regla de decisión
+Cuando haya que elegir entre dos implementaciones, siempre gana la que sea más intuitiva, genere menos fricción y comunique más confianza — aunque sea técnicamente más compleja de construir.
+
+---
+
 ## 1. INGENIERÍA DEL DOLOR
 
 ### 1.1 Síntoma Central

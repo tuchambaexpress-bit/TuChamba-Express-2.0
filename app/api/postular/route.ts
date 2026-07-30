@@ -61,7 +61,20 @@ export async function POST(request: Request) {
     .single()
 
   if (postulacionExistente) {
-    return NextResponse.json({ ok: true, yaExistia: true })
+    // Obtener etapa actual de la postulación existente
+  const { data: postExistente } = await supabase
+    .from('postulaciones')
+    .select('etapa_actual, chats(id)')
+    .eq('candidato_id', candidatoId)
+    .eq('vacante_id', vacanteId)
+    .single()
+
+  return NextResponse.json({ 
+    ok: true, 
+    yaExistia: true,
+    chatId: postExistente?.chats?.[0]?.id ?? null,
+    etapaActual: postExistente?.etapa_actual ?? 'Aplicado'
+  })
   }
 
   // 3. Obtener datos de la vacante para el chat
@@ -114,5 +127,9 @@ export async function POST(request: Request) {
   }
 
   // Obtener el chatId recién creado
-return NextResponse.json({ ok: true, chatId: chatCreado?.id ?? null })
+return NextResponse.json({ 
+  ok: true, 
+  chatId: chatCreado?.id ?? null,
+  etapaActual: 'Aplicado'
+})
 }

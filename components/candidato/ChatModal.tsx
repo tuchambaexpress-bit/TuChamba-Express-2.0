@@ -17,6 +17,7 @@ export default function ChatModal({ vacanteId, vacanteTitulo, reclutadorId, onCl
   const [error, setError] = useState('')
   const [enviado, setEnviado] = useState(false)
   const [mensajeExito, setMensajeExito] = useState('')
+  const [etapaActual, setEtapaActual] = useState('Aplicado')
 
   // Detectar sesión existente (cero fricción)
   const sesionExistente = typeof window !== 'undefined'
@@ -58,6 +59,7 @@ export default function ChatModal({ vacanteId, vacanteTitulo, reclutadorId, onCl
             vacanteId
           }))
         }
+              if (data.etapaActual) setEtapaActual(data.etapaActual)
               setMensajeExito(data.yaExistia
           ? '¡Ya estabas postulado! Un reclutador se pondrá en contacto contigo pronto.'
           : '¡Postulación enviada! Un reclutador se pondrá en contacto contigo pronto.'
@@ -92,10 +94,11 @@ export default function ChatModal({ vacanteId, vacanteTitulo, reclutadorId, onCl
             <p className="text-gray-500 text-sm">{mensajeExito}</p>
           </div>
           {/* Chat */}
-          {chatId && (
-            <ChatWindow
+            {chatId && (
+              <ChatWindow
               chatId={chatId}
               nombreCandidato={nombreGuardado}
+              etapaActual={etapaActual}
               onClose={onClose}
             />
           )}
