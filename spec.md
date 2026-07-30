@@ -420,6 +420,23 @@ created_at timestamptz DEFAULT now()
 
 **CA-01.4:** El sistema nunca crea una postulación si el campo `telefono` está vacío o tiene menos de 10 dígitos.
 
+**CA-01.5 — Cero fricción: persistencia del chat sin registro:**
+Dado que un candidato ya se postuló a una vacante en una visita anterior, cuando regresa a esa misma vacante en una visita nueva, entonces el sistema detecta automáticamente su sesión guardada en `localStorage` y le muestra directamente el historial del chat — sin pedirle nombre ni teléfono de nuevo.
+
+Implementación:
+- Al crear la postulación exitosamente, guardar en `localStorage`:
+  `{ telefono, nombre, chatId, vacanteId }` bajo la clave `chat_sesion_{vacanteId}`
+- Al abrir el modal de una vacante, revisar si existe `chat_sesion_{vacanteId}` en localStorage
+- Si existe → saltar el formulario de nombre/teléfono y mostrar el chat directamente
+- Si no existe → mostrar el formulario normal (primera vez)
+
+Este patrón garantiza que un candidato nunca tenga que volver a llenar sus datos para una vacante en la que ya aplicó, mientras mantiene sesiones independientes por vacante (el candidato puede aplicar a múltiples vacantes simultáneamente con chats separados).
+
+**CA-01.6 — Un chat por vacante, visibilidad cruzada para el reclutador:**
+Cada postulación genera exactamente un chat independiente entre ese candidato y esa vacante específica. Un candidato puede tener múltiples chats activos simultáneamente (uno por cada vacante a la que aplicó).
+
+En el portal del reclutador (Sprint 4), cuando un candidato aparece en múltiples vacantes de la misma agencia, el sistema muestra un indicador: *"Este candidato también aplicó a [otra vacante]"* — dándole contexto al reclutador sin violar la privacidad entre agencias.
+
 ---
 
 ### HU-02: Reclutador gestiona su pipeline

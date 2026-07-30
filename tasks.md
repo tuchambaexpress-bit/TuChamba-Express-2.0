@@ -101,19 +101,19 @@ implement changes → si hay observaciones, se corrige antes de archivar
 ## SPRINT 3 — PORTAL CANDIDATO + SISTEMA DE INVITACIÓN
 > **Objetivo:** Candidato puede ver vacantes, postularse, y el flujo de invitación de agencias funciona de punta a punta.
 
-- [ ] 3.1 `app/page.tsx`: listado de vacantes vigentes (Server Component, query directa a Supabase).
-- [ ] 3.2 Paginación de 15 vacantes por página.
-- [ ] 3.3 Buscador por texto (título, empresa, ciudad) con normalización de acentos — Client Component.
-- [ ] 3.4 Filtros de Estado y Ciudad (dependientes).
-- [ ] 3.5 `app/vacante/[id]/page.tsx`: detalle completo, incluyendo letras chiquitas, rutas, logística y beneficios.
-- [ ] 3.6 `generateMetadata` dinámico por vacante (título, description, canonical limpio) — ver plan.md §8.
-- [ ] 3.7 `JobPostingSchema.tsx` como Server Component dentro del detalle de vacante.
-- [ ] 3.8 Verificar en DevTools que el canonical NUNCA incluye `?ref=`.
-- [ ] 3.9 Hook `useReferido.ts`: leer `?ref=CODIGO` de URL, guardar en localStorage, persistir entre navegaciones.
-- [ ] 3.10 Modal/Client Component de chat: al hacer clic en "Postularme", pedir nombre y teléfono (mínimo 10 dígitos).
-- [ ] 3.11 Al confirmar: crear `candidato` (si no existe, por teléfono), crear `postulacion` con `etapa_actual = "Aplicado"`, crear `chat` tipo `candidato_reclutador`.
-- [ ] 3.12 Si ya existe chat para teléfono+vacante+reclutador: retomar sin duplicar.
-- [ ] 3.13 `reclutador_id` de la postulación se asigna desde el código de referido en localStorage (si existe).
+- [X] 3.1 `app/page.tsx`: listado de vacantes vigentes (Server Component, query directa a Supabase).
+- [X] 3.2 Paginación de 15 vacantes por página.
+- [X] 3.3 Buscador por texto (título, empresa, ciudad) con normalización de acentos — Client Component.
+- [X] 3.4 Filtros de Estado y Ciudad (dependientes).
+- [X] 3.5 `app/vacante/[id]/page.tsx`: detalle completo, incluyendo letras chiquitas, rutas, logística y beneficios.
+- [X] 3.6 `generateMetadata` dinámico por vacante (título, description, canonical limpio) — ver plan.md §8.
+- [X] 3.7 `JobPostingSchema.tsx` como Server Component dentro del detalle de vacante.
+- [X] 3.8 Verificar en DevTools que el canonical NUNCA incluye `?ref=`.
+- [X] 3.9 Hook `useReferido.ts`: leer `?ref=CODIGO` de URL, guardar en localStorage, persistir entre navegaciones.
+- [X] 3.10 Modal/Client Component de chat: al hacer clic en "Postularme", pedir nombre y teléfono (mínimo 10 dígitos).
+- [X] 3.11 Al confirmar: crear `candidato` (si no existe, por teléfono), crear `postulacion` con `etapa_actual = "Aplicado"`, crear `chat` tipo `candidato_reclutador`.
+- [X] 3.12 Si ya existe chat para teléfono+vacante+reclutador: retomar sin duplicar.
+- [X] 3.13 `reclutador_id` de la postulación se asigna desde el código de referido en localStorage (si existe).
 - [ ] 3.14 Componente `ChatWindow.tsx`: mensajes en tiempo real vía canal `chat:{chatId}` de Supabase Realtime.
 - [ ] 3.15 Estado visible de postulación en la vista de chat del candidato (badge con etapa actual).
 - [ ] 3.16 Detección de fuente de tráfico al cargar la página, registro en `trafico_referidos`.
@@ -134,13 +134,14 @@ implement changes → si hay observaciones, se corrige antes de archivar
 > **Objetivo:** Reclutador gestiona su pipeline con trazabilidad completa.
 
 - [ ] 4.1 `app/reclutador/login/page.tsx`: login por código. Consulta tabla `reclutadores`. Sesión en cookie/localStorage (sin Supabase Auth nativo).
-- [ ] 4.2 `app/reclutador/dashboard/page.tsx`: métricas básicas (candidatos activos, colocados este mes, comisión estimada).
+- [ ] 4.2 `app/reclutador/dashboard/page.tsx`: métricas básicas (candidatos activos, colocados este mes, comisión estimada). Para reclutadores nuevos sin actividad: mostrar guía de inicio rápido de 4 pasos en lugar de métricas vacías (ver spec.md CA-09.1).
 - [ ] 4.3 `app/reclutador/pipeline/page.tsx`: Kanban con columnas de etapas personalizadas por vacante.
 - [ ] 4.4 Cards de candidato: nombre, vacante, días en etapa actual (calculado desde `historial_etapas`), badge mensaje nuevo.
 - [ ] 4.5 Drag and drop con `@dnd-kit` entre columnas.
 - [ ] 4.6 Al soltar card: actualizar `postulaciones.etapa_actual` + insertar fila en `historial_etapas` (etapa_anterior, etapa_nueva, cambiado_por).
 - [ ] 4.7 Modal de confirmación al mover a "Contratado": pedir fecha de contratación, calcular garantía (`calcularGarantiaFin`), calcular comisión (`calcularComision`).
-- [ ] 4.8 Modal de confirmación al mover a "Descartado": pedir motivo (renuncia/despido_empresa/despido_causa/otro).
+- [ ] 4.8 Modal de confirmación al mover a "Descartado": pedir motivo + opción de enviar retroalimentación al candidato con plantillas predefinidas (ver spec.md HU-10, CA-10.1 a CA-10.4).
+- [ ] 4.8b El mensaje de retroalimentación se envía como `es_sistema = true` en el chat del candidato. El chat queda en modo solo lectura con mensaje de cierre.
 - [ ] 4.9 Campo opcional de `score` (1-5) por postulación, editable desde la card.
 - [ ] 4.10 `app/reclutador/chats/page.tsx`: lista de chats tipo `candidato_reclutador`, badge "Nuevo" si último sender fue candidato.
 - [ ] 4.11 `ChatWindow.tsx` reusado: mensajes en tiempo real, input multiline, scroll automático.
@@ -190,7 +191,9 @@ implement changes → si hay observaciones, se corrige antes de archivar
 - [ ] 5.11 `app/coordinador/pipeline/page.tsx`: Kanban global de la agencia (filtrable por vacante/reclutador).
 - [ ] 5.12 `app/coordinador/faq/page.tsx`: preguntas escaladas (Nivel 3) sin responder con alerta visual, formulario de respuesta, toggle "Publicar en FAQ".
 - [ ] 5.13 Chat coordinador↔reclutador (tipo `reclutador_coordinador`): lista de conversaciones, contextuales por vacante o generales.
-- [ ] 5.14 Trigger de alerta proactiva: al cambiar `vacantes.status`, notificar a todos los reclutadores con postulaciones activas en esa vacante (ver spec.md CA-07.6).
+- [ ] 5.14 Trigger de alerta proactiva granular: al cambiar `status`, `comision_base_mxn`, `dias_garantia`, `tiene_promocion`, `promocion_monto_mxn`, `tiene_ruta` de una vacante — notificar a todos los reclutadores de la agencia con mensaje específico de qué cambió (ver spec.md CA-07.6, CA-07.7, CA-07.8).
+- [ ] 5.15 Sección "Qué decirle al candidato" en el VacanteModal — texto editable por el coordinador que aparece en la ficha operativa del reclutador (ver spec.md CA-09.2).
+- [ ] 5.16 Indicador de completitud de vacante — badge de advertencia si faltan campos críticos antes de publicar (ver spec.md CA-09.3).
 - [ ] 5.15 `app/coordinador/corte-semanal/page.tsx`: resumen automático por reclutador (efectivos, no efectivos, total a pagar).
 - [ ] 5.16 Botón "Marcar semana como pagada": actualiza `cortes_semana.pagado` y `postulaciones.pagado`, genera resumen descargable.
 

@@ -15,6 +15,13 @@ export default function ChatModal({ vacanteId, vacanteTitulo, reclutadorId, onCl
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [enviado, setEnviado] = useState(false)
+  const [mensajeExito, setMensajeExito] = useState('')
+
+  // Detectar sesión existente (cero fricción)
+  const sesionExistente = typeof window !== 'undefined'
+    ? localStorage.getItem(`chat_sesion_${vacanteId}`)
+    : null
+  const sesion = sesionExistente ? JSON.parse(sesionExistente) : null
 
   async function handleSubmit() {
     if (!nombre.trim()) { setError('Ingresa tu nombre'); return }
@@ -41,6 +48,19 @@ export default function ChatModal({ vacanteId, vacanteTitulo, reclutadorId, onCl
       if (!res.ok) {
         setError(data.error ?? 'Ocurrió un error, intenta de nuevo')
       } else {
+        // Guardar sesión en localStorage para "cero fricción"
+        if (data.chatId) {
+          localStorage.setItem(`chat_sesion_${vacanteId}`, JSON.stringify({
+            telefono: telefono.trim(),
+            nombre: nombre.trim(),
+            chatId: data.chatId,
+            vacanteId
+          }))
+        }
+              setMensajeExito(data.yaExistia
+          ? '¡Ya estabas postulado! Un reclutador se pondrá en contacto contigo pronto.'
+          : '¡Postulación enviada! Un reclutador se pondrá en contacto contigo pronto.'
+        )
         setEnviado(true)
       }
     } catch {
@@ -54,10 +74,14 @@ export default function ChatModal({ vacanteId, vacanteTitulo, reclutadorId, onCl
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
         <div className="bg-white rounded-2xl p-8 max-w-sm w-full text-center shadow-xl">
-          <p className="text-4xl mb-4">🎉</p>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">¡Postulación enviada!</h3>
+          <p className="text-4xl mb-4">
+            {mensajeExito.includes('Ya estabas') ? '👀' : '🎉'}
+          </p>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">
+            {mensajeExito.includes('Ya estabas') ? '¡Ya estás en proceso!' : '¡Postulación enviada!'}
+          </h3>
           <p className="text-gray-500 text-sm mb-6">
-            Un reclutador se pondrá en contacto contigo pronto para la vacante de <strong>{vacanteTitulo}</strong>.
+            {mensajeExito}
           </p>
           <button
             onClick={onClose}

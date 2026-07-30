@@ -95,7 +95,7 @@ export async function POST(request: Request) {
   }
 
   // 5. Crear chat
-  const { error: errorChat } = await supabase
+  const { data: chatCreado, error: errorChat } = await supabase
     .from('chats')
     .insert({
       tipo: 'candidato_reclutador',
@@ -106,10 +106,13 @@ export async function POST(request: Request) {
       agencia_id: vacante.agencia_id,
       ultimo_sender_tipo: 'candidato'
     })
+    .select('id')
+    .single()
 
   if (errorChat) {
     return NextResponse.json({ error: 'Error al crear chat' }, { status: 500 })
   }
 
-  return NextResponse.json({ ok: true })
+  // Obtener el chatId recién creado
+return NextResponse.json({ ok: true, chatId: chatCreado?.id ?? null })
 }
