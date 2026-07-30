@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import VacanteCard from './VacanteCard'
 import VacanteDetalle from './VacanteDetalle'
 import { useReferido } from '@/hooks/useReferido'
@@ -50,6 +50,11 @@ export default function VacantesPortal({ vacantes }: Props) {
   const [filtroEstado, setFiltroEstado] = useState('')
   const [filtroCiudad, setFiltroCiudad] = useState('')
   const [pagina, setPagina] = useState(1)
+  const [tieneRef, setTieneRef] = useState(false)
+
+  useEffect(() => {
+    setTieneRef(new URLSearchParams(window.location.search).has('ref'))
+  }, [])
   useReferido()
   useTrafico()
 
@@ -130,6 +135,16 @@ export default function VacantesPortal({ vacantes }: Props) {
             )}
           </div>
         </div>
+        {!tieneRef && (
+          <div className="flex justify-end mt-1">
+            <a 
+              href="/admin" 
+              className="text-xs text-green-300 hover:text-white opacity-50 hover:opacity-100 transition-opacity"
+            >
+              Admin
+            </a>
+          </div>
+        )}
       </header>
 
       {/* Layout dos columnas */}
