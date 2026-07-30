@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import VacanteDetalle from '@/components/candidato/VacanteDetalle'
 import { JobPostingSchema } from '@/components/seo/JobPostingSchema'
+import TraficoTracker from '@/components/candidato/TraficoTracker'
 
 interface Props {
   params: { id: string }
@@ -74,6 +75,7 @@ export default async function VacantePage({ params }: Props) {
         </div>
       </header>
       <JobPostingSchema vacante={vacanteFormateada} />
+      <TraficoTracker vacanteId={params.id} />
       <div className="max-w-3xl mx-auto bg-white min-h-screen">
         <VacanteDetalle
           vacante={vacanteFormateada}

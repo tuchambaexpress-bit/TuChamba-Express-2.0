@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import ChatWindow from './ChatWindow'
 
 interface Props {
   vacanteId: string
@@ -71,24 +72,43 @@ export default function ChatModal({ vacanteId, vacanteTitulo, reclutadorId, onCl
   }
 
   if (enviado) {
-    return (
+  const sesion = typeof window !== 'undefined'
+    ? localStorage.getItem(`chat_sesion_${vacanteId}`)
+    : null
+  const chatId = sesion ? JSON.parse(sesion).chatId : null
+  const nombreGuardado = sesion ? JSON.parse(sesion).nombre : nombre
+
+  return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-        <div className="bg-white rounded-2xl p-8 max-w-sm w-full text-center shadow-xl">
-          <p className="text-4xl mb-4">
-            {mensajeExito.includes('Ya estabas') ? '👀' : '🎉'}
-          </p>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">
-            {mensajeExito.includes('Ya estabas') ? '¡Ya estás en proceso!' : '¡Postulación enviada!'}
-          </h3>
-          <p className="text-gray-500 text-sm mb-6">
-            {mensajeExito}
-          </p>
-          <button
-            onClick={onClose}
-            className="w-full bg-[#1A6B3C] text-white py-3 rounded-xl font-semibold hover:bg-[#155c33] transition-colors"
-          >
-            Entendido
-          </button>
+        <div className="bg-white rounded-2xl max-w-sm w-full shadow-xl overflow-hidden">
+          {/* Confirmación */}
+          <div className="p-6 text-center border-b border-gray-100">
+            <p className="text-3xl mb-2">
+              {mensajeExito.includes('Ya estabas') ? '👀' : '🎉'}
+            </p>
+            <h3 className="text-lg font-bold text-gray-900 mb-1">
+              {mensajeExito.includes('Ya estabas') ? '¡Ya estás en proceso!' : '¡Postulación enviada!'}
+            </h3>
+            <p className="text-gray-500 text-sm">{mensajeExito}</p>
+          </div>
+          {/* Chat */}
+          {chatId && (
+            <ChatWindow
+              chatId={chatId}
+              nombreCandidato={nombreGuardado}
+              onClose={onClose}
+            />
+          )}
+          {!chatId && (
+            <div className="p-4">
+              <button
+                onClick={onClose}
+                className="w-full bg-[#1A6B3C] text-white py-3 rounded-xl font-semibold"
+              >
+                Entendido
+              </button>
+            </div>
+          )}
         </div>
       </div>
     )
