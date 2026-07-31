@@ -32,6 +32,7 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
   )
   const [comisionCalculada, setComisionCalculada] = useState<number | null>(null)
   const [garantiaFin, setGarantiaFin] = useState<string | null>(null)
+  const [score, setScore] = useState<number>(postulacion.score ?? 0)
 
   useEffect(() => {
     function handleEsc(e: KeyboardEvent) {
@@ -167,6 +168,15 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
     setMostrarModalEntrevista(false)
   }
 
+  async function guardarScore(nuevoScore: number) {
+    setScore(nuevoScore)
+    const supabase = createClient()
+    await supabase
+      .from('postulaciones')
+      .update({ score: nuevoScore })
+      .eq('id', postulacion.id)
+  }
+
   async function confirmarContratado() {
     setMoviendo(true)
     const supabase = createClient()
@@ -238,6 +248,19 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
         <p className="text-xs text-gray-500 mt-1">
           {diasEnEtapa === 0 ? 'Hoy' : `Hace ${diasEnEtapa} día${diasEnEtapa !== 1 ? 's' : ''}`}
         </p>
+
+        {/* Score 1-5 estrellas */}
+        <div className="flex gap-0.5 mt-2">
+          {[1,2,3,4,5].map(n => (
+            <button
+              key={n}
+              onClick={() => guardarScore(n)}
+              className={`text-lg leading-none ${n <= score ? 'text-yellow-400' : 'text-gray-200'} hover:text-yellow-400 transition-colors`}
+            >
+              ★
+            </button>
+          ))}
+        </div>
 
         {/* Botones principales */}
         <div className="flex gap-2 mt-3">
