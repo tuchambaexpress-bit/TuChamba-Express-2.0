@@ -114,17 +114,17 @@ implement changes → si hay observaciones, se corrige antes de archivar
 - [X] 3.11 Al confirmar: crear `candidato` (si no existe, por teléfono), crear `postulacion` con `etapa_actual = "Aplicado"`, crear `chat` tipo `candidato_reclutador`.
 - [X] 3.12 Si ya existe chat para teléfono+vacante+reclutador: retomar sin duplicar.
 - [X] 3.13 `reclutador_id` de la postulación se asigna desde el código de referido en localStorage (si existe).
-- [ ] 3.14 Componente `ChatWindow.tsx`: mensajes en tiempo real vía canal `chat:{chatId}` de Supabase Realtime.
-- [ ] 3.15 Estado visible de postulación en la vista de chat del candidato (badge con etapa actual).
-- [ ] 3.16 Detección de fuente de tráfico al cargar la página, registro en `trafico_referidos`.
-- [ ] 3.17 Botón admin oculto cuando URL contiene `?ref=`.
-- [ ] 3.18 `app/admin/invitaciones/page.tsx`: botón "Generar invitación", crea token único con expiración de 7 días.
-- [ ] 3.19 `app/invitacion/[token]/page.tsx`: valida token (existe, no usado, no expirado). Si inválido, mensaje de error claro.
-- [ ] 3.20 Paso 1 del formulario de invitación: datos de la agencia → status `pendiente_aprobacion`.
-- [ ] 3.21 Paso 2 (mismo flujo, sin cortar sesión): datos del coordinador → status `pendiente_aprobacion`, vinculado a la agencia recién creada.
-- [ ] 3.22 Pantalla de "Tu cuenta está en revisión" para coordinador con status pendiente.
-- [ ] 3.23 `app/coordinador/solicitudes/page.tsx` (vista admin): lista de agencias+coordinadores pendientes con botones Aprobar/Rechazar.
-- [ ] 3.24 Al aprobar: `agencia.status = 'activa'`, `coordinador.status = 'activo'` simultáneamente.
+- [X] 3.14 Componente `ChatWindow.tsx`: mensajes en tiempo real vía canal `chat:{chatId}` de Supabase Realtime.
+- [X] 3.15 Estado visible de postulación en la vista de chat del candidato (badge con etapa actual).
+- [X] 3.16 Detección de fuente de tráfico al cargar la página, registro en `trafico_referidos`.
+- [X] 3.17 Botón admin oculto cuando URL contiene `?ref=`.
+- [X] 3.18 `app/admin/invitaciones/page.tsx`: botón "Generar invitación", crea token único con expiración de 7 días.
+- [X] 3.19 `app/invitacion/[token]/page.tsx`: valida token (existe, no usado, no expirado). Si inválido, mensaje de error claro.
+- [X] 3.20 Paso 1 del formulario de invitación: datos de la agencia → status `pendiente_aprobacion`.
+- [X] 3.21 Paso 2 (mismo flujo, sin cortar sesión): datos del coordinador → status `pendiente_aprobacion`, vinculado a la agencia recién creada.
+- [X] 3.22 Pantalla de "Tu cuenta está en revisión" para coordinador con status pendiente.
+- [X] 3.23 `app/coordinador/solicitudes/page.tsx` (vista admin): lista de agencias+coordinadores pendientes con botones Aprobar/Rechazar.
+- [X] 3.24 Al aprobar: `agencia.status = 'activa'`, `coordinador.status = 'activo'` simultáneamente.
 
 **✓ Criterio de avance:** Candidato puede ver vacantes, postularse, chatear en tiempo real. Un coordinador puede completar el flujo de invitación de punta a punta y quedar pendiente hasta que el admin lo aprueba.
 
@@ -272,7 +272,7 @@ implement changes → si hay observaciones, se corrige antes de archivar
 | Sprint 0 — Diseño de API | 2026-06-29 | 2026-06-29 | Completo |
 | Sprint 1 — Supabase | 2026-06-29 | 2026-06-29 | Completo |
 | Sprint 2 — Next.js + Deploy | 2026-07-17 | 2026-07-27 | Completo |
-| Sprint 3 — Candidato + Invitación | — | — | Pendiente |
+| Sprint 3 — Candidato + Invitación | 2026-07-28 | 2026-07-30 | Completo |
 | Sprint 4 — Reclutador + ATS | — | — | Pendiente |
 | Sprint 5 — Coordinador + Alta vacante | — | — | Pendiente |
 | Sprint 6 — Power BI + Agentes | — | — | Pendiente |
