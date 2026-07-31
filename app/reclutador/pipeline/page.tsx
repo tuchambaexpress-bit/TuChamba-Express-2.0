@@ -21,7 +21,7 @@ export default async function PipelinePage() {
       </header>
       <div className="px-4 py-6">
         <h2 className="text-xl font-bold text-gray-900 mb-4 max-w-7xl mx-auto">Pipeline de candidatos</h2>
-        <div className="overflow-x-auto h-[calc(100vh-140px)]">
+        <div className="overflow-x-auto h-[calc(100vh-140px)] relative">
           <KanbanBoard />
         </div>
       </div>

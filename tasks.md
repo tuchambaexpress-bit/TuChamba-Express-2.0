@@ -142,6 +142,12 @@ implement changes → si hay observaciones, se corrige antes de archivar
 - [ ] 4.7 Modal de confirmación al mover a "Contratado": pedir fecha de contratación, calcular garantía (`calcularGarantiaFin`), calcular comisión (`calcularComision`).
 - [ ] 4.8 Modal de confirmación al mover a "Descartado": pedir motivo + opción de enviar retroalimentación al candidato con plantillas predefinidas (ver spec.md HU-10, CA-10.1 a CA-10.4).
 - [ ] 4.8b El mensaje de retroalimentación se envía como `es_sistema = true` en el chat del candidato. El chat queda en modo solo lectura con mensaje de cierre.
+- [ ] 4.8c Modal de descarte mejorado (ver spec.md HU-13): motivo específico, alcance (esta vacante / todas), ofrecer otra vacante al descartar.
+- [ ] 4.8d Columna "Descartados" al final del Kanban — visible solo si hay candidatos descartados.
+- [ ] 4.8e Badge "⚠️ Historial previo" en cards de candidatos reactivados (ver spec.md HU-14).
+- [ ] 4.15b Botón "📱 Contactar por WhatsApp" en cards de candidatos en etapa "Entrevista" — genera link wa.me con mensaje pre-escrito (ver spec.md CA-15.1).
+- [ ] 4.15c Campo para registrar fecha_entrevista y lugar_entrevista directo desde la card del Kanban (ver spec.md CA-15.2).
+- [ ] 4.15d Alertas automáticas pre-entrevista: 24h antes al reclutador, 48h después si no avanzó (ver spec.md CA-15.3 y CA-15.4).
 - [ ] 4.9 Campo opcional de `score` (1-5) por postulación, editable desde la card.
 - [ ] 4.10 `app/reclutador/chats/page.tsx`: lista de chats tipo `candidato_reclutador`, badge "Nuevo" si último sender fue candidato.
 - [ ] 4.11 `ChatWindow.tsx` reusado: mensajes en tiempo real, input multiline, scroll automático.

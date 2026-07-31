@@ -290,11 +290,13 @@ lada text DEFAULT '+52'      -- prefijo internacional para el teléfono
 telefono text NOT NULL
 email text
 cv_url text
+vetado boolean DEFAULT false        -- candidato vetado por comportamiento reincidente
+motivo_veto text                    -- razón del veto
+vetado_at timestamptz               -- cuándo fue vetado
+vetado_por uuid                     -- coordinador o admin que lo vetó
 created_at timestamptz DEFAULT now()
 ```
-> El selector de LADA aparece en el modal de postulación junto al campo
-> de teléfono. Opciones mínimas: +52 (México), +1 (USA/Canadá), +54 (Argentina).
-> El candidato puede escribir cualquier LADA manualmente.
+> **Lógica de veto:** Un candidato vetado no puede postularse a ninguna vacante de la agencia que lo vetó. Si intenta abrir el chat, el sistema le muestra un mensaje genérico sin exponer el motivo. El veto puede ser revertido por el coordinador o admin.
 
 ### postulaciones
 ```sql
@@ -313,6 +315,16 @@ fecha_garantia_fin date             -- calculado: fecha_contratacion + dias_gara
 garantia_cumplida bool DEFAULT false
 motivo_no_efectivo text             -- renuncia/despido_empresa/despido_causa/otro
 comision_aplicable bool DEFAULT false
+
+-- DESCARTE EN PIPELINE
+motivo_descarte text                -- no_cumple_perfil/no_se_presento/rechazo_candidato/
+                                    --   rechazo_empresa/no_contesta/otro
+descartado_por text                 -- reclutador/empresa/candidato
+motivo_descarte_detalle text        -- texto libre adicional
+
+-- ENTREVISTA
+fecha_entrevista timestamptz        -- cuándo es la entrevista agendada
+lugar_entrevista text               -- dirección o link de videollamada
 
 -- COMISIÓN APLICADA (calculada al momento del cierre)
 comision_aplicada_mxn numeric       -- base o promoción según fecha de contratación
@@ -699,7 +711,57 @@ Dado que el coordinador marca una vacante como `status = 'pausada'` con nota "si
 
 **CA-12.4:** El coordinador puede ver en su panel la lista de reclutadores con: nombre, código, país/LADA, vacantes activas que trabajan, candidatos en proceso, y fecha de último acceso al sistema.
 
-### 5.1 Cálculo de comisión al cierre
+---
+
+### HU-13: Descarte mejorado con motivo y opciones
+**Como** reclutador, **quiero** poder descartar a un candidato con un motivo específico y decidir si puede postularse a otras vacantes, **para** que el sistema tenga trazabilidad real del proceso.
+
+**CA-13.1:** Al mover un candidato a "Descartado", el modal muestra:
+- Razón del descarte (opciones): No cumple el perfil / No se presentó a la entrevista / El candidato declinó / La empresa no lo aceptó / No contesta / Otro (campo libre)
+- ¿Descartar para?: Solo esta vacante (puede postularse a otras) / Todas las vacantes de la agencia
+- Mensaje de retroalimentación al candidato (opcional, usa plantillas de HU-10)
+
+**CA-13.2:** Al descartar, el sistema pregunta: *"¿Quieres buscarle otra vacante a [nombre]?"* — si el reclutador dice sí, muestra las vacantes activas de la agencia donde el candidato podría encajar.
+
+**CA-13.3:** Los candidatos descartados aparecen en una columna separada "Descartados" al final del Kanban — nunca se borran del historial.
+
+---
+
+### HU-14: Revivir candidato descartado
+**Como** reclutador, **quiero** poder reactivar a un candidato previamente descartado para una nueva vacante, **para** darle una segunda oportunidad sin perder el historial anterior.
+
+**CA-14.1:** Dado que un candidato descartado regresa a postularse a una vacante, cuando abre el chat, entonces el sistema crea una nueva postulación independiente sin borrar la anterior. El historial de la postulación anterior queda visible para el reclutador como referencia.
+
+**CA-14.2:** El reclutador ve en la card del candidato reactivado un badge: *"⚠️ Candidato con historial previo"* — con link para ver sus postulaciones anteriores.
+
+**CA-14.3 — Veto de candidato:**
+Si un candidato es reincidente en conductas problemáticas (no se presenta repetidamente, comportamiento inapropiado, etc.), el coordinador puede vetarlo. Un candidato vetado:
+- No puede abrir chats en ninguna vacante de esa agencia
+- Ve un mensaje genérico: *"En este momento no podemos procesar tu postulación"*
+- El veto puede ser revertido en cualquier momento por el coordinador o admin
+- El motivo del veto es interno — nunca se muestra al candidato
+
+---
+
+### HU-15: Seguimiento pre-entrevista con contacto directo
+**Como** reclutador, **quiero** poder contactar rápidamente a un candidato citado para confirmar su asistencia, **para** reducir las ausencias a entrevistas sin depender de recordarlo manualmente.
+
+> *Origen: Dolor real documentado en grupo de WhatsApp de HR CONNECT — Roxana García envía mensajes de seguimiento manualmente a todos los candidatos citados antes de cada jornada de entrevistas.*
+
+**CA-15.1:** Cuando un candidato está en etapa "Entrevista" y tiene `fecha_entrevista` registrada, su card en el Kanban muestra:
+- La fecha y hora de la entrevista
+- Un botón **"📱 Contactar por WhatsApp"** que genera el link: `https://wa.me/52{telefono}?text=Hola {nombre}, te recordamos que tienes entrevista para {vacante} el {fecha} a las {hora} en {lugar}. ¿Confirmas tu asistencia?`
+- El reclutador solo toca el botón, WhatsApp se abre con el mensaje pre-escrito — no hay integración con Meta, no hay permisos especiales
+
+**CA-15.2:** El reclutador puede registrar la `fecha_entrevista` y `lugar_entrevista` directamente desde la card del candidato en el Kanban, sin tener que abrir un formulario separado.
+
+**CA-15.3 — Alertas automáticas de seguimiento:**
+- **24 horas antes de la entrevista** → alerta al reclutador: *"Mañana tiene entrevista [nombre] para [vacante]. ¿Ya confirmaste su asistencia?"*
+- **Al día siguiente si el candidato no avanzó de etapa** → alerta: *"¿Se presentó [nombre] a su entrevista? Actualiza su estado en el pipeline."*
+
+**CA-15.4:** El sistema detecta automáticamente si un candidato que tenía entrevista no avanzó de etapa "Entrevista" en 48 horas — genera la alerta CA-15.3 automáticamente sin que el reclutador tenga que recordarlo.
+
+---
 Al mover candidato a "Contratado":
 ```
 SI vacantes.tiene_promocion = true

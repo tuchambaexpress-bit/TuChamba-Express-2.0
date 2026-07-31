@@ -23,8 +23,8 @@ const COLORES_ETAPA: Record<string, string> = {
 export default function KanbanColumn({ etapa, postulaciones, todasPostulaciones, onActualizarEtapa, reclutadorId }: Props) {
   return (
     <div className="w-72 flex-shrink-0">
-      {/* Header de columna */}
-      <div className="flex items-center gap-2 mb-3">
+      {/* Header de columna — sticky */}
+      <div className="flex items-center gap-2 mb-3 sticky top-0 bg-gray-50 py-2 z-10">
         <span className={`text-xs font-semibold px-2 py-1 rounded-full ${COLORES_ETAPA[etapa] ?? 'bg-gray-100 text-gray-700'}`}>
           {etapa}
         </span>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import ChatWindow from './ChatWindow'
 
 interface Props {
@@ -17,6 +17,13 @@ export default function ChatModal({ vacanteId, vacanteTitulo, reclutadorId, onCl
   const [error, setError] = useState('')
   const [enviado, setEnviado] = useState(false)
   const [mensajeExito, setMensajeExito] = useState('')
+  useEffect(() => {
+    function handleEsc(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', handleEsc)
+    return () => document.removeEventListener('keydown', handleEsc)
+  }, [])
   const [etapaActual, setEtapaActual] = useState('Aplicado')
 
   // Detectar sesión existente (cero fricción)
