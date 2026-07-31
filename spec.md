@@ -267,6 +267,12 @@ documentos_requeridos jsonb DEFAULT '[]'
 
 -- COMERCIAL
 dias_garantia int NOT NULL
+dias_induccion int DEFAULT 0           -- días de inducción de la empresa (0 = sin inducción formal)
+induccion_dentro_garantia bool DEFAULT true  -- true: garantía empieza desde día 1 de inducción
+                                             -- false: garantía empieza DESPUÉS de los días de inducción
+                                             -- Ejemplo false: 5 días inducción + 30 días garantía = 35 días totales
+                                             -- Caso especial: candidato queda el mismo día de entrevista →
+                                             --   fecha_contratacion = fecha_entrevista = día 1 de garantía
 comision_base_mxn numeric NOT NULL
 tiene_promocion bool DEFAULT false
 promocion_descripcion text

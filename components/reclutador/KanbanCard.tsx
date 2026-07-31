@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { getSemanaISO } from '@/lib/utils'
 
 
 interface Props {
@@ -25,12 +26,19 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
   const [mostrarMenu, setMostrarMenu] = useState(false)
   const [mostrarModalDescarte, setMostrarModalDescarte] = useState(false)
   const [mostrarModalEntrevista, setMostrarModalEntrevista] = useState(false)
+  const [mostrarModalContratado, setMostrarModalContratado] = useState(false)
+  const [fechaContratacion, setFechaContratacion] = useState(
+    new Date().toISOString().split('T')[0]
+  )
+  const [comisionCalculada, setComisionCalculada] = useState<number | null>(null)
+  const [garantiaFin, setGarantiaFin] = useState<string | null>(null)
 
   useEffect(() => {
     function handleEsc(e: KeyboardEvent) {
       if (e.key === 'Escape') {
         setMostrarModalDescarte(false)
         setMostrarModalEntrevista(false)
+        setMostrarModalContratado(false)
         setMostrarMenu(false)
       }
     }
@@ -63,6 +71,23 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
     if (nuevaEtapa === 'Descartado') {
       setMostrarMenu(false)
       setMostrarModalDescarte(true)
+      return
+    }
+    if (nuevaEtapa === 'Contratado') {
+      setMostrarMenu(false)
+      // Calcular comisión y garantía preview
+      const diasGarantia = postulacion.vacantes?.dias_garantia ?? 30
+      const comisionBase = postulacion.vacantes?.comision_base_mxn ?? 0
+      const tienePromo = postulacion.vacantes?.tiene_promocion ?? false
+      const promoFin = postulacion.vacantes?.promocion_fin
+      const promoMonto = postulacion.vacantes?.promocion_monto_mxn ?? 0
+      const hoy = new Date().toISOString().split('T')[0]
+      const monto = tienePromo && promoFin && hoy <= promoFin ? promoMonto : comisionBase
+      const fin = new Date()
+      fin.setDate(fin.getDate() + diasGarantia)
+      setComisionCalculada(monto)
+      setGarantiaFin(fin.toISOString().split('T')[0])
+      setMostrarModalContratado(true)
       return
     }
     setMostrarMenu(false)
@@ -140,6 +165,39 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
       .eq('id', postulacion.id)
 
     setMostrarModalEntrevista(false)
+  }
+
+  async function confirmarContratado() {
+    setMoviendo(true)
+    const supabase = createClient()
+    const diasGarantia = postulacion.vacantes?.dias_garantia ?? 30
+    const fechaFin = new Date(fechaContratacion)
+    fechaFin.setDate(fechaFin.getDate() + diasGarantia)
+
+    await supabase
+      .from('postulaciones')
+      .update({
+        etapa_actual: 'Contratado',
+        fecha_contratacion: fechaContratacion,
+        fecha_garantia_fin: fechaFin.toISOString().split('T')[0],
+        comision_aplicable: true,
+        comision_aplicada_mxn: comisionCalculada,
+        semana_corte: getSemanaISO(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', postulacion.id)
+
+    await supabase.from('historial_etapas').insert({
+      postulacion_id: postulacion.id,
+      etapa_anterior: postulacion.etapa_actual,
+      etapa_nueva: 'Contratado',
+      cambiado_por: reclutadorId,
+      nota: `Contratado. Garantía hasta ${fechaFin.toISOString().split('T')[0]}`
+    })
+
+    onActualizarEtapa(postulacion.id, 'Contratado')
+    setMostrarModalContratado(false)
+    setMoviendo(false)
   }
 
   function generarLinkWhatsApp() {
@@ -317,6 +375,62 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
                 className="flex-1 bg-red-500 hover:bg-red-600 disabled:opacity-40 text-white py-2.5 rounded-xl text-sm font-medium"
               >
                 Descartar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Contratado */}
+      {mostrarModalContratado && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl p-5 max-w-sm w-full shadow-xl">
+            <h3 className="font-bold text-gray-900 mb-1">🎉 Confirmar contratación</h3>
+            <p className="text-sm text-gray-500 mb-4">{nombre} — {vacante}</p>
+
+            <div className="space-y-3 mb-4">
+              <div>
+                <label className="text-xs font-medium text-gray-700 block mb-1">Fecha de contratación *</label>
+                <input
+                  type="date"
+                  value={fechaContratacion}
+                  onChange={e => {
+                    setFechaContratacion(e.target.value)
+                    const diasGarantia = postulacion.vacantes?.dias_garantia ?? 30
+                    const fin = new Date(e.target.value)
+                    fin.setDate(fin.getDate() + diasGarantia)
+                    setGarantiaFin(fin.toISOString().split('T')[0])
+                  }}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
+                />
+              </div>
+            </div>
+
+            {/* Resumen */}
+            <div className="bg-green-50 border border-green-200 rounded-xl p-3 mb-4 space-y-1">
+              <p className="text-xs text-green-700">
+                <span className="font-semibold">Días de garantía:</span> {postulacion.vacantes?.dias_garantia ?? 30} días
+              </p>
+              <p className="text-xs text-green-700">
+                <span className="font-semibold">Garantía cumple:</span> {garantiaFin ? new Date(garantiaFin).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'}
+              </p>
+              <p className="text-xs text-green-700 text-lg font-bold">
+                <span className="font-semibold">Tu comisión:</span> ${comisionCalculada?.toLocaleString('es-MX')} MXN
+              </p>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setMostrarModalContratado(false)}
+                className="flex-1 border border-gray-300 text-gray-700 py-2.5 rounded-xl text-sm font-medium"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmarContratado}
+                className="flex-1 bg-[#1A6B3C] hover:bg-[#155c33] text-white py-2.5 rounded-xl text-sm font-medium"
+              >
+                ✅ Confirmar
               </button>
             </div>
           </div>

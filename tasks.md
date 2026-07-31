@@ -200,6 +200,7 @@ implement changes → si hay observaciones, se corrige antes de archivar
 - [ ] 5.14 Trigger de alerta proactiva granular: al cambiar `status`, `comision_base_mxn`, `dias_garantia`, `tiene_promocion`, `promocion_monto_mxn`, `tiene_ruta` de una vacante — notificar a todos los reclutadores de la agencia con mensaje específico de qué cambió (ver spec.md CA-07.6, CA-07.7, CA-07.8).
 - [ ] 5.15 Sección "Qué decirle al candidato" en el VacanteModal — texto editable por el coordinador que aparece en la ficha operativa del reclutador (ver spec.md CA-09.2).
 - [ ] 5.16 Indicador de completitud de vacante — badge de advertencia si faltan campos críticos antes de publicar (ver spec.md CA-09.3).
+- [ ] 5.16b Campos de inducción en formulario de vacante: `dias_induccion` (número) y checkbox `induccion_dentro_garantia` con leyenda "La inducción va dentro de los días de garantía". Si `induccion_dentro_garantia = false`, el cálculo de `fecha_garantia_fin` suma `dias_induccion + dias_garantia`.
 - [ ] 5.15 `app/coordinador/corte-semanal/page.tsx`: resumen automático por reclutador (efectivos, no efectivos, total a pagar).
 - [ ] 5.16 Botón "Marcar semana como pagada": actualiza `cortes_semana.pagado` y `postulaciones.pagado`, genera resumen descargable.
 - [ ] 5.17 Configuración de día de corte por agencia: el coordinador puede definir `dia_corte` y `dia_pago` desde su perfil de agencia (campos ya existentes en DB desde Sprint 4).
