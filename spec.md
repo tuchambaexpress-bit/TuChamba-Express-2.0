@@ -32,6 +32,36 @@ Cada elemento de la UI debe comunicar profesionalismo y transparencia:
 ### Regla de decisión
 Cuando haya que elegir entre dos implementaciones, siempre gana la que sea más intuitiva, genere menos fricción y comunique más confianza — aunque sea técnicamente más compleja de construir.
 
+### Responsive Design — breakpoints y comportamiento por portal
+
+**Breakpoints estándar:**
+- Móvil: < 768px
+- Tablet: 768px - 1024px
+- Desktop: > 1024px
+
+**Portal Candidato:**
+- Móvil → lista de vacantes a pantalla completa, detalle abre en modal bottom-sheet
+- Desktop → lista izquierda 40%, detalle derecha 60%
+
+**Portal Reclutador:**
+- Móvil → Kanban muestra lista filtrable por etapa (no columnas horizontales)
+- Desktop → Kanban con columnas horizontales con scroll
+- Todas las pantallas del reclutador deben ser 100% funcionales en móvil — los reclutadores operan principalmente desde su celular
+
+**Portal Coordinador:**
+- Tablet/Desktop prioritario para gestión de vacantes (formulario complejo)
+- Móvil debe permitir al menos: ver solicitudes, aprobar/rechazar, cambiar status de vacantes
+- El dashboard Power BI colapsa a gráficas apiladas verticalmente en móvil
+
+**Portal Admin:**
+- Desktop prioritario
+- Móvil debe permitir generar invitaciones y aprobar solicitudes
+
+**APK Android (Fase 2):**
+- Reclutador: pipeline, chats, comisiones
+- Coordinador: gestión básica de vacantes, solicitudes, aprobar candidatos contratados
+- Construida con React Native + Expo reutilizando lógica de negocio del MVP web
+
 ---
 
 ## 1. INGENIERÍA DEL DOLOR
@@ -693,10 +723,34 @@ DE LO CONTRARIO
 > **Nota:** No existe comisión parcial en ningún caso. Es todo o nada al cumplir la garantía.
 
 ### 5.3 Corte semanal
-- El corte aplica de **lunes a jueves**
-- El pago se procesa el **viernes**
+
+**Día de corte configurable por agencia:**
+- El coordinador define el día de corte y día de pago para su agencia
+- Por defecto: corte jueves (dia_corte=4), pago viernes (dia_pago=5)
+- Campos ya existentes en tabla `agencias`: `dia_corte` (int, 1=Lun...7=Dom), `dia_pago` (int)
+- El sistema calcula automáticamente las fechas de corte basándose en estos campos
+
+**Reglas del corte:**
 - Solo entran candidatos con `garantia_cumplida = true` en esa semana
 - El coordinador marca el corte como pagado manualmente después de transferir
+- El campo `semana_corte` en `postulaciones` usa formato ISO (ej. "2026-W22")
+
+**Vista del reclutador — Comisión estimada:**
+- El reclutador puede seleccionar "semana en curso" o semanas anteriores
+- La semana en curso se calcula considerando el `dia_corte` de su agencia
+- Se muestra: candidatos en garantía activa, candidatos efectivos pendientes de pago, y total estimado a cobrar en el próximo corte
+- Solo se suman candidatos con `garantia_cumplida = true` y `pagado = false`
+
+**Vista del coordinador — Panel de corte:**
+- Resumen semanal por reclutador: colocados, efectivos, no efectivos, total a pagar
+- Botón "Marcar semana como pagado" actualiza `postulaciones.pagado = true` para todos los registros de esa semana
+- Genera resumen descargable por reclutador para comprobante de pago
+
+**Comisiones variables por vacante/empresa:**
+- Cada vacante tiene su propia `comision_base_mxn` definida por el coordinador
+- Las promociones (`tiene_promocion`, `promocion_monto_mxn`, `promocion_fin`) permiten subir la comisión temporalmente
+- El sistema aplica automáticamente la comisión correcta al momento de marcar "Contratado"
+- El coordinador puede modificar comisiones en cualquier momento — los cambios aplican solo a nuevas colocaciones, nunca retroactivamente
 
 ---
 

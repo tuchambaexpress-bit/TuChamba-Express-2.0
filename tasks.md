@@ -133,8 +133,8 @@ implement changes → si hay observaciones, se corrige antes de archivar
 ## SPRINT 4 — PORTAL RECLUTADOR (PWA) + ATS
 > **Objetivo:** Reclutador gestiona su pipeline con trazabilidad completa.
 
-- [ ] 4.1 `app/reclutador/login/page.tsx`: login por código. Consulta tabla `reclutadores`. Sesión en cookie/localStorage (sin Supabase Auth nativo).
-- [ ] 4.2 `app/reclutador/dashboard/page.tsx`: métricas básicas (candidatos activos, colocados este mes, comisión estimada). Para reclutadores nuevos sin actividad: mostrar guía de inicio rápido de 4 pasos en lugar de métricas vacías (ver spec.md CA-09.1).
+- [X] 4.1 `app/reclutador/login/page.tsx`: login por código. Consulta tabla `reclutadores`. Sesión en cookie/localStorage (sin Supabase Auth nativo).
+- [X] 4.2 `app/reclutador/dashboard/page.tsx`: métricas básicas (candidatos activos, colocados este mes, comisión estimada). Para reclutadores nuevos sin actividad: mostrar guía de inicio rápido de 4 pasos en lugar de métricas vacías (ver spec.md CA-09.1).
 - [ ] 4.3 `app/reclutador/pipeline/page.tsx`: Kanban con columnas de etapas personalizadas por vacante.
 - [ ] 4.4 Cards de candidato: nombre, vacante, días en etapa actual (calculado desde `historial_etapas`), badge mensaje nuevo.
 - [ ] 4.5 Drag and drop con `@dnd-kit` entre columnas.
@@ -196,6 +196,7 @@ implement changes → si hay observaciones, se corrige antes de archivar
 - [ ] 5.16 Indicador de completitud de vacante — badge de advertencia si faltan campos críticos antes de publicar (ver spec.md CA-09.3).
 - [ ] 5.15 `app/coordinador/corte-semanal/page.tsx`: resumen automático por reclutador (efectivos, no efectivos, total a pagar).
 - [ ] 5.16 Botón "Marcar semana como pagada": actualiza `cortes_semana.pagado` y `postulaciones.pagado`, genera resumen descargable.
+- [ ] 5.17 Configuración de día de corte por agencia: el coordinador puede definir `dia_corte` y `dia_pago` desde su perfil de agencia (campos ya existentes en DB desde Sprint 4).
 
 **✓ Criterio de avance:** Coordinador crea una vacante completa (8 bloques), la IA ayuda a redactar la descripción, el sitemap se sincroniza, el reclutador la ve en su ficha, y el FAQ resuelve dudas en cascada.
 
