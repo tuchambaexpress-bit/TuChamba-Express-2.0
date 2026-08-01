@@ -148,7 +148,7 @@ export default function ComisionesReclutador() {
             <p className="text-gray-500">No hay comisiones en esta categoría</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {comisionesFiltradas.map(c => {
               const diasRestantes = c.fecha_garantia_fin
                 ? Math.ceil((new Date(c.fecha_garantia_fin).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
