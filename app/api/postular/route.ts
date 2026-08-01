@@ -117,7 +117,8 @@ export async function POST(request: Request) {
       vacante_id: vacanteId,
       postulacion_id: postulacion.id,
       agencia_id: vacante.agencia_id,
-      ultimo_sender_tipo: 'candidato'
+      ultimo_sender_tipo: 'candidato',
+      leido_reclutador: false
     })
     .select('id')
     .single()

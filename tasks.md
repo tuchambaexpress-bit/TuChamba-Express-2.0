@@ -219,7 +219,16 @@ implement changes → si hay observaciones, se corrige antes de archivar
 - [ ] 6.5 Gráfica 5: Fuentes de tráfico (dona, desde `trafico_referidos`).
 - [ ] 6.6 Gráfica 6: Tiempo promedio de colocación por vacante (calculado desde `historial_etapas`).
 - [ ] 6.7 Filtros de rango de fechas para todas las gráficas.
-- [ ] 6.8 Edge Function `agente-matching`: evalúa mensaje del candidato vs requisitos de la vacante, da retroalimentación en el chat.
+- [ ] 6.8 Edge Function `agente-matching` — pre-calificación automática de candidatos (ver spec.md HU-17):
+  - Hace 2-3 preguntas clave al candidato basadas en los requisitos de la vacante
+  - Si no cumple → muestra vacantes alternativas, no conecta con el reclutador
+  - Si cumple → conecta con el reclutador con badge "✅ Pre-calificado" en la card del Kanban
+  - El coordinador puede editar las preguntas de pre-calificación por vacante (máximo 5)
+- [ ] 6.8b Control de cupo por vacante (ver spec.md HU-16):
+  - Campo `cupo_requerido` editable por el coordinador en la ficha de vacante
+  - Indicador en tiempo real: contratados activos / en proceso / lugares disponibles
+  - Pausa automática cuando `cupo_cubierto >= cupo_requerido` + notificación al coordinador
+  - Alerta amarilla cuando candidatos en Entrevista+Oferta igualan el cupo restante
 - [ ] 6.9 Edge Function `agente-seguimiento`: genera mensaje sugerido cuando una alerta de "sin movimiento 48h" se dispara.
 - [ ] 6.10 Edge Function `agente-resumen-semanal`: resumen narrativo automático cada jueves (Supabase Cron) para el coordinador.
 - [ ] 6.11 Verificar que `agente-faq` (ya creado en Sprint 4) cierra correctamente el ciclo: estructurado → FAQ → escalación → guardado opcional en FAQ.

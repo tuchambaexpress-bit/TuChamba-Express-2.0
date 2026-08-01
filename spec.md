@@ -283,6 +283,10 @@ promocion_fin date
 status text DEFAULT 'vigente'       -- vigente/pausada/cerrada
 empresa_visible bool DEFAULT true
 destacada bool DEFAULT false
+cupo_requerido int DEFAULT 1        -- personas que necesita la empresa para esta vacante
+cupo_cubierto int DEFAULT 0         -- calculado: candidatos en etapa Contratado con garantía activa
+                                    -- Regla: pausar automáticamente cuando cupo_cubierto >= cupo_requerido
+                                    -- Alerta amarilla: cuando candidatos en Entrevista+Oferta >= cupo_requerido
 tags jsonb DEFAULT '[]'
 created_at timestamptz DEFAULT now()
 updated_at timestamptz DEFAULT now()
@@ -766,6 +770,49 @@ Si un candidato es reincidente en conductas problemáticas (no se presenta repet
 - **Al día siguiente si el candidato no avanzó de etapa** → alerta: *"¿Se presentó [nombre] a su entrevista? Actualiza su estado en el pipeline."*
 
 **CA-15.4:** El sistema detecta automáticamente si un candidato que tenía entrevista no avanzó de etapa "Entrevista" en 48 horas — genera la alerta CA-15.3 automáticamente sin que el reclutador tenga que recordarlo.
+
+---
+
+### HU-16: Control de cupo máximo por vacante
+**Como** coordinador, **quiero** definir cuántas personas necesita cada empresa y que el sistema pause la vacante automáticamente al cubrirlo, **para** no seguir recibiendo candidatos cuando ya está completo el requerimiento.
+
+> *Origen: Documento "Requerimiento Semanal" de HR CONNECT — Roxana define manualmente cuántas personas necesita cada empresa por semana. TuChamba automatiza este control.*
+
+**CA-16.1:** El coordinador define `cupo_requerido` en cada vacante (ej. "FEMSA necesita 5 operadores"). Puede modificarlo en cualquier momento.
+
+**CA-16.2:** El sistema muestra en tiempo real el estado del cupo en la ficha de vacante del coordinador:
+```
+FEMSA Operador — Cupo: 5
+✅ Contratados activos: 3
+⏳ En proceso (Entrevista+Oferta): 4
+🔴 Lugares disponibles: 2
+```
+
+**CA-16.3:** Cuando `cupo_cubierto >= cupo_requerido`, el sistema pausa automáticamente la vacante (`status = 'pausada'`) y notifica al coordinador: *"✅ Cupo cubierto: FEMSA Operador ya tiene 5 contratados activos. La vacante fue pausada automáticamente."*
+
+**CA-16.4:** Alerta amarilla cuando los candidatos en Entrevista+Oferta igualan o superan el cupo restante — avisa al coordinador antes de que se llene, no después.
+
+**CA-16.5:** `cupo_cubierto` se calcula automáticamente — solo cuenta candidatos en etapa "Contratado" con `garantia_cumplida = false` (garantía activa). No cuenta descartados, no efectivos ni renuncias.
+
+---
+
+### HU-17: Agente de pre-calificación (Matching automático)
+**Como** reclutador, **quiero** que el sistema filtre candidatos antes de que lleguen a mí, **para** solo recibir candidatos que realmente cumplen el perfil de la vacante.
+
+> *Origen: Dolor real de HR CONNECT — reclutadores mandan candidatos que claramente no cumplen el perfil porque no tienen herramienta de filtro. Cada vacante tiene requisitos específicos que el candidato debe cumplir antes de ser enviado al reclutador.*
+
+**CA-17.1:** Cuando un candidato abre el chat de una vacante, antes de conectarlo con el reclutador, el Agente de Matching le hace 2-3 preguntas clave basadas en los requisitos de esa vacante. Ejemplo para Operador de Producción:
+- *"¿Tienes secundaria terminada?"*
+- *"¿Puedes trabajar en turnos rotativos (6am-2pm / 2pm-10pm)?"*
+- *"¿Tienes cómo llegar a Apodaca?"*
+
+**CA-17.2:** Si el candidato no cumple algún requisito crítico, el sistema le responde honestamente: *"Para esta vacante necesitas [requisito]. En este momento no cumples el perfil, pero tenemos otras vacantes donde podrías encajar:"* → muestra vacantes alternativas.
+
+**CA-17.3:** Si el candidato cumple todos los requisitos, pasa al reclutador con un badge visible en su card del Kanban: **"✅ Pre-calificado"** — el reclutador sabe que ese candidato ya pasó el filtro inicial.
+
+**CA-17.4:** El coordinador define las preguntas de pre-calificación por vacante (máximo 5 preguntas de sí/no o opción múltiple). El sistema las genera automáticamente a partir de los `requisitos` de la vacante, pero el coordinador puede editarlas.
+
+**CA-17.5:** Los candidatos que no pasan el filtro quedan registrados en el sistema como "No calificado" — el coordinador puede ver qué requisito falló más frecuentemente para ajustar el perfil de la vacante si es necesario.
 
 ---
 Al mover candidato a "Contratado":

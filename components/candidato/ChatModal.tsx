@@ -89,25 +89,30 @@ export default function ChatModal({ vacanteId, vacanteTitulo, reclutadorId, onCl
 
   return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-        <div className="bg-white rounded-2xl max-w-sm w-full shadow-xl overflow-hidden">
-          {/* Confirmación */}
-          <div className="p-6 text-center border-b border-gray-100">
-            <p className="text-3xl mb-2">
+        <div className="bg-white rounded-2xl max-w-sm w-full shadow-xl flex flex-col" style={{height: '85vh', maxHeight: '600px'}}>
+          {/* Confirmación compacta */}
+          <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-3 flex-shrink-0">
+            <p className="text-xl">
               {mensajeExito.includes('Ya estabas') ? '👀' : '🎉'}
             </p>
-            <h3 className="text-lg font-bold text-gray-900 mb-1">
-              {mensajeExito.includes('Ya estabas') ? '¡Ya estás en proceso!' : '¡Postulación enviada!'}
-            </h3>
-            <p className="text-gray-500 text-sm">{mensajeExito}</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-gray-900">
+                {mensajeExito.includes('Ya estabas') ? '¡Ya estás en proceso!' : '¡Postulación enviada!'}
+              </p>
+              <p className="text-xs text-gray-500 line-clamp-2">{mensajeExito}</p>
+            </div>
+            <button onClick={onClose} className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 text-sm flex-shrink-0">✕</button>
           </div>
           {/* Chat */}
             {chatId && (
+            <div className="flex flex-col flex-1 min-h-0">
               <ChatWindow
-              chatId={chatId}
-              nombreCandidato={nombreGuardado}
-              etapaActual={etapaActual}
-              onClose={onClose}
-            />
+                chatId={chatId}
+                nombreCandidato={nombreGuardado}
+                etapaActual={etapaActual}
+                onClose={onClose}
+              />
+            </div>
           )}
           {!chatId && (
             <div className="p-4">

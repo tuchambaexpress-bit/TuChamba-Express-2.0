@@ -15,14 +15,16 @@ interface Props {
   chatId: string
   nombreCandidato: string
   etapaActual?: string
+  senderTipo?: 'candidato' | 'reclutador'
   onClose: () => void
 }
 
-export default function ChatWindow({ chatId, nombreCandidato, etapaActual, onClose }: Props) {
+export default function ChatWindow({ chatId, nombreCandidato, etapaActual, senderTipo = 'candidato', onClose }: Props) {
   const [mensajes, setMensajes] = useState<Mensaje[]>([])
   const [texto, setTexto] = useState('')
   const [enviando, setEnviando] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
   const supabase = createClient()
 
   // Cargar mensajes existentes
@@ -36,12 +38,20 @@ export default function ChatWindow({ chatId, nombreCandidato, etapaActual, onClo
       if (data) setMensajes(data)
     }
     cargarMensajes()
+
+    // Marcar como leído cuando el reclutador abre el chat
+    if (senderTipo === 'reclutador') {
+      supabase.from('chats')
+        .update({ leido_reclutador: true })
+        .eq('id', chatId)
+        .then(({ error }) => console.log('leido update:', error ?? 'ok'))
+    }
   }, [chatId])
 
   // Suscripción Realtime
   useEffect(() => {
     const canal = supabase
-      .channel(`chat:${chatId}`)
+      .channel(`chat-${chatId}-${Math.random()}`)
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
@@ -57,7 +67,11 @@ export default function ChatWindow({ chatId, nombreCandidato, etapaActual, onClo
 
   // Scroll al último mensaje
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    setTimeout(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+      }
+    }, 100)
   }, [mensajes])
 
   async function enviarMensaje() {
@@ -66,7 +80,7 @@ export default function ChatWindow({ chatId, nombreCandidato, etapaActual, onClo
 
     await supabase.from('mensajes').insert({
       chat_id: chatId,
-      sender_tipo: 'candidato',
+      sender_tipo: senderTipo,
       sender_nombre: nombreCandidato,
       texto: texto.trim(),
       timestamp: new Date().toISOString()
@@ -76,7 +90,8 @@ export default function ChatWindow({ chatId, nombreCandidato, etapaActual, onClo
     await supabase.from('chats').update({
       ultimo_mensaje: texto.trim(),
       ultimo_mensaje_at: new Date().toISOString(),
-      ultimo_sender_tipo: 'candidato'
+      ultimo_sender_tipo: senderTipo,
+      leido_reclutador: senderTipo === 'candidato' ? false : true
     }).eq('id', chatId)
 
     setTexto('')
@@ -104,15 +119,27 @@ export default function ChatWindow({ chatId, nombreCandidato, etapaActual, onClo
       </div>
 
       {/* Mensajes */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[200px] max-h-[300px]">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
         {mensajes.length === 0 && (
           <p className="text-center text-gray-400 text-sm mt-8">
             Tu mensaje será enviado al reclutador. Pronto te contactarán.
           </p>
         )}
-        {mensajes.map(m => (
-          <div
-            key={m.id}
+        {mensajes.map((m, i) => {
+          const fechaActual = new Date(m.timestamp).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })
+          const fechaAnterior = i > 0 ? new Date(mensajes[i-1].timestamp).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' }) : null
+          const mostrarFecha = fechaActual !== fechaAnterior
+          return (
+            <div key={m.id}>
+              {mostrarFecha && (
+                <div className="flex items-center justify-center my-2">
+                  <span className="text-xs text-gray-400 bg-gray-100 px-3 py-1 rounded-full">
+                    {fechaActual}
+                  </span>
+                </div>
+              )}
+              <div
+                key={m.id}
             className={`flex ${m.sender_tipo === 'candidato' ? 'justify-end' : 'justify-start'}`}
           >
             <div className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${
@@ -126,19 +153,27 @@ export default function ChatWindow({ chatId, nombreCandidato, etapaActual, onClo
               </p>
             </div>
           </div>
-        ))}
+            </div>
+          )
+        })}
         <div ref={bottomRef} />
       </div>
 
       {/* Input */}
       <div className="border-t border-gray-100 p-3 flex gap-2">
-        <input
-          type="text"
+        <textarea
           value={texto}
           onChange={e => setTexto(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && enviarMensaje()}
+          onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviarMensaje() } }}
           placeholder="Escribe un mensaje..."
-          className="flex-1 border border-gray-200 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
+          rows={1}
+          className="flex-1 border border-gray-200 rounded-2xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C] resize-none overflow-hidden"
+          style={{ maxHeight: '80px', overflowY: 'auto' }}
+          onInput={e => {
+            const t = e.target as HTMLTextAreaElement
+            t.style.height = 'auto'
+            t.style.height = Math.min(t.scrollHeight, 80) + 'px'
+          }}
         />
         <button
           onClick={enviarMensaje}
