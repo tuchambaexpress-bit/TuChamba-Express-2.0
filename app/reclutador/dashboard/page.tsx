@@ -3,11 +3,13 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { useAlertas } from '@/hooks/useAlertas'
 
 export default function DashboardReclutador() {
   const router = useRouter()
   const [sesion, setSesion] = useState<any>(null)
   const [copiadoRef, setCopiadoRef] = useState(false)
+  useAlertas(sesion?.id ?? null)
   const [filtro, setFiltro] = useState<'semana' | 'mes' | 'todo'>('mes')
   const supabase = createClient()
 
