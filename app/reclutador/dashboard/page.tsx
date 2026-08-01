@@ -2,11 +2,19 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 
 export default function DashboardReclutador() {
   const router = useRouter()
   const [sesion, setSesion] = useState<any>(null)
   const [copiadoRef, setCopiadoRef] = useState(false)
+
+  const [metricas, setMetricas] = useState({
+    candidatosActivos: 0,
+    colocadosMes: 0,
+    comisionEstimada: 0,
+    chatsNuevos: 0
+  })
 
   useEffect(() => {
     const data = localStorage.getItem('reclutador_sesion')
@@ -14,8 +22,52 @@ export default function DashboardReclutador() {
       router.push('/reclutador/login')
       return
     }
-    setSesion(JSON.parse(data))
+    const s = JSON.parse(data)
+    setSesion(s)
+    cargarMetricas(s.id)
   }, [])
+
+  async function cargarMetricas(reclutadorId: string) {
+    const supabase = createClient()
+    const inicioMes = new Date()
+    inicioMes.setDate(1)
+    inicioMes.setHours(0, 0, 0, 0)
+
+    const { count: activos } = await supabase
+      .from('postulaciones')
+      .select('*', { count: 'exact', head: true })
+      .eq('reclutador_id', reclutadorId)
+      .not('etapa_actual', 'in', '("Descartado","Contratado")')
+
+    const { count: colocados } = await supabase
+      .from('postulaciones')
+      .select('*', { count: 'exact', head: true })
+      .eq('reclutador_id', reclutadorId)
+      .eq('etapa_actual', 'Contratado')
+      .gte('fecha_contratacion', inicioMes.toISOString().split('T')[0])
+
+    const { data: comisiones } = await supabase
+      .from('postulaciones')
+      .select('comision_aplicada_mxn')
+      .eq('reclutador_id', reclutadorId)
+      .eq('garantia_cumplida', false)
+      .eq('comision_aplicable', true)
+
+    const totalComision = comisiones?.reduce((sum, p) => sum + (p.comision_aplicada_mxn ?? 0), 0) ?? 0
+
+    const { count: chatsNuevos } = await supabase
+      .from('chats')
+      .select('*', { count: 'exact', head: true })
+      .eq('reclutador_id', reclutadorId)
+      .eq('leido_reclutador', false)
+
+    setMetricas({
+      candidatosActivos: activos ?? 0,
+      colocadosMes: colocados ?? 0,
+      comisionEstimada: totalComision,
+      chatsNuevos: chatsNuevos ?? 0
+    })
+  }
 
   if (!sesion) return null
 
@@ -64,19 +116,19 @@ export default function DashboardReclutador() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-white rounded-xl p-4 shadow-sm">
             <p className="text-xs text-gray-500">Candidatos activos</p>
-            <p className="text-2xl font-bold text-gray-900">0</p>
+            <p className="text-2xl font-bold text-gray-900">{metricas.candidatosActivos}</p>
           </div>
           <div className="bg-white rounded-xl p-4 shadow-sm">
             <p className="text-xs text-gray-500">Colocados este mes</p>
-            <p className="text-2xl font-bold text-gray-900">0</p>
+            <p className="text-2xl font-bold text-gray-900">{metricas.colocadosMes}</p>
           </div>
           <div className="bg-white rounded-xl p-4 shadow-sm">
             <p className="text-xs text-gray-500">Comisión estimada</p>
-            <p className="text-2xl font-bold text-[#1A6B3C]">$0</p>
+            <p className="text-2xl font-bold text-[#1A6B3C]">${metricas.comisionEstimada.toLocaleString('es-MX')}</p>
           </div>
           <div className="bg-white rounded-xl p-4 shadow-sm">
-            <p className="text-xs text-gray-500">Chats nuevos</p>
-            <p className="text-2xl font-bold text-gray-900">0</p>
+            <p className="text-xs text-gray-500">Chats sin leer</p>
+            <p className="text-2xl font-bold text-gray-900">{metricas.chatsNuevos}</p>
           </div>
         </div>
 
