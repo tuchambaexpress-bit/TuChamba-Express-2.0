@@ -525,6 +525,21 @@ En el portal del reclutador (Sprint 4), cuando un candidato aparece en múltiple
 
 **CA-02.4:** El reclutador puede mover cualquier tarjeta a "Descartado" desde cualquier etapa, pero el sistema le pide confirmar y registrar el motivo.
 
+**CA-02.5 — Dashboard con métricas reales:**
+El dashboard del reclutador muestra 4 métricas en tiempo real:
+- **Candidatos activos** — postulaciones no descartadas ni contratadas (total acumulado)
+- **Colocados este mes** — contratados en el mes natural en curso
+- **Comisión estimada** — suma de `comision_aplicada_mxn` de candidatos contratados con garantía activa (`garantia_cumplida = false`)
+- **Chats sin leer** — chats con `leido_reclutador = false`
+
+**CA-02.6 — Filtro de fechas en métricas:**
+El reclutador puede filtrar las métricas por período:
+- Esta semana (lunes a domingo)
+- Este mes (mes natural)
+- Rango personalizado (date picker desde/hasta)
+
+Al cambiar el filtro, todas las métricas se recalculan automáticamente sin recargar la página. Esto permite al reclutador hacer sus propias cuentas y revisar su historial de rendimiento.
+
 ---
 
 ### HU-03: Reclutador consulta la ficha operativa de una vacante
@@ -813,6 +828,27 @@ FEMSA Operador — Cupo: 5
 **CA-17.4:** El coordinador define las preguntas de pre-calificación por vacante (máximo 5 preguntas de sí/no o opción múltiple). El sistema las genera automáticamente a partir de los `requisitos` de la vacante, pero el coordinador puede editarlas.
 
 **CA-17.5:** Los candidatos que no pasan el filtro quedan registrados en el sistema como "No calificado" — el coordinador puede ver qué requisito falló más frecuentemente para ajustar el perfil de la vacante si es necesario.
+
+---
+
+### HU-18: Mis postulaciones — historial del candidato
+**Como** candidato, **quiero** poder ver todas las vacantes a las que me he postulado y el estado de cada una, **para** no perderme entre conversaciones cuando hay muchas vacantes disponibles.
+
+> *Origen: Pain point identificado en sesión de desarrollo — con 100+ vacantes un candidato no tiene forma de saber a cuáles ya aplicó ni en qué etapa está cada proceso.*
+
+**CA-18.1:** El candidato accede a "Mis postulaciones" desde el header del portal candidato con solo ingresar su número de teléfono — sin contraseña, sin registro adicional. El teléfono es su identificador único.
+
+**CA-18.2:** La página `app/mis-postulaciones/page.tsx` muestra todas las postulaciones del candidato con:
+- Nombre de la vacante y empresa
+- Etapa actual (badge de color)
+- Fecha de postulación
+- Botón "Ver chat" que abre directamente la conversación
+
+**CA-18.3:** Si el candidato tiene postulaciones en etapa "Descartado", las muestra al final de la lista en gris — con el mensaje de retroalimentación si fue enviado.
+
+**CA-18.4:** Si el candidato no tiene postulaciones registradas con ese teléfono, el sistema le muestra las vacantes activas disponibles para que pueda postularse.
+
+**CA-18.5:** El teléfono ingresado se guarda en localStorage bajo la clave `candidato_telefono` — en visitas futuras el sistema lo recuerda y no vuelve a pedirlo.
 
 ---
 Al mover candidato a "Contratado":

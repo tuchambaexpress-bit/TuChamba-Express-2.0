@@ -135,23 +135,25 @@ implement changes → si hay observaciones, se corrige antes de archivar
 
 - [X] 4.1 `app/reclutador/login/page.tsx`: login por código. Consulta tabla `reclutadores`. Sesión en cookie/localStorage (sin Supabase Auth nativo).
 - [X] 4.2 `app/reclutador/dashboard/page.tsx`: métricas básicas (candidatos activos, colocados este mes, comisión estimada). Para reclutadores nuevos sin actividad: mostrar guía de inicio rápido de 4 pasos en lugar de métricas vacías (ver spec.md CA-09.1).
-- [ ] 4.3 `app/reclutador/pipeline/page.tsx`: Kanban con columnas de etapas personalizadas por vacante.
-- [ ] 4.4 Cards de candidato: nombre, vacante, días en etapa actual (calculado desde `historial_etapas`), badge mensaje nuevo.
-- [ ] 4.5 Drag and drop con `@dnd-kit` entre columnas.
-- [ ] 4.6 Al soltar card: actualizar `postulaciones.etapa_actual` + insertar fila en `historial_etapas` (etapa_anterior, etapa_nueva, cambiado_por).
-- [ ] 4.7 Modal de confirmación al mover a "Contratado": pedir fecha de contratación, calcular garantía (`calcularGarantiaFin`), calcular comisión (`calcularComision`).
+- [X] 4.3 `app/reclutador/pipeline/page.tsx`: Kanban con columnas de etapas personalizadas por vacante.
+- [X] 4.4 Cards de candidato: nombre, vacante, días en etapa actual (calculado desde `historial_etapas`), badge mensaje nuevo.
+- [X] 4.5 Drag and drop con `@dnd-kit` entre columnas.
+- [X] 4.6 Al soltar card: actualizar `postulaciones.etapa_actual` + insertar fila en `historial_etapas` (etapa_anterior, etapa_nueva, cambiado_por).
+- [X] 4.7 Modal de confirmación al mover a "Contratado": pedir fecha de contratación, calcular garantía (`calcularGarantiaFin`), calcular comisión (`calcularComision`).
 - [ ] 4.8 Modal de confirmación al mover a "Descartado": pedir motivo + opción de enviar retroalimentación al candidato con plantillas predefinidas (ver spec.md HU-10, CA-10.1 a CA-10.4).
-- [ ] 4.8b El mensaje de retroalimentación se envía como `es_sistema = true` en el chat del candidato. El chat queda en modo solo lectura con mensaje de cierre.
-- [ ] 4.8c Modal de descarte mejorado (ver spec.md HU-13): motivo específico, alcance (esta vacante / todas), ofrecer otra vacante al descartar.
-- [ ] 4.8d Columna "Descartados" al final del Kanban — visible solo si hay candidatos descartados.
+- [X] 4.8b El mensaje de retroalimentación se envía como `es_sistema = true` en el chat del candidato. El chat queda en modo solo lectura con mensaje de cierre.
+- [X] 4.8c Modal de descarte mejorado (ver spec.md HU-13): motivo específico, alcance (esta vacante / todas), ofrecer otra vacante al descartar.
+- [X] 4.8d Columna "Descartados" al final del Kanban — visible solo si hay candidatos descartados.
 - [ ] 4.8e Badge "⚠️ Historial previo" en cards de candidatos reactivados (ver spec.md HU-14).
-- [ ] 4.15b Botón "📱 Contactar por WhatsApp" en cards de candidatos en etapa "Entrevista" — genera link wa.me con mensaje pre-escrito (ver spec.md CA-15.1).
-- [ ] 4.15c Campo para registrar fecha_entrevista y lugar_entrevista directo desde la card del Kanban (ver spec.md CA-15.2).
+- [X] 4.15b Botón "📱 Contactar por WhatsApp" en cards de candidatos en etapa "Entrevista" — genera link wa.me con mensaje pre-escrito (ver spec.md CA-15.1).
+- [X] 4.15c Campo para registrar fecha_entrevista y lugar_entrevista directo desde la card del Kanban (ver spec.md CA-15.2).
 - [ ] 4.15d Alertas automáticas pre-entrevista: 24h antes al reclutador, 48h después si no avanzó (ver spec.md CA-15.3 y CA-15.4).
-- [ ] 4.9 Campo opcional de `score` (1-5) por postulación, editable desde la card.
-- [ ] 4.10 `app/reclutador/chats/page.tsx`: lista de chats tipo `candidato_reclutador`, badge "Nuevo" si último sender fue candidato.
-- [ ] 4.11 `ChatWindow.tsx` reusado: mensajes en tiempo real, input multiline, scroll automático.
-- [ ] 4.12 Formulario de registro manual de candidato externo (`es_manual = true`).
+- [X] 4.9 Campo opcional de `score` (1-5) por postulación, editable desde la card.
+- [X] 4.10 `app/reclutador/chats/page.tsx`: lista de chats tipo `candidato_reclutador`, badge "Nuevo" si último sender fue candidato.
+- [X] 4.11 `ChatWindow.tsx` reusado: mensajes en tiempo real, input multiline, scroll automático.
+- [X] 4.12 Formulario de registro manual de candidato externo (`es_manual = true`).
+- [ ] 4.12b Métricas reales en dashboard del reclutador: candidatos activos, colocados este mes, comisión estimada ($), chats sin leer. Filtro por mes/semana/fechas personalizadas pendiente (ver 4.12c).
+- [ ] 4.12c Filtro de fechas en métricas del dashboard: selector de período (mes actual, semana actual, rango personalizado) que recalcula todas las métricas en tiempo real.
 - [ ] 4.13 `app/reclutador/vacante/[id]/page.tsx`: ficha operativa completa (contacto RRHH, logística, FAQ existente).
 - [ ] 4.14 Input de pregunta nueva: primero consulta Nivel 1 (campos estructurados) localmente antes de llamar a cualquier función.
 - [ ] 4.15 Si Nivel 1 no resuelve, invoca Edge Function `agente-faq` (que internamente revisa Nivel 2 FAQ, y si no hay match, escala a Nivel 3 coordinador).
