@@ -16,6 +16,8 @@ export default async function PipelinePage() {
           <div className="flex gap-4">
             <a href="/reclutador/dashboard" className="text-green-200 hover:text-white text-sm">Dashboard</a>
             <a href="/reclutador/chats" className="text-green-200 hover:text-white text-sm">Chats</a>
+            <a href="/reclutador/comisiones" className="text-green-200 hover:text-white text-sm">Comisiones</a>
+            <a href="/reclutador/alertas" className="text-green-200 hover:text-white text-sm">Alertas</a>
           </div>
         </div>
       </header>

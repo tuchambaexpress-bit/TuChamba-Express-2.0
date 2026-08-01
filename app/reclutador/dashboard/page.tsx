@@ -123,15 +123,21 @@ export default function DashboardReclutador() {
             <h1 className="text-white font-bold text-xl">Tu Chamba Express</h1>
             <p className="text-green-200 text-sm">Hola, {sesion.nombre}</p>
           </div>
-          <button
-            onClick={() => {
-              localStorage.removeItem('reclutador_sesion')
-              router.push('/reclutador/login')
-            }}
-            className="text-green-200 hover:text-white text-sm"
-          >
-            Cerrar sesión
-          </button>
+          <div className="flex gap-4 items-center">
+            <a href="/reclutador/pipeline" className="text-green-200 hover:text-white text-sm">Pipeline</a>
+            <a href="/reclutador/chats" className="text-green-200 hover:text-white text-sm">Chats</a>
+            <a href="/reclutador/comisiones" className="text-green-200 hover:text-white text-sm">Comisiones</a>
+            <a href="/reclutador/alertas" className="text-green-200 hover:text-white text-sm">Alertas</a>
+            <button
+              onClick={() => {
+                localStorage.removeItem('reclutador_sesion')
+                router.push('/reclutador/login')
+              }}
+              className="text-green-200 hover:text-white text-sm"
+            >
+              Cerrar sesión
+            </button>
+          </div>
         </div>
       </header>
 
