@@ -8,6 +8,7 @@ export default function DashboardReclutador() {
   const router = useRouter()
   const [sesion, setSesion] = useState<any>(null)
   const [copiadoRef, setCopiadoRef] = useState(false)
+  const [filtro, setFiltro] = useState<'semana' | 'mes' | 'todo'>('mes')
   const supabase = createClient()
 
   const [metricas, setMetricas] = useState({
@@ -25,7 +26,7 @@ export default function DashboardReclutador() {
     }
     const s = JSON.parse(data)
     setSesion(s)
-    cargarMetricas(s.id)
+    cargarMetricas(s.id, filtro)
 
     // Realtime — actualizar chats sin leer en tiempo real
     const canal = supabase
@@ -43,11 +44,36 @@ export default function DashboardReclutador() {
     return () => { supabase.removeChannel(canal) }
   }, [])
 
-  async function cargarMetricas(reclutadorId: string) {
+  useEffect(() => {
+     if (sesion) cargarMetricas(sesion.id, filtro)
+  }, [filtro, sesion])
+
+  async function cargarMetricas(reclutadorId: string, periodo: 'semana' | 'mes' | 'todo' = 'mes') {
     const supabase = createClient()
-    const inicioMes = new Date()
-    inicioMes.setDate(1)
-    inicioMes.setHours(0, 0, 0, 0)
+    const ahora = new Date()
+    let fechaInicio: string | null = null
+
+    if (periodo === 'mes') {
+      const inicio = new Date(ahora.getFullYear(), ahora.getMonth(), 1)
+      fechaInicio = inicio.toISOString().split('T')[0]
+    } else if (periodo === 'semana') {
+      // Obtener día de corte de la agencia del reclutador
+      const { data: agenciaData } = await supabase
+        .from('reclutador_agencia')
+        .select('agencias(dia_corte)')
+        .eq('reclutador_id', reclutadorId)
+        .eq('activo', true)
+        .single()
+
+      // dia_corte: 1=Lun, 2=Mar, 3=Mie, 4=Jue(default), 5=Vie, 6=Sab, 7=Dom
+      const diaCorte = (agenciaData?.agencias as any)?.dia_corte ?? 4
+      const diaSemanaActual = ahora.getDay() === 0 ? 7 : ahora.getDay()
+      const diasDesdeCorte = (diaSemanaActual - diaCorte + 7) % 7
+      const inicio = new Date(ahora)
+      inicio.setDate(ahora.getDate() - diasDesdeCorte)
+      inicio.setHours(0, 0, 0, 0)
+      fechaInicio = inicio.toISOString().split('T')[0]
+    }
 
     const { count: activos } = await supabase
       .from('postulaciones')
@@ -55,12 +81,14 @@ export default function DashboardReclutador() {
       .eq('reclutador_id', reclutadorId)
       .not('etapa_actual', 'in', '("Descartado","Contratado")')
 
-    const { count: colocados } = await supabase
+    let colocadosQuery = supabase
       .from('postulaciones')
       .select('*', { count: 'exact', head: true })
       .eq('reclutador_id', reclutadorId)
       .eq('etapa_actual', 'Contratado')
-      .gte('fecha_contratacion', inicioMes.toISOString().split('T')[0])
+
+    if (fechaInicio) colocadosQuery = colocadosQuery.gte('fecha_contratacion', fechaInicio)
+    const { count: colocados } = await colocadosQuery
 
     const { data: comisiones } = await supabase
       .from('postulaciones')
@@ -108,6 +136,23 @@ export default function DashboardReclutador() {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Filtro de período */}
+        <div className="flex gap-2 mb-4">
+          {(['semana', 'mes', 'todo'] as const).map(p => (
+            <button
+              key={p}
+              onClick={() => setFiltro(p)}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                filtro === p
+                  ? 'bg-[#1A6B3C] text-white'
+                  : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              {p === 'semana' ? 'Esta semana' : p === 'mes' ? 'Este mes' : 'Todo'}
+            </button>
+          ))}
+        </div>
+
         {/* Link de referido */}
         <div className="bg-[#1A6B3C] rounded-2xl p-4 mb-6 text-white">
           <p className="text-sm font-semibold mb-1">🔗 Tu link de referido</p>
