@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 export default function DashboardReclutador() {
   const router = useRouter()
   const [sesion, setSesion] = useState<any>(null)
+  const [copiadoRef, setCopiadoRef] = useState(false)
 
   useEffect(() => {
     const data = localStorage.getItem('reclutador_sesion')
@@ -39,6 +40,26 @@ export default function DashboardReclutador() {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Link de referido */}
+        <div className="bg-[#1A6B3C] rounded-2xl p-4 mb-6 text-white">
+          <p className="text-sm font-semibold mb-1">🔗 Tu link de referido</p>
+          <p className="text-xs text-green-200 mb-3">Comparte este link para que los candidatos queden vinculados a ti automáticamente</p>
+          <div className="flex gap-2">
+            <div className="flex-1 bg-white/20 rounded-lg px-3 py-2 text-xs text-white truncate">
+              tuchambaexpress.com?ref={sesion.codigo}
+            </div>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(`https://tu-chamba-express-2-0.vercel.app?ref=${sesion.codigo}`)
+                setCopiadoRef(true)
+                setTimeout(() => setCopiadoRef(false), 2000)
+              }}
+              className="bg-white text-[#1A6B3C] font-semibold text-xs px-3 py-2 rounded-lg flex-shrink-0"
+            >
+              {copiadoRef ? '✓ Copiado' : 'Copiar'}
+            </button>
+          </div>
+        </div>
         {/* Métricas básicas */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-white rounded-xl p-4 shadow-sm">
