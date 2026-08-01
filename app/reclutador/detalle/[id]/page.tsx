@@ -1,0 +1,215 @@
+import { createClient as createServerClient } from '@supabase/supabase-js'
+import { notFound } from 'next/navigation'
+import Link from 'next/link'
+
+interface Props {
+  params: { id: string }
+}
+
+export default async function FichaVacante({ params }: Props) {
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+
+  const { data: vacante } = await supabase
+    .from('vacantes')
+    .select(`
+      id, titulo, descripcion, requisitos, beneficios,
+      letras_chiquitas, salario_min, salario_max, salario_tipo,
+      salario_visible, ciudad, estado, colonia_zona,
+      modalidad, jornada, horario, tipo_contrato,
+      tiene_ruta, zonas_ruta, ruta_para_entrevista,
+      estacionamiento, comedor, uniforme,
+      empresa_visible, destacada, status,
+      dias_garantia, dias_induccion, induccion_dentro_garantia,
+      comision_base_mxn, tiene_promocion, promocion_monto_mxn, promocion_fin,
+      contacto_rrhh, contacto_rrhh_telefono, contacto_rrhh_horario,
+      punto_reunion, documentos_requeridos,
+      negocios(nombre)
+    `)
+    .eq('id', params.id)
+    .single()
+
+  if (!vacante) notFound()
+
+  const empresa = vacante.empresa_visible
+    ? (vacante.negocios as any)?.nombre ?? 'Empresa'
+    : 'Empresa Confidencial'
+
+  const salario = vacante.salario_visible && vacante.salario_min
+    ? `$${vacante.salario_min.toLocaleString('es-MX')}${vacante.salario_max ? ` - $${vacante.salario_max.toLocaleString('es-MX')}` : ''} ${vacante.salario_tipo ?? ''}`
+    : 'A convenir'
+
+  const hoy = new Date().toISOString().split('T')[0]
+  const tienePromoActiva = vacante.tiene_promocion && vacante.promocion_fin && hoy <= vacante.promocion_fin
+  const comisionFinal = tienePromoActiva ? vacante.promocion_monto_mxn : vacante.comision_base_mxn
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-[#1A6B3C] px-6 py-4 shadow-md">
+        <div className="max-w-3xl mx-auto flex items-center justify-between">
+          <div>
+            <h1 className="text-white font-bold text-xl">Tu Chamba Express</h1>
+            <p className="text-green-200 text-sm">Ficha operativa</p>
+          </div>
+          <Link href="/reclutador/pipeline" className="text-green-200 hover:text-white text-sm">
+            ← Pipeline
+          </Link>
+        </div>
+      </header>
+
+    <div className="max-w-5xl mx-auto px-4 py-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        {/* Encabezado */}
+        <div className="bg-white rounded-2xl p-5 shadow-sm">
+          <h2 className="text-xl font-bold text-gray-900">{vacante.titulo}</h2>
+          <p className="text-[#1A6B3C] font-semibold mt-1">{empresa}</p>
+          <p className="text-gray-500 text-sm mt-1">📍 {vacante.ciudad}, {vacante.estado}</p>
+          <div className="flex gap-2 mt-3 flex-wrap">
+            <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-lg">{vacante.jornada}</span>
+            <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-lg">{vacante.modalidad}</span>
+            <span className={`text-xs px-2 py-1 rounded-lg font-medium ${vacante.status === 'vigente' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+              {vacante.status}
+            </span>
+          </div>
+        </div>
+
+        {/* Comisión — lo más importante para el reclutador */}
+        <div className={`rounded-2xl p-5 shadow-sm ${tienePromoActiva ? 'bg-amber-50 border border-amber-200' : 'bg-white'}`}>
+          <h3 className="font-bold text-gray-900 mb-3">
+            💰 Tu comisión {tienePromoActiva ? '🔥 ¡Bono activo!' : ''}
+          </h3>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <p className="text-xs text-gray-500">Comisión base</p>
+              <p className="text-lg font-bold text-gray-900">${vacante.comision_base_mxn?.toLocaleString('es-MX')} MXN</p>
+            </div>
+            {tienePromoActiva && (
+              <div>
+                <p className="text-xs text-amber-600">🔥 Bono especial</p>
+                <p className="text-lg font-bold text-amber-700">${vacante.promocion_monto_mxn?.toLocaleString('es-MX')} MXN</p>
+                <p className="text-xs text-amber-600">Válido hasta {new Date(vacante.promocion_fin!).toLocaleDateString('es-MX')}</p>
+              </div>
+            )}
+            <div>
+              <p className="text-xs text-gray-500">Días de garantía</p>
+              <p className="text-base font-bold text-gray-900">{vacante.dias_garantia} días</p>
+            </div>
+            {vacante.dias_induccion > 0 && (
+              <div>
+                <p className="text-xs text-gray-500">Días de inducción</p>
+                <p className="text-base font-bold text-gray-900">
+                  {vacante.dias_induccion} días
+                  <span className="text-xs font-normal text-gray-400 ml-1">
+                    ({vacante.induccion_dentro_garantia ? 'dentro de garantía' : 'antes de garantía'})
+                  </span>
+                </p>
+              </div>
+            )}
+          </div>
+          <div className="mt-3 bg-green-50 border border-green-200 rounded-xl p-3">
+            <p className="text-sm text-green-700 font-medium">
+              ✅ Cobras ${comisionFinal?.toLocaleString('es-MX')} MXN cuando el candidato cumple {vacante.induccion_dentro_garantia ? vacante.dias_garantia : (vacante.dias_garantia + (vacante.dias_induccion ?? 0))} días
+            </p>
+          </div>
+        </div>
+
+        {/* Salario del candidato */}
+        <div className="bg-white rounded-2xl p-5 shadow-sm">
+          <h3 className="font-bold text-gray-900 mb-3">💵 Salario del candidato</h3>
+          <p className="text-lg font-bold text-gray-900">{salario}</p>
+          {vacante.horario && <p className="text-sm text-gray-500 mt-1">🕐 {vacante.horario}</p>}
+          {vacante.tipo_contrato && <p className="text-sm text-gray-500 mt-1">📋 {vacante.tipo_contrato}</p>}
+        </div>
+
+        {/* Qué decirle al candidato */}
+        <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 shadow-sm">
+          <h3 className="font-bold text-blue-900 mb-2">💬 Qué decirle al candidato</h3>
+          <p className="text-sm text-blue-800">
+            {vacante.descripcion ?? 'El coordinador aún no ha agregado instrucciones específicas para esta vacante.'}
+          </p>
+          {vacante.punto_reunion && (
+            <div className="mt-3 bg-white rounded-xl p-3">
+              <p className="text-xs text-gray-500">Punto de reunión / entrevista</p>
+              <p className="text-sm font-medium text-gray-800">{vacante.punto_reunion}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Contacto RRHH */}
+        {vacante.contacto_rrhh && (
+          <div className="bg-white rounded-2xl p-5 shadow-sm">
+            <h3 className="font-bold text-gray-900 mb-3">📞 Contacto RRHH</h3>
+            <p className="text-sm font-medium text-gray-800">{vacante.contacto_rrhh}</p>
+            {vacante.contacto_rrhh_telefono && (
+              <p className="text-sm text-gray-500 mt-1">📱 {vacante.contacto_rrhh_telefono}</p>
+            )}
+            {vacante.contacto_rrhh_horario && (
+              <p className="text-sm text-gray-500 mt-1">🕐 {vacante.contacto_rrhh_horario}</p>
+            )}
+          </div>
+        )}
+
+        {/* Requisitos */}
+        {vacante.requisitos?.length > 0 && (
+          <div className="bg-white rounded-2xl p-5 shadow-sm">
+            <h3 className="font-bold text-gray-900 mb-3">✅ Requisitos</h3>
+            <ul className="space-y-1">
+              {vacante.requisitos.map((r: string, i: number) => (
+                <li key={i} className="text-sm text-gray-700 flex gap-2">
+                  <span className="text-[#1A6B3C]">•</span>{r}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Beneficios */}
+        {vacante.beneficios?.length > 0 && (
+          <div className="bg-white rounded-2xl p-5 shadow-sm">
+            <h3 className="font-bold text-gray-900 mb-3">🎁 Beneficios</h3>
+            <ul className="space-y-1">
+              {vacante.beneficios.map((b: string, i: number) => (
+                <li key={i} className="text-sm text-gray-700 flex gap-2">
+                  <span className="text-green-500">✓</span>{b}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Logística */}
+        {(vacante.tiene_ruta || vacante.estacionamiento || vacante.comedor || vacante.uniforme) && (
+          <div className="bg-white rounded-2xl p-5 shadow-sm">
+            <h3 className="font-bold text-gray-900 mb-3">🚌 Logística</h3>
+            <div className="flex flex-wrap gap-2">
+              {vacante.tiene_ruta && (
+                <div className="bg-green-50 border border-green-200 rounded-xl px-3 py-2">
+                  <p className="text-xs font-semibold text-green-700">🚌 Ruta de transporte</p>
+                  {vacante.zonas_ruta?.length > 0 && (
+                    <p className="text-xs text-green-600 mt-0.5">{vacante.zonas_ruta.join(', ')}</p>
+                  )}
+                </div>
+              )}
+              {vacante.estacionamiento && <span className="bg-gray-50 border border-gray-200 text-gray-700 text-xs px-3 py-2 rounded-xl">🅿️ Estacionamiento</span>}
+              {vacante.comedor && <span className="bg-gray-50 border border-gray-200 text-gray-700 text-xs px-3 py-2 rounded-xl">🍽️ Comedor</span>}
+              {vacante.uniforme && <span className="bg-gray-50 border border-gray-200 text-gray-700 text-xs px-3 py-2 rounded-xl">👕 Uniforme</span>}
+            </div>
+          </div>
+        )}
+
+        {/* Letras chiquitas */}
+        {vacante.letras_chiquitas && (
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 shadow-sm">
+            <h3 className="font-bold text-amber-800 mb-2">⚠️ Información importante</h3>
+            <p className="text-sm text-amber-700">{vacante.letras_chiquitas}</p>
+          </div>
+        )}
+
+      </div>
+    </div>
+  </div>
+  )
+}

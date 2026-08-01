@@ -270,6 +270,7 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
           >
             💬 Chat
           </a>
+          <a href={`/reclutador/detalle/${postulacion.vacante_id}`} className="text-xs bg-gray-50 hover:bg-gray-100 text-gray-600 px-2 py-1.5 rounded-lg border border-gray-200 transition-colors">📋</a>
           <div className="relative">
             <button
               onClick={() => setMostrarMenu(!mostrarMenu)}
