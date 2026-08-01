@@ -8,6 +8,7 @@ export default function DashboardReclutador() {
   const router = useRouter()
   const [sesion, setSesion] = useState<any>(null)
   const [copiadoRef, setCopiadoRef] = useState(false)
+  const supabase = createClient()
 
   const [metricas, setMetricas] = useState({
     candidatosActivos: 0,
@@ -25,6 +26,21 @@ export default function DashboardReclutador() {
     const s = JSON.parse(data)
     setSesion(s)
     cargarMetricas(s.id)
+
+    // Realtime — actualizar chats sin leer en tiempo real
+    const canal = supabase
+      .channel('dashboard-chats')
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'chats',
+        filter: `reclutador_id=eq.${s.id}`
+      }, () => {
+        cargarMetricas(s.id)
+      })
+      .subscribe()
+
+    return () => { supabase.removeChannel(canal) }
   }, [])
 
   async function cargarMetricas(reclutadorId: string) {
