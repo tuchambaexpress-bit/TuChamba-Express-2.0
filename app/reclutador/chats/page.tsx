@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import ChatWindow from '@/components/candidato/ChatWindow'
@@ -16,7 +16,7 @@ interface Chat {
   postulaciones: { etapa_actual: string }[]
 }
 
-export default function ChatsReclutador() {
+function ChatsReclutadorInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const chatIdParam = searchParams.get('chat')
@@ -166,5 +166,12 @@ export default function ChatsReclutador() {
         </div>
       </div>
     </div>
+  )
+}
+export default function ChatsReclutador() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center"><p className="text-gray-400">Cargando...</p></div>}>
+      <ChatsReclutadorInner />
+    </Suspense>
   )
 }
