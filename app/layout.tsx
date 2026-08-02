@@ -13,6 +13,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
+      <head>
+        <link rel="icon" href="/favicon.png" />
+        <meta name="theme-color" content="#1A6B3C" />
+      </head>
       <body>{children}</body>
     </html>
   )
