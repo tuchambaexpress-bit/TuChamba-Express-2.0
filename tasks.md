@@ -152,17 +152,17 @@ implement changes → si hay observaciones, se corrige antes de archivar
 - [X] 4.10 `app/reclutador/chats/page.tsx`: lista de chats tipo `candidato_reclutador`, badge "Nuevo" si último sender fue candidato.
 - [X] 4.11 `ChatWindow.tsx` reusado: mensajes en tiempo real, input multiline, scroll automático.
 - [X] 4.12 Formulario de registro manual de candidato externo (`es_manual = true`).
-- [ ] 4.12b Métricas reales en dashboard del reclutador: candidatos activos, colocados este mes, comisión estimada ($), chats sin leer. Filtro por mes/semana/fechas personalizadas pendiente (ver 4.12c).
+- [X] 4.12b Métricas reales en dashboard del reclutador: candidatos activos, colocados este mes, comisión estimada ($), chats sin leer. Filtro por mes/semana/fechas personalizadas pendiente (ver 4.12c).
 - [ ] 4.12c Filtro de fechas en métricas del dashboard: selector de período (mes actual, semana actual, rango personalizado) que recalcula todas las métricas en tiempo real.
-- [ ] 4.13 `app/reclutador/vacante/[id]/page.tsx`: ficha operativa completa (contacto RRHH, logística, FAQ existente).
+- [X] 4.13 `app/reclutador/vacante/[id]/page.tsx`: ficha operativa completa (contacto RRHH, logística, FAQ existente).
 - [ ] 4.14 Input de pregunta nueva: primero consulta Nivel 1 (campos estructurados) localmente antes de llamar a cualquier función.
 - [ ] 4.15 Si Nivel 1 no resuelve, invoca Edge Function `agente-faq` (que internamente revisa Nivel 2 FAQ, y si no hay match, escala a Nivel 3 coordinador).
-- [ ] 4.16 `app/reclutador/comisiones/page.tsx`: resumen de la semana actual con estado de garantía y monto a cobrar el viernes.
-- [ ] 4.17 Panel de alertas: lista de alertas no leídas, click navega al contexto relevante.
-- [ ] 4.18 Hook `useAlertas.ts`: verificación periódica de candidatos sin movimiento 48h, garantías ≤3 días, entrevistas vencidas.
+- [X] 4.16 `app/reclutador/comisiones/page.tsx`: resumen de la semana actual con estado de garantía y monto a cobrar el viernes.
+- [X] 4.17 Panel de alertas: lista de alertas no leídas, click navega al contexto relevante.
+- [X] 4.18 Hook `useAlertas.ts`: verificación periódica de candidatos sin movimiento 48h, garantías ≤3 días, entrevistas vencidas.
 - [ ] 4.19 `documentos_candidato`: subida de CV/identificación a Supabase Storage, vinculado a la postulación.
-- [ ] 4.20 Configurar PWA: `manifest.json` completo, `public/sw.js` básico.
-- [ ] 4.21 Verificar en Chrome DevTools → Application → Manifest que el PWA es instalable en Android.
+- [X] 4.20 Configurar PWA: `manifest.json` completo, `public/sw.js` básico.
+- [X] 4.21 Verificar en Chrome DevTools → Application → Manifest que el PWA es instalable en Android.
 
 **✓ Criterio de avance:** Reclutador gestiona pipeline con historial de cambios registrado, chatea en tiempo real, ve su comisión semanal, y las preguntas estructuradas (Nivel 1) se resuelven sin ningún costo de IA.
 
