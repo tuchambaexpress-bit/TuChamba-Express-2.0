@@ -2,8 +2,14 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'TuChamba Express 2.0',
+  title: 'Tu Chamba Express',
   description: 'Plataforma de reclutamiento para Nuevo León',
+  manifest: '/manifest.json',
+  themeColor: '#1A6B3C',
+  icons: {
+    icon: '/favicon.png',
+    apple: '/icon-192.png',
+  }
 }
 
 export default function RootLayout({
@@ -13,10 +19,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
-      <head>
-        <link rel="icon" href="/favicon.png" />
-        <meta name="theme-color" content="#1A6B3C" />
-      </head>
       <body>{children}</body>
     </html>
   )
