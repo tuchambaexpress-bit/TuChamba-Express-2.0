@@ -7,6 +7,7 @@ import ChatWindow from '@/components/candidato/ChatWindow'
 
 interface Chat {
   id: string
+  candidato_id: string
   ultimo_mensaje: string | null
   ultimo_mensaje_at: string | null
   ultimo_sender_tipo: string | null
@@ -20,6 +21,7 @@ function ChatsReclutadorInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const chatIdParam = searchParams.get('chat')
+  const candidatoIdParam = searchParams.get('candidato')
 
   const [chats, setChats] = useState<Chat[]>([])
   const [chatSeleccionado, setChatSeleccionado] = useState<string | null>(chatIdParam)
@@ -78,7 +80,7 @@ function ChatsReclutadorInner() {
     const { data } = await supabase
       .from('chats')
       .select(`
-        id, ultimo_mensaje, ultimo_mensaje_at, ultimo_sender_tipo, leido_reclutador,
+        id, candidato_id, ultimo_mensaje, ultimo_mensaje_at, ultimo_sender_tipo, leido_reclutador,
         candidatos(nombre, telefono),
         vacantes(titulo),
         postulaciones(etapa_actual)
@@ -93,7 +95,11 @@ function ChatsReclutadorInner() {
 
   const [ordenPor, setOrdenPor] = useState<'fecha' | 'nombre' | 'vacante'>('fecha')
 
-  const chatsOrdenados = [...chats].sort((a, b) => {
+  const chatsFiltrados = candidatoIdParam
+    ? chats.filter(c => c.candidato_id === candidatoIdParam)
+    : chats
+
+  const chatsOrdenados = [...chatsFiltrados].sort((a, b) => {
     if (ordenPor === 'nombre') {
       return (a.candidatos?.nombre ?? '').localeCompare(b.candidatos?.nombre ?? '')
     }
@@ -123,7 +129,12 @@ function ChatsReclutadorInner() {
         <div className="w-full md:w-80 border-r border-gray-200 bg-white overflow-y-auto flex-shrink-0">
           <div className="p-4 border-b border-gray-100 bg-blue-50">
             <h2 className="font-bold text-gray-900">Chats</h2>
-            <p className="text-xs text-gray-400 mb-2">{chats.length} conversaciones</p>
+            <p className="text-xs text-gray-400 mb-2">
+              {chatsFiltrados.length} conversaciones
+              {candidatoIdParam && (
+                <> · <a href="/reclutador/chats" className="text-[#1A6B3C] underline">ver todos</a></>
+              )}
+            </p>
             <div className="flex items-center gap-2">
               <label className="text-xs text-gray-500 whitespace-nowrap">Ordenar por:</label>
               <select

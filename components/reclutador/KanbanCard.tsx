@@ -10,6 +10,7 @@ interface Props {
   etapasDisponibles: string[]
   onActualizarEtapa: (postulacionId: string, nuevaEtapa: string) => void
   reclutadorId: string
+  tieneHistorialPrevio?: boolean
 }
 
 const MOTIVOS_DESCARTE = [
@@ -21,7 +22,7 @@ const MOTIVOS_DESCARTE = [
   { value: 'otro', label: 'Otro' },
 ]
 
-export default function KanbanCard({ postulacion, etapasDisponibles, onActualizarEtapa, reclutadorId }: Props) {
+export default function KanbanCard({ postulacion, etapasDisponibles, onActualizarEtapa, reclutadorId, tieneHistorialPrevio }: Props) {
   const [moviendo, setMoviendo] = useState(false)
   const [mostrarMenu, setMostrarMenu] = useState(false)
   const [mostrarModalDescarte, setMostrarModalDescarte] = useState(false)
@@ -299,6 +300,16 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
       <div className={`bg-white rounded-xl p-3 shadow-sm border border-gray-100 ${moviendo ? 'opacity-50' : ''}`}>
         {/* Nombre candidato */}
         <p className="font-semibold text-gray-900 text-sm">{nombre}</p>
+
+        {/* Badge de historial previo (CA-14.2) */}
+        {tieneHistorialPrevio && (
+          <a
+            href={`/reclutador/chats?candidato=${postulacion.candidato_id}`}
+            className="inline-block text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium mt-1 hover:bg-amber-200 transition-colors"
+          >
+            ⚠️ Candidato con historial previo
+          </a>
+        )}
 
         {/* Vacante */}
         <p className="text-xs text-[#1A6B3C] mt-0.5">{vacante}</p>

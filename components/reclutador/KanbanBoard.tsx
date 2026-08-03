@@ -24,6 +24,7 @@ interface Postulacion {
 
 export default function KanbanBoard() {
   const [postulaciones, setPostulaciones] = useState<Postulacion[]>([])
+  const [candidatosConHistorial, setCandidatosConHistorial] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
   const [sesion, setSesion] = useState<any>(null)
 
@@ -40,7 +41,7 @@ export default function KanbanBoard() {
     const { data } = await supabase
       .from('postulaciones')
       .select(`
-        id, etapa_actual, candidato_id, vacante_id, agencia_id, created_at,
+        id, etapa_actual, candidato_id, vacante_id, created_at,
         candidatos(id, nombre, telefono),
         vacantes(titulo, etapas_personalizadas, dias_garantia, comision_base_mxn),
         chats(id)
@@ -50,6 +51,23 @@ export default function KanbanBoard() {
       .order('created_at', { ascending: false })
 
     if (data) setPostulaciones(data as any)
+
+    // CA-14.2: detectar candidatos con historial previo (postulaciones
+    // descartadas anteriores del mismo candidato, con este reclutador).
+    if (data && data.length > 0) {
+      const candidatoIds = [...new Set(data.map((p: any) => p.candidato_id))]
+      const { data: historial } = await supabase
+        .from('postulaciones')
+        .select('candidato_id')
+        .eq('reclutador_id', reclutadorId)
+        .eq('etapa_actual', 'Descartado')
+        .in('candidato_id', candidatoIds)
+
+      if (historial) {
+        setCandidatosConHistorial(new Set(historial.map((h: any) => h.candidato_id)))
+      }
+    }
+
     setLoading(false)
   }
 
@@ -110,6 +128,7 @@ export default function KanbanBoard() {
               etapasDisponibles={['Aplicado','Contactado','Entrevista','Oferta','Contratado','Descartado']}
               onActualizarEtapa={actualizarEtapa}
               reclutadorId={sesion?.id}
+              tieneHistorialPrevio={candidatosConHistorial.has(p.candidato_id)}
             />
           </div>
         ))}
@@ -127,6 +146,7 @@ export default function KanbanBoard() {
             todasPostulaciones={postulaciones}
             onActualizarEtapa={actualizarEtapa}
             reclutadorId={sesion?.id}
+            candidatosConHistorial={candidatosConHistorial}
           />
         ))}
       </div>

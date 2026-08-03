@@ -10,6 +10,7 @@ interface Props {
   todasPostulaciones: any[]
   onActualizarEtapa: (postulacionId: string, nuevaEtapa: string) => void
   reclutadorId: string
+  candidatosConHistorial?: Set<string>
 }
 
 const COLORES_ETAPA: Record<string, string> = {
@@ -20,7 +21,7 @@ const COLORES_ETAPA: Record<string, string> = {
   'Contratado': 'bg-green-100 text-green-700',
 }
 
-export default function KanbanColumn({ etapa, postulaciones, todasPostulaciones, onActualizarEtapa, reclutadorId }: Props) {
+export default function KanbanColumn({ etapa, postulaciones, todasPostulaciones, onActualizarEtapa, reclutadorId, candidatosConHistorial }: Props) {
   return (
     <div className="w-72 flex-shrink-0">
       {/* Header de columna — sticky */}
@@ -40,6 +41,7 @@ export default function KanbanColumn({ etapa, postulaciones, todasPostulaciones,
             etapasDisponibles={['Aplicado', 'Contactado', 'Entrevista', 'Oferta', 'Contratado', 'Descartado']}
             onActualizarEtapa={onActualizarEtapa}
             reclutadorId={reclutadorId}
+            tieneHistorialPrevio={candidatosConHistorial?.has(p.candidato_id) ?? false}
           />
         ))}
         {postulaciones.length === 0 && (
