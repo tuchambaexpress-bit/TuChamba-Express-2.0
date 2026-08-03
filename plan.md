@@ -817,6 +817,12 @@ FASE 3 — OpenClaw o agente propio (autonomía avanzada),
           API pública para terceros (monetización como infraestructura)
 ```
 
+> **Nota 2026-08-02:** se agregó un Sprint 8 nuevo en `tasks.md` — Limpieza y
+> retención de datos (ver spec.md HU-19). Surgió como necesidad real detectada
+> durante Sprint 4, no estaba contemplado en este roadmap original. Se
+> documentó en tasks.md como backlog para retomarlo en su turno, sin renumerar
+> el resto del roadmap de 6 meses.
+
 ---
 
 ## 13. PROTOCOLO DE CONTINGENCIA (Troubleshooting)

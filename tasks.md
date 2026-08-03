@@ -140,7 +140,7 @@ implement changes → si hay observaciones, se corrige antes de archivar
 - [X] 4.5 Drag and drop con `@dnd-kit` entre columnas.
 - [X] 4.6 Al soltar card: actualizar `postulaciones.etapa_actual` + insertar fila en `historial_etapas` (etapa_anterior, etapa_nueva, cambiado_por).
 - [X] 4.7 Modal de confirmación al mover a "Contratado": pedir fecha de contratación, calcular garantía (`calcularGarantiaFin`), calcular comisión (`calcularComision`).
-- [ ] 4.8 Modal de confirmación al mover a "Descartado": pedir motivo + opción de enviar retroalimentación al candidato con plantillas predefinidas (ver spec.md HU-10, CA-10.1 a CA-10.4).
+- [X] 4.8 Modal de confirmación al mover a "Descartado": pedir motivo + opción de enviar retroalimentación al candidato con plantillas predefinidas (ver spec.md HU-10, CA-10.1 a CA-10.4). Verificado en vivo 2026-08-02: plantillas, mensaje al chat, bloqueo de chat en tiempo real (Realtime en `chats.archivado`), alcance de descarte (CA-13.1) y auto-veto por 3 inasistencias (CA-14.4, nueva). En el camino se corrigieron 2 bugs preexistentes no relacionados: columna `motivo_descarte_detalle` faltante en `postulaciones`, y `onClose` pasado como prop a Client Component en `VacanteDetalle.tsx`/`app/vacante/[id]/page.tsx`.
 - [X] 4.8b El mensaje de retroalimentación se envía como `es_sistema = true` en el chat del candidato. El chat queda en modo solo lectura con mensaje de cierre.
 - [X] 4.8c Modal de descarte mejorado (ver spec.md HU-13): motivo específico, alcance (esta vacante / todas), ofrecer otra vacante al descartar.
 - [X] 4.8d Columna "Descartados" al final del Kanban — visible solo si hay candidatos descartados.
@@ -260,6 +260,25 @@ implement changes → si hay observaciones, se corrige antes de archivar
 
 ---
 
+## SPRINT 8 — LIMPIEZA Y RETENCIÓN DE DATOS (backlog, ver spec.md HU-19)
+> **Objetivo:** Base de datos ligera sin perder trazabilidad de comisiones ni memoria del auto-veto.
+> Creado 2026-08-02 a partir de una necesidad real detectada por José durante Sprint 4 — se documenta
+> aquí para no interrumpir el orden activo de sprints, y se retoma cuando le toque su turno.
+
+- [ ] 8.1 Migración: crear tabla `strikes_inasistencia` (ver spec.md, sección Modelo de Datos).
+- [ ] 8.2 Modificar `confirmarDescarte()` (`KanbanCard.tsx`): al descartar con `motivo_descarte = 'no_se_presento'`, hacer `upsert` sobre `strikes_inasistencia` por `(telefono, agencia_id)` (CA-19.1).
+- [ ] 8.3 Actualizar la lógica de auto-veto (CA-14.4) para leer el contador desde `strikes_inasistencia` en vez de contar directo sobre `postulaciones`, y guardar `vetado_desde` al llegar a 3 (CA-19.2).
+- [ ] 8.4 Filtrar candidatos vetados fuera de `/reclutador/pipeline`, `/reclutador/chats` y el Kanban global del coordinador (CA-19.3).
+- [ ] 8.5 Panel "Candidatos vetados" en el dashboard del coordinador: lista de vetados con detalle (nombre, teléfono, motivo, fecha) y botón para revertir el veto manualmente (CA-19.3, reutiliza CA-14.3).
+- [ ] 8.6 Botón "Eliminar descartados vencidos (+15 días)" en dashboard del coordinador, con conteo previo y confirmación (CA-19.4).
+- [ ] 8.7 Botón "Eliminar contratados vencidos (+30 días)" en dashboard del coordinador, con conteo previo y confirmación (CA-19.5).
+- [ ] 8.8 Botón "Eliminar huellas de veto vencidas (+1 año)" en dashboard del coordinador, con conteo previo, confirmación, y reversión automática de `candidatos.vetado` al borrar (CA-19.6).
+- [ ] 8.9 Prueba manual end-to-end: candidato con 3 inasistencias en fechas separadas por más de 15 días entre sí — confirmar que el auto-veto sigue disparando correctamente aunque el expediente completo ya se haya limpiado entre strikes.
+
+**✓ Criterio de avance:** Los 3 botones funcionan con confirmación previa, los vetados están invisibles en los dashboards operativos pero visibles y reversibles desde el panel del coordinador, y el auto-veto sigue funcionando correctamente incluso cuando el expediente completo del candidato ya fue limpiado por la retención de 15 días.
+
+---
+
 ## 🗂️ BACKLOG — FASE 2 (post-lanzamiento, fuera del roadmap de 6 meses)
 
 - [ ] Notificaciones push en PWA
@@ -293,10 +312,19 @@ implement changes → si hay observaciones, se corrige antes de archivar
 | Sprint 1 — Supabase | 2026-06-29 | 2026-06-29 | Completo |
 | Sprint 2 — Next.js + Deploy | 2026-07-17 | 2026-07-27 | Completo |
 | Sprint 3 — Candidato + Invitación | 2026-07-28 | 2026-07-30 | Completo |
-| Sprint 4 — Reclutador + ATS | 2026-07-30 | 2026-08-01 | Completo |
-| Sprint 5 — Coordinador + Alta vacante | 2026-08-01 | — | En progreso |
+| Sprint 4 — Reclutador + ATS | 2026-07-30 | — | En progreso (retomado para cerrar cabos sueltos) |
+| Sprint 5 — Coordinador + Alta vacante | 2026-08-01 | — | Pausado (se retoma al cerrar Sprint 4) |
 | Sprint 6 — Power BI + Agentes | — | — | Pendiente |
 | Sprint 7 — Admin + QA | — | — | Pendiente |
+| Sprint 8 — Limpieza y retención de datos | — | — | Pendiente (agregado 2026-08-02) |
+
+> **Nota Sprint 4:** Se decidió cerrar por completo antes de retomar Sprint 5, en vez de dejar deuda técnica repartida. Pendientes reales a cerrar en orden:
+> - `4.8` — verificar que la retroalimentación al descartar sí llega al chat como `es_sistema = true`
+> - `4.8e` — badge "⚠️ Historial previo" en `KanbanCard.tsx` para candidatos reactivados
+> - `4.14` y `4.15` — agente FAQ nivel 1/2/3 (consulta local → Edge Function `agente-faq`)
+> - `4.15d` — alertas automáticas pre-entrevista (24h antes / 48h después) en `useAlertas.ts`
+> - `4.19` — subida de `documentos_candidato` a Supabase Storage
+> Sprint 5 avanzó 5.1 y 5.1b antes de este corte — quedan intactas, se retoma en 5.2 al reabrir el sprint.
 
 ---
 

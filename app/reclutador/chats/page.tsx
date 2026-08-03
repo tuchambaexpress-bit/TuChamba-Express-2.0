@@ -40,14 +40,34 @@ function ChatsReclutadorInner() {
     const canal = supabase
       .channel('chats-reclutador')
       .on('postgres_changes', {
-        event: 'UPDATE',
+        event: '*',
         schema: 'public',
         table: 'chats',
         filter: `reclutador_id=eq.${sesion.id}`
       }, (payload) => {
-        setChats(prev => prev.map(c =>
-          c.id === payload.new.id ? { ...c, ...payload.new } : c
-        ))
+        if (payload.eventType === 'INSERT') {
+          // Chat nuevo (candidato recién postulado): sí necesitamos los
+          // joins completos (nombre, vacante), así que recargamos todo.
+          cargarChats(sesion.id)
+          return
+        }
+
+        const cambio = payload.new as Record<string, any>
+        const soloMarcadoLeido = payload.old &&
+          Object.keys(cambio).every(k =>
+            k === 'leido_reclutador' || (cambio as any)[k] === (payload.old as any)[k]
+          )
+
+        if (soloMarcadoLeido) {
+          // Solo cambió el estado de "leído" — actualizamos esa fila sin
+          // reordenar ni recargar todo, para que la lista no "baile".
+          setChats(prev => prev.map(c =>
+            c.id === cambio.id ? { ...c, leido_reclutador: cambio.leido_reclutador } : c
+          ))
+        } else {
+          // Cambió algo que sí afecta el orden (mensaje nuevo, archivado, etc.)
+          cargarChats(sesion.id)
+        }
       })
       .subscribe()
     return () => { supabase.removeChannel(canal) }
@@ -71,6 +91,19 @@ function ChatsReclutadorInner() {
     setLoading(false)
   }
 
+  const [ordenPor, setOrdenPor] = useState<'fecha' | 'nombre' | 'vacante'>('fecha')
+
+  const chatsOrdenados = [...chats].sort((a, b) => {
+    if (ordenPor === 'nombre') {
+      return (a.candidatos?.nombre ?? '').localeCompare(b.candidatos?.nombre ?? '')
+    }
+    if (ordenPor === 'vacante') {
+      return (a.vacantes?.titulo ?? '').localeCompare(b.vacantes?.titulo ?? '')
+    }
+    // 'fecha' — más reciente primero (mismo orden que ya trae cargarChats)
+    return (b.ultimo_mensaje_at ?? '').localeCompare(a.ultimo_mensaje_at ?? '')
+  })
+
   const chatActivo = chats.find(c => c.id === chatSeleccionado)
 
   return (
@@ -88,9 +121,21 @@ function ChatsReclutadorInner() {
       <div className="max-w-7xl mx-auto flex h-[calc(100vh-64px)]">
         {/* Lista de chats */}
         <div className="w-full md:w-80 border-r border-gray-200 bg-white overflow-y-auto flex-shrink-0">
-          <div className="p-4 border-b border-gray-100">
+          <div className="p-4 border-b border-gray-100 bg-blue-50">
             <h2 className="font-bold text-gray-900">Chats</h2>
-            <p className="text-xs text-gray-400">{chats.length} conversaciones</p>
+            <p className="text-xs text-gray-400 mb-2">{chats.length} conversaciones</p>
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-gray-500 whitespace-nowrap">Ordenar por:</label>
+              <select
+                value={ordenPor}
+                onChange={e => setOrdenPor(e.target.value as 'fecha' | 'nombre' | 'vacante')}
+                className="flex-1 text-xs border border-gray-200 rounded-lg px-2 py-1 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-[#1A6B3C]"
+              >
+                <option value="fecha">Más reciente</option>
+                <option value="nombre">Nombre</option>
+                <option value="vacante">Vacante</option>
+              </select>
+            </div>
           </div>
 
           {loading ? (
@@ -101,7 +146,7 @@ function ChatsReclutadorInner() {
               <p className="text-sm">No tienes chats activos</p>
             </div>
           ) : (
-            chats.map(c => {
+            chatsOrdenados.map(c => {
               const tieneNuevo = !c.leido_reclutador
               const etapa = c.postulaciones?.[0]?.etapa_actual ?? ''
               return (

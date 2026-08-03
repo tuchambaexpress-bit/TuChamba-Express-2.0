@@ -480,6 +480,23 @@ fuente text                         -- google_organico/facebook/instagram/
 created_at timestamptz DEFAULT now()
 ```
 
+### strikes_inasistencia (huella permanente para el auto-veto — ver HU-19)
+```sql
+id uuid PK
+telefono text NOT NULL
+agencia_id uuid FK → agencias.id
+contador int DEFAULT 1
+primera_fecha timestamptz DEFAULT now()
+ultima_fecha timestamptz DEFAULT now()
+vetado_desde timestamptz              -- se llena cuando contador llega a 3
+UNIQUE(telefono, agencia_id)
+```
+> Tabla intencionalmente independiente del ciclo de vida de `candidatos`. Se
+> actualiza en el momento exacto de cada descarte con `motivo_descarte =
+> 'no_se_presento'`, por lo que el conteo sobrevive aunque el expediente
+> completo del candidato (chats, mensajes, postulaciones) se limpie a los 15
+> días por la política de retención (HU-19).
+
 ---
 
 ## 4. HISTORIAS DE USUARIO Y CRITERIOS DE ACEPTACIÓN
@@ -1081,3 +1098,40 @@ cortes_semana         → qué reclutadores/agencias generan
 Sin al menos 2-3 meses de datos reales de tráfico y conversión,
 cualquier sugerencia del agente sería especulación sin base.
 Se diseña su Edge Function específica cuando exista ese histórico.
+
+---
+
+### HU-19: Política de retención y limpieza de datos (Sprint 8 — backlog, no MVP inmediato)
+**Como** coordinador, **quiero** poder limpiar manualmente los registros de candidatos que ya cumplieron su ciclo (descartados, contratados, vetados), **para** mantener la base de datos ligera sin perder información mientras es útil ni comprometer la trazabilidad de comisiones ya pagadas.
+
+> *Origen: José identificó que sin una política de limpieza, la base de datos acumula indefinidamente chats, mensajes y postulaciones de candidatos que ya no tienen ningún valor operativo — descartados que nunca volverán, contratados cuya comisión ya se pagó hace meses.*
+
+**Reglas de vencimiento (3 categorías independientes):**
+
+| Categoría | Qué se borra | Vence a los | Se cuenta desde |
+|---|---|---|---|
+| Descartado con motivo ≠ `no_se_presento` | Expediente completo (candidato, chats, mensajes, historial de etapas) | 15 días | Fecha del descarte |
+| Contratado (garantía cumplida y comisión ya cobrada) | Expediente completo | 30 días | Fecha de contratación |
+| Huella de veto (`strikes_inasistencia` con `contador >= 3`) | Solo el registro de la huella (teléfono + agencia + contador) | 1 año | `vetado_desde` (fecha del 3er strike) |
+
+**CA-19.1 — Registro del strike, independiente del expediente:**
+Cada vez que `confirmarDescarte()` guarda un descarte con `motivo_descarte = 'no_se_presento'` (ver CA-14.4), el sistema hace `upsert` sobre `strikes_inasistencia` por `(telefono, agencia_id)`: si no existe, la crea con `contador = 1`; si existe, incrementa `contador` y actualiza `ultima_fecha`. Este registro es independiente del expediente completo del candidato y no se ve afectado por la limpieza de los 15 días.
+
+**CA-19.2 — Auto-veto y archivo automático:**
+Cuando `strikes_inasistencia.contador` llega a 3, además de lo ya definido en CA-14.4 (marcar `candidatos.vetado = true`, alerta al coordinador), el sistema:
+- Guarda `strikes_inasistencia.vetado_desde = now()`
+- Archiva automáticamente todas las postulaciones activas de ese candidato en esa agencia (`etapa_actual` no cambia, pero se oculta de los dashboards — ver CA-19.3)
+
+**CA-19.3 — Los vetados desaparecen de los dashboards operativos:**
+Mientras un candidato esté vetado (`candidatos.vetado = true`), sus chats y postulaciones **no aparecen** en `/reclutador/pipeline`, `/reclutador/chats`, ni en el Kanban global del coordinador — quedan en un estado de archivo invisible para el uso diario. Solo son visibles desde un panel específico de "Candidatos vetados" en el dashboard del coordinador (ver CA-19.6), donde puede revisarlos y revertir el veto manualmente en cualquier momento (reutiliza el mecanismo ya definido en CA-14.3).
+
+**CA-19.4 — Botón "Eliminar descartados vencidos (+15 días)":**
+Visible solo en el dashboard del coordinador. Al presionarlo, el sistema primero muestra cuántos registros serán afectados (ej. "Esto eliminará 12 candidatos descartados") y pide confirmación explícita. Al confirmar, borra el expediente completo (candidato, chats, mensajes, historial de etapas y documentos) de todas las postulaciones con `etapa_actual = 'Descartado'`, `motivo_descarte ≠ 'no_se_presento'`, y `updated_at` con más de 15 días. Los candidatos vetados (`vetado = true`) quedan excluidos de este botón sin importar su motivo original — solo se eliminan vía CA-19.6.
+
+**CA-19.5 — Botón "Eliminar contratados vencidos (+30 días)":**
+Mismo patrón de confirmación previa. Borra el expediente completo de postulaciones con `etapa_actual = 'Contratado'`, `garantia_cumplida = true`, `pagado = true`, y `fecha_contratacion` con más de 30 días.
+
+**CA-19.6 — Botón "Eliminar huellas de veto vencidas (+1 año)":**
+Mismo patrón de confirmación previa. Borra únicamente las filas de `strikes_inasistencia` donde `vetado_desde` tiene más de 1 año. Al borrar la huella de un candidato, el sistema también revierte `candidatos.vetado = false` (si el candidato aún existe en la base) para que ese número pueda volver a postularse con normalidad — "empieza de cero".
+
+**Nota de diseño — por qué la huella es independiente del candidato:** si el candidato reaplica después de que su expediente anterior ya se limpió (15 días), el sistema crea un registro nuevo en `candidatos` (mismo `telefono`, fila distinta), pero `strikes_inasistencia` sigue reconociendo el número y acumulando correctamente hacia el auto-veto — sin este desacople, un candidato problemático podría "resetear" su historial de inasistencias con solo esperar 16 días entre cada intento.
