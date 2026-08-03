@@ -444,7 +444,7 @@ tipo text NOT NULL
 -- tipos: garantia_venciendo/candidato_sin_movimiento/
 --        entrevista_vencida/vacante_sin_candidatos/
 --        mensaje_nuevo/pregunta_sin_responder/
---        vacante_status_cambio
+--        vacante_status_cambio/candidato_auto_vetado
 destinatario_id uuid NOT NULL
 destinatario_rol text NOT NULL      -- reclutador/coordinador/admin
 vacante_id uuid
@@ -766,6 +766,25 @@ Si un candidato es reincidente en conductas problemáticas (no se presenta repet
 - El veto puede ser revertido en cualquier momento por el coordinador o admin
 - El motivo del veto es interno — nunca se muestra al candidato
 
+**CA-14.4 — Auto-veto por inasistencia repetida:**
+Cuando `confirmarDescarte()` registra un descarte con `motivo_descarte = 'no_se_presento'`,
+el sistema cuenta cuántas veces ese mismo `candidato_id` acumula ese motivo específico
+dentro de la misma `agencia_id` (histórico completo del candidato en esa agencia,
+sin importar la vacante). El motivo `no_contesta` NO suma a este contador — se
+mantiene solo como estatus informativo, no como señal de inasistencia.
+
+Al llegar a **3 inasistencias** (`no_se_presento`) en la misma agencia:
+- El sistema marca automáticamente `candidatos.vetado = true`
+- `candidatos.motivo_veto = 'Auto-veto: 3 inasistencias a entrevista sin previo aviso en esta agencia'`
+- `candidatos.vetado_por = NULL` (queda registrado como acción del sistema, no de una persona)
+- `candidatos.vetado_at = now()`
+- Se genera una `alerta` tipo `candidato_auto_vetado` dirigida al coordinador de
+  esa agencia, con el detalle: nombre, teléfono y las 3 fechas de inasistencia.
+
+El coordinador conserva control total: desde su panel puede ver el detalle completo
+del auto-veto y revertirlo en cualquier momento (reutiliza el mecanismo de reversión
+ya definido en CA-14.3) — el sistema propone, el coordinador decide.
+
 ---
 
 ### HU-15: Seguimiento pre-entrevista con contacto directo
@@ -784,7 +803,7 @@ Si un candidato es reincidente en conductas problemáticas (no se presenta repet
 - **24 horas antes de la entrevista** → alerta al reclutador: *"Mañana tiene entrevista [nombre] para [vacante]. ¿Ya confirmaste su asistencia?"*
 - **Al día siguiente si el candidato no avanzó de etapa** → alerta: *"¿Se presentó [nombre] a su entrevista? Actualiza su estado en el pipeline."*
 
-**CA-15.4:** El sistema detecta automáticamente si un candidato que tenía entrevista no avanzó de etapa "Entrevista" en 48 horas — genera la alerta CA-15.3 automáticamente sin que el reclutador tenga que recordarlo.
+**CA-15.4:** El sistema detecta automáticamente si un candidato que tenía entrevista no avanzó de etapa "Entrevista" en 48 horas → genera la alerta CA-15.3 automáticamente sin que el reclutador tenga que recordarlo.
 
 ---
 
@@ -894,7 +913,7 @@ DE LO CONTRARIO
 
 **Vista del coordinador — Panel de corte:**
 - Resumen semanal por reclutador: colocados, efectivos, no efectivos, total a pagar
-- Botón "Marcar semana como pagado" actualiza `postulaciones.pagado = true` para todos los registros de esa semana
+- Botón "Marcar semana como pagada" actualiza `postulaciones.pagado = true` para todos los registros de esa semana
 - Genera resumen descargable por reclutador para comprobante de pago
 
 **Comisiones variables por vacante/empresa:**

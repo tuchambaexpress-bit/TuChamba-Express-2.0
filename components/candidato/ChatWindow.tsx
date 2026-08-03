@@ -23,11 +23,12 @@ export default function ChatWindow({ chatId, nombreCandidato, etapaActual, sende
   const [mensajes, setMensajes] = useState<Mensaje[]>([])
   const [texto, setTexto] = useState('')
   const [enviando, setEnviando] = useState(false)
+  const [archivado, setArchivado] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const supabase = createClient()
 
-  // Cargar mensajes existentes
+  // Cargar mensajes existentes + estado actual del chat
   useEffect(() => {
     async function cargarMensajes() {
       const { data } = await supabase
@@ -39,6 +40,16 @@ export default function ChatWindow({ chatId, nombreCandidato, etapaActual, sende
     }
     cargarMensajes()
 
+    async function cargarEstadoChat() {
+      const { data } = await supabase
+        .from('chats')
+        .select('archivado')
+        .eq('id', chatId)
+        .single()
+      if (data) setArchivado(data.archivado)
+    }
+    cargarEstadoChat()
+
     // Marcar como leído cuando el reclutador abre el chat
     if (senderTipo === 'reclutador') {
       supabase.from('chats')
@@ -46,6 +57,24 @@ export default function ChatWindow({ chatId, nombreCandidato, etapaActual, sende
         .eq('id', chatId)
         .then(({ error }) => console.log('leido update:', error ?? 'ok'))
     }
+  }, [chatId])
+
+  // Realtime: si el reclutador descarta al candidato mientras tiene el chat
+  // abierto, el bloqueo se aplica al instante sin necesidad de recargar.
+  useEffect(() => {
+    const canalChat = supabase
+      .channel(`chat-status-${chatId}-${Math.random()}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'chats',
+        filter: `id=eq.${chatId}`
+      }, (payload) => {
+        setArchivado((payload.new as { archivado: boolean }).archivado)
+      })
+      .subscribe()
+
+    return () => { supabase.removeChannel(canalChat) }
   }, [chatId])
 
   // Suscripción Realtime
@@ -104,9 +133,9 @@ export default function ChatWindow({ chatId, nombreCandidato, etapaActual, sende
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
         <div>
         <p className="text-sm font-medium text-gray-700">💬 Chat con el reclutador</p>
-        {etapaActual && (
+        {(archivado || etapaActual) && (
           <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
-            {etapaActual}
+            {archivado ? 'Descartado' : etapaActual}
           </span>
         )}
       </div>
@@ -159,30 +188,38 @@ export default function ChatWindow({ chatId, nombreCandidato, etapaActual, sende
         <div ref={bottomRef} />
       </div>
 
-      {/* Input */}
-      <div className="border-t border-gray-100 p-3 flex gap-2">
-        <textarea
-          value={texto}
-          onChange={e => setTexto(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviarMensaje() } }}
-          placeholder="Escribe un mensaje..."
-          rows={1}
-          className="flex-1 border border-gray-200 rounded-2xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C] resize-none overflow-hidden"
-          style={{ maxHeight: '80px', overflowY: 'auto' }}
-          onInput={e => {
-            const t = e.target as HTMLTextAreaElement
-            t.style.height = 'auto'
-            t.style.height = Math.min(t.scrollHeight, 80) + 'px'
-          }}
-        />
-        <button
-          onClick={enviarMensaje}
-          disabled={!texto.trim() || enviando}
-          className="w-9 h-9 bg-[#1A6B3C] hover:bg-[#155c33] disabled:opacity-40 text-white rounded-full flex items-center justify-center"
-        >
-          ➤
-        </button>
-      </div>
+      {/* Input — bloqueado si la postulación fue descartada (CA-10.4) */}
+      {archivado && senderTipo === 'candidato' ? (
+        <div className="border-t border-gray-100 p-3 text-center">
+          <p className="text-xs text-gray-400">
+            Esta postulación ha sido cerrada. Puedes aplicar a otras vacantes en TuChamba.
+          </p>
+        </div>
+      ) : (
+        <div className="border-t border-gray-100 p-3 flex gap-2">
+          <textarea
+            value={texto}
+            onChange={e => setTexto(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviarMensaje() } }}
+            placeholder="Escribe un mensaje..."
+            rows={1}
+            className="flex-1 border border-gray-200 rounded-2xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C] resize-none overflow-hidden"
+            style={{ maxHeight: '80px', overflowY: 'auto' }}
+            onInput={e => {
+              const t = e.target as HTMLTextAreaElement
+              t.style.height = 'auto'
+              t.style.height = Math.min(t.scrollHeight, 80) + 'px'
+            }}
+          />
+          <button
+            onClick={enviarMensaje}
+            disabled={!texto.trim() || enviando}
+            className="w-9 h-9 bg-[#1A6B3C] hover:bg-[#155c33] disabled:opacity-40 text-white rounded-full flex items-center justify-center"
+          >
+            ➤
+          </button>
+        </div>
+      )}
     </div>
   )
 }

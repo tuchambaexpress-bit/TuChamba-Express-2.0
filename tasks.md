@@ -153,7 +153,7 @@ implement changes → si hay observaciones, se corrige antes de archivar
 - [X] 4.11 `ChatWindow.tsx` reusado: mensajes en tiempo real, input multiline, scroll automático.
 - [X] 4.12 Formulario de registro manual de candidato externo (`es_manual = true`).
 - [X] 4.12b Métricas reales en dashboard del reclutador: candidatos activos, colocados este mes, comisión estimada ($), chats sin leer. Filtro por mes/semana/fechas personalizadas pendiente (ver 4.12c).
-- [ ] 4.12c Filtro de fechas en métricas del dashboard: selector de período (mes actual, semana actual, rango personalizado) que recalcula todas las métricas en tiempo real.
+- [X] 4.12c Filtro de fechas en métricas del dashboard: selector de período (mes actual, semana actual, rango personalizado) que recalcula todas las métricas en tiempo real.
 - [X] 4.13 `app/reclutador/vacante/[id]/page.tsx`: ficha operativa completa (contacto RRHH, logística, FAQ existente).
 - [ ] 4.14 Input de pregunta nueva: primero consulta Nivel 1 (campos estructurados) localmente antes de llamar a cualquier función.
 - [ ] 4.15 Si Nivel 1 no resuelve, invoca Edge Function `agente-faq` (que internamente revisa Nivel 2 FAQ, y si no hay match, escala a Nivel 3 coordinador).
@@ -171,7 +171,8 @@ implement changes → si hay observaciones, se corrige antes de archivar
 ## SPRINT 5 — PORTAL COORDINADOR — ALTA DE VACANTE Y GESTIÓN
 > **Objetivo:** Coordinador gestiona vacantes (8 bloques), reclutadores y FAQ.
 
-- [ ] 5.1 `app/coordinador/login/page.tsx`: email + password con Supabase Auth.
+- [X] 5.1 `app/coordinador/login/page.tsx`: email + password con Supabase Auth.
+- [X] 5.1b `app/coordinador/dashboard/page.tsx`: dashboard base con accesos rápidos a vacantes, reclutadores, pipeline y corte semanal.
 - [ ] 5.2 Middleware de ruta: redirige a login si no hay sesión, y a "en revisión" si `status != 'activo'`.
 - [ ] 5.3 `app/coordinador/vacantes/page.tsx`: listado de vacantes de la agencia, filtros de status y prioridad.
 - [ ] 5.4 Construir `components/forms/EditableList.tsx` — componente reutilizable de lista editable (agregar, editar in-line, borrar, reordenar con `@dnd-kit`). Ver código de referencia en plan.md §11. Este componente se construye UNA vez y se reutiliza en requisitos, beneficios, documentos_requeridos, zonas_ruta y tags.
@@ -203,9 +204,9 @@ implement changes → si hay observaciones, se corrige antes de archivar
 - [ ] 5.15 Sección "Qué decirle al candidato" en el VacanteModal — texto editable por el coordinador que aparece en la ficha operativa del reclutador (ver spec.md CA-09.2).
 - [ ] 5.16 Indicador de completitud de vacante — badge de advertencia si faltan campos críticos antes de publicar (ver spec.md CA-09.3).
 - [ ] 5.16b Campos de inducción en formulario de vacante: `dias_induccion` (número) y checkbox `induccion_dentro_garantia` con leyenda "La inducción va dentro de los días de garantía". Si `induccion_dentro_garantia = false`, el cálculo de `fecha_garantia_fin` suma `dias_induccion + dias_garantia`.
-- [ ] 5.15 `app/coordinador/corte-semanal/page.tsx`: resumen automático por reclutador (efectivos, no efectivos, total a pagar).
-- [ ] 5.16 Botón "Marcar semana como pagada": actualiza `cortes_semana.pagado` y `postulaciones.pagado`, genera resumen descargable.
-- [ ] 5.17 Configuración de día de corte por agencia: el coordinador puede definir `dia_corte` y `dia_pago` desde su perfil de agencia (campos ya existentes en DB desde Sprint 4).
+- [ ] 5.17 `app/coordinador/corte-semanal/page.tsx`: resumen automático por reclutador (efectivos, no efectivos, total a pagar).
+- [ ] 5.18 Botón "Marcar semana como pagada": actualiza `cortes_semana.pagado` y `postulaciones.pagado`, genera resumen descargable.
+- [ ] 5.19 Configuración de día de corte por agencia: el coordinador puede definir `dia_corte` y `dia_pago` desde su perfil de agencia (campos ya existentes en DB desde Sprint 4).
 
 **✓ Criterio de avance:** Coordinador crea una vacante completa (8 bloques), la IA ayuda a redactar la descripción, el sitemap se sincroniza, el reclutador la ve en su ficha, y el FAQ resuelve dudas en cascada.
 
@@ -292,8 +293,8 @@ implement changes → si hay observaciones, se corrige antes de archivar
 | Sprint 1 — Supabase | 2026-06-29 | 2026-06-29 | Completo |
 | Sprint 2 — Next.js + Deploy | 2026-07-17 | 2026-07-27 | Completo |
 | Sprint 3 — Candidato + Invitación | 2026-07-28 | 2026-07-30 | Completo |
-| Sprint 4 — Reclutador + ATS | — | — | Pendiente |
-| Sprint 5 — Coordinador + Alta vacante | — | — | Pendiente |
+| Sprint 4 — Reclutador + ATS | 2026-07-30 | 2026-08-01 | Completo |
+| Sprint 5 — Coordinador + Alta vacante | 2026-08-01 | — | En progreso |
 | Sprint 6 — Power BI + Agentes | — | — | Pendiente |
 | Sprint 7 — Admin + QA | — | — | Pendiente |
 

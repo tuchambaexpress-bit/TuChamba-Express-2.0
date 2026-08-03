@@ -95,69 +95,104 @@ FORMATO DE SPEC: compatible con OpenSpec — legible por Claude Code,
 
 ## 2. ESTRUCTURA DE REPOSITORIO (Next.js App Router)
 
+> **Estado:** Actualizado al Sprint 5 (01/08/2026). Las rutas marcadas con ✅ ya existen en producción.
+
 ```
 tuchamba-v2/
-├── .env.local              ← NUNCA en GitHub
-├── .env.example             ← Sí en GitHub (sin valores reales)
-├── .gitignore                ← .env.local incluido desde el primer commit
-├── CLAUDE.md                  ← Reglas permanentes para Claude Code/Cline
-├── spec.md
-├── plan.md
-├── tasks.md
-├── next.config.js
-├── tailwind.config.ts
-├── tsconfig.json
-├── package.json
-├── public/
-│   ├── manifest.json
-│   ├── sw.js                 ← Service Worker
-│   ├── sitemap.xml           ← Auto-generado y sincronizado a GitHub
-│   ├── robots.txt
-│   └── favicon.png
+├── .env.local                    ← NUNCA en GitHub
+├── .gitignore
+├── CLAUDE.md                     ← Reglas permanentes para el copiloto IA
+├── spec.md                       ← Especificación funcional completa
+├── plan.md                       ← Arquitectura técnica
+├── tasks.md                      ← Sprints con tareas atómicas
+├── next.config.js                ✅
+├── tailwind.config.ts            ✅
+├── tsconfig.json                 ✅
+├── package.json                  ✅
+├── public/                       ✅
+│   ├── manifest.json             ✅ PWA manifest
+│   ├── favicon.png               ✅ Favicon portal candidato
+│   ├── Logo_Header.png           ✅ Logo horizontal (portal candidato)
+│   ├── Logo_Header_02.png        ✅ Logo alternativo (portales internos)
+│   ├── icon-192.png              ✅ Ícono PWA 192x192
+│   ├── icon-512.png              ✅ Ícono PWA 512x512
+│   ├── ojo-abierto.png           ✅ Botón ver contraseña
+│   └── ojo-cerrado.png           ✅ Botón ocultar contraseña
 ├── supabase/
-│   ├── migrations/           ← SQL versionado de cada tabla
-│   └── functions/             ← Edge Functions (agentes + API interna)
-│       ├── agente-matching/
-│       ├── agente-seguimiento/
-│       ├── agente-descripcion-vacante/
-│       ├── agente-faq/
-│       ├── agente-resumen-semanal/
-│       └── sync-sitemap/
+│   └── functions/
+│       └── API.md                ✅ Endpoints documentados
+├── hooks/                        ✅
+│   ├── useReferido.ts            ✅ Captura ?ref= en localStorage
+│   ├── useTrafico.ts             ✅ Detecta fuente de tráfico
+│   └── useAlertas.ts             ✅ Genera alertas automáticas
+├── lib/                          ✅
+│   ├── utils.ts                  ✅ cn, getSemanaISO, calcularComision, calcularGarantiaFin
+│   └── supabase/
+│       ├── client.ts             ✅ Cliente browser
+│       └── server.ts             ✅ Cliente servidor
+├── components/
+│   ├── ui/
+│   │   └── button.tsx            ✅ Shadcn/ui
+│   ├── candidato/
+│   │   ├── VacantesPortal.tsx    ✅ Layout split + búsqueda + filtros + paginación
+│   │   ├── VacanteCard.tsx       ✅ Card de vacante en lista
+│   │   ├── VacanteDetalle.tsx    ✅ Panel detalle + botón postular
+│   │   ├── ChatModal.tsx         ✅ Modal postulación + chat candidato
+│   │   ├── ChatWindow.tsx        ✅ Chat Realtime (candidato y reclutador)
+│   │   └── TraficoTracker.tsx    ✅ Tracker de fuente en página vacante individual
+│   ├── invitacion/
+│   │   └── FormularioInvitacion.tsx ✅ Formulario 2 pasos registro agencia
+│   ├── admin/
+│   │   └── SolicitudesPanel.tsx  ✅ Panel aprobar/rechazar agencias
+│   ├── reclutador/
+│   │   ├── KanbanBoard.tsx       ✅ Tablero principal (desktop + móvil)
+│   │   ├── KanbanColumn.tsx      ✅ Columna por etapa
+│   │   └── KanbanCard.tsx        ✅ Card candidato con modales descarte/contratado/entrevista
+│   └── seo/
+│       └── JobPostingSchema.tsx  ✅ JSON-LD para Google Jobs
 └── app/
-    ├── layout.tsx              ← Root layout
-    ├── page.tsx                 ← Home pública = Portal Candidato
+    ├── layout.tsx                ✅ Root layout con metadata PWA
+    ├── globals.css               ✅ Tailwind base
+    ├── page.tsx                  ✅ Portal Candidato (Home pública)
     ├── vacante/[id]/
-    │   └── page.tsx              ← Detalle de vacante (SSR + SEO dinámico)
+    │   └── page.tsx              ✅ Detalle vacante SSR + SEO + JSON-LD
     ├── invitacion/[token]/
-    │   └── page.tsx               ← Registro de agencia + coordinador (público)
+    │   └── page.tsx              ✅ Registro agencia + coordinador
+    ├── admin/
+    │   ├── invitaciones/
+    │   │   └── page.tsx          ✅ Generador de links de invitación
+    │   └── solicitudes/
+    │       └── page.tsx          ✅ Panel aprobar/rechazar agencias
     ├── reclutador/
-    │   ├── layout.tsx
-    │   ├── login/page.tsx
-    │   ├── dashboard/page.tsx
-    │   ├── pipeline/page.tsx       ← Kanban
-    │   ├── chats/page.tsx
-    │   ├── vacante/[id]/page.tsx   ← Ficha operativa + FAQ
-    │   └── comisiones/page.tsx
+    │   ├── layout.tsx            ✅
+    │   ├── login/page.tsx        ✅ Login por código
+    │   ├── dashboard/page.tsx    ✅ Métricas + link referido + filtro fechas
+    │   ├── pipeline/page.tsx     ✅ Kanban con modales
+    │   ├── chats/page.tsx        ✅ Lista chats + ChatWindow Realtime
+    │   ├── detalle/[id]/
+    │   │   └── page.tsx          ✅ Ficha operativa de vacante
+    │   ├── comisiones/page.tsx   ✅ Panel comisiones con día de pago por agencia
+    │   └── alertas/page.tsx      ✅ Panel alertas automáticas
     ├── coordinador/
-    │   ├── layout.tsx
-    │   ├── login/page.tsx
-    │   ├── dashboard/page.tsx       ← Power BI
-    │   ├── vacantes/page.tsx
-    │   ├── vacantes/nueva/page.tsx   ← Alta (8 bloques)
-    │   ├── reclutadores/page.tsx
-    │   ├── pipeline/page.tsx          ← Kanban global de la agencia
-    │   ├── faq/page.tsx
-    │   ├── corte-semanal/page.tsx
-    │   └── solicitudes/page.tsx        ← Aprobación de agencias/coordinadores
-    └── admin/
-        ├── layout.tsx
-        ├── login/page.tsx
-        ├── agencias/page.tsx
-        ├── invitaciones/page.tsx       ← Generador de links
-        └── metrics/page.tsx
-└── components/
-    ├── chat/
-    │   ├── ChatWindow.tsx       ← Componente único reusado en los 4 tipos
+    │   ├── layout.tsx            ✅
+    │   ├── login/page.tsx        ✅ Login email+password Supabase Auth
+    │   ├── dashboard/page.tsx    ✅ Dashboard base con accesos rápidos
+    │   ├── vacantes/             ⏳ Sprint 5
+    │   ├── reclutadores/         ⏳ Sprint 5
+    │   ├── pipeline/             ⏳ Sprint 5
+    │   └── corte-semanal/        ⏳ Sprint 5
+    └── api/
+        ├── postular/route.ts     ✅ Crea candidato + postulación + chat
+        ├── trafico/route.ts      ✅ Registra fuente de tráfico
+        ├── invitaciones/route.ts ✅ Genera token de invitación (protegido admin)
+        ├── registro-agencia/route.ts ✅ Registra agencia + coordinador
+        ├── reclutador/
+        │   └── login/route.ts    ✅ Verifica código de reclutador
+        └── admin/
+            ├── aprobar-agencia/route.ts  ✅ Activa agencia + crea cuenta Auth
+            ├── rechazar-agencia/route.ts ✅ Rechaza solicitud
+            └── reset-password/route.ts  ✅ Reset password via Admin API
+```
     │   ├── ChatBubble.tsx
     │   └── ChatInput.tsx
     ├── kanban/

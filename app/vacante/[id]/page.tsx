@@ -79,7 +79,6 @@ export default async function VacantePage({ params }: Props) {
       <div className="max-w-3xl mx-auto bg-white min-h-screen">
         <VacanteDetalle
           vacante={vacanteFormateada}
-          onClose={() => {}}
           esModal={false}
         />
       </div>

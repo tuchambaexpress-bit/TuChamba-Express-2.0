@@ -36,12 +36,12 @@ interface Vacante {
 
 interface Props {
   vacante: Vacante
-  onClose: () => void
+  onClose?: () => void
   esModal: boolean
   reclutadorId?: string | null
 }
 
-export default function VacanteDetalle({ vacante, onClose, esModal, reclutadorId }: Props) {
+export default function VacanteDetalle({ vacante, esModal, reclutadorId }: Props) {
   const [chatAbierto, setChatAbierto] = useState(false)
 const codigoRef = typeof window !== 'undefined'
   ? localStorage.getItem('ref_codigo')

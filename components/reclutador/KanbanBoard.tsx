@@ -40,7 +40,7 @@ export default function KanbanBoard() {
     const { data } = await supabase
       .from('postulaciones')
       .select(`
-        id, etapa_actual, candidato_id, vacante_id, created_at,
+        id, etapa_actual, candidato_id, vacante_id, agencia_id, created_at,
         candidatos(id, nombre, telefono),
         vacantes(titulo, etapas_personalizadas, dias_garantia, comision_base_mxn),
         chats(id)

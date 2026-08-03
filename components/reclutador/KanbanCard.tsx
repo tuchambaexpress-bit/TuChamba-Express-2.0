@@ -111,11 +111,8 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
     setMoviendo(false)
   }
 
-  async function confirmarDescarte() {
-    if (!motivoDescarte) return
-    setMoviendo(true)
+  async function descartarUnaPostulacion(postulacionId: string, etapaAnterior: string, nota: string) {
     const supabase = createClient()
-
     await supabase
       .from('postulaciones')
       .update({
@@ -125,17 +122,50 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
         motivo_descarte_detalle: motivoDetalle || null,
         updated_at: new Date().toISOString()
       })
-      .eq('id', postulacion.id)
+      .eq('id', postulacionId)
 
     await supabase.from('historial_etapas').insert({
-      postulacion_id: postulacion.id,
-      etapa_anterior: postulacion.etapa_actual,
+      postulacion_id: postulacionId,
+      etapa_anterior: etapaAnterior,
       etapa_nueva: 'Descartado',
       cambiado_por: reclutadorId,
-      nota: motivoDetalle || motivoDescarte
+      nota
     })
+  }
 
-    // Enviar mensaje de retroalimentación al candidato si se escribió
+  async function confirmarDescarte() {
+    if (!motivoDescarte) return
+    setMoviendo(true)
+    const supabase = createClient()
+
+    // Descarte de la postulación activa (siempre ocurre)
+    await descartarUnaPostulacion(
+      postulacion.id,
+      postulacion.etapa_actual,
+      motivoDetalle || motivoDescarte
+    )
+
+    // Alcance "todas las vacantes": cerrar el resto de postulaciones activas
+    // del mismo candidato en esta agencia (CA-13.1, Decisión A — no toca candidatos.vetado)
+    if (alcanceDescarte === 'todas') {
+      const { data: otras } = await supabase
+        .from('postulaciones')
+        .select('id, etapa_actual')
+        .eq('candidato_id', postulacion.candidato_id)
+        .eq('agencia_id', postulacion.agencia_id)
+        .neq('id', postulacion.id)
+        .not('etapa_actual', 'in', '("Descartado","Contratado")')
+
+      for (const p of otras ?? []) {
+        await descartarUnaPostulacion(
+          p.id,
+          p.etapa_actual,
+          `${motivoDetalle || motivoDescarte} (descarte masivo desde ${vacante})`
+        )
+      }
+    }
+
+    // Enviar mensaje de retroalimentación al candidato si se escribió (CA-10.3)
     if (mensajeRetro && postulacion.chats?.[0]?.id) {
       await supabase.from('mensajes').insert({
         chat_id: postulacion.chats[0].id,
@@ -145,6 +175,44 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
         es_sistema: true,
         timestamp: new Date().toISOString()
       })
+    }
+
+    // Cerrar el chat en modo solo lectura (CA-10.4 — reutiliza chats.archivado)
+    if (postulacion.chats?.[0]?.id) {
+      await supabase
+        .from('chats')
+        .update({ archivado: true })
+        .eq('id', postulacion.chats[0].id)
+    }
+
+    // Auto-veto por 3 inasistencias en esta agencia (CA-14.4)
+    if (motivoDescarte === 'no_se_presento') {
+      const { count } = await supabase
+        .from('postulaciones')
+        .select('id', { count: 'exact', head: true })
+        .eq('candidato_id', postulacion.candidato_id)
+        .eq('agencia_id', postulacion.agencia_id)
+        .eq('motivo_descarte', 'no_se_presento')
+
+      if ((count ?? 0) >= 3) {
+        await supabase
+          .from('candidatos')
+          .update({
+            vetado: true,
+            motivo_veto: 'Auto-veto: 3 inasistencias a entrevista sin previo aviso en esta agencia',
+            vetado_por: null,
+            vetado_at: new Date().toISOString()
+          })
+          .eq('id', postulacion.candidato_id)
+
+        await supabase.from('alertas').insert({
+          tipo: 'candidato_auto_vetado',
+          destinatario_id: postulacion.agencia_id,
+          destinatario_rol: 'coordinador',
+          candidato_id: postulacion.candidato_id,
+          mensaje: `${nombre} (${telefono}) fue auto-vetado tras 3 inasistencias a entrevista en tu agencia. Puedes revisar el detalle y revertir el veto si lo consideras necesario.`
+        })
+      }
     }
 
     onActualizarEtapa(postulacion.id, 'Descartado')
@@ -378,6 +446,16 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
 
             {/* Retroalimentación opcional */}
             <p className="text-xs font-medium text-gray-700 mb-1">Mensaje al candidato (opcional)</p>
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              <button type="button" onClick={() => setMensajeRetro('Gracias por tu interés. Si en el futuro cambias de opinión, con gusto podemos reactivar tu postulación.')}
+                className="text-[10px] px-2 py-1 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-50">Renuncia</button>
+              <button type="button" onClick={() => setMensajeRetro('Revisamos tu perfil y en este momento no es el match ideal para esta posición. Te invitamos a revisar otras vacantes en TuChamba.')}
+                className="text-[10px] px-2 py-1 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-50">No cumple perfil</button>
+              <button type="button" onClick={() => setMensajeRetro('Notamos que no pudiste asistir a tu cita. Si deseas reagendar, escríbenos.')}
+                className="text-[10px] px-2 py-1 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-50">No se presentó</button>
+              <button type="button" onClick={() => setMensajeRetro('La empresa tomó otra decisión en esta ocasión. Seguimos trabajando para encontrarte una oportunidad.')}
+                className="text-[10px] px-2 py-1 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-50">Empresa no aceptó</button>
+            </div>
             <textarea
               placeholder="Ej. Gracias por tu interés, en esta ocasión no continúas en el proceso..."
               value={mensajeRetro}
