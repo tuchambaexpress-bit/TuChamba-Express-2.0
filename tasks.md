@@ -144,7 +144,7 @@ implement changes → si hay observaciones, se corrige antes de archivar
 - [X] 4.8b El mensaje de retroalimentación se envía como `es_sistema = true` en el chat del candidato. El chat queda en modo solo lectura con mensaje de cierre.
 - [X] 4.8c Modal de descarte mejorado (ver spec.md HU-13): motivo específico, alcance (esta vacante / todas), ofrecer otra vacante al descartar.
 - [X] 4.8d Columna "Descartados" al final del Kanban — visible solo si hay candidatos descartados.
-- [ ] 4.8e Badge "⚠️ Historial previo" en cards de candidatos reactivados (ver spec.md HU-14).
+- [X] 4.8e Badge "⚠️ Historial previo" en cards de candidatos reactivados (ver spec.md HU-14). Verificado en vivo 2026-08-03: detección real vía historial de descartes (no solo visual), badge clicable que filtra `/reclutador/chats?candidato=...` mostrando solo las conversaciones de ese candidato, con opción "ver todos" para regresar sin filtro.
 - [X] 4.15b Botón "📱 Contactar por WhatsApp" en cards de candidatos en etapa "Entrevista" — genera link wa.me con mensaje pre-escrito (ver spec.md CA-15.1).
 - [X] 4.15c Campo para registrar fecha_entrevista y lugar_entrevista directo desde la card del Kanban (ver spec.md CA-15.2).
 - [ ] 4.15d Alertas automáticas pre-entrevista: 24h antes al reclutador, 48h después si no avanzó (ver spec.md CA-15.3 y CA-15.4).

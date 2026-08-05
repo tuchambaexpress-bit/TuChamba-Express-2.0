@@ -87,7 +87,8 @@ export default function ChatWindow({ chatId, nombreCandidato, etapaActual, sende
         table: 'mensajes',
         filter: `chat_id=eq.${chatId}`
       }, (payload) => {
-        setMensajes(prev => [...prev, payload.new as Mensaje])
+        const nuevo = payload.new as Mensaje
+        setMensajes(prev => prev.some(m => m.id === nuevo.id) ? prev : [...prev, nuevo])
       })
       .subscribe()
 
@@ -107,13 +108,25 @@ export default function ChatWindow({ chatId, nombreCandidato, etapaActual, sende
     if (!texto.trim() || enviando) return
     setEnviando(true)
 
-    await supabase.from('mensajes').insert({
-      chat_id: chatId,
-      sender_tipo: senderTipo,
-      sender_nombre: nombreCandidato,
-      texto: texto.trim(),
-      timestamp: new Date().toISOString()
-    })
+    const { data: mensajeInsertado, error } = await supabase
+      .from('mensajes')
+      .insert({
+        chat_id: chatId,
+        sender_tipo: senderTipo,
+        sender_nombre: nombreCandidato,
+        texto: texto.trim(),
+        timestamp: new Date().toISOString()
+      })
+      .select('id, sender_tipo, sender_nombre, texto, timestamp')
+      .single()
+
+    if (!error && mensajeInsertado) {
+      // Lo pintamos de inmediato (no dependemos del eco de Realtime,
+      // que puede no llegar si el canal se desconectó por inactividad).
+      setMensajes(prev =>
+        prev.some(m => m.id === mensajeInsertado.id) ? prev : [...prev, mensajeInsertado]
+      )
+    }
 
     // Actualizar último mensaje en el chat
     await supabase.from('chats').update({
