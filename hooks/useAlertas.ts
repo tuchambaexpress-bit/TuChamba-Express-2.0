@@ -112,6 +112,38 @@ export function useAlertas(reclutadorId: string | null) {
           })
         }
       }
+
+      // 4. Entrevistas vencidas sin avance de etapa (CA-15.4)
+      const { data: entrevistasVencidas } = await supabase
+        .from('postulaciones')
+        .select('id, candidato_id, vacante_id, fecha_entrevista, candidatos(nombre), vacantes(titulo)')
+        .eq('reclutador_id', reclutadorId)
+        .eq('etapa_actual', 'Entrevista')
+        .not('fecha_entrevista', 'is', null)
+        .lt('fecha_entrevista', ahora.toISOString())
+
+      for (const p of entrevistasVencidas ?? []) {
+        const { count } = await supabase
+          .from('alertas')
+          .select('*', { count: 'exact', head: true })
+          .eq('reclutador_id', reclutadorId)
+          .eq('postulacion_id', p.id)
+          .eq('tipo', 'confirmar_asistencia')
+
+        if (!count) {
+          await supabase.from('alertas').insert({
+            tipo: 'confirmar_asistencia',
+            reclutador_id: reclutadorId,
+            postulacion_id: p.id,
+            candidato_id: p.candidato_id,
+            vacante_id: p.vacante_id,
+            mensaje: `¿Se presentó ${(p.candidatos as any)?.nombre} a su entrevista? Actualiza su estado en el pipeline.`,
+            leida: false,
+            destinatario_id: reclutadorId,
+            destinatario_rol: 'reclutador'
+          })
+        }
+      }
     }
 
     // Ejecutar al cargar y cada 30 minutos

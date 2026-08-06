@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import ReclutadorNav from '@/components/reclutador/ReclutadorNav'
 
 interface Alerta {
   id: string
@@ -69,27 +70,17 @@ export default function AlertasReclutador() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-[#1A6B3C] px-6 py-4 shadow-md">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-white font-bold text-xl">Tu Chamba Express</h1>
-            <p className="text-green-200 text-sm">
-              Alertas {noLeidas > 0 ? `· ${noLeidas} sin leer` : ''}
-            </p>
-          </div>
-          <div className="flex gap-4 items-center">
-            {noLeidas > 0 && (
-              <button
-                onClick={marcarTodasLeidas}
-                className="text-green-200 hover:text-white text-xs border border-green-400 px-3 py-1 rounded-lg"
-              >
-                Marcar todas como leídas
-              </button>
-            )}
-            <a href="/reclutador/dashboard" className="text-green-200 hover:text-white text-sm">← Dashboard</a>
-          </div>
+      <ReclutadorNav subtitulo={noLeidas > 0 ? `Alertas · ${noLeidas} sin leer` : 'Alertas'} />
+      {noLeidas > 0 && (
+        <div className="max-w-4xl mx-auto px-4 pt-4">
+          <button
+            onClick={marcarTodasLeidas}
+            className="text-[#1A6B3C] hover:underline text-xs border border-[#1A6B3C] px-3 py-1 rounded-lg bg-white"
+          >
+            Marcar todas como leídas
+          </button>
         </div>
-      </header>
+      )}
 
       <div className="max-w-4xl mx-auto px-4 py-6">
         {loading ? (

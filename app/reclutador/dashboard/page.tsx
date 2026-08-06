@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useAlertas } from '@/hooks/useAlertas'
+import ReclutadorNav from '@/components/reclutador/ReclutadorNav'
 
 export default function DashboardReclutador() {
   const router = useRouter()
@@ -119,29 +120,7 @@ export default function DashboardReclutador() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-[#1A6B3C] px-6 py-4 shadow-md">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-white font-bold text-xl">Tu Chamba Express</h1>
-            <p className="text-green-200 text-sm">Hola, {sesion.nombre}</p>
-          </div>
-          <div className="flex gap-4 items-center">
-            <a href="/reclutador/pipeline" className="text-green-200 hover:text-white text-sm">Pipeline</a>
-            <a href="/reclutador/chats" className="text-green-200 hover:text-white text-sm">Chats</a>
-            <a href="/reclutador/comisiones" className="text-green-200 hover:text-white text-sm">Comisiones</a>
-            <a href="/reclutador/alertas" className="text-green-200 hover:text-white text-sm">Alertas</a>
-            <button
-              onClick={() => {
-                localStorage.removeItem('reclutador_sesion')
-                router.push('/reclutador/login')
-              }}
-              className="text-green-200 hover:text-white text-sm"
-            >
-              Cerrar sesión
-            </button>
-          </div>
-        </div>
-      </header>
+      <ReclutadorNav subtitulo={`Hola, ${sesion.nombre}`} />
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Filtro de período */}

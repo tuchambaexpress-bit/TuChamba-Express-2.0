@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import ChatWindow from '@/components/candidato/ChatWindow'
+import ReclutadorNav from '@/components/reclutador/ReclutadorNav'
 
 interface Chat {
   id: string
@@ -114,15 +115,7 @@ function ChatsReclutadorInner() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-[#1A6B3C] px-6 py-4 shadow-md">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <h1 className="text-white font-bold text-xl">Tu Chamba Express</h1>
-          <div className="flex gap-4">
-            <a href="/reclutador/dashboard" className="text-green-200 hover:text-white text-sm">Dashboard</a>
-            <a href="/reclutador/pipeline" className="text-green-200 hover:text-white text-sm">Pipeline</a>
-          </div>
-        </div>
-      </header>
+      <ReclutadorNav />
 
       <div className="max-w-7xl mx-auto flex h-[calc(100vh-64px)]">
         {/* Lista de chats */}

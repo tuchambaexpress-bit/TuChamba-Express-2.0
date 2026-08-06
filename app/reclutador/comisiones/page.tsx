@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { getSemanaISO } from '@/lib/utils'
+import ReclutadorNav from '@/components/reclutador/ReclutadorNav'
 
 interface Comision {
   id: string
@@ -91,15 +92,7 @@ export default function ComisionesReclutador() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-[#1A6B3C] px-6 py-4 shadow-md">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-white font-bold text-xl">Tu Chamba Express</h1>
-            <p className="text-green-200 text-sm">Mis comisiones</p>
-          </div>
-          <a href="/reclutador/dashboard" className="text-green-200 hover:text-white text-sm">← Dashboard</a>
-        </div>
-      </header>
+      <ReclutadorNav subtitulo="Mis comisiones" />
 
       <div className="max-w-4xl mx-auto px-4 py-6">
 
