@@ -34,6 +34,15 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
   const [comisionCalculada, setComisionCalculada] = useState<number | null>(null)
   const [garantiaFin, setGarantiaFin] = useState<string | null>(null)
   const [score, setScore] = useState<number>(postulacion.score ?? 0)
+  const [mostrarModalDocumentos, setMostrarModalDocumentos] = useState(false)
+  const [documentos, setDocumentos] = useState<any[]>([])
+  const [cargandoDocs, setCargandoDocs] = useState(false)
+  const [tipoDocumento, setTipoDocumento] = useState('cv')
+  const [archivoSeleccionado, setArchivoSeleccionado] = useState<File | null>(null)
+  const [subiendoDoc, setSubiendoDoc] = useState(false)
+  const [errorDoc, setErrorDoc] = useState('')
+  const [fileInputKey, setFileInputKey] = useState(0)
+  const [eliminandoDoc, setEliminandoDoc] = useState<string | null>(null)
 
   useEffect(() => {
     function handleEsc(e: KeyboardEvent) {
@@ -42,11 +51,12 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
         setMostrarModalEntrevista(false)
         setMostrarModalContratado(false)
         setMostrarMenu(false)
+        if (mostrarModalDocumentos) cerrarModalDocumentos()
       }
     }
     document.addEventListener('keydown', handleEsc)
     return () => document.removeEventListener('keydown', handleEsc)
-  }, [])
+  }, [mostrarModalDocumentos])
 
   // Estado modal descarte
   const [motivoDescarte, setMotivoDescarte] = useState('')
@@ -279,6 +289,65 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
     setMoviendo(false)
   }
 
+  async function abrirModalDocumentos() {
+    setMostrarModalDocumentos(true)
+    setCargandoDocs(true)
+    const res = await fetch(`/api/documentos?candidatoId=${postulacion.candidato_id}`)
+    const data = await res.json()
+    setDocumentos(data.documentos ?? [])
+    setCargandoDocs(false)
+  }
+
+  function cerrarModalDocumentos() {
+    setMostrarModalDocumentos(false)
+    setArchivoSeleccionado(null)
+    setErrorDoc('')
+    setFileInputKey(k => k + 1) // fuerza recrear el <input type="file"> limpio
+  }
+
+  async function eliminarDocumento(id: string) {
+    if (!confirm('¿Eliminar este documento? Esta acción no se puede deshacer.')) return
+    setEliminandoDoc(id)
+    await fetch(`/api/documentos?id=${id}`, { method: 'DELETE' })
+    setDocumentos(prev => prev.filter(d => d.id !== id))
+    setEliminandoDoc(null)
+  }
+
+  async function subirDocumento() {
+    if (!archivoSeleccionado) return
+    setSubiendoDoc(true)
+    setErrorDoc('')
+
+    const formData = new FormData()
+    formData.append('file', archivoSeleccionado)
+    formData.append('candidatoId', postulacion.candidato_id)
+    formData.append('postulacionId', postulacion.id)
+    formData.append('tipo', tipoDocumento)
+
+    const res = await fetch('/api/documentos', { method: 'POST', body: formData })
+    const data = await res.json()
+
+    if (!res.ok) {
+      setErrorDoc(data.error ?? 'Error al subir el archivo')
+    } else {
+      setArchivoSeleccionado(null)
+      setFileInputKey(k => k + 1)
+      await abrirModalDocumentos()
+    }
+    setSubiendoDoc(false)
+  }
+
+  const NOMBRES_TIPO: Record<string, string> = {
+    cv: 'CV',
+    identificacion: 'Identificación',
+    comprobante_domicilio: 'Comprobante de domicilio',
+    comprobante_estudios: 'Comprobante de estudios',
+    rfc: 'RFC',
+    nss: 'NSS',
+    curp: 'CURP',
+    otro: 'Otro'
+  }
+
   function generarLinkWhatsApp() {
     const fecha = tieneEntrevista
       ? new Date(postulacion.fecha_entrevista).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })
@@ -349,7 +418,13 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
           >
             💬 Chat
           </a>
-          <a href={`/reclutador/detalle/${postulacion.vacante_id}`} className="text-xs bg-gray-50 hover:bg-gray-100 text-gray-600 px-2 py-1.5 rounded-lg border border-gray-200 transition-colors">📋</a>
+          <a href={`/reclutador/detalle/${postulacion.vacante_id}`} className="text-lg bg-gray-50 hover:bg-gray-100 text-gray-600 px-2 py-1 rounded-lg border border-gray-200 transition-colors leading-none flex items-center">📋</a>
+          <button
+            onClick={abrirModalDocumentos}
+            className="text-lg bg-gray-50 hover:bg-gray-100 text-gray-600 px-2 py-1 rounded-lg border border-gray-200 transition-colors leading-none"
+          >
+            📎
+          </button>
           <div className="relative">
             <button
               onClick={() => setMostrarMenu(!mostrarMenu)}
@@ -544,6 +619,92 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
                 className="flex-1 bg-[#1A6B3C] hover:bg-[#155c33] text-white py-2.5 rounded-xl text-sm font-medium"
               >
                 ✅ Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Documentos (CA-02.7) */}
+      {mostrarModalDocumentos && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl p-5 max-w-sm w-full shadow-xl max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="font-bold text-gray-900">📎 Documentos</h3>
+              <button onClick={cerrarModalDocumentos} className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 text-sm">✕</button>
+            </div>
+            <p className="text-sm text-gray-500 mb-4">{nombre}</p>
+
+            {/* Lista de documentos existentes */}
+            {cargandoDocs ? (
+              <p className="text-xs text-gray-400 text-center py-4">Cargando...</p>
+            ) : documentos.length === 0 ? (
+              <p className="text-xs text-gray-400 text-center py-4">Sin documentos subidos todavía</p>
+            ) : (
+              <div className="space-y-2 mb-4">
+                {documentos.map((doc) => (
+                  <div
+                    key={doc.id}
+                    className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg px-3 py-2"
+                  >
+                    <div>
+                      <p className="text-xs font-medium text-gray-800">{NOMBRES_TIPO[doc.tipo] ?? doc.tipo}</p>
+                      <p className="text-[10px] text-gray-400">
+                        {new Date(doc.created_at).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={doc.url_firmada ?? '#'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-[#1A6B3C] hover:underline"
+                      >
+                        Ver ↗
+                      </a>
+                      <button
+                        onClick={() => eliminarDocumento(doc.id)}
+                        disabled={eliminandoDoc === doc.id}
+                        className="text-xs text-red-500 hover:text-red-600 disabled:opacity-40"
+                      >
+                        {eliminandoDoc === doc.id ? '...' : '🗑️'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Subir nuevo */}
+            <div className="border-t border-gray-100 pt-3">
+              <p className="text-xs font-medium text-gray-700 mb-2">Tipo de documento</p>
+              <select
+                value={tipoDocumento}
+                onChange={e => setTipoDocumento(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
+              >
+                <option value="cv">CV</option>
+                <option value="identificacion">Identificación</option>
+                <option value="comprobante_domicilio">Comprobante de domicilio</option>
+                <option value="comprobante_estudios">Comprobante de estudios</option>
+                <option value="rfc">RFC</option>
+                <option value="nss">NSS</option>
+                <option value="curp">CURP</option>
+                <option value="otro">Otro</option>
+              </select>
+              <input
+                key={fileInputKey}
+                type="file"
+                onChange={e => setArchivoSeleccionado(e.target.files?.[0] ?? null)}
+                className="w-full text-xs text-gray-600 mb-2"
+              />
+              {errorDoc && <p className="text-red-500 text-xs mb-2">{errorDoc}</p>}
+              <button
+                onClick={subirDocumento}
+                disabled={!archivoSeleccionado || subiendoDoc}
+                className="w-full bg-[#1A6B3C] hover:bg-[#155c33] disabled:opacity-40 text-white py-2 rounded-lg text-sm font-medium"
+              >
+                {subiendoDoc ? 'Subiendo...' : 'Subir documento'}
               </button>
             </div>
           </div>

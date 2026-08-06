@@ -444,7 +444,7 @@ tipo text NOT NULL
 -- tipos: garantia_venciendo/candidato_sin_movimiento/
 --        entrevista_vencida/vacante_sin_candidatos/
 --        mensaje_nuevo/pregunta_sin_responder/
---        vacante_status_cambio/candidato_auto_vetado
+--        vacante_status_cambio/candidato_auto_vetado/confirmar_asistencia
 destinatario_id uuid NOT NULL
 destinatario_rol text NOT NULL      -- reclutador/coordinador/admin
 vacante_id uuid
@@ -556,6 +556,15 @@ El reclutador puede filtrar las métricas por período:
 - Rango personalizado (date picker desde/hasta)
 
 Al cambiar el filtro, todas las métricas se recalculan automáticamente sin recargar la página. Esto permite al reclutador hacer sus propias cuentas y revisar su historial de rendimiento.
+
+**CA-02.7 — Subida de documentos del candidato (`documentos_candidato`):**
+El reclutador puede subir documentos del candidato (CV, identificación, comprobante de domicilio, u otro) desde un botón **"📎 Documentos"** en la card del Kanban — no el candidato, ya que en la práctica actual (HR CONNECT) el candidato manda su CV por WhatsApp y el reclutador lo tiene a la mano para subirlo. Esto evita exponer un formulario de subida de archivos sin autenticación en el chat público.
+
+Al hacer clic, se abre un modal simple con:
+- La lista de documentos ya subidos para ese candidato (nombre del tipo, fecha, link para ver/descargar)
+- Un selector de tipo (`cv` / `identificacion` / `comprobante` / `otro`) + botón para subir un archivo nuevo
+
+Cada archivo se guarda en Supabase Storage y genera una fila en `documentos_candidato` vinculada al `candidato_id` y `postulacion_id` actual. No hay límite de un solo documento por tipo — un candidato puede tener, por ejemplo, dos versiones de CV subidas en momentos distintos (versionado natural, sin sobrescribir).
 
 ---
 

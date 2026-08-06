@@ -147,7 +147,8 @@ implement changes → si hay observaciones, se corrige antes de archivar
 - [X] 4.8e Badge "⚠️ Historial previo" en cards de candidatos reactivados (ver spec.md HU-14). Verificado en vivo 2026-08-03: detección real vía historial de descartes (no solo visual), badge clicable que filtra `/reclutador/chats?candidato=...` mostrando solo las conversaciones de ese candidato, con opción "ver todos" para regresar sin filtro.
 - [X] 4.15b Botón "📱 Contactar por WhatsApp" en cards de candidatos en etapa "Entrevista" — genera link wa.me con mensaje pre-escrito (ver spec.md CA-15.1).
 - [X] 4.15c Campo para registrar fecha_entrevista y lugar_entrevista directo desde la card del Kanban (ver spec.md CA-15.2).
-- [ ] 4.15d Alertas automáticas pre-entrevista: 24h antes al reclutador, 48h después si no avanzó (ver spec.md CA-15.3 y CA-15.4).
+- [X] 4.15d Alertas automáticas pre-entrevista: 24h antes al reclutador, 48h después si no avanzó (ver spec.md CA-15.3 y CA-15.4). Verificado en vivo 2026-08-05: nuevo tipo `confirmar_asistencia` agregado a `useAlertas.ts` y a spec.md, mensaje exacto confirmado en BD y en `/reclutador/alertas`.
+- [X] 4.15e (mejora, no numerada originalmente) `components/reclutador/ReclutadorNav.tsx`: nav compartido para las 5 páginas del reclutador (antes había 3 versiones inconsistentes del header). Incluye contador en tiempo real de alertas sin leer y chats sin leer, ambos vía Realtime.
 - [X] 4.9 Campo opcional de `score` (1-5) por postulación, editable desde la card.
 - [X] 4.10 `app/reclutador/chats/page.tsx`: lista de chats tipo `candidato_reclutador`, badge "Nuevo" si último sender fue candidato.
 - [X] 4.11 `ChatWindow.tsx` reusado: mensajes en tiempo real, input multiline, scroll automático.
@@ -160,7 +161,7 @@ implement changes → si hay observaciones, se corrige antes de archivar
 - [X] 4.16 `app/reclutador/comisiones/page.tsx`: resumen de la semana actual con estado de garantía y monto a cobrar el viernes.
 - [X] 4.17 Panel de alertas: lista de alertas no leídas, click navega al contexto relevante.
 - [X] 4.18 Hook `useAlertas.ts`: verificación periódica de candidatos sin movimiento 48h, garantías ≤3 días, entrevistas vencidas.
-- [ ] 4.19 `documentos_candidato`: subida de CV/identificación a Supabase Storage, vinculado a la postulación.
+- [ ] 4.19 `documentos_candidato`: subida de CV/identificación a Supabase Storage, vinculado a la postulación (ver spec.md CA-02.7). Diseño confirmado 2026-08-06: sube el reclutador (no el candidato) desde botón "📎 Documentos" en la card del Kanban; modal con lista de documentos ya subidos + selector de tipo (cv/identificacion/comprobante/otro) + subir nuevo; sin límite de 1 por tipo (versionado).
 - [X] 4.20 Configurar PWA: `manifest.json` completo, `public/sw.js` básico.
 - [X] 4.21 Verificar en Chrome DevTools → Application → Manifest que el PWA es instalable en Android.
 
