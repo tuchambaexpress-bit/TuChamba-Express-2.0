@@ -17,7 +17,7 @@ const COLORES_ETAPA: Record<string, string> = {
   'Aplicado': 'bg-gray-100 text-gray-700',
   'Contactado': 'bg-blue-100 text-blue-700',
   'Entrevista': 'bg-yellow-100 text-yellow-700',
-  'Oferta': 'bg-purple-100 text-purple-700',
+  'Inducción': 'bg-purple-100 text-purple-700',
   'Contratado': 'bg-green-100 text-green-700',
 }
 
@@ -38,7 +38,7 @@ export default function KanbanColumn({ etapa, postulaciones, todasPostulaciones,
           <KanbanCard
             key={p.id}
             postulacion={p}
-            etapasDisponibles={['Aplicado', 'Contactado', 'Entrevista', 'Oferta', 'Contratado', 'Descartado']}
+            etapasDisponibles={['Aplicado', 'Contactado', 'Entrevista', 'Inducción', 'Contratado', 'Descartado']}
             onActualizarEtapa={onActualizarEtapa}
             reclutadorId={reclutadorId}
             tieneHistorialPrevio={candidatosConHistorial?.has(p.candidato_id) ?? false}

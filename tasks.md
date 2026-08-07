@@ -161,7 +161,7 @@ implement changes → si hay observaciones, se corrige antes de archivar
 - [X] 4.16 `app/reclutador/comisiones/page.tsx`: resumen de la semana actual con estado de garantía y monto a cobrar el viernes.
 - [X] 4.17 Panel de alertas: lista de alertas no leídas, click navega al contexto relevante.
 - [X] 4.18 Hook `useAlertas.ts`: verificación periódica de candidatos sin movimiento 48h, garantías ≤3 días, entrevistas vencidas.
-- [ ] 4.19 `documentos_candidato`: subida de CV/identificación a Supabase Storage, vinculado a la postulación (ver spec.md CA-02.7). Diseño confirmado 2026-08-06: sube el reclutador (no el candidato) desde botón "📎 Documentos" en la card del Kanban; modal con lista de documentos ya subidos + selector de tipo (cv/identificacion/comprobante/otro) + subir nuevo; sin límite de 1 por tipo (versionado).
+- [X] 4.19 `documentos_candidato`: subida de CV/identificación a Supabase Storage, vinculado a la postulación (ver spec.md CA-02.7). Verificado en vivo 2026-08-06: subida, listado con links firmados, borrado, 8 tipos de documento, y fix de bug donde el archivo seleccionado persistía entre aperturas del modal (cierre con X/Escape ahora limpia el estado).
 - [X] 4.20 Configurar PWA: `manifest.json` completo, `public/sw.js` básico.
 - [X] 4.21 Verificar en Chrome DevTools → Application → Manifest que el PWA es instalable en Android.
 
@@ -174,6 +174,43 @@ implement changes → si hay observaciones, se corrige antes de archivar
 
 - [X] 5.1 `app/coordinador/login/page.tsx`: email + password con Supabase Auth.
 - [X] 5.1b `app/coordinador/dashboard/page.tsx`: dashboard base con accesos rápidos a vacantes, reclutadores, pipeline y corte semanal.
+- [ ] 5.1c **CORRECCIÓN — Rediseño del disparo de garantía/comisión + ciclo de vida completo del candidato en el pipeline** (ver spec.md CA-02.2 corregida, CA-02.8 a CA-02.11, CA-19.3b/c — detectado y ampliado 2026-08-06 por José, confirmado con Roxana García):
+
+  **Parte 1 — Disparo de garantía/comisión (ya con parches aplicados en KanbanCard/KanbanBoard/KanbanColumn/utils.ts, pendiente de terminar):**
+  - Renombrar etapa "Oferta" → "Inducción" en `etapas_personalizadas` (default de vacantes nuevas) y en `KanbanColumn.tsx` (`COLORES_ETAPA`) — ✅ aplicado
+  - Al mover a "Inducción": selector de fecha de inicio (sin restricción de pasado) — ✅ aplicado
+  - Mover cálculo de garantía/comisión de "Contratado" a "Inducción"; "Contratado" solo guarda `fecha_firma_contrato` informativo — ✅ aplicado
+  - `negocios.dias_descanso` (jsonb, default `[0]`) + `calcularGarantiaFinHabil()` en `lib/utils.ts` — ✅ aplicado y probado en vivo (Pedro Plata, 2026-08-06: 30 días hábiles = 35 días corridos con 5 domingos saltados, correcto)
+  - Migraciones SQL `postulaciones.fecha_firma_contrato` y `negocios.dias_descanso` — ✅ aplicadas
+  - **Pendiente:** UI en el coordinador para configurar `dias_descanso` por empresa (hoy solo editable por SQL directo — Fase 2 de esta corrección, cuando se construya `5.5` gestión de negocios)
+  - **Pendiente:** actualizar CA-16.2/16.4 y comentarios de cupo con el nuevo nombre de etapa en el código (spec ya actualizado)
+
+  **Parte 2 — Flujo secuencial obligatorio (CA-02.9):**
+  - El menú "Mover" solo ofrece la siguiente etapa inmediata en el orden `Aplicado → Contactado → Entrevista → Inducción → Contratado`, nunca etapas futuras salteadas
+  - "Descartado" sigue disponible desde cualquier etapa activa como excepción
+  - Reagendar entrevista (ya existente) no cuenta como salto — sigue siendo la misma etapa
+
+  **Parte 3 — "No efectivo" en Inducción (CA-02.10):**
+  - Nuevo motivo de descarte `no_concluyo_induccion`, disponible SOLO desde etapa "Inducción" (reutiliza el modal de Descartar existente)
+  - Campo de fecha editable (no fija a "hoy") — reclutador ingresa el último día real que el candidato se presentó
+  - Al confirmar: `comision_aplicable = false`, guarda `motivo_no_efectivo`, envía notificación breve al candidato por el chat interno
+  - NO cuenta automáticamente para el auto-veto de 3 strikes (CA-14.4) — señal de comportamiento distinta a `no_se_presento`
+  - Visual: card en rojo tenue, al final de la columna "Descartado", 2 días antes de archivarse (CA-19.3b)
+
+  **Parte 4 — Reactivación manual del coordinador:**
+  - Botón "🔄 Reactivar candidato" en el panel de vetados/no-efectivos del coordinador
+  - Limpia `vetado`, `motivo_veto`, reinicia contador en `strikes_inasistencia` — deja registro de quién/cuándo autorizó
+  - Aplica tanto a vetados (CA-14.4) como a "No efectivo" (CA-02.10)
+
+  **Parte 5 — Archivo automático (extensión de HU-19, ver CA-19.3b/CA-19.3c):**
+  - "No efectivo": se oculta del Kanban 2 días después de marcarse, visible solo para coordinador
+  - "Contratado" con garantía cumplida: se oculta del Kanban 3 días después de `garantia_cumplida = true`, visible solo para coordinador (capa "oculto" previa al borrado real de 30 días de CA-19.5)
+  - Requiere el panel del coordinador de candidatos archivados (parte de Sprint 8, HU-19 — aquí solo se documenta el criterio, la construcción del panel es Sprint 8)
+
+  **Parte 6 — Badge de inactividad (CA-02.11):**
+  - Badge "🚨 Sin actividad" directo en la card, en cualquier etapa activa con más de 72h sin `updated_at` — puramente visual, no dispara nada automático, solo empuja al reclutador a decidir
+
+  **Nota general:** no aplica retroactivo — José confirmó que todos los candidatos actuales son de prueba, sin comisiones reales en juego. Partes 2, 3, 4, 6 aún no tienen código — quedan documentadas para construirse a continuación de la Parte 1.
 - [ ] 5.2 Middleware de ruta: redirige a login si no hay sesión, y a "en revisión" si `status != 'activo'`.
 - [ ] 5.3 `app/coordinador/vacantes/page.tsx`: listado de vacantes de la agencia, filtros de status y prioridad.
 - [ ] 5.4 Construir `components/forms/EditableList.tsx` — componente reutilizable de lista editable (agregar, editar in-line, borrar, reordenar con `@dnd-kit`). Ver código de referencia en plan.md §11. Este componente se construye UNA vez y se reutiliza en requisitos, beneficios, documentos_requeridos, zonas_ruta y tags.
@@ -294,6 +331,7 @@ implement changes → si hay observaciones, se corrige antes de archivar
 - [ ] Agente Monitor de Base de Datos (alertas de anomalías)
 - [ ] Agente Monitor de Vercel (diagnóstico automático de deploys fallidos)
 - [ ] Agente de Salud del Producto (reporte semanal automático al admin)
+- [ ] Rutas de transporte con documento PDF por empresa (idea de José, 2026-08-06): al dar de alta una vacante, el coordinador indica si la empresa cuenta con rutas y puede subir el PDF con el detalle — visible en la ficha de la vacante en el portal candidato desde el inicio, para que el candidato consulte por su cuenta y solo pregunte dudas puntuales. **Nota de diseño pendiente de resolver cuando se construya:** José confirmó que beneficios y transporte suelen ser iguales para todas las vacantes de una misma empresa (lo que varía es requisitos/horarios por vacante) — esto sugiere que `tiene_ruta` y `zonas_ruta`, hoy campos de `vacantes`, probablemente deberían vivir en `negocios` en vez de repetirse por vacante. Evaluar migración al construir esta feature.
 
 ## 🗂️ BACKLOG — FASE 3 (visión a 12+ meses)
 

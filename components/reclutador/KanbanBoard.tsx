@@ -16,8 +16,18 @@ interface Postulacion {
   etapa_actual: string
   candidato_id: string
   vacante_id: string
+  agencia_id: string
   candidatos: Candidato
-  vacantes: { titulo: string; etapas_personalizadas: string[]; dias_garantia: number; comision_base_mxn: number }
+  vacantes: {
+    titulo: string
+    etapas_personalizadas: string[]
+    dias_garantia: number
+    comision_base_mxn: number
+    tiene_promocion?: boolean
+    promocion_fin?: string | null
+    promocion_monto_mxn?: number | null
+    negocios: { dias_descanso: number[] } | null
+  }
   chats: { id: string }[]
   created_at: string
 }
@@ -41,9 +51,9 @@ export default function KanbanBoard() {
     const { data } = await supabase
       .from('postulaciones')
       .select(`
-        id, etapa_actual, candidato_id, vacante_id, created_at,
+        id, etapa_actual, candidato_id, vacante_id, agencia_id, created_at,
         candidatos(id, nombre, telefono),
-        vacantes(titulo, etapas_personalizadas, dias_garantia, comision_base_mxn),
+        vacantes(titulo, etapas_personalizadas, dias_garantia, comision_base_mxn, tiene_promocion, promocion_fin, promocion_monto_mxn, negocios(dias_descanso)),
         chats(id)
       `)
       .eq('reclutador_id', reclutadorId)
@@ -98,7 +108,7 @@ export default function KanbanBoard() {
   }
 
   // Obtener etapas únicas de todas las vacantes
-  const todasEtapas = ['Aplicado', 'Contactado', 'Entrevista', 'Oferta', 'Contratado']
+  const todasEtapas = ['Aplicado', 'Contactado', 'Entrevista', 'Inducción', 'Contratado']
 
   return (
     <>
@@ -125,7 +135,7 @@ export default function KanbanBoard() {
             </div>
             <KanbanCard
               postulacion={p}
-              etapasDisponibles={['Aplicado','Contactado','Entrevista','Oferta','Contratado','Descartado']}
+              etapasDisponibles={['Aplicado','Contactado','Entrevista','Inducción','Contratado','Descartado']}
               onActualizarEtapa={actualizarEtapa}
               reclutadorId={sesion?.id}
               tieneHistorialPrevio={candidatosConHistorial.has(p.candidato_id)}

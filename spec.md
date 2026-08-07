@@ -212,6 +212,15 @@ industria text
 contacto_nombre text
 contacto_telefono text
 contacto_email text
+dias_descanso jsonb DEFAULT '[0]'   -- días de la semana que NO cuentan para
+                                     -- el cálculo de días de garantía, por
+                                     -- empresa (0=Domingo...6=Sábado, formato
+                                     -- JS Date.getDay()). Default: solo domingo.
+                                     -- Configurable por el coordinador, aplica
+                                     -- a TODAS las vacantes de esa empresa
+                                     -- (ver CA-02.8). No cubre descansos
+                                     -- rolados post-inducción — ver limitación
+                                     -- documentada en CA-02.8.
 created_at timestamptz DEFAULT now()
 ```
 
@@ -260,7 +269,7 @@ deadline date
 prioridad text DEFAULT 'normal'     -- normal/alta/urgente
 
 -- ATS
-etapas_personalizadas jsonb DEFAULT '["Aplicado","Contactado","Entrevista","Oferta","Contratado"]'
+etapas_personalizadas jsonb DEFAULT '["Aplicado","Contactado","Entrevista","Inducción","Contratado"]'  -- renombrado de "Oferta" el 2026-08-06, ver CA-02.8
 requiere_examen_medico bool DEFAULT false
 requiere_estudio_socioeconomico bool DEFAULT false
 documentos_requeridos jsonb DEFAULT '[]'
@@ -286,7 +295,7 @@ destacada bool DEFAULT false
 cupo_requerido int DEFAULT 1        -- personas que necesita la empresa para esta vacante
 cupo_cubierto int DEFAULT 0         -- calculado: candidatos en etapa Contratado con garantía activa
                                     -- Regla: pausar automáticamente cuando cupo_cubierto >= cupo_requerido
-                                    -- Alerta amarilla: cuando candidatos en Entrevista+Oferta >= cupo_requerido
+                                    -- Alerta amarilla: cuando candidatos en Entrevista+Inducción >= cupo_requerido
 tags jsonb DEFAULT '[]'
 created_at timestamptz DEFAULT now()
 updated_at timestamptz DEFAULT now()
@@ -320,8 +329,14 @@ es_manual bool DEFAULT false        -- candidato importado por el reclutador
 score int                           -- calificación 1-5 del reclutador (opcional)
 
 -- CONTRATACIÓN
-fecha_contratacion date
+fecha_contratacion date             -- desde CA-02.8 (2026-08-06): representa el
+                                     -- INICIO DE INDUCCIÓN, capturado al mover a
+                                     -- etapa "Inducción" — ya no el día de firma
+fecha_firma_contrato date           -- informativo, capturado al mover a "Contratado"
+                                     -- (no dispara ningún cálculo, ver CA-02.2)
 fecha_garantia_fin date             -- calculado: fecha_contratacion + dias_garantia
+                                     -- días HÁBILES según negocios.dias_descanso
+                                     -- de la empresa (ver CA-02.8), no días corridos
 garantia_cumplida bool DEFAULT false
 motivo_no_efectivo text             -- renuncia/despido_empresa/despido_causa/otro
 comision_aplicable bool DEFAULT false
@@ -368,7 +383,8 @@ created_at timestamptz DEFAULT now()
 id uuid PK
 candidato_id uuid FK → candidatos.id
 postulacion_id uuid FK → postulaciones.id
-tipo text                           -- cv/identificacion/comprobante/otro
+tipo text                           -- cv/identificacion/comprobante_domicilio/
+                                     -- comprobante_estudios/rfc/nss/curp/otro
 archivo_url text NOT NULL           -- Supabase Storage
 created_at timestamptz DEFAULT now()
 ```
@@ -536,9 +552,56 @@ En el portal del reclutador (Sprint 4), cuando un candidato aparece en múltiple
 
 **CA-02.1:** Dado que el reclutador arrastra una tarjeta a una nueva columna, cuando suelta la tarjeta, entonces `postulaciones.etapa_actual` se actualiza en tiempo real y todos los dispositivos conectados reflejan el cambio.
 
-**CA-02.2:** Dado que el reclutador mueve un candidato a la etapa "Contratado", cuando confirma la acción en el modal de confirmación, entonces el sistema registra `fecha_contratacion = hoy`, calcula `fecha_garantia_fin = fecha_contratacion + vacantes.dias_garantia`, y revisa si hay promoción activa para asignar `comision_aplicada_mxn`.
+**CA-02.2 (corregida 2026-08-06 — ver CA-02.8 para el detalle completo):** Dado que el reclutador mueve un candidato a la etapa "Contratado", cuando confirma la acción en el modal, entonces el sistema registra `fecha_firma_contrato = hoy` como referencia informativa — **pero la garantía y la comisión ya quedaron fijadas antes**, al momento de mover al candidato a "Inducción" (ver CA-02.8). "Contratado" es solo el cierre administrativo del ciclo, no dispara ningún cálculo nuevo.
 
 **CA-02.3:** Dado que una postulación lleva más de 48 horas en la misma etapa sin actividad, entonces el sistema genera una alerta visible en el panel del reclutador: *"[Nombre candidato] lleva X días sin movimiento en [vacante]."*
+
+**CA-02.8 — Etapa "Inducción" (antes "Oferta") dispara garantía y comisión, con días de descanso configurables por empresa:**
+
+> *Origen: José detectó que el sistema calculaba `fecha_garantia_fin` sumando días corridos sin respetar descansos, y que el disparo ocurría en "Contratado" (día de firma de contrato) en vez de en el día real de inicio de inducción — ambos desalineados con cómo opera HR CONNECT en la práctica. Confirmado con Roxana García: sí ocurre que un candidato inicia inducción jueves/viernes y el descanso (domingo) mueve la fecha real de cumplimiento de garantía.*
+
+La etapa que antes se llamaba **"Oferta"** se renombra a **"Inducción"** en `etapas_personalizadas`. Al mover un candidato a esta etapa:
+- El reclutador captura la **fecha de inicio de inducción** en un selector de fecha — sin restricción de fechas pasadas (el candidato puede avisar tarde).
+- En ese momento, y no antes ni después, el sistema:
+  - Guarda `fecha_contratacion = fecha_inicio_induccion` (se reutiliza este campo existente; conceptualmente ahora representa "inicio de garantía", no "firma de contrato")
+  - Calcula `fecha_garantia_fin` contando `vacantes.dias_garantia` días **hábiles según la configuración de descanso de la empresa** (`negocios.dias_descanso`), no días corridos — saltándose los días marcados como descanso en el conteo.
+  - Marca `comision_aplicable = true` y asigna `comision_aplicada_mxn` (revisando promoción activa, igual que antes)
+
+**Configuración de días de descanso (`negocios.dias_descanso`):** el coordinador la define **una sola vez por empresa** (no por vacante) desde el alta o edición del negocio cliente — aplica automáticamente a todas las vacantes activas de esa empresa. Por defecto viene configurado solo domingo, ya que José confirmó que ese es el patrón más común durante el periodo de inducción/capacitación, pero el coordinador puede ajustarlo si una empresa específica opera distinto.
+
+**Limitación conocida, documentada a propósito (no se resuelve en este alcance):** este mecanismo cubre un patrón de descanso semanal fijo (ej. "siempre domingo") para el cálculo de garantía. **No** cubre descansos rolados por empleado que suelen aplicar *después* de que termina la inducción (turnos rotativos individuales) — eso requeriría un calendario por candidato, no por empresa, y queda fuera de este ajuste. Si en el futuro se necesita esa precisión, sería una historia de usuario nueva.
+
+**CA-02.9 — Flujo secuencial obligatorio, sin saltos de etapa:**
+
+> *Origen: José, 2026-08-06 — evitar problemas de proceso si el reclutador se salta pasos.*
+
+El pipeline solo permite avanzar en orden estricto: `Aplicado → Contactado → Entrevista → Inducción → Contratado`. El menú "Mover" únicamente ofrece la siguiente etapa inmediata (no todas las etapas futuras). La única excepción es **"Descartado"**, disponible como salida desde cualquier etapa activa (Aplicado, Contactado, Entrevista, Inducción) en cualquier momento. Desde "Entrevista", el reclutador puede reagendar la fecha las veces que sea necesario (ya existente) sin que eso cuente como saltarse el flujo — sigue siendo la misma etapa hasta que el candidato confirma que se presenta a inducción.
+
+**CA-02.10 — "No efectivo": candidato no concluye inducción:**
+
+> *Origen: José, 2026-08-06 — reutiliza el flujo de Descartar existente en vez de crear un mecanismo nuevo, con una fecha retroactiva para que el sistema calcule la falta correctamente.*
+
+Disponible **únicamente desde la etapa "Inducción"** (no desde "Contratado" — una vez firmado el contrato, ese caso se maneja distinto, fuera de este alcance). Se dispara desde el mismo modal de "Descartar" ya existente, con un motivo nuevo: **`no_concluyo_induccion`**.
+
+A diferencia de los demás motivos de descarte (donde la fecha siempre es "hoy"), aquí el campo de fecha es **editable** — el reclutador ingresa el último día real que el candidato se presentó, para que el sistema cuente la falta a partir del día siguiente y pueda determinar si alcanzó a completar los días de garantía antes de desertar.
+
+Al confirmar:
+- `etapa_actual = 'Descartado'`, `motivo_descarte = 'no_concluyo_induccion'`
+- `comision_aplicable = false`, `motivo_no_efectivo = 'renuncia'` u otro valor según lo que indique el reclutador (reutiliza el campo ya existente, CA-04.4 ya cubre que esto lo excluye del corte semanal)
+- Se envía una notificación breve al candidato (por el chat interno, igual que la retroalimentación de CA-10.3) avisando el cierre — sin necesidad de reactivar contacto por WhatsApp aparte, ya que el chat interno ya cumple esa función.
+- **No cuenta automáticamente para el auto-veto de 3 strikes (CA-14.4).** Son señales de comportamiento distintas: `no_se_presento` (nunca llegó a la entrevista) vs. `no_concluyo_induccion` (sí llegó, pero no terminó). Quedan separadas a propósito; si más adelante se decide que ambas deban sumar al mismo contador, será una decisión explícita futura, no automática.
+
+**Presentación visual:** la card de un candidato marcado "No efectivo" se tiñe de rojo tenue y se ordena al final de la columna "Descartado" — visible unos días antes de pasar al archivo (ver CA-19.3 actualizada).
+
+**Reactivación manual (control exclusivo del coordinador):** si el candidato se pone en contacto de nuevo pidiendo otra oportunidad, el coordinador (nunca automático) puede usar un botón **"🔄 Reactivar candidato"** desde su panel de candidatos vetados/no-efectivos. Esto limpia `candidatos.vetado`, `motivo_veto`, y reinicia el contador en `strikes_inasistencia` — dejando registro en el historial de quién autorizó la reactivación y cuándo, para trazabilidad. Aplica tanto a vetados por CA-14.4 como a candidatos marcados "No efectivo" que el coordinador decide darles otra oportunidad.
+
+**CA-02.11 — Badge visual de inactividad prolongada (72h):**
+
+> *Origen: José, 2026-08-06. Distinto de la alerta de 48h (CA-02.3, que es una notificación aparte para seguimiento normal) — este es un badge visual directo en la card, para candidatos "atorados" en cualquier etapa activa sin que el reclutador les dé ningún destino (ni avance, ni Descartado).*
+
+Una postulación en cualquier etapa activa (Aplicado, Contactado, Entrevista, Inducción) que lleve **más de 72 horas** sin ningún cambio (`updated_at`) muestra un badge **"🚨 Sin actividad"** directamente en su card del Kanban, junto al nombre del candidato — visible sin necesidad de abrir alertas ni notificaciones, para empujar al reclutador a tomar una decisión (avanzarlo o descartarlo). No dispara ningún archivo automático — la resolución sigue siendo manual, vía el flujo normal de mover o descartar.
+
+---
 
 **CA-02.4:** El reclutador puede mover cualquier tarjeta a "Descartado" desde cualquier etapa, pero el sistema le pide confirmar y registrar el motivo.
 
@@ -558,13 +621,19 @@ El reclutador puede filtrar las métricas por período:
 Al cambiar el filtro, todas las métricas se recalculan automáticamente sin recargar la página. Esto permite al reclutador hacer sus propias cuentas y revisar su historial de rendimiento.
 
 **CA-02.7 — Subida de documentos del candidato (`documentos_candidato`):**
-El reclutador puede subir documentos del candidato (CV, identificación, comprobante de domicilio, u otro) desde un botón **"📎 Documentos"** en la card del Kanban — no el candidato, ya que en la práctica actual (HR CONNECT) el candidato manda su CV por WhatsApp y el reclutador lo tiene a la mano para subirlo. Esto evita exponer un formulario de subida de archivos sin autenticación en el chat público.
+El reclutador puede subir documentos del candidato desde un botón **"📎 Documentos"** en la card del Kanban — no el candidato, ya que en la práctica actual (HR CONNECT) el candidato manda su CV por WhatsApp y el reclutador lo tiene a la mano para subirlo. Esto evita exponer un formulario de subida de archivos sin autenticación en el chat público.
 
-Al hacer clic, se abre un modal simple con:
-- La lista de documentos ya subidos para ese candidato (nombre del tipo, fecha, link para ver/descargar)
-- Un selector de tipo (`cv` / `identificacion` / `comprobante` / `otro`) + botón para subir un archivo nuevo
+Tipos de documento soportados: `cv`, `identificacion`, `comprobante_domicilio`, `comprobante_estudios`, `rfc`, `nss`, `curp`, `otro`.
 
-Cada archivo se guarda en Supabase Storage y genera una fila en `documentos_candidato` vinculada al `candidato_id` y `postulacion_id` actual. No hay límite de un solo documento por tipo — un candidato puede tener, por ejemplo, dos versiones de CV subidas en momentos distintos (versionado natural, sin sobrescribir).
+Al hacer clic, se abre un modal con:
+- La lista de documentos ya subidos para ese candidato (nombre del tipo, fecha, link para ver/descargar, opción de eliminar)
+- Un selector de tipo + botón para subir un archivo nuevo (sin restricción de formato ni límite de un solo documento por tipo — versionado natural)
+
+Cada archivo se guarda en Supabase Storage y genera una fila en `documentos_candidato` vinculada al `candidato_id` y `postulacion_id` de subida — pero es **visible desde cualquier postulación de ese mismo candidato** (el filtro es por `candidato_id`, no por vacante específica), ya que el documento pertenece a la persona, no a un proceso en particular.
+
+**Eliminación:** cualquier reclutador con acceso a la card puede eliminar un documento (borra tanto el archivo en Storage como el registro en base de datos). No se distingue quién lo subió — mismo nivel de control que ya tienen sobre etapa, score, etc. de sus candidatos. "Reemplazar" un documento es simplemente eliminar el anterior y subir uno nuevo del mismo tipo.
+
+**Manejo de estado en el modal (corrección 2026-08-06):** al cerrar el modal (botón X o tecla Escape), cualquier archivo seleccionado pero no subido se descarta — el modal siempre abre limpio, sin arrastrar selecciones de aperturas anteriores.
 
 ---
 
@@ -844,13 +913,13 @@ ya definido en CA-14.3) — el sistema propone, el coordinador decide.
 ```
 FEMSA Operador — Cupo: 5
 ✅ Contratados activos: 3
-⏳ En proceso (Entrevista+Oferta): 4
+⏳ En proceso (Entrevista+Inducción): 4
 🔴 Lugares disponibles: 2
 ```
 
 **CA-16.3:** Cuando `cupo_cubierto >= cupo_requerido`, el sistema pausa automáticamente la vacante (`status = 'pausada'`) y notifica al coordinador: *"✅ Cupo cubierto: FEMSA Operador ya tiene 5 contratados activos. La vacante fue pausada automáticamente."*
 
-**CA-16.4:** Alerta amarilla cuando los candidatos en Entrevista+Oferta igualan o superan el cupo restante — avisa al coordinador antes de que se llene, no después.
+**CA-16.4:** Alerta amarilla cuando los candidatos en Entrevista+Inducción igualan o superan el cupo restante — avisa al coordinador antes de que se llene, no después.
 
 **CA-16.5:** `cupo_cubierto` se calcula automáticamente — solo cuenta candidatos en etapa "Contratado" con `garantia_cumplida = false` (garantía activa). No cuenta descartados, no efectivos ni renuncias.
 
@@ -1133,6 +1202,10 @@ Cuando `strikes_inasistencia.contador` llega a 3, además de lo ya definido en C
 
 **CA-19.3 — Los vetados desaparecen de los dashboards operativos:**
 Mientras un candidato esté vetado (`candidatos.vetado = true`), sus chats y postulaciones **no aparecen** en `/reclutador/pipeline`, `/reclutador/chats`, ni en el Kanban global del coordinador — quedan en un estado de archivo invisible para el uso diario. Solo son visibles desde un panel específico de "Candidatos vetados" en el dashboard del coordinador (ver CA-19.6), donde puede revisarlos y revertir el veto manualmente en cualquier momento (reutiliza el mecanismo ya definido en CA-14.3).
+
+**CA-19.3b — Archivo de "No efectivo" (agregada 2026-08-06, ver CA-02.10):** una postulación marcada `motivo_descarte = 'no_concluyo_induccion'` se muestra con la card en rojo tenue al final de la columna "Descartado" durante 2 días. Pasado ese margen, se oculta del Kanban del reclutador igual que un vetado — visible solo en el panel del coordinador ("No efectivos" / vetados), reactivable manualmente vía el botón "🔄 Reactivar candidato" descrito en CA-02.10.
+
+**CA-19.3c — Archivo de "Contratado" con garantía cumplida (agregada 2026-08-06):** cuando `garantia_cumplida` pasa a `true` automáticamente (el sistema detecta que ya pasó `fecha_garantia_fin`), la card permanece visible 3 días más como margen de seguridad, y después se oculta del Kanban del reclutador — visible solo para el coordinador. Este archivo es independiente del borrado permanente de CA-19.5 (que sigue ocurriendo a los 30 días desde `fecha_contratacion`/inicio de inducción); es solo una capa de "oculto pero no borrado" antes del borrado real.
 
 **CA-19.4 — Botón "Eliminar descartados vencidos (+15 días)":**
 Visible solo en el dashboard del coordinador. Al presionarlo, el sistema primero muestra cuántos registros serán afectados (ej. "Esto eliminará 12 candidatos descartados") y pide confirmación explícita. Al confirmar, borra el expediente completo (candidato, chats, mensajes, historial de etapas y documentos) de todas las postulaciones con `etapa_actual = 'Descartado'`, `motivo_descarte ≠ 'no_se_presento'`, y `updated_at` con más de 15 días. Los candidatos vetados (`vetado = true`) quedan excluidos de este botón sin importar su motivo original — solo se eliminan vía CA-19.6.

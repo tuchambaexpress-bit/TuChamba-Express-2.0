@@ -40,7 +40,35 @@ export function calcularGarantiaFin(
   fechaContratacion: string,
   diasGarantia: number
 ): string {
+  // Mantenido por compatibilidad — usar calcularGarantiaFinHabil() para el
+  // cálculo correcto que respeta días de descanso (ver CA-02.8).
   const fecha = new Date(fechaContratacion)
   fecha.setDate(fecha.getDate() + diasGarantia)
+  return fecha.toISOString().split('T')[0]
+}
+
+/**
+ * CA-02.8 — Calcula fecha_garantia_fin contando solo días HÁBILES,
+ * saltándose los días de descanso configurados por empresa (negocios.dias_descanso).
+ *
+ * @param fechaInicio - fecha de inicio de inducción (YYYY-MM-DD)
+ * @param diasGarantia - número de días de garantía a cumplir (vacantes.dias_garantia)
+ * @param diasDescanso - array de días de la semana que NO cuentan (0=Domingo...6=Sábado)
+ */
+export function calcularGarantiaFinHabil(
+  fechaInicio: string,
+  diasGarantia: number,
+  diasDescanso: number[] = [0]
+): string {
+  const fecha = new Date(fechaInicio + 'T00:00:00')
+  let diasContados = 0
+
+  while (diasContados < diasGarantia) {
+    fecha.setDate(fecha.getDate() + 1)
+    if (!diasDescanso.includes(fecha.getDay())) {
+      diasContados++
+    }
+  }
+
   return fecha.toISOString().split('T')[0]
 }

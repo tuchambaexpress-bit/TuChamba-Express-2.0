@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { getSemanaISO } from '@/lib/utils'
+import { getSemanaISO, calcularGarantiaFinHabil } from '@/lib/utils'
 
 
 interface Props {
@@ -27,8 +27,12 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
   const [mostrarMenu, setMostrarMenu] = useState(false)
   const [mostrarModalDescarte, setMostrarModalDescarte] = useState(false)
   const [mostrarModalEntrevista, setMostrarModalEntrevista] = useState(false)
-  const [mostrarModalContratado, setMostrarModalContratado] = useState(false)
-  const [fechaContratacion, setFechaContratacion] = useState(
+  const [mostrarModalInduccion, setMostrarModalInduccion] = useState(false)
+  const [fechaInduccion, setFechaInduccion] = useState(
+    new Date().toISOString().split('T')[0]
+  )
+  const [mostrarModalFirmaContrato, setMostrarModalFirmaContrato] = useState(false)
+  const [fechaFirmaContrato, setFechaFirmaContrato] = useState(
     new Date().toISOString().split('T')[0]
   )
   const [comisionCalculada, setComisionCalculada] = useState<number | null>(null)
@@ -49,7 +53,8 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
       if (e.key === 'Escape') {
         setMostrarModalDescarte(false)
         setMostrarModalEntrevista(false)
-        setMostrarModalContratado(false)
+        setMostrarModalInduccion(false)
+        setMostrarModalFirmaContrato(false)
         setMostrarMenu(false)
         if (mostrarModalDocumentos) cerrarModalDocumentos()
       }
@@ -85,21 +90,25 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
       setMostrarModalDescarte(true)
       return
     }
-    if (nuevaEtapa === 'Contratado') {
+    if (nuevaEtapa === 'Inducción') {
       setMostrarMenu(false)
-      // Calcular comisión y garantía preview
+      // Calcular comisión y garantía preview (CA-02.8: se fija aquí, no en Contratado)
       const diasGarantia = postulacion.vacantes?.dias_garantia ?? 30
       const comisionBase = postulacion.vacantes?.comision_base_mxn ?? 0
       const tienePromo = postulacion.vacantes?.tiene_promocion ?? false
       const promoFin = postulacion.vacantes?.promocion_fin
       const promoMonto = postulacion.vacantes?.promocion_monto_mxn ?? 0
+      const diasDescanso = postulacion.vacantes?.negocios?.dias_descanso ?? [0]
       const hoy = new Date().toISOString().split('T')[0]
       const monto = tienePromo && promoFin && hoy <= promoFin ? promoMonto : comisionBase
-      const fin = new Date()
-      fin.setDate(fin.getDate() + diasGarantia)
       setComisionCalculada(monto)
-      setGarantiaFin(fin.toISOString().split('T')[0])
-      setMostrarModalContratado(true)
+      setGarantiaFin(calcularGarantiaFinHabil(fechaInduccion, diasGarantia, diasDescanso))
+      setMostrarModalInduccion(true)
+      return
+    }
+    if (nuevaEtapa === 'Contratado') {
+      setMostrarMenu(false)
+      setMostrarModalFirmaContrato(true)
       return
     }
     setMostrarMenu(false)
@@ -256,19 +265,19 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
       .eq('id', postulacion.id)
   }
 
-  async function confirmarContratado() {
+  async function confirmarInduccion() {
     setMoviendo(true)
     const supabase = createClient()
     const diasGarantia = postulacion.vacantes?.dias_garantia ?? 30
-    const fechaFin = new Date(fechaContratacion)
-    fechaFin.setDate(fechaFin.getDate() + diasGarantia)
+    const diasDescanso = postulacion.vacantes?.negocios?.dias_descanso ?? [0]
+    const fechaFin = calcularGarantiaFinHabil(fechaInduccion, diasGarantia, diasDescanso)
 
     await supabase
       .from('postulaciones')
       .update({
-        etapa_actual: 'Contratado',
-        fecha_contratacion: fechaContratacion,
-        fecha_garantia_fin: fechaFin.toISOString().split('T')[0],
+        etapa_actual: 'Inducción',
+        fecha_contratacion: fechaInduccion,
+        fecha_garantia_fin: fechaFin,
         comision_aplicable: true,
         comision_aplicada_mxn: comisionCalculada,
         semana_corte: getSemanaISO(),
@@ -279,13 +288,39 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
     await supabase.from('historial_etapas').insert({
       postulacion_id: postulacion.id,
       etapa_anterior: postulacion.etapa_actual,
+      etapa_nueva: 'Inducción',
+      cambiado_por: reclutadorId,
+      nota: `Inicia inducción ${fechaInduccion}. Garantía hasta ${fechaFin}`
+    })
+
+    onActualizarEtapa(postulacion.id, 'Inducción')
+    setMostrarModalInduccion(false)
+    setMoviendo(false)
+  }
+
+  async function confirmarFirmaContrato() {
+    setMoviendo(true)
+    const supabase = createClient()
+
+    await supabase
+      .from('postulaciones')
+      .update({
+        etapa_actual: 'Contratado',
+        fecha_firma_contrato: fechaFirmaContrato,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', postulacion.id)
+
+    await supabase.from('historial_etapas').insert({
+      postulacion_id: postulacion.id,
+      etapa_anterior: postulacion.etapa_actual,
       etapa_nueva: 'Contratado',
       cambiado_por: reclutadorId,
-      nota: `Contratado. Garantía hasta ${fechaFin.toISOString().split('T')[0]}`
+      nota: `Firma de contrato: ${fechaFirmaContrato}. Garantía y comisión ya fijadas desde Inducción.`
     })
 
     onActualizarEtapa(postulacion.id, 'Contratado')
-    setMostrarModalContratado(false)
+    setMostrarModalFirmaContrato(false)
     setMoviendo(false)
   }
 
@@ -569,38 +604,38 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
         </div>
       )}
 
-      {/* Modal de Contratado */}
-      {mostrarModalContratado && (
+      {/* Modal de Inducción (CA-02.8) — aquí se fija garantía y comisión */}
+      {mostrarModalInduccion && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
           <div className="bg-white rounded-2xl p-5 max-w-sm w-full shadow-xl">
-            <h3 className="font-bold text-gray-900 mb-1">🎉 Confirmar contratación</h3>
+            <h3 className="font-bold text-gray-900 mb-1">🎓 Inicia inducción</h3>
             <p className="text-sm text-gray-500 mb-4">{nombre} — {vacante}</p>
 
             <div className="space-y-3 mb-4">
               <div>
-                <label className="text-xs font-medium text-gray-700 block mb-1">Fecha de contratación *</label>
+                <label className="text-xs font-medium text-gray-700 block mb-1">Fecha de inicio de inducción *</label>
                 <input
                   type="date"
-                  value={fechaContratacion}
+                  value={fechaInduccion}
                   onChange={e => {
-                    setFechaContratacion(e.target.value)
+                    setFechaInduccion(e.target.value)
                     const diasGarantia = postulacion.vacantes?.dias_garantia ?? 30
-                    const fin = new Date(e.target.value)
-                    fin.setDate(fin.getDate() + diasGarantia)
-                    setGarantiaFin(fin.toISOString().split('T')[0])
+                    const diasDescanso = postulacion.vacantes?.negocios?.dias_descanso ?? [0]
+                    setGarantiaFin(calcularGarantiaFinHabil(e.target.value, diasGarantia, diasDescanso))
                   }}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
                 />
+                <p className="text-[10px] text-gray-400 mt-1">Puedes seleccionar una fecha anterior a hoy si el candidato avisó tarde.</p>
               </div>
             </div>
 
             {/* Resumen */}
             <div className="bg-green-50 border border-green-200 rounded-xl p-3 mb-4 space-y-1">
               <p className="text-xs text-green-700">
-                <span className="font-semibold">Días de garantía:</span> {postulacion.vacantes?.dias_garantia ?? 30} días
+                <span className="font-semibold">Días de garantía:</span> {postulacion.vacantes?.dias_garantia ?? 30} días hábiles
               </p>
               <p className="text-xs text-green-700">
-                <span className="font-semibold">Garantía cumple:</span> {garantiaFin ? new Date(garantiaFin).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'}
+                <span className="font-semibold">Garantía cumple:</span> {garantiaFin ? new Date(garantiaFin + 'T00:00:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'}
               </p>
               <p className="text-xs text-green-700 text-lg font-bold">
                 <span className="font-semibold">Tu comisión:</span> ${comisionCalculada?.toLocaleString('es-MX')} MXN
@@ -609,13 +644,52 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
 
             <div className="flex gap-2">
               <button
-                onClick={() => setMostrarModalContratado(false)}
+                onClick={() => setMostrarModalInduccion(false)}
                 className="flex-1 border border-gray-300 text-gray-700 py-2.5 rounded-xl text-sm font-medium"
               >
                 Cancelar
               </button>
               <button
-                onClick={confirmarContratado}
+                onClick={confirmarInduccion}
+                className="flex-1 bg-[#1A6B3C] hover:bg-[#155c33] text-white py-2.5 rounded-xl text-sm font-medium"
+              >
+                ✅ Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Firma de Contrato — cierre administrativo, no recalcula nada */}
+      {mostrarModalFirmaContrato && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl p-5 max-w-sm w-full shadow-xl">
+            <h3 className="font-bold text-gray-900 mb-1">🎉 Confirmar contratación</h3>
+            <p className="text-sm text-gray-500 mb-4">{nombre} — {vacante}</p>
+
+            <div className="space-y-3 mb-4">
+              <div>
+                <label className="text-xs font-medium text-gray-700 block mb-1">Fecha de firma de contrato *</label>
+                <input
+                  type="date"
+                  value={fechaFirmaContrato}
+                  onChange={e => setFechaFirmaContrato(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
+                />
+              </div>
+            </div>
+
+            <p className="text-xs text-gray-400 mb-4">La garantía y tu comisión ya quedaron fijadas desde que el candidato inició inducción — este paso solo cierra el ciclo administrativamente.</p>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setMostrarModalFirmaContrato(false)}
+                className="flex-1 border border-gray-300 text-gray-700 py-2.5 rounded-xl text-sm font-medium"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmarFirmaContrato}
                 className="flex-1 bg-[#1A6B3C] hover:bg-[#155c33] text-white py-2.5 rounded-xl text-sm font-medium"
               >
                 ✅ Confirmar
