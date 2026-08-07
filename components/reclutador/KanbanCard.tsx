@@ -22,6 +22,8 @@ const MOTIVOS_DESCARTE = [
   { value: 'otro', label: 'Otro' },
 ]
 
+const MOTIVO_NO_CONCLUYO_INDUCCION = { value: 'no_concluyo_induccion', label: 'No concluyó inducción' }
+
 export default function KanbanCard({ postulacion, etapasDisponibles, onActualizarEtapa, reclutadorId, tieneHistorialPrevio }: Props) {
   const [moviendo, setMoviendo] = useState(false)
   const [mostrarMenu, setMostrarMenu] = useState(false)
@@ -68,6 +70,14 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
   const [motivoDetalle, setMotivoDetalle] = useState('')
   const [alcanceDescarte, setAlcanceDescarte] = useState('esta_vacante')
   const [mensajeRetro, setMensajeRetro] = useState('')
+  const [fechaUltimoDiaPresente, setFechaUltimoDiaPresente] = useState(
+    new Date().toISOString().split('T')[0]
+  )
+
+  // CA-02.10: "No efectivo" solo disponible desde etapa Inducción
+  const motivosDescarteDisponibles = postulacion.etapa_actual === 'Inducción'
+    ? [...MOTIVOS_DESCARTE, MOTIVO_NO_CONCLUYO_INDUCCION]
+    : MOTIVOS_DESCARTE
 
   // Estado modal entrevista
   const [fechaEntrevista, setFechaEntrevista] = useState('')
@@ -83,6 +93,19 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
   const vacante = postulacion.vacantes?.titulo
   const enEntrevista = postulacion.etapa_actual === 'Entrevista'
   const tieneEntrevista = postulacion.fecha_entrevista
+
+  // CA-02.9: flujo secuencial, un paso a la vez (adelante o atrás, tipo Ctrl+Z)
+  const ORDEN_ETAPAS = ['Aplicado', 'Contactado', 'Entrevista', 'Inducción', 'Contratado']
+  const indiceActual = ORDEN_ETAPAS.indexOf(postulacion.etapa_actual)
+  const siguienteEtapa = indiceActual >= 0 && indiceActual < ORDEN_ETAPAS.length - 1
+    ? ORDEN_ETAPAS[indiceActual + 1]
+    : null
+  const anteriorEtapa = indiceActual > 0 ? ORDEN_ETAPAS[indiceActual - 1] : null
+  const opcionesMenu = [
+    ...(siguienteEtapa ? [siguienteEtapa] : []),
+    ...(anteriorEtapa ? [anteriorEtapa] : []),
+    ...(postulacion.etapa_actual !== 'Contratado' ? ['Descartado'] : [])
+  ]
 
   async function cambiarEtapa(nuevaEtapa: string) {
     if (nuevaEtapa === 'Descartado') {
@@ -115,16 +138,33 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
     setMoviendo(true)
     const supabase = createClient()
 
+    // Si retrocede desde "Inducción", la garantía/comisión ya calculada
+    // deja de tener sentido — se limpia para no dejar datos fantasma.
+    const retrocedeDesdeInduccion = postulacion.etapa_actual === 'Inducción'
+    const camposReset = retrocedeDesdeInduccion
+      ? {
+          fecha_contratacion: null,
+          fecha_garantia_fin: null,
+          comision_aplicable: false,
+          comision_aplicada_mxn: null
+        }
+      : {}
+
     await supabase
       .from('postulaciones')
-      .update({ etapa_actual: nuevaEtapa, updated_at: new Date().toISOString() })
+      .update({
+        etapa_actual: nuevaEtapa,
+        updated_at: new Date().toISOString(),
+        ...camposReset
+      })
       .eq('id', postulacion.id)
 
     await supabase.from('historial_etapas').insert({
       postulacion_id: postulacion.id,
       etapa_anterior: postulacion.etapa_actual,
       etapa_nueva: nuevaEtapa,
-      cambiado_por: reclutadorId
+      cambiado_por: reclutadorId,
+      nota: retrocedeDesdeInduccion ? 'Retrocedido — garantía y comisión reiniciadas' : undefined
     })
 
     onActualizarEtapa(postulacion.id, nuevaEtapa)
@@ -133,13 +173,27 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
 
   async function descartarUnaPostulacion(postulacionId: string, etapaAnterior: string, nota: string) {
     const supabase = createClient()
+
+    // CA-02.10: "No concluyó inducción" limpia garantía/comisión ya calculadas
+    // y guarda el último día real de presencia en el detalle, para trazabilidad.
+    const esNoEfectivo = motivoDescarte === 'no_concluyo_induccion'
+    const detalleFinal = esNoEfectivo
+      ? `Último día presente: ${fechaUltimoDiaPresente}${motivoDetalle ? ' — ' + motivoDetalle : ''}`
+      : (motivoDetalle || null)
+
     await supabase
       .from('postulaciones')
       .update({
         etapa_actual: 'Descartado',
         motivo_descarte: motivoDescarte,
         descartado_por: 'reclutador',
-        motivo_descarte_detalle: motivoDetalle || null,
+        motivo_descarte_detalle: detalleFinal,
+        ...(esNoEfectivo ? {
+          fecha_contratacion: null,
+          fecha_garantia_fin: null,
+          comision_aplicable: false,
+          comision_aplicada_mxn: null
+        } : {}),
         updated_at: new Date().toISOString()
       })
       .eq('id', postulacionId)
@@ -405,6 +459,18 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
         {/* Nombre candidato */}
         <p className="font-semibold text-gray-900 text-sm">{nombre}</p>
 
+        {/* Badge de inactividad prolongada (CA-02.11) */}
+        {(() => {
+          const etapasActivas = ['Aplicado', 'Contactado', 'Entrevista', 'Inducción']
+          const horasSinMovimiento = (Date.now() - new Date(postulacion.updated_at).getTime()) / (1000 * 60 * 60)
+          const sinActividad = etapasActivas.includes(postulacion.etapa_actual) && horasSinMovimiento > 72
+          return sinActividad && (
+            <span className="inline-block text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium mt-1 mr-1">
+              🚨 Sin actividad
+            </span>
+          )
+        })()}
+
         {/* Badge de historial previo (CA-14.2) */}
         {tieneHistorialPrevio && (
           <a
@@ -469,20 +535,20 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
             </button>
             {mostrarMenu && (
               <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-xl shadow-lg z-10 min-w-[160px]">
-                {etapasDisponibles
-                  .filter(e => e !== postulacion.etapa_actual)
-                  .map(etapa => (
-                    <button
-                      key={etapa}
-                      onClick={() => cambiarEtapa(etapa)}
-                      className={`w-full text-left px-3 py-2 text-xs hover:bg-gray-50 first:rounded-t-xl last:rounded-b-xl ${
-                        etapa === 'Descartado' ? 'text-red-500 font-medium' : 'text-gray-700'
-                      }`}
-                    >
-                      {etapa === 'Descartado' ? '❌ Descartar' : etapa}
-                    </button>
-                  ))
-                }
+                {opcionesMenu.map(etapa => (
+                  <button
+                    key={etapa}
+                    onClick={() => cambiarEtapa(etapa)}
+                    className={`w-full text-left px-3 py-2 text-xs hover:bg-gray-50 first:rounded-t-xl last:rounded-b-xl ${
+                      etapa === 'Descartado' ? 'text-red-500 font-medium' : 'text-gray-700'
+                    }`}
+                  >
+                    {etapa === 'Descartado' ? '❌ Descartar' : etapa === anteriorEtapa ? `← ${etapa}` : `→ ${etapa}`}
+                  </button>
+                ))}
+                {opcionesMenu.length === 0 && (
+                  <p className="px-3 py-2 text-xs text-gray-400">Sin acciones disponibles</p>
+                )}
               </div>
             )}
           </div>
@@ -519,7 +585,7 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
             {/* Motivo */}
             <p className="text-xs font-medium text-gray-700 mb-2">Razón del descarte *</p>
             <div className="space-y-1.5 mb-4">
-              {MOTIVOS_DESCARTE.map(m => (
+              {motivosDescarteDisponibles.map(m => (
                 <label key={m.value} className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="radio"
@@ -542,6 +608,23 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
                 onChange={e => setMotivoDetalle(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
               />
+            )}
+
+            {motivoDescarte === 'no_concluyo_induccion' && (
+              <div className="mb-4">
+                <label className="text-xs font-medium text-gray-700 block mb-1">
+                  Último día que se presentó *
+                </label>
+                <input
+                  type="date"
+                  value={fechaUltimoDiaPresente}
+                  onChange={e => setFechaUltimoDiaPresente(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
+                />
+                <p className="text-[10px] text-gray-400 mt-1">
+                  El sistema considera la falta a partir del día siguiente a esta fecha.
+                </p>
+              </div>
             )}
 
             {/* Alcance */}
@@ -576,6 +659,10 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
                 className="text-[10px] px-2 py-1 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-50">No se presentó</button>
               <button type="button" onClick={() => setMensajeRetro('La empresa tomó otra decisión en esta ocasión. Seguimos trabajando para encontrarte una oportunidad.')}
                 className="text-[10px] px-2 py-1 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-50">Empresa no aceptó</button>
+              {motivoDescarte === 'no_concluyo_induccion' && (
+                <button type="button" onClick={() => setMensajeRetro('Notamos que no continuaste con tu proceso de inducción. Si fue un malentendido o quieres platicarlo, contáctanos.')}
+                  className="text-[10px] px-2 py-1 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-50">No concluyó inducción</button>
+              )}
             </div>
             <textarea
               placeholder="Ej. Gracias por tu interés, en esta ocasión no continúas en el proceso..."

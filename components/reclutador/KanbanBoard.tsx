@@ -30,6 +30,7 @@ interface Postulacion {
   }
   chats: { id: string }[]
   created_at: string
+  updated_at: string
 }
 
 export default function KanbanBoard() {
@@ -51,7 +52,7 @@ export default function KanbanBoard() {
     const { data } = await supabase
       .from('postulaciones')
       .select(`
-        id, etapa_actual, candidato_id, vacante_id, agencia_id, created_at,
+        id, etapa_actual, candidato_id, vacante_id, agencia_id, created_at, updated_at,
         candidatos(id, nombre, telefono),
         vacantes(titulo, etapas_personalizadas, dias_garantia, comision_base_mxn, tiene_promocion, promocion_fin, promocion_monto_mxn, negocios(dias_descanso)),
         chats(id)
