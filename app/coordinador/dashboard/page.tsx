@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import CoordinadorNav from '@/components/coordinador/CoordinadorNav'
 
 export default function DashboardCoordinador() {
   const router = useRouter()
@@ -20,26 +21,7 @@ export default function DashboardCoordinador() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-[#1A6B3C] px-6 py-4 shadow-md">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div>
-            <img src="/Logo_Header.png" alt="Tu Chamba Express" className="h-8 object-contain" />
-            <p className="text-green-200 text-sm mt-1">Portal Coordinador</p>
-          </div>
-          <div className="flex gap-4 items-center">
-            <span className="text-green-200 text-sm">Hola, {sesion.nombre}</span>
-            <button
-              onClick={() => {
-                localStorage.removeItem('coordinador_sesion')
-                router.push('/coordinador/login')
-              }}
-              className="text-green-200 hover:text-white text-sm"
-            >
-              Cerrar sesión
-            </button>
-          </div>
-        </div>
-      </header>
+      <CoordinadorNav />
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-6">Dashboard</h2>
