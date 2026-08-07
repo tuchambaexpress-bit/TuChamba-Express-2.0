@@ -19,6 +19,7 @@ const COLORES_ETAPA: Record<string, string> = {
   'Entrevista': 'bg-yellow-100 text-yellow-700',
   'Inducción': 'bg-purple-100 text-purple-700',
   'Contratado': 'bg-green-100 text-green-700',
+  'Descartado': 'bg-red-100 text-red-700',
 }
 
 export default function KanbanColumn({ etapa, postulaciones, todasPostulaciones, onActualizarEtapa, reclutadorId, candidatosConHistorial }: Props) {
@@ -27,7 +28,7 @@ export default function KanbanColumn({ etapa, postulaciones, todasPostulaciones,
       {/* Header de columna — sticky */}
       <div className="flex items-center gap-2 mb-3 sticky top-0 bg-gray-50 py-2 z-10">
         <span className={`text-xs font-semibold px-2 py-1 rounded-full ${COLORES_ETAPA[etapa] ?? 'bg-gray-100 text-gray-700'}`}>
-          {etapa}
+          {etapa === 'Descartado' ? 'Descartados' : etapa}
         </span>
         <span className="text-xs text-gray-400">{postulaciones.length}</span>
       </div>

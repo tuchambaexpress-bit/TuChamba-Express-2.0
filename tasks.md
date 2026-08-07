@@ -202,17 +202,21 @@ implement changes → si hay observaciones, se corrige antes de archivar
   - Botón "🔄 Reactivar candidato" en el panel de vetados/no-efectivos del coordinador
   - Limpia `vetado`, `motivo_veto`, reinicia contador en `strikes_inasistencia` — deja registro de quién/cuándo autorizó
   - Aplica tanto a vetados (CA-14.4) como a "No efectivo" (CA-02.10)
-  - Depende de que exista el panel del coordinador (construir junto con Parte 5 o en Sprint 8)
+  - Depende de que exista el panel del coordinador (construir junto con Sprint 8/portal coordinador)
 
-  **Parte 5 — Archivo automático (extensión de HU-19, ver CA-19.3b/CA-19.3c) — ⏳ PENDIENTE, siguiente en la fila:**
-  - "No efectivo": ocultar del Kanban del reclutador 2 días después de marcarse (mitad del reclutador — se puede hacer ya, ajustando el query de `KanbanBoard.tsx`)
-  - "Contratado" con garantía cumplida: ocultar del Kanban 3 días después de `garantia_cumplida = true` (mitad del reclutador — también se puede hacer ya)
-  - Panel del coordinador para ver lo archivado — depende de Sprint 8/portal coordinador, no bloquea la mitad del reclutador
+  **Parte 5 — Archivo automático (extensión de HU-19, ver CA-19.3b/CA-19.3c) — ✅ COMPLETA (mitad del reclutador), verificada en vivo 2026-08-07:**
+  - Columna "Descartados" agregada al Kanban (CA-13.3, nunca se había construido — hueco detectado y cerrado hoy)
+  - "No efectivo": se oculta del Kanban 2 días después de marcarse — verificado con Pedro Plata (desapareció tras simular `updated_at` de hace 3 días)
+  - "Contratado" con garantía cumplida: se oculta 3 días después, calculado al vuelo comparando `fecha_garantia_fin` contra hoy (sin depender de un cron ni del campo `garantia_cumplida`, que nunca se actualiza automáticamente — hueco documentado, no resuelto, evitado con este enfoque)
+  - Cards "No efectivo" con fondo rojo tenue distinguible — verificado
+  - Menú "Mover" ya no ofrece acciones en etapas terminales (Descartado, Contratado)
+  - **Pendiente:** panel del coordinador para ver lo archivado (Sprint 8/portal coordinador) — no bloquea lo ya construido
 
   **Parte 6 — Badge de inactividad (CA-02.11) — ✅ COMPLETA, verificada en vivo:**
   - Badge "🚨 Sin actividad" en la card, etapas activas con más de 72h sin `updated_at` — verificado con Lex Luthor (screenshot 2026-08-06)
 
-  **Nota general:** no aplica retroactivo — José confirmó que todos los candidatos actuales son de prueba, sin comisiones reales en juego. Partes 1, 2, 3 y 6 completas y probadas en vivo hoy (2026-08-06). Partes 4 y 5 quedan pendientes — la mitad de la Parte 5 que le toca al reclutador (ocultar del Kanban) puede resolverse sin esperar al portal coordinador.
+  **Nota general:** no aplica retroactivo — José confirmó que todos los candidatos actuales son de prueba, sin comisiones reales en juego. Partes 1, 2, 3, 5 (mitad reclutador) y 6 completas y probadas en vivo. Solo queda pendiente la Parte 4, que depende del portal coordinador — 5.1c se marca [X] cuando esa parte se resuelva junto con Sprint 8.
+- [ ] 5.1d `Descartados`: botón de consulta en cada card mostrando motivo, detalle, **fecha y hora exactas** del descarte, quién lo descartó, y el mensaje de retroalimentación enviado (ver spec.md CA-13.4, idea de José 2026-08-07). Solo lectura, sin edición.
 - [X] 5.2 Middleware de ruta: redirige a login si no hay sesión, y a "en revisión" si `status != 'activo'`. Verificado en vivo 2026-08-06: nuevo `middleware.ts` (raíz del proyecto) protege `/coordinador/*` por si una sesión ya abierta pierde status activo a mitad de uso (el login en sí ya bloqueaba el caso de entrar con cuenta inactiva desde cero — el middleware cubre el caso complementario). Nueva página `app/coordinador/en-revision/page.tsx` (CA-08.3). Vínculo confirmado: `coordinadores.email` = `auth.users.email` (los IDs no coinciden).
 - [ ] 5.3 `app/coordinador/vacantes/page.tsx`: listado de vacantes de la agencia, filtros de status y prioridad.
 - [ ] 5.4 Construir `components/forms/EditableList.tsx` — componente reutilizable de lista editable (agregar, editar in-line, borrar, reordenar con `@dnd-kit`). Ver código de referencia en plan.md §11. Este componente se construye UNA vez y se reutiliza en requisitos, beneficios, documentos_requeridos, zonas_ruta y tags.
@@ -237,7 +241,7 @@ implement changes → si hay observaciones, se corrige antes de archivar
   - Reporte post-importación: cuántas vacantes se crearon, cuántas fallaron y por qué (fila + motivo)
   - Modo "actualizar existentes": si el título+empresa ya existe para esa agencia, actualiza en vez de duplicar
 - [ ] 5.10 `app/coordinador/reclutadores/page.tsx`: CRUD de reclutadores de la agencia.
-- [ ] 5.11 `app/coordinador/pipeline/page.tsx`: Kanban global de la agencia (filtrable por vacante/reclutador).
+- [ ] 5.11 `app/coordinador/pipeline/page.tsx`: Kanban global de la agencia, filtrable por vacante/reclutador. Refinamiento 2026-08-07 (idea de José): además del filtro simple, considerar una vista tipo "panel de reclutadores" — lista de reclutadores de la agencia, y al seleccionar uno, ver su pipeline completo filtrado (solo consulta, sin editar) para que el coordinador revise el estatus de sus candidatos sin tener que buscarlo entre el Kanban global mezclado.
 - [ ] 5.12 `app/coordinador/faq/page.tsx`: preguntas escaladas (Nivel 3) sin responder con alerta visual, formulario de respuesta, toggle "Publicar en FAQ".
 - [ ] 5.13 Chat coordinador↔reclutador (tipo `reclutador_coordinador`): lista de conversaciones, contextuales por vacante o generales.
 - [ ] 5.14 Trigger de alerta proactiva granular: al cambiar `status`, `comision_base_mxn`, `dias_garantia`, `tiene_promocion`, `promocion_monto_mxn`, `tiene_ruta` de una vacante — notificar a todos los reclutadores de la agencia con mensaje específico de qué cambió (ver spec.md CA-07.6, CA-07.7, CA-07.8).

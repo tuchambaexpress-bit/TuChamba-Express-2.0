@@ -843,7 +843,9 @@ Dado que el coordinador marca una vacante como `status = 'pausada'` con nota "si
 
 **CA-13.2:** Al descartar, el sistema pregunta: *"¿Quieres buscarle otra vacante a [nombre]?"* — si el reclutador dice sí, muestra las vacantes activas de la agencia donde el candidato podría encajar.
 
-**CA-13.3:** Los candidatos descartados aparecen en una columna separada "Descartados" al final del Kanban — nunca se borran del historial.
+**CA-13.3:** Los candidatos descartados aparecen en una columna separada "Descartados" al final del Kanban — nunca se borran del historial. Implementada 2026-08-07: la columna filtra candidatos "No efectivo" (`motivo_descarte = 'no_concluyo_induccion'`) fuera de vista 2 días después de marcarse (CA-19.3b), y a los "Contratado" con garantía ya cumplida 3 días después (CA-19.3c, calculado al vuelo comparando `fecha_garantia_fin` contra la fecha actual, sin depender de un proceso programado). Las cards "No efectivo" se muestran con fondo rojo tenue, distinguibles del resto de descartados.
+
+**CA-13.4 — Consulta del detalle de descarte (idea de José, 2026-08-07):** desde la columna "Descartados", cada card tiene un botón para abrir un modal de solo lectura mostrando: motivo de descarte seleccionado, el detalle/comentario escrito por el reclutador, **fecha y hora exactas** del descarte, quién lo descartó, y el mensaje de retroalimentación enviado al candidato (si hubo uno). Sin edición — es puramente de consulta, para que el reclutador o el coordinador puedan revisar el historial sin tener que rastrear la información en Supabase directamente.
 
 ---
 

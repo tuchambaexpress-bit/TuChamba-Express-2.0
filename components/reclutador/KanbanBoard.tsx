@@ -31,6 +31,10 @@ interface Postulacion {
   chats: { id: string }[]
   created_at: string
   updated_at: string
+  motivo_descarte: string | null
+  motivo_descarte_detalle: string | null
+  fecha_garantia_fin: string | null
+  garantia_cumplida: boolean
 }
 
 export default function KanbanBoard() {
@@ -53,15 +57,38 @@ export default function KanbanBoard() {
       .from('postulaciones')
       .select(`
         id, etapa_actual, candidato_id, vacante_id, agencia_id, created_at, updated_at,
+        motivo_descarte, motivo_descarte_detalle, fecha_garantia_fin, garantia_cumplida,
         candidatos(id, nombre, telefono),
         vacantes(titulo, etapas_personalizadas, dias_garantia, comision_base_mxn, tiene_promocion, promocion_fin, promocion_monto_mxn, negocios(dias_descanso)),
         chats(id)
       `)
       .eq('reclutador_id', reclutadorId)
-      .not('etapa_actual', 'eq', 'Descartado')
       .order('created_at', { ascending: false })
 
-    if (data) setPostulaciones(data as any)
+    if (data) {
+      const ahora = Date.now()
+      const DOS_DIAS = 2 * 24 * 60 * 60 * 1000
+      const TRES_DIAS = 3 * 24 * 60 * 60 * 1000
+
+      const visibles = data.filter((p: any) => {
+        // CA-19.3b: "No efectivo" se oculta 2 días después de marcarse
+        if (p.etapa_actual === 'Descartado' && p.motivo_descarte === 'no_concluyo_induccion') {
+          return ahora - new Date(p.updated_at).getTime() < DOS_DIAS
+        }
+        // CA-19.3c: "Contratado" con garantía cumplida se oculta 3 días después
+        // (calculado al vuelo comparando fecha, sin depender de garantia_cumplida guardado)
+        if (p.etapa_actual === 'Contratado' && p.fecha_garantia_fin) {
+          const yaSeVencio = ahora > new Date(p.fecha_garantia_fin + 'T00:00:00').getTime()
+          if (yaSeVencio) {
+            const diasDesdeVencio = ahora - new Date(p.fecha_garantia_fin + 'T00:00:00').getTime()
+            return diasDesdeVencio < TRES_DIAS
+          }
+        }
+        return true
+      })
+
+      setPostulaciones(visibles as any)
+    }
 
     // CA-14.2: detectar candidatos con historial previo (postulaciones
     // descartadas anteriores del mismo candidato, con este reclutador).
@@ -108,8 +135,8 @@ export default function KanbanBoard() {
     )
   }
 
-  // Obtener etapas únicas de todas las vacantes
-  const todasEtapas = ['Aplicado', 'Contactado', 'Entrevista', 'Inducción', 'Contratado']
+  // Obtener etapas únicas de todas las vacantes (CA-13.3: se agrega "Descartados" al final)
+  const todasEtapas = ['Aplicado', 'Contactado', 'Entrevista', 'Inducción', 'Contratado', 'Descartado']
 
   return (
     <>
@@ -126,7 +153,7 @@ export default function KanbanBoard() {
         }}
       >
         <option value="">Todas las etapas</option>
-        {todasEtapas.map(e => <option key={e} value={e}>{e}</option>)}
+        {todasEtapas.map(e => <option key={e} value={e}>{e === 'Descartado' ? 'Descartados' : e}</option>)}
       </select>
       <div className="space-y-3">
         {postulaciones.map(p => (

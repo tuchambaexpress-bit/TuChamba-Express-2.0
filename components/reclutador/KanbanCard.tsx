@@ -40,6 +40,7 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
   const [comisionCalculada, setComisionCalculada] = useState<number | null>(null)
   const [garantiaFin, setGarantiaFin] = useState<string | null>(null)
   const [score, setScore] = useState<number>(postulacion.score ?? 0)
+  const [mostrarModalDetalleDescarte, setMostrarModalDetalleDescarte] = useState(false)
   const [mostrarModalDocumentos, setMostrarModalDocumentos] = useState(false)
   const [documentos, setDocumentos] = useState<any[]>([])
   const [cargandoDocs, setCargandoDocs] = useState(false)
@@ -57,6 +58,7 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
         setMostrarModalEntrevista(false)
         setMostrarModalInduccion(false)
         setMostrarModalFirmaContrato(false)
+        setMostrarModalDetalleDescarte(false)
         setMostrarMenu(false)
         if (mostrarModalDocumentos) cerrarModalDocumentos()
       }
@@ -101,11 +103,13 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
     ? ORDEN_ETAPAS[indiceActual + 1]
     : null
   const anteriorEtapa = indiceActual > 0 ? ORDEN_ETAPAS[indiceActual - 1] : null
-  const opcionesMenu = [
-    ...(siguienteEtapa ? [siguienteEtapa] : []),
-    ...(anteriorEtapa ? [anteriorEtapa] : []),
-    ...(postulacion.etapa_actual !== 'Contratado' ? ['Descartado'] : [])
-  ]
+  const opcionesMenu = postulacion.etapa_actual === 'Descartado' || postulacion.etapa_actual === 'Contratado'
+    ? [] // etapas terminales, sin acciones de movimiento
+    : [
+        ...(siguienteEtapa ? [siguienteEtapa] : []),
+        ...(anteriorEtapa ? [anteriorEtapa] : []),
+        'Descartado'
+      ]
 
   async function cambiarEtapa(nuevaEtapa: string) {
     if (nuevaEtapa === 'Descartado') {
@@ -455,7 +459,11 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
 
   return (
     <>
-      <div className={`bg-white rounded-xl p-3 shadow-sm border border-gray-100 ${moviendo ? 'opacity-50' : ''}`}>
+      <div className={`rounded-xl p-3 shadow-sm border ${
+        postulacion.motivo_descarte === 'no_concluyo_induccion'
+          ? 'bg-red-50 border-red-100'
+          : 'bg-white border-gray-100'
+      } ${moviendo ? 'opacity-50' : ''}`}>
         {/* Nombre candidato */}
         <p className="font-semibold text-gray-900 text-sm">{nombre}</p>
 
@@ -519,13 +527,21 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
           >
             💬 Chat
           </a>
-          <a href={`/reclutador/detalle/${postulacion.vacante_id}`} className="text-lg bg-gray-50 hover:bg-gray-100 text-gray-600 px-2 py-1 rounded-lg border border-gray-200 transition-colors leading-none flex items-center">📋</a>
+          <a href={`/reclutador/detalle/${postulacion.vacante_id}`} className="text-sm bg-gray-50 hover:bg-gray-100 text-gray-600 w-7 h-7 rounded-lg border border-gray-200 transition-colors flex items-center justify-center flex-shrink-0">📋</a>
           <button
             onClick={abrirModalDocumentos}
-            className="text-lg bg-gray-50 hover:bg-gray-100 text-gray-600 px-2 py-1 rounded-lg border border-gray-200 transition-colors leading-none"
+            className="text-sm bg-gray-50 hover:bg-gray-100 text-gray-600 w-7 h-7 rounded-lg border border-gray-200 transition-colors flex items-center justify-center flex-shrink-0"
           >
             📎
           </button>
+          {postulacion.etapa_actual === 'Descartado' && (
+            <button
+              onClick={() => setMostrarModalDetalleDescarte(true)}
+              className="text-sm bg-gray-50 hover:bg-gray-100 text-red-500 w-7 h-7 rounded-lg border border-gray-200 transition-colors flex items-center justify-center flex-shrink-0"
+            >
+              ❌
+            </button>
+          )}
           <div className="relative">
             <button
               onClick={() => setMostrarMenu(!mostrarMenu)}
@@ -781,6 +797,72 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
               >
                 ✅ Confirmar
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de detalle del descarte (CA-13.4) — solo lectura, compacto */}
+      {mostrarModalDetalleDescarte && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl p-4 max-w-xs w-full shadow-xl">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-bold text-gray-900 text-sm">Detalle del descarte</h3>
+              <button onClick={() => setMostrarModalDetalleDescarte(false)} className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 text-xs">✕</button>
+            </div>
+            <p className="text-xs text-gray-500 mb-3">{nombre}</p>
+            <div className="space-y-2 text-xs">
+              <div>
+                <p className="text-gray-400">Motivo</p>
+                <p className="text-gray-800 font-medium">
+                  {[...MOTIVOS_DESCARTE, MOTIVO_NO_CONCLUYO_INDUCCION].find(m => m.value === postulacion.motivo_descarte)?.label ?? postulacion.motivo_descarte ?? '—'}
+                </p>
+              </div>
+              {postulacion.motivo_descarte_detalle && (
+                <div>
+                  <p className="text-gray-400">Detalle</p>
+                  <p className="text-gray-800">{postulacion.motivo_descarte_detalle}</p>
+                </div>
+              )}
+              <div>
+                <p className="text-gray-400">Fecha y hora</p>
+                <p className="text-gray-800">
+                  {new Date(postulacion.updated_at).toLocaleString('es-MX', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de detalle del descarte (CA-13.4) — solo lectura, compacto */}
+      {mostrarModalDetalleDescarte && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl p-4 max-w-xs w-full shadow-xl">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-bold text-gray-900 text-sm">Detalle del descarte</h3>
+              <button onClick={() => setMostrarModalDetalleDescarte(false)} className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 text-xs">✕</button>
+            </div>
+            <p className="text-xs text-gray-500 mb-3">{nombre}</p>
+            <div className="space-y-2 text-xs">
+              <div>
+                <p className="text-gray-400">Motivo</p>
+                <p className="text-gray-800 font-medium">
+                  {[...MOTIVOS_DESCARTE, MOTIVO_NO_CONCLUYO_INDUCCION].find(m => m.value === postulacion.motivo_descarte)?.label ?? postulacion.motivo_descarte ?? '—'}
+                </p>
+              </div>
+              {postulacion.motivo_descarte_detalle && (
+                <div>
+                  <p className="text-gray-400">Detalle</p>
+                  <p className="text-gray-800">{postulacion.motivo_descarte_detalle}</p>
+                </div>
+              )}
+              <div>
+                <p className="text-gray-400">Fecha y hora</p>
+                <p className="text-gray-800">
+                  {new Date(postulacion.updated_at).toLocaleString('es-MX', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
             </div>
           </div>
         </div>
