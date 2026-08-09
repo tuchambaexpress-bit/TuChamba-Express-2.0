@@ -1219,3 +1219,20 @@ Mismo patrón de confirmación previa. Borra el expediente completo de postulaci
 Mismo patrón de confirmación previa. Borra únicamente las filas de `strikes_inasistencia` donde `vetado_desde` tiene más de 1 año. Al borrar la huella de un candidato, el sistema también revierte `candidatos.vetado = false` (si el candidato aún existe en la base) para que ese número pueda volver a postularse con normalidad — "empieza de cero".
 
 **Nota de diseño — por qué la huella es independiente del candidato:** si el candidato reaplica después de que su expediente anterior ya se limpió (15 días), el sistema crea un registro nuevo en `candidatos` (mismo `telefono`, fila distinta), pero `strikes_inasistencia` sigue reconociendo el número y acumulando correctamente hacia el auto-veto — sin este desacople, un candidato problemático podría "resetear" su historial de inasistencias con solo esperar 16 días entre cada intento.
+
+---
+
+### HU-20: Alta y gestión de vacantes desde `VacanteModal` (coordinador)
+**Como** coordinador, **quiero** dar de alta o duplicar vacantes de forma rápida, **para** no repetir información innecesariamente cuando varias vacantes comparten empresa o datos base.
+
+> *Origen: José, 2026-08-07 — dos decisiones de diseño para VacanteModal (tarea 5.5), confirmadas antes de programar.*
+
+**CA-20.1 — Selector de negocio con creación inline:**
+En la Sección 1 (Identidad) de `VacanteModal`, el campo de empresa es un dropdown con los negocios ya existentes de la agencia del coordinador. Al final de la lista aparece la opción **"+ Nuevo negocio"** — al seleccionarla, se despliegan los 3 campos básicos (`nombre`, `industria`, `contacto_nombre`/`contacto_telefono`/`contacto_email`) directamente dentro del mismo modal, sin salir del flujo de alta de vacante. Al guardar la vacante, si se usó esta opción, primero se crea el registro en `negocios` y luego la vacante se vincula a su `id` recién creado.
+
+**CA-20.2 — Duplicar vacante:**
+Cada fila del listado de vacantes (`5.3`) tiene un botón **"📋 Duplicar"**. Al usarlo, se abre `VacanteModal` en modo "crear nueva" pero **precargado** con todos los campos de la vacante origen, con 2 excepciones que siempre reinician a su valor por defecto:
+- `cupo_cubierto` → siempre arranca en `0` (es una vacante nueva e independiente, no hereda candidatos ya colocados)
+- `status` → siempre arranca en `'vigente'`, sin importar el status de la vacante origen (ej. si la original estaba `'pausada'`, la copia nace activa)
+
+El coordinador ajusta lo que necesite cambiar (horario, salario, etc.) antes de guardar como una vacante completamente nueva e independiente — sin ningún vínculo posterior con la original.

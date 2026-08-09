@@ -172,6 +172,9 @@ implement changes → si hay observaciones, se corrige antes de archivar
 ## SPRINT 5 — PORTAL COORDINADOR — ALTA DE VACANTE Y GESTIÓN
 > **Objetivo:** Coordinador gestiona vacantes (8 bloques), reclutadores y FAQ.
 
+> ⚠️ **BUG SISTÉMICO CORREGIDO 2026-08-07 — Todas las políticas RLS de `coordinadores`:**
+> Se descubrió que **14 políticas RLS** en 9 tablas (`vacantes` ×3, `negocios` ×2, `agencias`, `alertas`, `chats`, `coordinadores`, `cortes_semana` ×2, `faqs_vacante`, `mensajes` ×2) comparaban `coordinadores.id = auth.uid()` — pero el coordinador **no usa ese vínculo**, ya que `coordinadores.id` nunca coincide con el `id` de Supabase Auth (confirmado desde `5.2`). El vínculo real es por **email**. Todas corregidas a `coordinadores.email = auth.email()`. Este era un bug de origen (probablemente todas las políticas se copiaron del mismo patrón equivocado desde el diseño inicial de RLS) — **si se crea alguna tabla nueva con política de coordinador, usar `auth.email()` desde el principio, nunca `auth.uid()`.**
+
 - [X] 5.1 `app/coordinador/login/page.tsx`: email + password con Supabase Auth.
 - [X] 5.1b `app/coordinador/dashboard/page.tsx`: dashboard base con accesos rápidos a vacantes, reclutadores, pipeline y corte semanal.
 - [ ] 5.1c **CORRECCIÓN — Rediseño del disparo de garantía/comisión + ciclo de vida completo del candidato en el pipeline** (ver spec.md CA-02.2 corregida, CA-02.8 a CA-02.11, CA-19.3b/c — detectado y ampliado 2026-08-06 por José, confirmado con Roxana García):
@@ -220,7 +223,7 @@ implement changes → si hay observaciones, se corrige antes de archivar
 - [X] 5.2 Middleware de ruta: redirige a login si no hay sesión, y a "en revisión" si `status != 'activo'`. Verificado en vivo 2026-08-06: nuevo `middleware.ts` (raíz del proyecto) protege `/coordinador/*` por si una sesión ya abierta pierde status activo a mitad de uso (el login en sí ya bloqueaba el caso de entrar con cuenta inactiva desde cero — el middleware cubre el caso complementario). Nueva página `app/coordinador/en-revision/page.tsx` (CA-08.3). Vínculo confirmado: `coordinadores.email` = `auth.users.email` (los IDs no coinciden).
 - [X] 5.3 `app/coordinador/vacantes/page.tsx`: listado de vacantes de la agencia, filtros de status y prioridad. Verificado en vivo 2026-08-07: nuevo `components/coordinador/CoordinadorNav.tsx` (nav compartido, creado antes de que se duplicara en varias páginas como pasó con el reclutador). Bug corregido en el camino: 4 políticas RLS (`vacantes_lectura_coordinador`, `vacantes_update_coordinador`, `vacantes_insert_coordinador_activo`, `negocios_lectura_coordinador`) comparaban `coordinadores.id = auth.uid()` — mismo desajuste ya detectado en `5.2` (el vínculo real es por email, no por id). Corregidas a `coordinadores.email = auth.email()`. También se corrigió `agencia_id` de Roxana en datos de prueba (estaba en una agencia distinta a las vacantes de prueba).
 - [X] 5.4 Construir `components/forms/EditableList.tsx` — componente reutilizable de lista editable (agregar, editar in-line, borrar, reordenar con `@dnd-kit`). Ver código de referencia en plan.md §11. Este componente se construye UNA vez y se reutiliza en requisitos, beneficios, documentos_requeridos, zonas_ruta y tags. Verificado en vivo 2026-08-07 con página de prueba temporal (`/coordinador/test-editablelist`, borrar antes de producción): agregar, editar in-line, cancelar con Escape, borrar y reordenar por drag confirmados funcionando.
-- [ ] 5.5 `VacanteModal` — un solo modal completo con secciones colapsables (accordion), no wizard de pasos. Usa `EditableList` para requisitos, beneficios, documentos requeridos y zonas de ruta. Estructura interna:
+- [ ] 5.5 `VacanteModal` — un solo modal completo con secciones colapsables (accordion), no wizard de pasos. Usa `EditableList` para requisitos, beneficios, documentos requeridos y zonas de ruta. Diseño confirmado 2026-08-07 (ver spec.md HU-20): selector de negocio con opción "+ Nuevo negocio" inline (CA-20.1); modal reutilizable también para "Duplicar vacante" desde el listado, precargado con los datos de la vacante origen excepto `cupo_cubierto` (siempre 0) y `status` (siempre 'vigente') (CA-20.2). Estructura interna:
   - Sección 1: Identidad (título, negocio/agencia externa, visibilidad empresa)
   - Sección 2: Ubicación y modalidad
   - Sección 3: Condiciones laborales (salario, jornada, horario)
@@ -229,6 +232,18 @@ implement changes → si hay observaciones, se corrige antes de archivar
   - Sección 6: Letras chiquitas (texto libre, visible al candidato)
   - Sección 7: Parámetros de reclutamiento (posiciones, reclutadores asignados, garantía, comisión base, promoción, deadline, prioridad)
   - Sección 8: Proceso de selección (etapas personalizadas drag-to-reorder, documentos, examen médico, estudio socioeconómico, contacto RRHH)
+
+  **📍 Progreso 2026-08-07 (construcción en curso, guardar/editar/duplicar ya funcionan de punta a punta con lo construido hasta ahora):**
+  - ✅ Sección 1 (Identidad) — título, selector de negocio + "+ Nueva empresa" inline, visibilidad
+  - ✅ Sección 2 (Ubicación) — Ciudad o Municipio, Estado, Colonia/zona (idea de José, ayuda al candidato a autofiltrarse por cercanía), Modalidad
+  - ✅ Sección 3 (Condiciones) — Jornada (dropdown corto) + Turno (matutino/vespertino/nocturno/rotativo, campo nuevo, requirió migración) + Horario detallado (texto libre — campo `horario` ya existía en el esquema, nunca se había conectado). Ajustado tras revisar `Vacantes_Completo.xlsx` real de Roxana: `jornada` no puede ser un dropdown rígido, la realidad mezcla turnos/horarios en texto libre.
+  - ✅ Sección 6 (Letras chiquitas) — texto libre completo
+  - ✅ Sección 7 (Reclutamiento) — Días de garantía, Comisión base, y Promoción (checkbox + descripción/monto/fecha de vencimiento), con nota aclarando que es info solo para el reclutador (no visible al candidato) y tooltips (`InfoTooltip`) en campos ambiguos
+  - 🚧 Secciones 4, 5, 8 — todavía "Próximamente", pero ya con texto explicativo de qué contendrán y para quién (candidato vs. reclutador), en vez del placeholder genérico inicial
+  - Nuevo componente `components/ui/InfoTooltip.tsx` (círculo "!" con hover, estilo nota de Excel — idea de José) para explicar campos poco claros a lo largo de todo el formulario
+  - Fix: inputs numéricos (`dias_garantia`, `comision_base_mxn`) se manejan como string mientras se edita, se convierten a número solo al guardar — antes no dejaban borrar el "0" inicial
+  - Fix: cierre con tecla Escape
+  - **Pendiente:** Secciones 4, 5, 8 funcionales; luego conectar con `EditableList` (ya construido en `5.4`) para requisitos/beneficios/documentos/zonas de ruta
 - [ ] 5.6 Validación de campos obligatorios por sección antes de permitir guardar (título, ciudad, estado, jornada, dias_garantia, comision_base_mxn son siempre requeridos).
 - [ ] 5.7 Botón "Generar con IA ✨" que invoca `agente-descripcion-vacante` para autocompletar descripción/beneficios/letras chiquitas desde los datos básicos.
 - [ ] 5.8 Al guardar vacante: trigger de sincronización de sitemap (`sync-sitemap` Edge Function).

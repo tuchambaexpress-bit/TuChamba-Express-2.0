@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import CoordinadorNav from '@/components/coordinador/CoordinadorNav'
+import VacanteModal from '@/components/coordinador/VacanteModal'
 
 interface Vacante {
   id: string
@@ -37,6 +38,9 @@ export default function VacantesCoordinador() {
   const [loading, setLoading] = useState(true)
   const [filtroStatus, setFiltroStatus] = useState('')
   const [filtroPrioridad, setFiltroPrioridad] = useState('')
+  const [modalAbierto, setModalAbierto] = useState(false)
+  const [vacanteEditar, setVacanteEditar] = useState<string | null>(null)
+  const [vacanteDuplicar, setVacanteDuplicar] = useState<any | null>(null)
 
   useEffect(() => {
     const data = localStorage.getItem('coordinador_sesion')
@@ -77,7 +81,15 @@ export default function VacantesCoordinador() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-gray-900">Vacantes</h2>
-          <p className="text-sm text-gray-400">{vacantesFiltradas.length} de {vacantes.length}</p>
+          <div className="flex items-center gap-3">
+            <p className="text-sm text-gray-400">{vacantesFiltradas.length} de {vacantes.length}</p>
+            <button
+              onClick={() => { setVacanteEditar(null); setVacanteDuplicar(null); setModalAbierto(true) }}
+              className="bg-[#1A6B3C] hover:bg-[#155c33] text-white text-sm px-4 py-2 rounded-lg font-medium"
+            >
+              + Nueva vacante
+            </button>
+          </div>
         </div>
 
         {/* Filtros */}
@@ -125,13 +137,19 @@ export default function VacantesCoordinador() {
                   <th className="px-4 py-3 font-medium">Prioridad</th>
                   <th className="px-4 py-3 font-medium">Cupo</th>
                   <th className="px-4 py-3 font-medium">Creada</th>
+                  <th className="px-4 py-3 font-medium"></th>
                 </tr>
               </thead>
               <tbody>
                 {vacantesFiltradas.map(v => (
                   <tr key={v.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-3">
-                      <p className="font-medium text-gray-900">{v.titulo}</p>
+                      <button
+                        onClick={() => { setVacanteEditar(v.id); setVacanteDuplicar(null); setModalAbierto(true) }}
+                        className="font-medium text-gray-900 hover:text-[#1A6B3C] hover:underline text-left"
+                      >
+                        {v.titulo}
+                      </button>
                       <p className="text-xs text-gray-400">{v.negocios?.nombre ?? '—'}</p>
                     </td>
                     <td className="px-4 py-3 text-gray-600">{v.ciudad}, {v.estado}</td>
@@ -149,6 +167,14 @@ export default function VacantesCoordinador() {
                     <td className="px-4 py-3 text-gray-400 text-xs">
                       {new Date(v.created_at).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => { setVacanteEditar(null); setVacanteDuplicar(v); setModalAbierto(true) }}
+                        className="text-xs text-gray-500 hover:text-[#1A6B3C] border border-gray-200 rounded-lg px-2 py-1"
+                      >
+                        📋 Duplicar
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -156,6 +182,15 @@ export default function VacantesCoordinador() {
           </div>
         )}
       </div>
+
+      <VacanteModal
+        abierto={modalAbierto}
+        onCerrar={() => setModalAbierto(false)}
+        agenciaId={sesion.agencia_id}
+        vacanteId={vacanteEditar}
+        vacanteDuplicar={vacanteDuplicar}
+        onGuardado={() => cargarVacantes(sesion.agencia_id)}
+      />
     </div>
   )
 }
