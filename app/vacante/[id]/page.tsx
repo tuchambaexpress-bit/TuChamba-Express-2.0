@@ -8,6 +8,8 @@ interface Props {
   params: { id: string }
 }
 
+export const revalidate = 0 // nunca cachear — siempre datos frescos de Supabase
+
 export async function generateMetadata({ params }: Props) {
   const supabase = await createClient()
   const { data: vacante } = await supabase
@@ -44,9 +46,9 @@ export default async function VacantePage({ params }: Props) {
     .from('vacantes')
     .select(`
       id, titulo, descripcion, requisitos, beneficios,
-      letras_chiquitas, salario_min, salario_max, salario_tipo,
+      letras_chiquitas, salario_min, salario_max, salario_tipo, salario_periodo,
       salario_visible, ciudad, estado, colonia_zona,
-      modalidad, jornada, horario, tipo_contrato,
+      modalidad, jornada, horario, turno, tipo_contrato,
       tiene_ruta, zonas_ruta, ruta_para_entrevista,
       estacionamiento, comedor, uniforme,
       empresa_visible, destacada, status, created_at,

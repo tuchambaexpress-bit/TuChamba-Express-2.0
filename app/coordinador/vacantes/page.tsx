@@ -50,6 +50,21 @@ export default function VacantesCoordinador() {
     cargarVacantes(s.agencia_id)
   }, [])
 
+  useEffect(() => {
+    if (!sesion?.agencia_id) return
+    const supabase = createClient()
+    const canal = supabase
+      .channel(`vacantes-coordinador-${sesion.agencia_id}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'vacantes',
+        filter: `agencia_id=eq.${sesion.agencia_id}`
+      }, () => cargarVacantes(sesion.agencia_id))
+      .subscribe()
+    return () => { supabase.removeChannel(canal) }
+  }, [sesion])
+
   async function cargarVacantes(agenciaId: string) {
     const supabase = createClient()
     const { data } = await supabase
@@ -132,6 +147,7 @@ export default function VacantesCoordinador() {
               <thead>
                 <tr className="border-b border-gray-100 text-left text-gray-500 text-xs">
                   <th className="px-4 py-3 font-medium">Vacante</th>
+                  <th className="px-4 py-3 font-medium">Empresa</th>
                   <th className="px-4 py-3 font-medium">Ciudad</th>
                   <th className="px-4 py-3 font-medium">Status</th>
                   <th className="px-4 py-3 font-medium">Prioridad</th>
@@ -150,8 +166,8 @@ export default function VacantesCoordinador() {
                       >
                         {v.titulo}
                       </button>
-                      <p className="text-xs text-gray-400">{v.negocios?.nombre ?? '—'}</p>
                     </td>
+                    <td className="px-4 py-3 text-gray-600">{v.negocios?.nombre ?? '—'}</td>
                     <td className="px-4 py-3 text-gray-600">{v.ciudad}, {v.estado}</td>
                     <td className="px-4 py-3">
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${COLORES_STATUS[v.status] ?? 'bg-gray-100 text-gray-600'}`}>

@@ -244,6 +244,26 @@ implement changes → si hay observaciones, se corrige antes de archivar
   - Fix: inputs numéricos (`dias_garantia`, `comision_base_mxn`) se manejan como string mientras se edita, se convierten a número solo al guardar — antes no dejaban borrar el "0" inicial
   - Fix: cierre con tecla Escape
   - **Pendiente:** Secciones 4, 5, 8 funcionales; luego conectar con `EditableList` (ya construido en `5.4`) para requisitos/beneficios/documentos/zonas de ruta
+
+  **📍 Progreso adicional 2026-08-08:**
+  - ✅ Sección 4 (Descripción operativa) — descripción, requisitos y beneficios con `EditableList`, aviso de "visible al candidato"
+  - ✅ Sección 3 ampliada — salario completo: min/max, `salario_tipo` (neto/bruto/convenir) separado de `salario_periodo` (semanal/quincenal/mensual/por_hora, campo nuevo, requirió migración) tras detectar que el esquema original los mezclaba
+  - ✅ Sección 1 ampliada — checkbox "⭐ Destacada"
+  - ✅ Estética: secciones del accordion con estado seleccionado distinguible (azul) vs. no seleccionado (gris oscuro)
+  - ✅ Listado (`5.3`) — columna de empresa separada, Realtime agregado
+  - Fix: `salario_periodo`/`turno` faltaban en `VacanteDetalle.tsx`, `app/page.tsx` y `app/vacante/[id]/page.tsx` (portal público) — agregados a interfaces y queries
+  - Fix: `revalidate = 0` agregado a `app/page.tsx` y `app/vacante/[id]/page.tsx` — sin esto, Next.js servía datos cacheados del portal público indefinidamente
+  - **Hallazgo de infraestructura importante:** la tabla `vacantes` nunca estaba agregada a la publicación de Realtime de Supabase (`supabase_realtime`) — por eso ningún canal Realtime sobre esa tabla funcionaba, en ningún lado del proyecto, sin importar qué tan bien estuviera el código. Corregido con `alter publication supabase_realtime add table vacantes;`. **Nota para el futuro:** cualquier tabla nueva que necesite Realtime debe agregarse explícitamente a esta publicación — no es automático.
+  - Realtime agregado en `VacantesPortal.tsx` (portal público) — un solo canal compartido escuchando cambios en `vacantes`, incluyendo sincronización de la vacante actualmente seleccionada en el panel de detalle
+  - Nuevo `components/ui/InfoTooltip.tsx` usado también para aclarar "⭐ Destacada"
+
+  **📍 Progreso adicional 2026-08-08 (continuación):**
+  - ✅ Sección 4 completa y probada en vivo (Ayudante General — PASTELERIA LETY, requisitos y beneficios reales)
+  - Fix: `VacanteCard.tsx` (tarjeta de lista del portal público) tenía el mismo problema que `VacanteDetalle.tsx` — le faltaba `salario_periodo`/`turno` en la interfaz y los mismos mapas de traducción (`NOMBRES_JORNADA`, `NOMBRES_SALARIO_TIPO`, `NOMBRES_PERIODO`, `NOMBRES_MODALIDAD`) — corregido en ambos archivos
+  - Fix: `VacanteDetalle.tsx` no mostraba el campo `turno` al candidato (se guardaba pero era invisible) — agregado, y luego fusionado visualmente con Jornada en un solo bloque "Jornada / Turno"
+  - Limpieza: variable muerta `SECCIONES_LISTAS` en `VacanteModal.tsx` (dejó de usarse al construir la Sección 4 con lógica explícita, nunca se borró)
+  - Mejora: header del modal ahora muestra título + empresa de la vacante que se está editando/duplicando — evita confusión cuando hay vacantes con nombres similares
+  - **Nota de datos:** las 3 vacantes de prueba originales (creadas antes de `turno`/`salario_periodo`) tenían `jornada` con el valor crudo viejo (`tiempo_completo`) en vez del código corto nuevo (`completo`) — se corrigieron editando y re-guardando cada una desde el modal, no vía SQL directo
 - [ ] 5.6 Validación de campos obligatorios por sección antes de permitir guardar (título, ciudad, estado, jornada, dias_garantia, comision_base_mxn son siempre requeridos).
 - [ ] 5.7 Botón "Generar con IA ✨" que invoca `agente-descripcion-vacante` para autocompletar descripción/beneficios/letras chiquitas desde los datos básicos.
 - [ ] 5.8 Al guardar vacante: trigger de sincronización de sitemap (`sync-sitemap` Edge Function).

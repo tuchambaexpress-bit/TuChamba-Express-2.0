@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { ChevronDown, X } from 'lucide-react'
 import InfoTooltip from '@/components/ui/InfoTooltip'
+import { EditableList } from '@/components/forms/EditableList'
 
 interface Negocio {
   id: string
@@ -30,8 +31,6 @@ const SECCIONES = [
   { id: 'proceso', titulo: '8. Proceso de selección' },
 ]
 
-const SECCIONES_LISTAS = new Set(['descripcion', 'logistica', 'proceso']) // pendientes de construir
-
 const FORM_INICIAL = {
   titulo: '',
   negocio_id: '',
@@ -50,6 +49,15 @@ const FORM_INICIAL = {
   promocion_descripcion: '',
   promocion_monto_mxn: '',
   promocion_fin: '',
+  descripcion: '',
+  requisitos: [] as string[],
+  beneficios: [] as string[],
+  salario_min: '',
+  salario_max: '',
+  salario_tipo: 'neto',
+  salario_periodo: 'semanal',
+  salario_visible: true,
+  destacada: false,
 }
 
 export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, vacanteDuplicar, onGuardado }: Props) {
@@ -165,7 +173,15 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
       promocion_fin: form.tiene_promocion && form.promocion_fin ? form.promocion_fin : null,
       agencia_id: agenciaId,
       status: form.status ?? 'vigente',
-      descripcion: form.descripcion || form.titulo.trim(), // placeholder hasta construir Sección 4
+      descripcion: form.descripcion?.trim() || form.titulo.trim(),
+      requisitos: form.requisitos,
+      beneficios: form.beneficios,
+      salario_min: form.salario_min ? Number(form.salario_min) : null,
+      salario_max: form.salario_max ? Number(form.salario_max) : null,
+      salario_tipo: form.salario_tipo,
+      salario_periodo: form.salario_periodo,
+      salario_visible: form.salario_visible,
+      destacada: form.destacada,
     }
 
     const { error: errorGuardado } = vacanteId && !vacanteDuplicar
@@ -189,9 +205,17 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
       <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-xl">
         <div className="sticky top-0 bg-white flex items-center justify-between p-4 border-b border-gray-100 z-10">
-          <h2 className="font-bold text-gray-900">
-            {vacanteDuplicar ? 'Duplicar vacante' : vacanteId ? 'Editar vacante' : 'Nueva vacante'}
-          </h2>
+          <div>
+            <h2 className="font-bold text-gray-900">
+              {vacanteDuplicar ? 'Duplicar vacante' : vacanteId ? 'Editar vacante' : 'Nueva vacante'}
+            </h2>
+            {(vacanteId || vacanteDuplicar) && form.titulo && (
+              <p className="text-xs text-gray-500 mt-0.5">
+                {form.titulo}
+                {negocios.find(n => n.id === form.negocio_id)?.nombre ? ` — ${negocios.find(n => n.id === form.negocio_id)?.nombre}` : ''}
+              </p>
+            )}
+          </div>
           <button onClick={onCerrar} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500">
             <X className="w-4 h-4" />
           </button>
@@ -203,21 +227,61 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
               <button
                 type="button"
                 onClick={() => toggleSeccion(s.id)}
-                className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 text-left"
+                className={`w-full flex items-center justify-between px-4 py-3 text-left transition-colors ${
+                  seccionAbierta === s.id
+                    ? 'bg-blue-50 hover:bg-blue-100'
+                    : 'bg-gray-200 hover:bg-gray-300'
+                }`}
               >
-                <span className="text-sm font-medium text-gray-800">{s.titulo}</span>
-                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${seccionAbierta === s.id ? 'rotate-180' : ''}`} />
+                <span className={`text-sm font-medium ${seccionAbierta === s.id ? 'text-blue-800' : 'text-gray-800'}`}>{s.titulo}</span>
+                <ChevronDown className={`w-4 h-4 transition-transform ${seccionAbierta === s.id ? 'rotate-180 text-blue-500' : 'text-gray-500'}`} />
               </button>
 
               {seccionAbierta === s.id && (
                 <div className="p-4 space-y-3">
                   {s.id === 'descripcion' ? (
-                    <div>
-                      <p className="text-sm text-gray-400 italic mb-2">🚧 Próximamente — se construye en la siguiente pasada.</p>
-                      <p className="text-xs text-gray-500 bg-gray-50 rounded-lg p-2">
-                        Aquí van los <strong>requisitos</strong> (lo que el candidato debe cumplir, ej. "Secundaria terminada") y los <strong>beneficios</strong> (lo que la empresa ofrece, ej. "Vales de despensa"), cada uno como lista editable — visible al candidato en la ficha de la vacante.
-                      </p>
-                    </div>
+                    <>
+                      <div className="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 mb-1">
+                        <p className="text-[11px] text-blue-700">
+                          👁️ Toda esta sección es visible al <strong>candidato</strong> en la ficha de la vacante.
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-700 flex items-center mb-1">
+                          Descripción del puesto
+                          <InfoTooltip texto="Breve resumen de en qué consiste el trabajo día a día. Si lo dejas vacío, se usa el título de la vacante." />
+                        </label>
+                        <textarea
+                          value={form.descripcion}
+                          onChange={e => setForm({ ...form, descripcion: e.target.value })}
+                          placeholder="Ej. Operación de línea de producción bajo supervisión."
+                          rows={2}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C] resize-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-700 flex items-center mb-1">
+                          Requisitos
+                          <InfoTooltip texto="Lo que el candidato debe cumplir para el puesto, uno por uno (ej. 'Secundaria terminada'). Arrastra el ícono ⠿ para reordenar." />
+                        </label>
+                        <EditableList
+                          items={form.requisitos}
+                          onChange={(items) => setForm({ ...form, requisitos: items })}
+                          placeholder="Ej. Secundaria terminada"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-700 flex items-center mb-1">
+                          Beneficios
+                          <InfoTooltip texto="Lo que la empresa ofrece, uno por uno (ej. 'Vales de despensa')." />
+                        </label>
+                        <EditableList
+                          items={form.beneficios}
+                          onChange={(items) => setForm({ ...form, beneficios: items })}
+                          placeholder="Ej. Vales de despensa"
+                        />
+                      </div>
+                    </>
                   ) : s.id === 'logistica' ? (
                     <div>
                       <p className="text-sm text-gray-400 italic mb-2">🚧 Próximamente — se construye en la siguiente pasada.</p>
@@ -296,6 +360,18 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
                           className="accent-[#1A6B3C]"
                         />
                         <span className="text-sm text-gray-700">Mostrar el nombre de la empresa al candidato</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={form.destacada}
+                          onChange={e => setForm({ ...form, destacada: e.target.checked })}
+                          className="accent-[#1A6B3C]"
+                        />
+                        <span className="text-sm text-gray-700 flex items-center">
+                          ⭐ Destacar esta vacante
+                          <InfoTooltip texto="Aparece con un badge especial en el portal público para llamar más la atención de candidatos." />
+                        </span>
                       </label>
                     </>
                   ) : s.id === 'ubicacion' ? (
@@ -382,7 +458,55 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
                           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C] resize-none"
                         />
                       </div>
-                      <p className="text-xs text-gray-400">Salario detallado se agrega en la siguiente pasada.</p>
+                      <div>
+                        <label className="text-xs font-medium text-gray-700 block mb-1">Salario</label>
+                        <div className="grid grid-cols-3 gap-2">
+                          <input
+                            type="number"
+                            value={form.salario_min}
+                            onChange={e => setForm({ ...form, salario_min: e.target.value })}
+                            placeholder="Mínimo"
+                            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
+                          />
+                          <input
+                            type="number"
+                            value={form.salario_max}
+                            onChange={e => setForm({ ...form, salario_max: e.target.value })}
+                            placeholder="Máximo (opcional)"
+                            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
+                          />
+                          </div>
+                        <div className="grid grid-cols-2 gap-2 mt-2">
+                          <select
+                            value={form.salario_tipo}
+                            onChange={e => setForm({ ...form, salario_tipo: e.target.value })}
+                            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
+                          >
+                            <option value="neto">Neto</option>
+                            <option value="bruto">Bruto</option>
+                            <option value="convenir">A convenir</option>
+                          </select>
+                          <select
+                            value={form.salario_periodo}
+                            onChange={e => setForm({ ...form, salario_periodo: e.target.value })}
+                            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
+                          >
+                            <option value="semanal">Semanal</option>
+                            <option value="quincenal">Quincenal</option>
+                            <option value="mensual">Mensual</option>
+                            <option value="por_hora">Por hora</option>
+                          </select>
+                        </div>
+                        <label className="flex items-center gap-2 cursor-pointer mt-2">
+                          <input
+                            type="checkbox"
+                            checked={form.salario_visible}
+                            onChange={e => setForm({ ...form, salario_visible: e.target.checked })}
+                            className="accent-[#1A6B3C]"
+                          />
+                          <span className="text-xs text-gray-600">Mostrar el salario al candidato</span>
+                        </label>
+                      </div>
                     </>
                   ) : s.id === 'letras' ? (
                     <textarea

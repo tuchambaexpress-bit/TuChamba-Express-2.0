@@ -13,6 +13,7 @@ interface Vacante {
   salario_min: number | null
   salario_max: number | null
   salario_tipo: string | null
+  salario_periodo: string | null
   salario_visible: boolean
   ciudad: string
   estado: string
@@ -20,6 +21,7 @@ interface Vacante {
   modalidad: string
   jornada: string
   horario: string | null
+  turno: string | null
   tipo_contrato: string | null
   tiene_ruta: boolean
   zonas_ruta: string[]
@@ -50,8 +52,20 @@ const codigoRef = typeof window !== 'undefined'
     ? vacante.negocios?.nombre ?? 'Empresa'
     : 'Empresa Confidencial'
 
+  const NOMBRES_PERIODO: Record<string, string> = {
+    semanal: 'semanal', quincenal: 'quincenal', mensual: 'mensual', por_hora: 'por hora'
+  }
+  const NOMBRES_SALARIO_TIPO: Record<string, string> = {
+    neto: 'neto', bruto: 'bruto', convenir: 'a convenir'
+  }
+  const NOMBRES_JORNADA: Record<string, string> = {
+    completo: 'Tiempo completo', medio: 'Medio tiempo', proyecto: 'Por proyecto', fines: 'Fines de semana'
+  }
+  const NOMBRES_MODALIDAD: Record<string, string> = {
+    presencial: 'Presencial', hibrido: 'Híbrido', remoto: 'Remoto'
+  }
   const salario = vacante.salario_visible && vacante.salario_min
-    ? `$${vacante.salario_min.toLocaleString('es-MX')}${vacante.salario_max ? ` - $${vacante.salario_max.toLocaleString('es-MX')}` : ''} ${vacante.salario_tipo ?? ''}`
+    ? `$${vacante.salario_min.toLocaleString('es-MX')}${vacante.salario_max ? ` - $${vacante.salario_max.toLocaleString('es-MX')}` : ''} ${NOMBRES_SALARIO_TIPO[vacante.salario_tipo ?? ''] ?? vacante.salario_tipo ?? ''} ${NOMBRES_PERIODO[vacante.salario_periodo ?? ''] ?? ''}`.trim()
     : 'Salario a convenir'
 
   return (
@@ -97,12 +111,14 @@ const codigoRef = typeof window !== 'undefined'
           <p className="text-sm font-semibold text-gray-800">{salario}</p>
         </div>
         <div className="bg-gray-50 rounded-lg p-3">
-          <p className="text-xs text-gray-500">Jornada</p>
-          <p className="text-sm font-semibold text-gray-800">{vacante.jornada}</p>
+          <p className="text-xs text-gray-500">Jornada / Turno</p>
+          <p className="text-sm font-semibold text-gray-800">
+            {NOMBRES_JORNADA[vacante.jornada] ?? vacante.jornada}{vacante.turno && vacante.turno !== 'no_aplica' ? ` · ${vacante.turno.charAt(0).toUpperCase() + vacante.turno.slice(1)}` : ''}
+          </p>
         </div>
         <div className="bg-gray-50 rounded-lg p-3">
           <p className="text-xs text-gray-500">Modalidad</p>
-          <p className="text-sm font-semibold text-gray-800">{vacante.modalidad}</p>
+          <p className="text-sm font-semibold text-gray-800">{NOMBRES_MODALIDAD[vacante.modalidad] ?? vacante.modalidad}</p>
         </div>
         {vacante.horario && (
           <div className="bg-gray-50 rounded-lg p-3">

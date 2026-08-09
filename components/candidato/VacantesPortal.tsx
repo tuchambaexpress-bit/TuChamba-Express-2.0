@@ -5,6 +5,7 @@ import VacanteCard from './VacanteCard'
 import VacanteDetalle from './VacanteDetalle'
 import { useReferido } from '@/hooks/useReferido'
 import { useTrafico } from '@/hooks/useTrafico'
+import { createClient } from '@/lib/supabase/client'
 
 interface Vacante {
   id: string
@@ -16,6 +17,7 @@ interface Vacante {
   salario_min: number | null
   salario_max: number | null
   salario_tipo: string | null
+  salario_periodo: string | null
   salario_visible: boolean
   ciudad: string
   estado: string
@@ -23,6 +25,7 @@ interface Vacante {
   modalidad: string
   jornada: string
   horario: string | null
+  turno: string | null
   tipo_contrato: string | null
   tiene_ruta: boolean
   zonas_ruta: string[]
@@ -37,13 +40,25 @@ interface Vacante {
   negocios: { nombre: string } | null
 }
 
+const SELECT_VACANTES = `
+  id, titulo, descripcion, requisitos, beneficios,
+  letras_chiquitas, salario_min, salario_max, salario_tipo, salario_periodo,
+  salario_visible, ciudad, estado, colonia_zona,
+  modalidad, jornada, horario, turno, tipo_contrato,
+  tiene_ruta, zonas_ruta, ruta_para_entrevista,
+  estacionamiento, comedor, uniforme,
+  empresa_visible, destacada, status, created_at,
+  negocios(nombre)
+`
+
 interface Props {
   vacantes: Vacante[]
 }
 
 const ITEMS_POR_PAGINA = 15
 
-export default function VacantesPortal({ vacantes }: Props) {
+export default function VacantesPortal({ vacantes: vacantesIniciales }: Props) {
+  const [vacantes, setVacantes] = useState<Vacante[]>(vacantesIniciales)
   const [seleccionada, setSeleccionada] = useState<Vacante | null>(null)
   const [modalAbierto, setModalAbierto] = useState(false)
   const [busqueda, setBusqueda] = useState('')
@@ -57,6 +72,42 @@ export default function VacantesPortal({ vacantes }: Props) {
   }, [])
   useReferido()
   useTrafico()
+
+  // Realtime: refresca la lista sola cuando cualquier vacante vigente cambia
+  useEffect(() => {
+    const supabase = createClient()
+
+    async function recargarVacantes() {
+      const { data } = await supabase
+        .from('vacantes')
+        .select(SELECT_VACANTES)
+        .eq('status', 'vigente')
+        .order('destacada', { ascending: false })
+        .order('created_at', { ascending: false })
+
+      if (data) {
+        const formateadas = data.map((v: any) => ({
+          ...v,
+          negocios: Array.isArray(v.negocios) ? v.negocios[0] ?? null : v.negocios
+        }))
+        setVacantes(formateadas)
+
+        // Si la vacante abierta en el panel sigue vigente, refrescamos su detalle también
+        setSeleccionada(prev => {
+          if (!prev) return prev
+          const actualizada = formateadas.find((v: Vacante) => v.id === prev.id)
+          return actualizada ?? prev
+        })
+      }
+    }
+
+    const canal = supabase
+      .channel('vacantes-portal-publico')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'vacantes' }, () => recargarVacantes())
+      .subscribe()
+
+    return () => { supabase.removeChannel(canal) }
+  }, [])
 
   const normalizar = (texto: string) =>
     texto.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
