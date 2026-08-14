@@ -33,6 +33,8 @@ interface Vacante {
   destacada: boolean
   status: string
   created_at: string
+  requiere_examen_medico: boolean
+  requiere_antidoping: boolean
   negocios: { nombre: string; documentos_negocio?: { id: string; nombre_archivo: string; archivo_url: string }[] } | null
 }
 
@@ -224,15 +226,23 @@ const codigoRef = typeof window !== 'undefined'
         </div>
       )}
 
-      {/* Letras chiquitas */}
-      {vacante.letras_chiquitas && (
+      {/* Letras chiquitas + avisos de examen médico / antidoping */}
+      {(vacante.letras_chiquitas || vacante.requiere_examen_medico || vacante.requiere_antidoping) && (
         <div className="mb-5 bg-amber-50 border border-amber-200 rounded-xl p-4">
           <h3 className="font-semibold text-amber-800 mb-1 text-sm">
             ⚠️ Información importante
           </h3>
-          <p className="text-sm text-amber-700 leading-relaxed">
-            {vacante.letras_chiquitas}
-          </p>
+          {vacante.letras_chiquitas && (
+            <p className="text-sm text-amber-700 leading-relaxed">
+              {vacante.letras_chiquitas}
+            </p>
+          )}
+          {vacante.requiere_examen_medico && (
+            <p className="text-sm text-amber-700 leading-relaxed">🩺 Se realizará examen médico.</p>
+          )}
+          {vacante.requiere_antidoping && (
+            <p className="text-sm text-amber-700 leading-relaxed">🧪 Se realizará prueba antidoping.</p>
+          )}
         </div>
       )}
     </div>

@@ -15,6 +15,7 @@ export default async function Home() {
       tiene_ruta, zonas_ruta, ruta_para_entrevista,
       estacionamiento, comedor, uniforme,
       empresa_visible, destacada, status, created_at,
+      requiere_examen_medico, requiere_antidoping, 
       negocios(nombre, documentos_negocio(id, nombre_archivo, archivo_url))
     `)
     .eq('status', 'vigente')

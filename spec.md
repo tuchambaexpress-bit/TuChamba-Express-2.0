@@ -1290,3 +1290,13 @@ Los documentos son visibles en 3 lugares, sin restricción de sesión (bucket p�
 > *Origen: se detectaron 4 registros duplicados de "PASTELERIA LETY" en `negocios`, creados por pruebas repetidas de "+ Nueva empresa" sin ninguna validación previa — confirmando la necesidad real de este filtro, no solo preventiva.*
 
 Antes de crear un negocio nuevo desde el selector inline de la Sección 1 (CA-20.1), el sistema normaliza el nombre ingresado (quita acentos, colapsa espacios dobles, ignora mayúsculas/minúsculas) y lo compara contra los negocios ya existentes de la base completa. Si encuentra una coincidencia — ej. "Pastelería Lety", "pasteleria  lety" y "PASTELERIA LETY" se consideran la misma empresa — bloquea la creación y le indica al coordinador el nombre exacto ya registrado, para que lo seleccione de la lista en vez de crear un duplicado.
+
+**CA-20.5 — Documentos "tronco común" + Antidoping (idea de José, 2026-08-10):**
+
+> *Origen: José identificó los 6 documentos que casi siempre se piden en HR CONNECT (RFC, INE, comprobante de domicilio, CURP, NSS, acta de nacimiento) — repetirlos a mano en cada vacante nueva era fricción innecesaria. También detectó que "Examen médico" (ya existente) necesita un hermano "Antidoping", y que ambos deben ser visibles al candidato, no solo al reclutador como hoy.*
+
+En la Sección 8 de `VacanteModal`, arriba del campo de texto libre "Documentos requeridos" (`EditableList`), aparecen 6 checkboxes fijos correspondientes a los documentos más comunes: RFC, INE, Comprobante de domicilio, CURP, NSS, Acta de nacimiento. Al marcar/desmarcar cualquiera, el sistema agrega o quita automáticamente ese texto de la misma lista `documentos_requeridos` — el reclutador sigue viendo **una sola lista unificada**, sin duplicar la fuente de datos. El campo de texto libre sigue disponible para cualquier documento adicional específico de esa vacante/empresa que no esté en los 6 fijos.
+
+**Nuevo campo:** `vacantes.requiere_antidoping` (boolean, mismo patrón que `requiere_examen_medico` ya existente).
+
+**Cambio de visibilidad:** a diferencia de `requiere_estudio_socioeconomico` (que se queda exclusivo del reclutador, ya que normalmente lo hace la empresa directamente, sin involucrar al candidato antes), `requiere_examen_medico` y `requiere_antidoping` ahora **también son visibles al candidato** — se muestran como avisos adicionales dentro del bloque "⚠️ Información importante" del portal público (junto a las letras chiquitas), ej. "Se realizará examen médico" / "Se realizará prueba antidoping".

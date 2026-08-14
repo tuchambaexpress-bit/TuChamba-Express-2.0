@@ -31,6 +31,15 @@ const SECCIONES = [
   { id: 'proceso', titulo: '8. Proceso de selección' },
 ]
 
+const DOCUMENTOS_TRONCO_COMUN = [
+  'RFC (Constancia de situación fiscal)',
+  'INE vigente',
+  'Comprobante de domicilio (no mayor a 3 meses)',
+  'CURP',
+  'NSS (Hoja de seguridad social IMSS)',
+  'Acta de nacimiento',
+]
+
 const FORM_INICIAL = {
   titulo: '',
   negocio_id: '',
@@ -66,6 +75,7 @@ const FORM_INICIAL = {
   uniforme: false,
   documentos_requeridos: [] as string[],
   requiere_examen_medico: false,
+  requiere_antidoping: false,
   requiere_estudio_socioeconomico: false,
   contacto_rrhh_nombre: '',
   contacto_rrhh_telefono: '',
@@ -169,7 +179,15 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
   async function cargarVacante(id: string) {
     const supabase = createClient()
     const { data } = await supabase.from('vacantes').select('*').eq('id', id).single()
-    if (data) setForm(data)
+    if (data) {
+      // Ningún input controlado acepta `null` — convertimos cualquier campo
+      // nulo a cadena vacía, sin importar cuál sea (texto, numérico, etc.)
+      const dataLimpia: any = { ...data }
+      Object.keys(dataLimpia).forEach(campo => {
+        if (dataLimpia[campo] === null) dataLimpia[campo] = ''
+      })
+      setForm(dataLimpia)
+    }
   }
 
   function toggleSeccion(id: string) {
@@ -266,6 +284,7 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
       uniforme: form.uniforme,
       documentos_requeridos: form.documentos_requeridos,
       requiere_examen_medico: form.requiere_examen_medico,
+      requiere_antidoping: form.requiere_antidoping,
       requiere_estudio_socioeconomico: form.requiere_estudio_socioeconomico,
       contacto_rrhh_nombre: form.contacto_rrhh_nombre || null,
       contacto_rrhh_telefono: form.contacto_rrhh_telefono || null,
@@ -503,17 +522,47 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
 
                       <div>
                         <label className="text-xs font-medium text-gray-700 flex items-center mb-1">
-                          Documentos requeridos
-                          <InfoTooltip texto="Lo que el reclutador debe pedirle al candidato antes de avanzarlo (ej. 'INE', 'Comprobante de domicilio')." />
+                          Documentos tronco común
+                          <InfoTooltip texto="Los 6 documentos que casi siempre se piden. Márcalos para que aparezcan en la lista de abajo automáticamente." />
+                        </label>
+                        <div className="grid grid-cols-2 gap-1.5 mb-2">
+                          {DOCUMENTOS_TRONCO_COMUN.map(doc => (
+                            <label key={doc} className="flex items-center gap-1.5 cursor-pointer text-xs">
+                              <input
+                                type="checkbox"
+                                checked={form.documentos_requeridos.includes(doc)}
+                                onChange={e => {
+                                  const yaEsta = form.documentos_requeridos.includes(doc)
+                                  if (e.target.checked && !yaEsta) {
+                                    setForm({ ...form, documentos_requeridos: [...form.documentos_requeridos, doc] })
+                                  } else if (!e.target.checked && yaEsta) {
+                                    setForm({ ...form, documentos_requeridos: form.documentos_requeridos.filter((d: string) => d !== doc) })
+                                  }
+                                }}
+                                className="accent-[#1A6B3C]"
+                              />
+                              <span className="text-gray-700">{doc}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-medium text-gray-700 flex items-center mb-1">
+                          Otros documentos requeridos
+                          <InfoTooltip texto="Cualquier documento adicional específico de esta vacante o empresa, que no esté en la lista de tronco común." />
                         </label>
                         <EditableList
-                          items={form.documentos_requeridos}
-                          onChange={(items) => setForm({ ...form, documentos_requeridos: items })}
-                          placeholder="Ej. INE"
+                          items={form.documentos_requeridos.filter((d: string) => !DOCUMENTOS_TRONCO_COMUN.includes(d))}
+                          onChange={(items) => {
+                            const troncoComunActivos = form.documentos_requeridos.filter((d: string) => DOCUMENTOS_TRONCO_COMUN.includes(d))
+                            setForm({ ...form, documentos_requeridos: [...troncoComunActivos, ...items] })
+                          }}
+                          placeholder="Ej. Certificado de estudios"
                         />
                       </div>
 
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-3 gap-2">
                         <label className="flex items-center gap-2 cursor-pointer">
                           <input
                             type="checkbox"
@@ -521,7 +570,22 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
                             onChange={e => setForm({ ...form, requiere_examen_medico: e.target.checked })}
                             className="accent-[#1A6B3C]"
                           />
-                          <span className="text-sm text-gray-700">🩺 Examen médico</span>
+                          <span className="text-sm text-gray-700 flex items-center">
+                            🩺 Examen médico
+                            <InfoTooltip texto="Visible también para el candidato." />
+                          </span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={form.requiere_antidoping}
+                            onChange={e => setForm({ ...form, requiere_antidoping: e.target.checked })}
+                            className="accent-[#1A6B3C]"
+                          />
+                          <span className="text-sm text-gray-700 flex items-center">
+                            🧪 Antidoping
+                            <InfoTooltip texto="Visible también para el candidato." />
+                          </span>
                         </label>
                         <label className="flex items-center gap-2 cursor-pointer">
                           <input
@@ -530,7 +594,7 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
                             onChange={e => setForm({ ...form, requiere_estudio_socioeconomico: e.target.checked })}
                             className="accent-[#1A6B3C]"
                           />
-                          <span className="text-sm text-gray-700">📋 Estudio socioeconómico</span>
+                          <span className="text-sm text-gray-700">📋 Socioeconómico</span>
                         </label>
                       </div>
 
