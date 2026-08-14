@@ -29,8 +29,20 @@ Cada elemento de la UI debe comunicar profesionalismo y transparencia:
 - Las notificaciones son oportunas — el silencio genera desconfianza
 - El chat interno reemplaza al WhatsApp personal — la conversación es profesional y trazable
 
+### 4. Ligero — cada byte cuenta (agregado 2026-08-09, ver marca de corte abajo)
+
+> *Origen: José — la mayoría de los candidatos reales (operadores, ayudantes generales) navegan desde datos móviles limitados, no wifi de oficina. Cada consulta o archivo cargado de más antes de que lo pidan explícitamente les cuesta dinero real, no solo tiempo.*
+
+- **Nunca cargar el contenido de un archivo** (PDF, imagen) hasta que el usuario pida verlo explícitamente — solo se transmite su referencia (nombre, link), nunca el archivo en sí, en ninguna lista o vista general.
+- **Las consultas a listas deben paginar en la base de datos**, no solo en la vista — nunca traer de Supabase más registros de los que se van a mostrar en pantalla en ese momento.
+- **No incluir relaciones "pesadas" o poco usadas en queries de listado general** — solo en el detalle específico que el usuario ya abrió. Ejemplo: los documentos de rutas de una empresa no deben venir en el `select()` del listado completo de vacantes, solo en el de la ficha de una vacante individual.
+- Imágenes con lazy loading y tamaño optimizado antes de subir.
+- Advertir o limitar el tamaño de archivos que se suben, especialmente los que terminan visibles en el portal público sin sesión.
+
+> **⚠️ MARCA DE CORTE — Auditoría pendiente de "ligereza":** este principio se agregó el **2026-08-09**, después de construir `5.5` Secciones 4 y 5 (incluyendo `documentos_negocio`). Todo lo construido **antes** de esta fecha no fue diseñado con esta disciplina en mente y puede tener oportunidades de mejora sin auditar — en particular, se identificaron 2 casos concretos ya conocidos: (1) `VacantesPortal.tsx` pagina solo en la vista, no en la consulta a Supabase — trae todas las vacantes vigentes de golpe; (2) el `select()` del listado general de vacantes incluye `documentos_negocio` completo, cuando debería limitarse solo a la vista de detalle. Todo lo construido **después** de esta fecha debe seguir el principio desde el diseño, sin necesitar corrección posterior. Se hará una auditoría completa de "ligereza" al final del proyecto (candidato a agregarse como tarea explícita en Sprint 7, QA) revisando todo el código anterior a esta marca.
+
 ### Regla de decisión
-Cuando haya que elegir entre dos implementaciones, siempre gana la que sea más intuitiva, genere menos fricción y comunique más confianza — aunque sea técnicamente más compleja de construir.
+Cuando haya que elegir entre dos implementaciones, siempre gana la que sea más intuitiva, genere menos fricción, comunique más confianza, y sea más ligera para el usuario — aunque sea técnicamente más compleja de construir.
 
 ### Responsive Design — breakpoints y comportamiento por portal
 

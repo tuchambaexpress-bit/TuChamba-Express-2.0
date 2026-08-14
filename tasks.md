@@ -345,6 +345,7 @@ implement changes → si hay observaciones, se corrige antes de archivar
 - [ ] 7.9 Prueba de referido: `?ref=CODIGO`, cerrar navegador, reabrir — verificar persistencia en localStorage.
 - [ ] 7.10 Prueba PWA: instalar portal reclutador en Android, verificar funcionamiento sin Chrome abierto.
 - [ ] 7.11 Lighthouse audit portal candidato: meta >80 Performance, >90 SEO, >90 Accessibility.
+- [ ] 7.12 **Auditoría de "ligereza"** (ver spec.md, Principio de Diseño #4, marca de corte 2026-08-09): revisar todo el código construido antes de esa fecha contra el principio de "cada byte cuenta". Casos ya identificados y pendientes de corregir: `VacantesPortal.tsx` pagina solo en la vista (trae todas las vacantes vigentes de golpe desde Supabase, sin `.range()` ni `.limit()` en la consulta); el `select()` del listado general de vacantes (`app/page.tsx`, `app/coordinador/vacantes/page.tsx`) incluye `documentos_negocio` completo en vez de solo en el detalle. Revisar también otros queries construidos antes de la marca de corte por si tienen el mismo patrón.
 - [ ] 7.12 Verificar que ningún coordinador, en ningún status, puede editar/eliminar su propia agencia (prueba manual de RLS).
 
 **✓ Criterio de avance:** Todos los portales funcionan, SEO auditado, chat verificado, PWA instalable, Lighthouse >80, RLS de agencias confirmado infranqueable desde el lado coordinador.
