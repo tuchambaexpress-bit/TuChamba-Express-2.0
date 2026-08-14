@@ -282,6 +282,16 @@ prioridad text DEFAULT 'normal'     -- normal/alta/urgente
 
 -- ATS
 etapas_personalizadas jsonb DEFAULT '["Aplicado","Contactado","Entrevista","Inducción","Contratado"]'  -- renombrado de "Oferta" el 2026-08-06, ver CA-02.8
+                                     -- decisión 2026-08-09: NO se expone como editable en
+                                     -- VacanteModal — José confirmó que el proceso del
+                                     -- RECLUTADOR (filtrar y mandar a entrevista) es igual
+                                     -- para todas las vacantes/empresas; lo que varía entre
+                                     -- empresas es su propio proceso de CONTRATACIÓN interno,
+                                     -- ya cubierto por otros campos (examen médico, estudio
+                                     -- socioeconómico, documentos requeridos, contacto RRHH).
+                                     -- El campo sigue existiendo en el esquema por si algún
+                                     -- caso real futuro lo justifica, pero el flujo de 5
+                                     -- etapas es fijo para todo el sistema por ahora.
 requiere_examen_medico bool DEFAULT false
 requiere_estudio_socioeconomico bool DEFAULT false
 documentos_requeridos jsonb DEFAULT '[]'

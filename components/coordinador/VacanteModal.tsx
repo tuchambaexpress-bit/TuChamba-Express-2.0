@@ -64,6 +64,12 @@ const FORM_INICIAL = {
   estacionamiento: false,
   comedor: false,
   uniforme: false,
+  documentos_requeridos: [] as string[],
+  requiere_examen_medico: false,
+  requiere_estudio_socioeconomico: false,
+  contacto_rrhh_nombre: '',
+  contacto_rrhh_telefono: '',
+  mejor_horario_contacto: '',
 }
 
 function normalizarNombreNegocio(texto: string) {
@@ -258,6 +264,12 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
       estacionamiento: form.estacionamiento,
       comedor: form.comedor,
       uniforme: form.uniforme,
+      documentos_requeridos: form.documentos_requeridos,
+      requiere_examen_medico: form.requiere_examen_medico,
+      requiere_estudio_socioeconomico: form.requiere_estudio_socioeconomico,
+      contacto_rrhh_nombre: form.contacto_rrhh_nombre || null,
+      contacto_rrhh_telefono: form.contacto_rrhh_telefono || null,
+      mejor_horario_contacto: form.mejor_horario_contacto || null,
     }
 
     const { error: errorGuardado } = vacanteId && !vacanteDuplicar
@@ -482,12 +494,73 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
                       </div>
                     </>
                   ) : s.id === 'proceso' ? (
-                    <div>
-                      <p className="text-sm text-gray-400 italic mb-2">🚧 Próximamente — se construye en la siguiente pasada.</p>
-                      <p className="text-xs text-gray-500 bg-gray-50 rounded-lg p-2">
-                        Configuración del proceso interno de selección — <strong>solo para el reclutador</strong>, el candidato no la ve. Incluye: el orden de las etapas del Kanban para esta vacante, qué documentos hay que pedir (CV, identificación, etc.), si requiere examen médico o estudio socioeconómico, y el contacto de RRHH de la empresa para dudas.
-                      </p>
-                    </div>
+                    <>
+                      <div className="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 mb-1">
+                        <p className="text-[11px] text-blue-700">
+                          ℹ️ Esta sección es información para el <strong>reclutador</strong> — el candidato nunca la ve.
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-medium text-gray-700 flex items-center mb-1">
+                          Documentos requeridos
+                          <InfoTooltip texto="Lo que el reclutador debe pedirle al candidato antes de avanzarlo (ej. 'INE', 'Comprobante de domicilio')." />
+                        </label>
+                        <EditableList
+                          items={form.documentos_requeridos}
+                          onChange={(items) => setForm({ ...form, documentos_requeridos: items })}
+                          placeholder="Ej. INE"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={form.requiere_examen_medico}
+                            onChange={e => setForm({ ...form, requiere_examen_medico: e.target.checked })}
+                            className="accent-[#1A6B3C]"
+                          />
+                          <span className="text-sm text-gray-700">🩺 Examen médico</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={form.requiere_estudio_socioeconomico}
+                            onChange={e => setForm({ ...form, requiere_estudio_socioeconomico: e.target.checked })}
+                            className="accent-[#1A6B3C]"
+                          />
+                          <span className="text-sm text-gray-700">📋 Estudio socioeconómico</span>
+                        </label>
+                      </div>
+
+                      <div>
+                        <p className="text-xs font-medium text-gray-700 flex items-center mb-1">
+                          Contacto RRHH de la empresa (opcional)
+                          <InfoTooltip texto="Llenar solo si el reclutador tendrá contacto directo con la empresa para resolver dudas. Si el coordinador prefiere seguir siendo el intermediario, deja esto vacío." />
+                        </p>
+                        <div className="grid grid-cols-2 gap-2">
+                          <input
+                            value={form.contacto_rrhh_nombre}
+                            onChange={e => setForm({ ...form, contacto_rrhh_nombre: e.target.value })}
+                            placeholder="Nombre"
+                            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
+                          />
+                          <input
+                            value={form.contacto_rrhh_telefono}
+                            onChange={e => setForm({ ...form, contacto_rrhh_telefono: e.target.value })}
+                            placeholder="Teléfono"
+                            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
+                          />
+                        </div>
+                        <input
+                          value={form.mejor_horario_contacto}
+                          onChange={e => setForm({ ...form, mejor_horario_contacto: e.target.value })}
+                          placeholder="Mejor horario para contactarlo (ej. 9am-2pm)"
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-2 focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
+                        />
+                      </div>
+                    </>
                   ) : s.id === 'identidad' ? (
                     <>
                       <div>
