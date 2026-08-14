@@ -2,6 +2,8 @@ import { createClient as createServerClient } from '@supabase/supabase-js'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 
+export const revalidate = 0 // nunca cachear — siempre datos frescos de Supabase
+
 interface Props {
   params: { id: string }
 }
@@ -26,7 +28,7 @@ export default async function FichaVacante({ params }: Props) {
       comision_base_mxn, tiene_promocion, promocion_monto_mxn, promocion_fin,
       contacto_rrhh, contacto_rrhh_telefono, contacto_rrhh_horario,
       punto_reunion, documentos_requeridos,
-      negocios(nombre)
+      negocios(nombre, documentos_negocio(id, nombre_archivo, archivo_url))
     `)
     .eq('id', params.id)
     .single()
@@ -190,6 +192,21 @@ export default async function FichaVacante({ params }: Props) {
                   <p className="text-xs font-semibold text-green-700">🚌 Ruta de transporte</p>
                   {vacante.zonas_ruta?.length > 0 && (
                     <p className="text-xs text-green-600 mt-0.5">{vacante.zonas_ruta.join(', ')}</p>
+                  )}
+                  {(vacante.negocios as any)?.documentos_negocio?.length > 0 && (
+                    <div className="mt-1.5 space-y-0.5">
+                      {(vacante.negocios as any).documentos_negocio.map((doc: any) => (
+                        <a
+                          key={doc.id}
+                          href={doc.archivo_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-green-700 underline block"
+                        >
+                          📄 {doc.nombre_archivo}
+                        </a>
+                      ))}
+                    </div>
                   )}
                 </div>
               )}

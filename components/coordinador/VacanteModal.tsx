@@ -58,6 +58,20 @@ const FORM_INICIAL = {
   salario_periodo: 'semanal',
   salario_visible: true,
   destacada: false,
+  tiene_ruta: false,
+  zonas_ruta: [] as string[],
+  ruta_para_entrevista: false,
+  estacionamiento: false,
+  comedor: false,
+  uniforme: false,
+}
+
+function normalizarNombreNegocio(texto: string) {
+  return texto
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // quita acentos
+    .toLowerCase()
+    .replace(/\s+/g, ' ') // colapsa espacios dobles
+    .trim()
 }
 
 export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, vacanteDuplicar, onGuardado }: Props) {
@@ -73,6 +87,11 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
   const [form, setForm] = useState<any>(FORM_INICIAL)
   const [negocios, setNegocios] = useState<Negocio[]>([])
   const [creandoNegocio, setCreandoNegocio] = useState(false)
+  const [documentosRuta, setDocumentosRuta] = useState<any[]>([])
+  const [cargandoDocsRuta, setCargandoDocsRuta] = useState(false)
+  const [subiendoDocRuta, setSubiendoDocRuta] = useState(false)
+  const [errorDocRuta, setErrorDocRuta] = useState('')
+  const [fileInputRutaKey, setFileInputRutaKey] = useState(0)
   const [nuevoNegocio, setNuevoNegocio] = useState({ nombre: '', industria: '', contacto_nombre: '', contacto_telefono: '', contacto_email: '' })
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
@@ -106,6 +125,41 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
     if (data) setNegocios(data)
   }
 
+  async function cargarDocumentosRuta(negocioId: string) {
+    setCargandoDocsRuta(true)
+    const res = await fetch(`/api/documentos-negocio?negocioId=${negocioId}`)
+    const data = await res.json()
+    setDocumentosRuta(data.documentos ?? [])
+    setCargandoDocsRuta(false)
+  }
+
+  async function subirDocumentoRuta(archivo: File) {
+    if (!form.negocio_id) return
+    setSubiendoDocRuta(true)
+    setErrorDocRuta('')
+
+    const formData = new FormData()
+    formData.append('file', archivo)
+    formData.append('negocioId', form.negocio_id)
+
+    const res = await fetch('/api/documentos-negocio', { method: 'POST', body: formData })
+    const data = await res.json()
+
+    if (!res.ok) {
+      setErrorDocRuta(data.error ?? 'Error al subir el archivo')
+    } else {
+      setFileInputRutaKey(k => k + 1)
+      await cargarDocumentosRuta(form.negocio_id)
+    }
+    setSubiendoDocRuta(false)
+  }
+
+  async function eliminarDocumentoRuta(id: string) {
+    if (!confirm('¿Eliminar este PDF de rutas? Esta acción no se puede deshacer.')) return
+    await fetch(`/api/documentos-negocio?id=${id}`, { method: 'DELETE' })
+    if (form.negocio_id) await cargarDocumentosRuta(form.negocio_id)
+  }
+
   async function cargarVacante(id: string) {
     const supabase = createClient()
     const { data } = await supabase.from('vacantes').select('*').eq('id', id).single()
@@ -132,16 +186,32 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
 
     let negocioId = form.negocio_id
 
-    // CA-20.1: crear negocio inline si se seleccionó esa opción
+    // CA-20.1: crear negocio inline — verificando primero que no exista ya
     if (creandoNegocio) {
-      if (!nuevoNegocio.nombre.trim()) {
+      const nombreLimpio = nuevoNegocio.nombre.trim()
+      if (!nombreLimpio) {
         setError('El nombre del negocio es obligatorio')
         setGuardando(false)
         return
       }
+
+      // Filtro inteligente: normaliza acentos/mayúsculas/espacios antes de comparar,
+      // para detectar "Pastelería Lety" = "pasteleria  lety" = "PASTELERIA LETY"
+      const { data: todosNegocios } = await supabase.from('negocios').select('id, nombre')
+      const nombreNormalizado = normalizarNombreNegocio(nombreLimpio)
+      const existente = (todosNegocios ?? []).find(
+        n => normalizarNombreNegocio(n.nombre) === nombreNormalizado
+      )
+
+      if (existente) {
+        setError(`Ya existe una empresa llamada "${existente.nombre}" — selecciónala de la lista en vez de crear una nueva.`)
+        setGuardando(false)
+        return
+      }
+
       const { data: negocioCreado, error: errorNegocio } = await supabase
         .from('negocios')
-        .insert(nuevoNegocio)
+        .insert({ ...nuevoNegocio, nombre: nombreLimpio })
         .select('id')
         .single()
 
@@ -182,6 +252,12 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
       salario_periodo: form.salario_periodo,
       salario_visible: form.salario_visible,
       destacada: form.destacada,
+      tiene_ruta: form.tiene_ruta,
+      zonas_ruta: form.tiene_ruta ? form.zonas_ruta : [],
+      ruta_para_entrevista: form.tiene_ruta ? form.ruta_para_entrevista : false,
+      estacionamiento: form.estacionamiento,
+      comedor: form.comedor,
+      uniforme: form.uniforme,
     }
 
     const { error: errorGuardado } = vacanteId && !vacanteDuplicar
@@ -283,12 +359,128 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
                       </div>
                     </>
                   ) : s.id === 'logistica' ? (
-                    <div>
-                      <p className="text-sm text-gray-400 italic mb-2">🚧 Próximamente — se construye en la siguiente pasada.</p>
-                      <p className="text-xs text-gray-500 bg-gray-50 rounded-lg p-2">
-                        Información operativa sobre <strong>cómo llegar y qué hay en el sitio</strong> — distinta de los requisitos del puesto. Incluye: si hay ruta de transporte de la empresa (y qué zonas cubre), si esa ruta también sirve para ir a la entrevista, si hay estacionamiento, comedor y uniforme. Visible al candidato.
-                      </p>
-                    </div>
+                    <>
+                      <div className="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 mb-1">
+                        <p className="text-[11px] text-blue-700">
+                          👁️ Toda esta sección es visible al <strong>candidato</strong> en la ficha de la vacante.
+                        </p>
+                      </div>
+
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={form.tiene_ruta}
+                          onChange={e => {
+                            const activado = e.target.checked
+                            setForm({ ...form, tiene_ruta: activado })
+                            if (activado && form.negocio_id) cargarDocumentosRuta(form.negocio_id)
+                          }}
+                          className="accent-[#1A6B3C]"
+                        />
+                        <span className="text-sm text-gray-700 flex items-center">
+                          🚌 ¿La empresa ofrece ruta de transporte?
+                        </span>
+                      </label>
+
+                      {form.tiene_ruta && !form.negocio_id && (
+                        <p className="text-xs text-amber-600 bg-amber-50 rounded-lg p-2">
+                          Selecciona primero una empresa en la Sección 1 para poder subir sus documentos de rutas.
+                        </p>
+                      )}
+
+                      {form.tiene_ruta && form.negocio_id && (
+                        <div className="border border-gray-200 rounded-lg p-3 space-y-2">
+                          <p className="text-xs font-medium text-gray-700 flex items-center">
+                            📎 PDFs de rutas de {negocios.find(n => n.id === form.negocio_id)?.nombre}
+                            <InfoTooltip texto="Compartido entre todas las vacantes de esta empresa — si lo subes o borras aquí, se refleja en todas." />
+                          </p>
+                          {cargandoDocsRuta ? (
+                            <p className="text-xs text-gray-400">Cargando...</p>
+                          ) : documentosRuta.length === 0 ? (
+                            <p className="text-xs text-gray-400">Sin documentos subidos todavía</p>
+                          ) : (
+                            <div className="space-y-1">
+                              {documentosRuta.map((doc) => (
+                                <div key={doc.id} className="flex items-center justify-between bg-gray-50 rounded-lg px-2 py-1.5">
+                                  <a href={doc.archivo_url} target="_blank" rel="noopener noreferrer" className="text-xs text-[#1A6B3C] hover:underline truncate flex-1">
+                                    📄 {doc.nombre_archivo}
+                                  </a>
+                                  <button onClick={() => eliminarDocumentoRuta(doc.id)} className="text-xs text-red-500 hover:text-red-600 ml-2">🗑️</button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          <input
+                            key={fileInputRutaKey}
+                            type="file"
+                            accept="application/pdf"
+                            onChange={e => e.target.files?.[0] && subirDocumentoRuta(e.target.files[0])}
+                            disabled={subiendoDocRuta}
+                            className="w-full text-xs text-gray-600"
+                          />
+                          {errorDocRuta && <p className="text-red-500 text-xs">{errorDocRuta}</p>}
+                          {subiendoDocRuta && <p className="text-xs text-gray-400">Subiendo...</p>}
+                        </div>
+                      )}
+
+                      {form.tiene_ruta && (
+                        <div className="border border-gray-200 rounded-lg p-3 space-y-2 bg-gray-50">
+                          <div>
+                            <label className="text-xs font-medium text-gray-700 flex items-center mb-1">
+                              Zonas que cubre la ruta
+                              <InfoTooltip texto="Colonias o puntos de referencia por donde pasa el transporte, uno por uno." />
+                            </label>
+                            <EditableList
+                              items={form.zonas_ruta}
+                              onChange={(items) => setForm({ ...form, zonas_ruta: items })}
+                              placeholder="Ej. Parque Industrial Apodaca"
+                            />
+                          </div>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={form.ruta_para_entrevista}
+                              onChange={e => setForm({ ...form, ruta_para_entrevista: e.target.checked })}
+                              className="accent-[#1A6B3C]"
+                            />
+                            <span className="text-xs text-gray-600 flex items-center">
+                              La ruta también está disponible para ir a la entrevista
+                              <InfoTooltip texto="Si no está marcado, el candidato entiende que la ruta solo aplica una vez contratado, no antes." />
+                            </span>
+                          </label>
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-3 gap-3 pt-2">
+                        <label className="flex flex-col items-center gap-1 cursor-pointer border border-gray-200 rounded-lg p-2 hover:bg-gray-50">
+                          <input
+                            type="checkbox"
+                            checked={form.estacionamiento}
+                            onChange={e => setForm({ ...form, estacionamiento: e.target.checked })}
+                            className="accent-[#1A6B3C]"
+                          />
+                          <span className="text-xs text-gray-700">🅿️ Estacionamiento</span>
+                        </label>
+                        <label className="flex flex-col items-center gap-1 cursor-pointer border border-gray-200 rounded-lg p-2 hover:bg-gray-50">
+                          <input
+                            type="checkbox"
+                            checked={form.comedor}
+                            onChange={e => setForm({ ...form, comedor: e.target.checked })}
+                            className="accent-[#1A6B3C]"
+                          />
+                          <span className="text-xs text-gray-700">🍽️ Comedor</span>
+                        </label>
+                        <label className="flex flex-col items-center gap-1 cursor-pointer border border-gray-200 rounded-lg p-2 hover:bg-gray-50">
+                          <input
+                            type="checkbox"
+                            checked={form.uniforme}
+                            onChange={e => setForm({ ...form, uniforme: e.target.checked })}
+                            className="accent-[#1A6B3C]"
+                          />
+                          <span className="text-xs text-gray-700">👕 Uniforme</span>
+                        </label>
+                      </div>
+                    </>
                   ) : s.id === 'proceso' ? (
                     <div>
                       <p className="text-sm text-gray-400 italic mb-2">🚧 Próximamente — se construye en la siguiente pasada.</p>
@@ -445,6 +637,7 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
                             <option value="vespertino">Vespertino</option>
                             <option value="nocturno">Nocturno</option>
                             <option value="rotativo">Rotativo</option>
+                            <option value="fijo">Turno fijo (varios turnos)</option>
                           </select>
                         </div>
                       </div>

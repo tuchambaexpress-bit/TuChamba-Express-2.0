@@ -389,6 +389,19 @@ archivo_url text NOT NULL           -- Supabase Storage
 created_at timestamptz DEFAULT now()
 ```
 
+### documentos_negocio (PDFs de rutas de transporte, compartidos por empresa — ver CA-20.3)
+```sql
+id uuid PK
+negocio_id uuid FK → negocios.id
+nombre_archivo text NOT NULL
+archivo_url text NOT NULL           -- Supabase Storage, bucket PÚBLICO (documentos-negocio)
+created_at timestamptz DEFAULT now()
+```
+> A diferencia de `documentos_candidato` (bucket privado, links firmados), este bucket
+> es público — los PDFs de rutas no contienen información sensible y deben ser
+> visibles sin sesión (candidato en el portal público). Un documento se sube una
+> vez por empresa y aparece automáticamente en todas sus vacantes.
+
 ### chats (sistema de mensajería unificado)
 ```sql
 id uuid PK
@@ -1236,3 +1249,22 @@ Cada fila del listado de vacantes (`5.3`) tiene un botón **"📋 Duplicar"**. A
 - `status` → siempre arranca en `'vigente'`, sin importar el status de la vacante origen (ej. si la original estaba `'pausada'`, la copia nace activa)
 
 El coordinador ajusta lo que necesite cambiar (horario, salario, etc.) antes de guardar como una vacante completamente nueva e independiente — sin ningún vínculo posterior con la original.
+
+**CA-20.3 — Documentos de rutas de transporte por empresa (idea de José, 2026-08-09):**
+
+> *Origen: José compartió ejemplos reales de HR CONNECT — una sola empresa (ej. TOPBAND) puede tener más de 15 rutas de transporte distintas, normalmente consolidadas en 1-2 PDFs. El documento pertenece a la empresa, no a una vacante específica — si vive en `vacantes`, se repetiría (o desincronizaría) en cada vacante nueva de la misma empresa.*
+
+En la Sección 5 (Logística especial) de `VacanteModal`, el checkbox **"¿La empresa ofrece ruta de transporte?"** cumple una doble función:
+- **A nivel vacante** (sin cambios respecto al diseño original): controla si `tiene_ruta`/`zonas_ruta`/`ruta_para_entrevista` aplican a *esta* vacante específica — puede que una empresa tenga ruta en general pero una vacante puntual (ej. turno nocturno) no la use.
+- **A nivel empresa** (nuevo): al activarse, muestra el bloque de gestión de PDFs de `documentos_negocio` para la empresa seleccionada en la Sección 1 — subir, ver, eliminar. Estos documentos son **compartidos entre todas las vacantes de esa empresa**: si se sube o borra desde la vacante A, se refleja automáticamente en la vacante B de la misma empresa, sin duplicar el archivo.
+
+Los documentos son visibles en 3 lugares, sin restricción de sesión (bucket público):
+- **Coordinador** — dentro de `VacanteModal`, Sección 5
+- **Reclutador** — en la ficha operativa de la vacante (`/reclutador/detalle/[id]`), dentro del bloque de Logística
+- **Candidato** — en el portal público, dentro de la ficha completa de la vacante (`VacanteDetalle.tsx`)
+
+**CA-20.4 — Filtro inteligente contra duplicados de empresa (idea de José, 2026-08-09):**
+
+> *Origen: se detectaron 4 registros duplicados de "PASTELERIA LETY" en `negocios`, creados por pruebas repetidas de "+ Nueva empresa" sin ninguna validación previa — confirmando la necesidad real de este filtro, no solo preventiva.*
+
+Antes de crear un negocio nuevo desde el selector inline de la Sección 1 (CA-20.1), el sistema normaliza el nombre ingresado (quita acentos, colapsa espacios dobles, ignora mayúsculas/minúsculas) y lo compara contra los negocios ya existentes de la base completa. Si encuentra una coincidencia — ej. "Pastelería Lety", "pasteleria  lety" y "PASTELERIA LETY" se consideran la misma empresa — bloquea la creación y le indica al coordinador el nombre exacto ya registrado, para que lo seleccione de la lista en vez de crear un duplicado.

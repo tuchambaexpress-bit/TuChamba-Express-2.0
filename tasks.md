@@ -264,6 +264,17 @@ implement changes → si hay observaciones, se corrige antes de archivar
   - Limpieza: variable muerta `SECCIONES_LISTAS` en `VacanteModal.tsx` (dejó de usarse al construir la Sección 4 con lógica explícita, nunca se borró)
   - Mejora: header del modal ahora muestra título + empresa de la vacante que se está editando/duplicando — evita confusión cuando hay vacantes con nombres similares
   - **Nota de datos:** las 3 vacantes de prueba originales (creadas antes de `turno`/`salario_periodo`) tenían `jornada` con el valor crudo viejo (`tiempo_completo`) en vez del código corto nuevo (`completo`) — se corrigieron editando y re-guardando cada una desde el modal, no vía SQL directo
+
+  **📍 Progreso adicional 2026-08-09 — Sección 5 (Logística especial) completa y verificada en vivo:**
+  - ✅ Checkbox "¿Tiene ruta?" + `EditableList` de zonas + "ruta también para entrevista" + estacionamiento/comedor/uniforme — todos con aviso de "visible al candidato"
+  - ✅ Nuevo campo `turno` con opción "Turno fijo (varios turnos)" agregada tras revisar perfiles reales de HR CONNECT (Perfil_Topband.pdf)
+  - ✅ **Documentos de rutas por empresa (CA-20.3):** nueva tabla `documentos_negocio` + bucket público `documentos-negocio` (Storage) + políticas RLS (tabla y storage, usando `auth.email()` desde el inicio) + API route `app/api/documentos-negocio/route.ts` (mismo patrón que `documentos-candidato`, pero con `getPublicUrl()` en vez de links firmados, ya que el bucket es público) + interfaz de subida/lectura/borrado dentro de la Sección 5, compartida entre todas las vacantes de la misma empresa
+  - ✅ **Filtro inteligente contra duplicados de empresa (CA-20.4):** normaliza acentos/mayúsculas/espacios antes de comparar en "+ Nueva empresa" — verificado bloqueando la creación de "Pasteleria Lety" cuando ya existía "PASTELERIA LETY"
+  - ✅ Documento de rutas visible en la ficha operativa del reclutador (`app/reclutador/detalle/[id]/page.tsx`) — verificado en vivo con Ayudante General / PASTELERIA LETY
+  - **Limpieza de datos:** se encontraron y borraron 4 registros duplicados de "PASTELERIA LETY" en `negocios` (generados por pruebas repetidas de "+ Nueva empresa" antes de que existiera el filtro) — solo el vinculado a una vacante real se conservó
+  - Fix: `revalidate = 0` faltaba en `app/reclutador/detalle/[id]/page.tsx` — la ficha operativa servía datos cacheados, mismo patrón de bug que ya se había corregido en el portal público
+  - **Pendiente:** conectar el mismo documento de rutas al portal público del candidato (`VacanteDetalle.tsx` + `app/page.tsx` + `app/vacante/[id]/page.tsx`) — siguiente en la fila
+  - **Pendiente aparte (no bloquea):** `/reclutador/pipeline` (Kanban) no tiene Realtime — a diferencia de `/reclutador/chats`, `/coordinador/vacantes` y el portal público, que sí lo tienen
 - [ ] 5.6 Validación de campos obligatorios por sección antes de permitir guardar (título, ciudad, estado, jornada, dias_garantia, comision_base_mxn son siempre requeridos).
 - [ ] 5.7 Botón "Generar con IA ✨" que invoca `agente-descripcion-vacante` para autocompletar descripción/beneficios/letras chiquitas desde los datos básicos.
 - [ ] 5.8 Al guardar vacante: trigger de sincronización de sitemap (`sync-sitemap` Edge Function).
@@ -372,7 +383,13 @@ implement changes → si hay observaciones, se corrige antes de archivar
 - [ ] Agente Monitor de Base de Datos (alertas de anomalías)
 - [ ] Agente Monitor de Vercel (diagnóstico automático de deploys fallidos)
 - [ ] Agente de Salud del Producto (reporte semanal automático al admin)
-- [ ] Rutas de transporte con documento PDF por empresa (idea de José, 2026-08-06): al dar de alta una vacante, el coordinador indica si la empresa cuenta con rutas y puede subir el PDF con el detalle — visible en la ficha de la vacante en el portal candidato desde el inicio, para que el candidato consulte por su cuenta y solo pregunte dudas puntuales. **Nota de diseño pendiente de resolver cuando se construya:** José confirmó que beneficios y transporte suelen ser iguales para todas las vacantes de una misma empresa (lo que varía es requisitos/horarios por vacante) — esto sugiere que `tiene_ruta` y `zonas_ruta`, hoy campos de `vacantes`, probablemente deberían vivir en `negocios` en vez de repetirse por vacante. Evaluar migración al construir esta feature.
+- [ ] Rutas de transporte con documento PDF por empresa (idea de José, 2026-08-06) — **✅ en construcción, ver 5.5 Sección 5 y spec.md CA-20.3/CA-20.4** (avance detallado ahí, esta línea se conserva solo como referencia histórica de origen).
+- [ ] Documentos "tronco común" — checkbox simple para marcar documentos que aplican a cualquier vacante (idea de José, 2026-08-09), sin repetir la lista completa cada vez.
+- [ ] Links externos útiles en el portal candidato — IMSS, SAT (para sacar RFC/CURP), etc. (idea de José, 2026-08-09).
+- [ ] Checkbox "¿Es vacante urgente?" para el coordinador — separado del campo `prioridad` ya existente, o quizás la misma idea expresada distinto; aclarar al construir (idea de José, 2026-08-09).
+- [ ] Página de inicio del portal candidato con resumen de cuántas vacantes hay disponibles, estilo OCC (idea de José, 2026-08-09).
+- [ ] Rediseño del listado de vacantes del portal candidato: tarjetas individuales separadas en cuadros, estilo Indeed, en vez de la lista actual tipo chat (idea de José, 2026-08-09).
+- [ ] Botón "Postularme" repetido arriba y abajo de la ficha de vacante, para no tener que hacer scroll de regreso (idea de José, 2026-08-09).
 
 ## 🗂️ BACKLOG — FASE 3 (visión a 12+ meses)
 
