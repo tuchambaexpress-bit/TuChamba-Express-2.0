@@ -104,6 +104,7 @@ export default function VacantesPortal({ vacantes: vacantesIniciales }: Props) {
     const canal = supabase
       .channel('vacantes-portal-publico')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'vacantes' }, () => recargarVacantes())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'documentos_negocio' }, () => recargarVacantes())
       .subscribe()
 
     return () => { supabase.removeChannel(canal) }

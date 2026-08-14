@@ -33,7 +33,7 @@ interface Vacante {
   destacada: boolean
   status: string
   created_at: string
-  negocios: { nombre: string } | null
+  negocios: { nombre: string; documentos_negocio?: { id: string; nombre_archivo: string; archivo_url: string }[] } | null
 }
 
 interface Props {
@@ -187,6 +187,21 @@ const codigoRef = typeof window !== 'undefined'
                 )}
                 {vacante.ruta_para_entrevista && (
                   <p className="text-xs text-green-600">Disponible para entrevista</p>
+                )}
+                {vacante.negocios?.documentos_negocio && vacante.negocios.documentos_negocio.length > 0 && (
+                  <div className="mt-1.5 space-y-0.5">
+                    {vacante.negocios.documentos_negocio.map((doc) => (
+                      <a
+                        key={doc.id}
+                        href={doc.archivo_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-green-700 underline block"
+                      >
+                        📄 {doc.nombre_archivo}
+                      </a>
+                    ))}
+                  </div>
                 )}
               </div>
             )}

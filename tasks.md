@@ -273,7 +273,8 @@ implement changes → si hay observaciones, se corrige antes de archivar
   - ✅ Documento de rutas visible en la ficha operativa del reclutador (`app/reclutador/detalle/[id]/page.tsx`) — verificado en vivo con Ayudante General / PASTELERIA LETY
   - **Limpieza de datos:** se encontraron y borraron 4 registros duplicados de "PASTELERIA LETY" en `negocios` (generados por pruebas repetidas de "+ Nueva empresa" antes de que existiera el filtro) — solo el vinculado a una vacante real se conservó
   - Fix: `revalidate = 0` faltaba en `app/reclutador/detalle/[id]/page.tsx` — la ficha operativa servía datos cacheados, mismo patrón de bug que ya se había corregido en el portal público
-  - **Pendiente:** conectar el mismo documento de rutas al portal público del candidato (`VacanteDetalle.tsx` + `app/page.tsx` + `app/vacante/[id]/page.tsx`) — siguiente en la fila
+  - ✅ Conectado al portal público del candidato (`VacanteDetalle.tsx` + `app/page.tsx` + `app/vacante/[id]/page.tsx`) — verificado en vivo
+  - ✅ Realtime del portal público extendido a `documentos_negocio` (además de `vacantes`) — mismo hallazgo que con `vacantes`: la tabla no estaba en la publicación `supabase_realtime`, se agregó con `alter publication supabase_realtime add table documentos_negocio;`. Verificado en vivo: subir/borrar PDF desde el coordinador se refleja solo en el portal público, sin F5.
   - **Pendiente aparte (no bloquea):** `/reclutador/pipeline` (Kanban) no tiene Realtime — a diferencia de `/reclutador/chats`, `/coordinador/vacantes` y el portal público, que sí lo tienen
 - [ ] 5.6 Validación de campos obligatorios por sección antes de permitir guardar (título, ciudad, estado, jornada, dias_garantia, comision_base_mxn son siempre requeridos).
 - [ ] 5.7 Botón "Generar con IA ✨" que invoca `agente-descripcion-vacante` para autocompletar descripción/beneficios/letras chiquitas desde los datos básicos.
