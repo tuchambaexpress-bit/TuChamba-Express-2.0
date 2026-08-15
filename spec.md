@@ -735,7 +735,7 @@ NIVEL 3 — Escalación al coordinador
 
 **CA-05.2:** El canonical URL de cada vacante nunca incluye el parámetro `?ref=CODIGO` — siempre apunta a la URL limpia para evitar contenido duplicado en Google.
 
-**CA-05.3:** Dado que se publica, edita o cierra una vacante, entonces el sitemap.xml se regenera y sincroniza automáticamente al repositorio de GitHub sin intervención manual.
+**CA-05.3 (corregida 2026-08-10):** El sitemap.xml se genera **dinámicamente** vía `app/sitemap.ts` (función nativa de Next.js 14), consultando Supabase en vivo cada vez que se solicita `/sitemap.xml` — solo incluye vacantes con `status = 'vigente'`. No requiere sincronización manual ni automática a ningún repositorio: siempre refleja el estado real de la base de datos en el momento exacto de la consulta, sin necesitar un GitHub token ni disparar despliegues extra. Reemplaza el mecanismo de V1 (archivo estático commiteado a GitHub en cada cambio) por ser más simple, más seguro (sin token que administrar), y consistente con el Principio de Diseño #4 ("Ligero").
 
 ---
 
