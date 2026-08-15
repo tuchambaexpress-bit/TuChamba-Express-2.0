@@ -306,6 +306,15 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
     onCerrar()
   }
 
+  // 5.6: mapa de qué sección tiene qué campos obligatorios, para el indicador visual
+  const seccionesConFaltantes = new Set<string>()
+  if (!form.titulo?.trim()) seccionesConFaltantes.add('identidad')
+  if (!form.ciudad?.trim() || !form.estado?.trim()) seccionesConFaltantes.add('ubicacion')
+  if (!form.jornada) seccionesConFaltantes.add('condiciones')
+  if (form.dias_garantia === '' || Number(form.dias_garantia) <= 0 || form.comision_base_mxn === '' || form.comision_base_mxn === null || isNaN(Number(form.comision_base_mxn))) {
+    seccionesConFaltantes.add('reclutamiento')
+  }
+
   if (!abierto) return null
 
   return (
@@ -340,7 +349,12 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
                     : 'bg-gray-200 hover:bg-gray-300'
                 }`}
               >
-                <span className={`text-sm font-medium ${seccionAbierta === s.id ? 'text-blue-800' : 'text-gray-800'}`}>{s.titulo}</span>
+                <span className={`text-sm font-medium flex items-center gap-1.5 ${seccionAbierta === s.id ? 'text-blue-800' : 'text-gray-800'}`}>
+                  {s.titulo}
+                  {seccionesConFaltantes.has(s.id) && (
+                    <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" title="Falta información obligatoria en esta sección" />
+                  )}
+                </span>
                 <ChevronDown className={`w-4 h-4 transition-transform ${seccionAbierta === s.id ? 'rotate-180 text-blue-500' : 'text-gray-500'}`} />
               </button>
 
