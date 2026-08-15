@@ -612,7 +612,26 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
                         </label>
                       </div>
 
-                      <div>
+                      <div className="border-t border-gray-100 pt-3">
+                        <label className="flex items-center justify-between cursor-pointer">
+                          <span className="text-sm font-medium text-gray-700">
+                            {form.status === 'vigente' ? '🟢 Vigente' : '⚪ No vigente'}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setForm({ ...form, status: form.status === 'vigente' ? 'pausada' : 'vigente' })}
+                            className={`w-12 h-6 rounded-full transition-colors relative flex-shrink-0 ${form.status === 'vigente' ? 'bg-[#1A6B3C]' : 'bg-gray-300'}`}
+                          >
+                            <span
+                              className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-200"
+                              style={{ transform: form.status === 'vigente' ? 'translateX(24px)' : 'translateX(0px)' }}
+                            />
+                          </button>
+                        </label>
+                        <p className="text-[10px] text-gray-400 mt-1">Solo las vacantes "Vigente" son visibles para candidatos y aparecen en el sitemap. Puedes reactivarla cuando quieras.</p>
+                      </div>
+
+                      <div className="pt-3">
                         <p className="text-xs font-medium text-gray-700 flex items-center mb-1">
                           Contacto RRHH de la empresa (opcional)
                           <InfoTooltip texto="Llenar solo si el reclutador tendrá contacto directo con la empresa para resolver dudas. Si el coordinador prefiere seguir siendo el intermediario, deja esto vacío." />

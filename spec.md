@@ -790,20 +790,28 @@ Dado que el coordinador marca una vacante como `status = 'pausada'` con nota "si
 
 ---
 
-### HU-08: Importación masiva de vacantes vía Excel
-**Como** coordinador, **quiero** subir un archivo Excel con múltiples vacantes a la vez, **para** no tener que dar de alta una por una cuando manejo decenas de vacantes simultáneas (patrón confirmado en TuChamba V1: 129 vacantes operadas en conjunto a través de una sola agencia).
+### HU-08: Importación y exportación masiva de vacantes vía Excel (rediseñada 2026-08-10)
+**Como** coordinador, **quiero** subir o descargar un archivo Excel con múltiples vacantes a la vez, **para** no tener que dar de alta una por una cuando manejo decenas de vacantes simultáneas (patrón confirmado en TuChamba V1: 129 vacantes operadas en conjunto a través de una sola agencia).
 
-**CA-08.1 (numeración independiente de §8 — Sistema de Invitación):** El sistema provee una plantilla `.xlsx` descargable con las columnas: `TÍTULO`, `EMPRESA`, `MOSTRAR EMPRESA`, `ESTADO`, `MUNICIPIO`, `ZONA`, `SALARIO`, `DESCRIPCIÓN`, `JORNADA`, `REQUISITOS`, `BENEFICIOS`, `CONTACTO`, `ESTATUS`, `DÍAS DE GARANTÍA`, `COMISIÓN`, `IMPULSAR`.
+> *Origen del rediseño: José confirmó que la guía real de HR CONNECT usa columnas más simples con delimitador `|`, pero al construir esta historia decidió homologar Importar/Exportar contra las 8 secciones completas de `VacanteModal`, y reemplazar el delimitador por columnas individuales dinámicas — "si al coordinador se le pasa poner un `|`, eso va a hacer que no aparezca bien la lista". Esta versión reemplaza el diseño original documentado en las CA de abajo.*
 
-**CA-08.2:** Dado que el coordinador sube un archivo con la plantilla correcta, cuando el sistema lo procesa, entonces separa `REQUISITOS` y `BENEFICIOS` usando el delimitador `|` en arrays jsonb — el mismo formato que ya usa José en su proceso actual, sin requerir que cambie su forma de trabajar.
+**CA-08.1 (corregida):** El sistema no distingue entre "plantilla" e "importar/exportar" — el mismo botón "Exportar" genera un archivo `.xlsx` con **2 hojas**: "Vacantes" (los datos, o solo encabezados si el coordinador no tiene vacantes aún) e "Instrucciones" (tabla completa: cada columna, a qué sección/campo del modal corresponde, qué poner, y un ejemplo). Ese mismo archivo, editado o no, es el que se vuelve a subir con "Importar".
 
-**CA-08.3:** El campo `SALARIO` en texto libre (ej. *"De $3,360 a $5,600 Semanales"*) se interpreta automáticamente para poblar `salario_min`, `salario_max` y `salario_tipo`. Si el formato no se puede interpretar con confianza, la fila se marca para revisión manual en el reporte post-importación, sin bloquear el resto de la carga.
+Columnas fijas (38+): `ID`, `FECHA`, `TÍTULO`, `EMPRESA`, `MOSTRAR EMPRESA`, `DESTACADA`, `ESTADO`, `MUNICIPIO`, `ZONA`, `MODALIDAD`, `SALARIO MÍNIMO`, `SALARIO MÁXIMO`, `TIPO SALARIO`, `PERIODO SALARIO`, `MOSTRAR SALARIO`, `JORNADA`, `TURNO`, `HORARIO`, `DESCRIPCIÓN`, `ETIQUETAS`, `RUTA`, `ZONAS DE RUTA`, `RUTA PARA ENTREVISTA`, `ESTACIONAMIENTO`, `COMEDOR`, `UNIFORME`, `LETRAS CHIQUITAS`, `DÍAS DE GARANTÍA`, `COMISIÓN`, `TIENE PROMOCIÓN`, `DESCRIPCIÓN PROMOCIÓN`, `MONTO PROMOCIÓN`, `VENCE PROMOCIÓN`, `EXAMEN MÉDICO`, `ANTIDOPING`, `ESTUDIO SOCIOECONÓMICO`, `CONTACTO RRHH NOMBRE`, `CONTACTO RRHH TELÉFONO`, `MEJOR HORARIO CONTACTO`, `ESTATUS` — más las columnas dinámicas `REQUISITO_N`, `BENEFICIO_N`, `DOCUMENTO_N` (una por cada elemento, sin límite fijo).
+
+No se incluye el PDF de rutas de transporte (`documentos_negocio`) — es un archivo binario, se sigue subiendo únicamente desde `VacanteModal`.
+
+**CA-08.2 (corregida):** Los `REQUISITO_N`, `BENEFICIO_N` y `DOCUMENTO_N` **no usan delimitador** — cada uno vive en su propia columna. El sistema los detecta dinámicamente al importar (busca `REQUISITO_1`, `REQUISITO_2`... hasta que deje de encontrar la siguiente), sin importar cuántas existan ni en qué posición del archivo estén — la lectura es por **nombre de encabezado**, no por posición de columna, por lo que el coordinador puede reordenar o insertar columnas libremente sin romper el sistema.
+
+**CA-08.3:** Los campos `SALARIO MÍNIMO`/`SALARIO MÁXIMO`/`TIPO SALARIO`/`PERIODO SALARIO` van en columnas separadas (no en texto libre a interpretar) — más confiable que un parser de lenguaje natural. `TIPO SALARIO` acepta "Neto"/"Bruto"/"A convenir"; `PERIODO SALARIO` acepta "Semanales"/"Quincenales"/"Mensuales"/"Por hora" (se traducen a los códigos internos vía mapas bidireccionales en `lib/excel-vacantes.ts`).
 
 **CA-08.4:** Toda vacante importada se vincula automáticamente a la `agencia_id` del coordinador que realiza la importación — nunca queda huérfana ni sin agencia asignada.
 
-**CA-08.5:** Dado que el título y la empresa de una fila ya existen como vacante activa de esa misma agencia, cuando se importa de nuevo, entonces el sistema actualiza el registro existente en lugar de crear un duplicado.
+**CA-08.5:** Dado que el `ID` de una fila coincide con una vacante existente de esa agencia, o el `TÍTULO`+`EMPRESA` ya existen como vacante de esa agencia, cuando se importa de nuevo, entonces el sistema actualiza el registro existente en lugar de crear un duplicado. La `EMPRESA` se busca o crea automáticamente, reutilizando el mismo filtro anti-duplicados de nombre (normalización de acentos/mayúsculas) que ya usa `VacanteModal` (CA-20.4).
 
-**CA-08.6:** Al finalizar la importación, el coordinador recibe un reporte con: número de vacantes creadas, número de vacantes actualizadas, y el detalle de cualquier fila que falló (número de fila + motivo del error) — nunca un fallo silencioso.
+**CA-08.6:** Al finalizar la importación, el coordinador recibe un reporte con: número de vacantes creadas, número de vacantes actualizadas, y el detalle de cualquier fila que falló (número de fila + motivo del error) — nunca un fallo silencioso. Una fila con error no detiene el procesamiento de las demás.
+
+**CA-08.7 (nueva) — Toggle Vigente/No vigente:** `VacanteModal`, Sección 8, incluye un interruptor simple Vigente/No vigente (mapea a `status = 'vigente'`/`'pausada'` — se usa `'pausada'` como valor de "apagado" por reutilizar el esquema existente de 3 estados, aunque de cara al coordinador solo se presentan 2 opciones). Solo las vacantes "Vigente" son visibles en el portal público y aparecen en el sitemap. Reemplaza el hueco detectado donde `status` se guardaba en el modal pero nunca existía un control visual para cambiarlo.
 
 ---
 

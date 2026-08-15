@@ -1,0 +1,124 @@
+// Definición compartida de columnas para Importar/Exportar/Plantilla de vacantes.
+// Homologado 2026-08-10 (ver spec.md HU-08 actualizada) — mismo set de columnas
+// en los 3 lugares, cubriendo las 8 secciones de VacanteModal.
+
+export const NOMBRES_JORNADA: Record<string, string> = {
+  completo: 'Tiempo completo', medio: 'Medio tiempo', proyecto: 'Por proyecto', fines: 'Fines de semana'
+}
+export const JORNADA_INVERSO: Record<string, string> = Object.fromEntries(
+  Object.entries(NOMBRES_JORNADA).map(([k, v]) => [v.toLowerCase(), k])
+)
+
+export const NOMBRES_MODALIDAD: Record<string, string> = {
+  presencial: 'Presencial', hibrido: 'Híbrido', remoto: 'Remoto'
+}
+export const MODALIDAD_INVERSO: Record<string, string> = Object.fromEntries(
+  Object.entries(NOMBRES_MODALIDAD).map(([k, v]) => [v.toLowerCase(), k])
+)
+
+export const NOMBRES_SALARIO_TIPO: Record<string, string> = { neto: 'Neto', bruto: 'Bruto', convenir: 'A convenir' }
+export const SALARIO_TIPO_INVERSO: Record<string, string> = Object.fromEntries(
+  Object.entries(NOMBRES_SALARIO_TIPO).map(([k, v]) => [v.toLowerCase(), k])
+)
+export const NOMBRES_PERIODO: Record<string, string> = {
+  semanal: 'Semanales', quincenal: 'Quincenales', mensual: 'Mensuales', por_hora: 'Por hora'
+}
+export const PERIODO_INVERSO: Record<string, string> = Object.fromEntries(
+  Object.entries(NOMBRES_PERIODO).map(([k, v]) => [v.toLowerCase(), k])
+)
+
+export function parsearFecha(fecha: string): string | null {
+  if (!fecha) return null
+  const [dia, mes, anio] = fecha.split('/')
+  if (!dia || !mes || !anio) return null
+  return `${anio}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`
+}
+
+export function normalizarNombre(texto: string): string {
+  return texto
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+// Columnas fijas, en orden — las de REQUISITO_N y BENEFICIO_N se calculan aparte
+export const COLUMNAS_FIJAS = [
+  'ID', 'FECHA', 'TÍTULO', 'EMPRESA', 'MOSTRAR EMPRESA', 'DESTACADA',
+  'ESTADO', 'MUNICIPIO', 'ZONA', 'MODALIDAD',
+  'SALARIO MÍNIMO', 'SALARIO MÁXIMO', 'TIPO SALARIO', 'PERIODO SALARIO', 'MOSTRAR SALARIO',
+  'JORNADA', 'TURNO', 'HORARIO',
+  'DESCRIPCIÓN', 'ETIQUETAS',
+  'RUTA', 'ZONAS DE RUTA', 'RUTA PARA ENTREVISTA', 'ESTACIONAMIENTO', 'COMEDOR', 'UNIFORME',
+  'LETRAS CHIQUITAS',
+  'DÍAS DE GARANTÍA', 'COMISIÓN',
+  'TIENE PROMOCIÓN', 'DESCRIPCIÓN PROMOCIÓN', 'MONTO PROMOCIÓN', 'VENCE PROMOCIÓN',
+  'EXAMEN MÉDICO', 'ANTIDOPING', 'ESTUDIO SOCIOECONÓMICO',
+  'CONTACTO RRHH NOMBRE', 'CONTACTO RRHH TELÉFONO', 'MEJOR HORARIO CONTACTO',
+  'ESTATUS',
+]
+
+export const INSTRUCCIONES: { columna: string; campoSistema: string; descripcion: string; ejemplo: string }[] = [
+  { columna: 'ID', campoSistema: '(interno)', descripcion: 'Déjalo vacío para vacantes nuevas. Solo se usa para actualizar una vacante que ya existe (viene lleno si exportaste antes).', ejemplo: '(vacío)' },
+  { columna: 'FECHA', campoSistema: '(informativo)', descripcion: 'Fecha de creación. No afecta el sistema, es solo referencia.', ejemplo: '04/09/2026' },
+  { columna: 'TÍTULO', campoSistema: 'Sección 1 — Título', descripcion: 'Nombre del puesto. Obligatorio.', ejemplo: 'Ayudante General' },
+  { columna: 'EMPRESA', campoSistema: 'Sección 1 — Empresa', descripcion: 'Nombre de la empresa cliente. Si no existe, se crea automáticamente.', ejemplo: 'Pastelería Lety' },
+  { columna: 'MOSTRAR EMPRESA', campoSistema: 'Sección 1 — Mostrar empresa', descripcion: 'SI = el candidato ve el nombre real. NO = aparece como "Empresa Confidencial".', ejemplo: 'SI' },
+  { columna: 'DESTACADA', campoSistema: 'Sección 1 — Destacada', descripcion: 'SI = aparece con badge especial en el portal.', ejemplo: 'NO' },
+  { columna: 'ESTADO', campoSistema: 'Sección 2 — Estado', descripcion: 'Estado de la República. Obligatorio.', ejemplo: 'Nuevo León' },
+  { columna: 'MUNICIPIO', campoSistema: 'Sección 2 — Ciudad o Municipio', descripcion: 'Municipio o alcaldía. Obligatorio.', ejemplo: 'Apodaca' },
+  { columna: 'ZONA', campoSistema: 'Sección 2 — Colonia o zona', descripcion: 'Opcional. Ayuda al candidato a saber si le queda cerca.', ejemplo: 'Parque Industrial' },
+  { columna: 'MODALIDAD', campoSistema: 'Sección 2 — Modalidad', descripcion: 'Presencial, Híbrido o Remoto.', ejemplo: 'Presencial' },
+  { columna: 'SALARIO MÍNIMO', campoSistema: 'Sección 3 — Salario', descripcion: 'Solo el número, sin signo de pesos ni comas.', ejemplo: '2500' },
+  { columna: 'SALARIO MÁXIMO', campoSistema: 'Sección 3 — Salario', descripcion: 'Opcional, si el salario es un rango.', ejemplo: '3000' },
+  { columna: 'TIPO SALARIO', campoSistema: 'Sección 3 — Salario', descripcion: 'Neto, Bruto o A convenir.', ejemplo: 'Bruto' },
+  { columna: 'PERIODO SALARIO', campoSistema: 'Sección 3 — Salario', descripcion: 'Semanales, Quincenales, Mensuales o Por hora.', ejemplo: 'Semanales' },
+  { columna: 'MOSTRAR SALARIO', campoSistema: 'Sección 3 — Mostrar salario', descripcion: 'SI = visible al candidato. NO = aparece "A convenir".', ejemplo: 'SI' },
+  { columna: 'JORNADA', campoSistema: 'Sección 3 — Jornada', descripcion: 'Tiempo completo, Medio tiempo, Por proyecto o Fines de semana. Obligatorio.', ejemplo: 'Tiempo completo' },
+  { columna: 'TURNO', campoSistema: 'Sección 3 — Turno', descripcion: 'Matutino, Vespertino, Nocturno, Rotativo o Turno fijo (varios turnos). Déjalo vacío si no aplica.', ejemplo: 'Rotativo' },
+  { columna: 'HORARIO', campoSistema: 'Sección 3 — Horario detallado', descripcion: 'Texto libre con el detalle de horarios.', ejemplo: 'Turnos de 12h, 6:30am-6:30pm / 6:30pm-6:30am' },
+  { columna: 'DESCRIPCIÓN', campoSistema: 'Sección 4 — Descripción', descripcion: 'Resumen de actividades del puesto.', ejemplo: 'Empaquetado y sellado de producto' },
+  { columna: 'ETIQUETAS', campoSistema: 'Sección 4 — Etiquetas', descripcion: 'Palabras clave separadas por coma.', ejemplo: 'Almacén, Sin experiencia' },
+  { columna: 'REQUISITO_1, REQUISITO_2...', campoSistema: 'Sección 4 — Requisitos', descripcion: 'Un requisito por columna. Agrega tantas columnas REQUISITO_N como necesites — el sistema las detecta automáticamente.', ejemplo: 'Secundaria terminada' },
+  { columna: 'BENEFICIO_1, BENEFICIO_2...', campoSistema: 'Sección 4 — Beneficios', descripcion: 'Un beneficio por columna, mismo patrón que Requisitos.', ejemplo: 'Vales de despensa' },
+  { columna: 'RUTA', campoSistema: 'Sección 5 — ¿Tiene ruta?', descripcion: 'SI o NO.', ejemplo: 'SI' },
+  { columna: 'ZONAS DE RUTA', campoSistema: 'Sección 5 — Zonas de ruta', descripcion: 'Zonas separadas por coma. Solo aplica si RUTA = SI.', ejemplo: 'Parque Industrial, Centro' },
+  { columna: 'RUTA PARA ENTREVISTA', campoSistema: 'Sección 5 — Ruta para entrevista', descripcion: 'SI o NO.', ejemplo: 'NO' },
+  { columna: 'ESTACIONAMIENTO', campoSistema: 'Sección 5 — Estacionamiento', descripcion: 'SI o NO.', ejemplo: 'SI' },
+  { columna: 'COMEDOR', campoSistema: 'Sección 5 — Comedor', descripcion: 'SI o NO.', ejemplo: 'SI' },
+  { columna: 'UNIFORME', campoSistema: 'Sección 5 — Uniforme', descripcion: 'SI o NO.', ejemplo: 'NO' },
+  { columna: 'LETRAS CHIQUITAS', campoSistema: 'Sección 6 — Letras chiquitas', descripcion: 'Avisos que el candidato debe saber antes de llegar.', ejemplo: 'Sin tatuajes en la cara' },
+  { columna: 'DÍAS DE GARANTÍA', campoSistema: 'Sección 7 — Días de garantía', descripcion: 'Número entero. Obligatorio.', ejemplo: '30' },
+  { columna: 'COMISIÓN', campoSistema: 'Sección 7 — Comisión base', descripcion: 'Solo el número, sin signo de pesos. Obligatorio.', ejemplo: '2500' },
+  { columna: 'TIENE PROMOCIÓN', campoSistema: 'Sección 7 — Promoción', descripcion: 'SI o NO.', ejemplo: 'NO' },
+  { columna: 'DESCRIPCIÓN PROMOCIÓN', campoSistema: 'Sección 7 — Promoción', descripcion: 'Solo si TIENE PROMOCIÓN = SI.', ejemplo: 'Bono de lanzamiento' },
+  { columna: 'MONTO PROMOCIÓN', campoSistema: 'Sección 7 — Promoción', descripcion: 'Solo el número.', ejemplo: '3500' },
+  { columna: 'VENCE PROMOCIÓN', campoSistema: 'Sección 7 — Promoción', descripcion: 'Formato DD/MM/AAAA.', ejemplo: '30/09/2026' },
+  { columna: 'EXAMEN MÉDICO', campoSistema: 'Sección 8 — Examen médico', descripcion: 'SI o NO. Visible al candidato.', ejemplo: 'SI' },
+  { columna: 'ANTIDOPING', campoSistema: 'Sección 8 — Antidoping', descripcion: 'SI o NO. Visible al candidato.', ejemplo: 'NO' },
+  { columna: 'ESTUDIO SOCIOECONÓMICO', campoSistema: 'Sección 8 — Estudio socioeconómico', descripcion: 'SI o NO. Solo para el reclutador.', ejemplo: 'NO' },
+  { columna: 'CONTACTO RRHH NOMBRE', campoSistema: 'Sección 8 — Contacto RRHH (opcional)', descripcion: 'Solo si el reclutador tendrá contacto directo con la empresa.', ejemplo: '(vacío)' },
+  { columna: 'CONTACTO RRHH TELÉFONO', campoSistema: 'Sección 8 — Contacto RRHH (opcional)', descripcion: '10 dígitos, sin espacios ni guiones.', ejemplo: '(vacío)' },
+  { columna: 'DOCUMENTO_1, DOCUMENTO_2...', campoSistema: 'Sección 8 — Documentos requeridos', descripcion: 'Un documento por columna (incluye los 6 de "tronco común" si aplican: RFC, INE, Comprobante de domicilio, CURP, NSS, Acta de nacimiento, más cualquier extra). Mismo patrón que Requisitos/Beneficios.', ejemplo: 'RFC (Constancia de situación fiscal)' },
+  { columna: 'MEJOR HORARIO CONTACTO', campoSistema: 'Sección 8 — Contacto RRHH (opcional)', descripcion: 'Texto libre.', ejemplo: '(vacío)' },
+  { columna: 'ESTATUS', campoSistema: 'Vigente/No vigente (toggle Sección 8)', descripcion: 'Vigente o No vigente.', ejemplo: 'Vigente' },
+]
+
+export function esSiNo(valor: string | boolean | undefined | null): boolean {
+  if (typeof valor === 'boolean') return valor
+  return String(valor ?? '').trim().toUpperCase() === 'SI'
+}
+
+export function generarHojaInstrucciones(): any[][] {
+  return [
+    ['REGLAS DE ORO'],
+    ['1. NO cambies los encabezados de la Hoja 1 (TÍTULO, EMPRESA, etc.)'],
+    ['2. Los campos SI/NO siempre van en mayúsculas: SI o NO'],
+    ['3. Fechas en formato DD/MM/AAAA'],
+    ['4. Para REQUISITOS, BENEFICIOS y DOCUMENTOS: usa una columna por cada uno (REQUISITO_1, REQUISITO_2..., BENEFICIO_1..., DOCUMENTO_1...) — agrega tantas como necesites, el sistema las detecta solas'],
+    ['5. Los campos OBLIGATORIOS son: TÍTULO, ESTADO, MUNICIPIO, JORNADA, DÍAS DE GARANTÍA, COMISIÓN'],
+    [],
+    ['COLUMNA', 'SE RELACIONA CON (en el modal "+ Nueva vacante")', 'QUÉ PONER', 'EJEMPLO'],
+    ...INSTRUCCIONES.map(i => [i.columna, i.campoSistema, i.descripcion, i.ejemplo]),
+  ]
+}

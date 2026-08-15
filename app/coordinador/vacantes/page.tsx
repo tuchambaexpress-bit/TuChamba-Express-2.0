@@ -41,6 +41,8 @@ export default function VacantesCoordinador() {
   const [modalAbierto, setModalAbierto] = useState(false)
   const [vacanteEditar, setVacanteEditar] = useState<string | null>(null)
   const [vacanteDuplicar, setVacanteDuplicar] = useState<any | null>(null)
+  const [importando, setImportando] = useState(false)
+  const [reporteImportacion, setReporteImportacion] = useState<any | null>(null)
 
   useEffect(() => {
     const data = localStorage.getItem('coordinador_sesion')
@@ -64,6 +66,26 @@ export default function VacantesCoordinador() {
       .subscribe()
     return () => { supabase.removeChannel(canal) }
   }, [sesion])
+
+  async function importarExcel(archivo: File) {
+    setImportando(true)
+    setReporteImportacion(null)
+
+    const formData = new FormData()
+    formData.append('file', archivo)
+    formData.append('agenciaId', sesion.agencia_id)
+
+    const res = await fetch('/api/importar-vacantes', { method: 'POST', body: formData })
+    const data = await res.json()
+
+    setImportando(false)
+    if (!res.ok) {
+      setReporteImportacion({ error: data.error ?? 'Error al importar' })
+    } else {
+      setReporteImportacion(data)
+      cargarVacantes(sesion.agencia_id)
+    }
+  }
 
   async function cargarVacantes(agenciaId: string) {
     const supabase = createClient()
@@ -98,6 +120,21 @@ export default function VacantesCoordinador() {
           <h2 className="text-2xl font-bold text-gray-900">Vacantes</h2>
           <div className="flex items-center gap-3">
             <p className="text-sm text-gray-400">{vacantesFiltradas.length} de {vacantes.length}</p>
+            <a href={`/api/exportar-vacantes?agenciaId=${sesion.agencia_id}`}
+              className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm px-4 py-2 rounded-lg font-medium"
+            >
+              📥 Exportar
+            </a>
+            <label className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm px-4 py-2 rounded-lg font-medium cursor-pointer">
+              {importando ? 'Importando...' : '📤 Importar'}
+              <input
+                type="file"
+                accept=".xlsx"
+                disabled={importando}
+                onChange={e => e.target.files?.[0] && importarExcel(e.target.files[0])}
+                className="hidden"
+              />
+            </label>
             <button
               onClick={() => { setVacanteEditar(null); setVacanteDuplicar(null); setModalAbierto(true) }}
               className="bg-[#1A6B3C] hover:bg-[#155c33] text-white text-sm px-4 py-2 rounded-lg font-medium"
@@ -198,6 +235,56 @@ export default function VacantesCoordinador() {
           </div>
         )}
       </div>
+
+      {reporteImportacion && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl p-5 max-w-md w-full shadow-xl">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-bold text-gray-900">Resultado de la importación</h3>
+              <button onClick={() => setReporteImportacion(null)} className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">✕</button>
+            </div>
+
+            {reporteImportacion.error ? (
+              <p className="text-red-500 text-sm">{reporteImportacion.error}</p>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div className="bg-green-50 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-bold text-green-700">{reporteImportacion.creadas}</p>
+                    <p className="text-xs text-green-600">Creadas</p>
+                  </div>
+                  <div className="bg-blue-50 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-bold text-blue-700">{reporteImportacion.actualizadas}</p>
+                    <p className="text-xs text-blue-600">Actualizadas</p>
+                  </div>
+                </div>
+
+                {reporteImportacion.errores?.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium text-red-600 mb-1">
+                      {reporteImportacion.errores.length} fila(s) con error:
+                    </p>
+                    <div className="max-h-40 overflow-y-auto space-y-1">
+                      {reporteImportacion.errores.map((e: any, i: number) => (
+                        <p key={i} className="text-xs text-gray-600 bg-red-50 rounded px-2 py-1">
+                          Fila {e.fila}: {e.motivo}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            <button
+              onClick={() => setReporteImportacion(null)}
+              className="w-full mt-4 bg-[#1A6B3C] hover:bg-[#155c33] text-white py-2 rounded-xl text-sm font-medium"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
 
       <VacanteModal
         abierto={modalAbierto}
