@@ -1,6 +1,8 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 
 interface Props {
   subtitulo?: string
@@ -8,6 +10,7 @@ interface Props {
 
 export default function CoordinadorNav({ subtitulo }: Props) {
   const router = useRouter()
+  const [chatsSinLeer, setChatsSinLeer] = useState(0)
 
   function obtenerSesion() {
     if (typeof window === 'undefined') return null
@@ -16,6 +19,33 @@ export default function CoordinadorNav({ subtitulo }: Props) {
   }
 
   const sesion = obtenerSesion()
+
+  useEffect(() => {
+    if (!sesion?.id) return
+    const supabase = createClient()
+
+    async function cargarConteoChats() {
+      const { count } = await supabase
+        .from('chats')
+        .select('*', { count: 'exact', head: true })
+        .eq('coordinador_id', sesion.id)
+        .eq('leido_coordinador', false)
+      setChatsSinLeer(count ?? 0)
+    }
+    cargarConteoChats()
+
+    const canal = supabase
+      .channel(`chats-nav-coordinador-${sesion.id}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'chats',
+        filter: `coordinador_id=eq.${sesion.id}`
+      }, () => cargarConteoChats())
+      .subscribe()
+
+    return () => { supabase.removeChannel(canal) }
+  }, [sesion?.id])
 
   return (
     <header className="bg-[#1A6B3C] px-6 py-4 shadow-md">
@@ -29,6 +59,14 @@ export default function CoordinadorNav({ subtitulo }: Props) {
           <a href="/coordinador/vacantes" className="text-green-200 hover:text-white text-sm">Vacantes</a>
           <a href="/coordinador/reclutadores" className="text-green-200 hover:text-white text-sm">Reclutadores</a>
           <a href="/coordinador/pipeline" className="text-green-200 hover:text-white text-sm">Pipeline</a>
+          <a href="/coordinador/chat-reclutadores" className="relative text-green-200 hover:text-white text-sm">
+            Chat
+            {chatsSinLeer > 0 && (
+              <span className="absolute -top-2 -right-3 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">
+                {chatsSinLeer > 9 ? '9+' : chatsSinLeer}
+              </span>
+            )}
+          </a>
           <a href="/coordinador/corte-semanal" className="text-green-200 hover:text-white text-sm">Corte semanal</a>
           {sesion?.nombre && (
             <span className="text-green-200 text-sm hidden lg:inline">Hola, {sesion.nombre}</span>
