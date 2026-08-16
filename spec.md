@@ -495,7 +495,11 @@ tipo text NOT NULL
 -- tipos: garantia_venciendo/candidato_sin_movimiento/
 --        entrevista_vencida/vacante_sin_candidatos/
 --        mensaje_nuevo/pregunta_sin_responder/
---        vacante_status_cambio/candidato_auto_vetado/confirmar_asistencia
+--        vacante_actualizada/candidato_auto_vetado/confirmar_asistencia/
+--        promocion_nueva
+-- (corregido 2026-08-16: el frontend real usa 'vacante_actualizada', no
+--  'vacante_status_cambio' como decía esta lista antes — ver ICONOS en
+--  app/reclutador/alertas/page.tsx. 'promocion_nueva' es nuevo, tarea 5.14.)
 destinatario_id uuid NOT NULL
 destinatario_rol text NOT NULL      -- reclutador/coordinador/admin
 vacante_id uuid
@@ -1308,3 +1312,39 @@ En la Sección 8 de `VacanteModal`, arriba del campo de texto libre "Documentos 
 **Nuevo campo:** `vacantes.requiere_antidoping` (boolean, mismo patrón que `requiere_examen_medico` ya existente).
 
 **Cambio de visibilidad:** a diferencia de `requiere_estudio_socioeconomico` (que se queda exclusivo del reclutador, ya que normalmente lo hace la empresa directamente, sin involucrar al candidato antes), `requiere_examen_medico` y `requiere_antidoping` ahora **también son visibles al candidato** — se muestran como avisos adicionales dentro del bloque "⚠️ Información importante" del portal público (junto a las letras chiquitas), ej. "Se realizará examen médico" / "Se realizará prueba antidoping".
+
+---
+
+### HU-21: Kanban global del coordinador con panel de reclutadores
+**Como** coordinador, **quiero** ver el pipeline completo de cualquiera de mis reclutadores sin poder alterarlo por accidente, **para** supervisar el avance de toda la agencia desde un solo lugar sin arriesgar el trabajo operativo del reclutador.
+
+> *Origen: idea de José, 2026-08-07 — implementada y verificada en vivo 2026-08-10 en `app/coordinador/pipeline/page.tsx`.*
+
+**CA-21.1 — Panel de reclutadores:** La pantalla muestra primero una lista de los reclutadores de la agencia. Al seleccionar uno, se despliega su pipeline (Kanban) completo, filtrado únicamente a las postulaciones que ese reclutador gestiona.
+
+**CA-21.2 — Modo solo lectura, sin excepción:** El Kanban global usa un componente dedicado, `KanbanCardSoloLectura.tsx`, sin ningún botón de acción (mover etapa, descartar, contactar, etc.) — decisión explícita para que el coordinador nunca pueda alterar por accidente el pipeline operativo de un reclutador. Reutiliza los mismos badges ya definidos para el Kanban del reclutador: "Sin actividad 72h", "Historial previo" y "No efectivo".
+
+**CA-21.3 — Layout de pantalla completa:** A diferencia del resto del portal coordinador, esta vista específica no usa el contenedor `max-w-7xl` — el Kanban ocupa el ancho completo de la pantalla, con altura ajustada al viewport (`calc(100vh - 180px)`), para dar espacio real a las columnas horizontales. Este ajuste aplica solo a la vista del Kanban seleccionado, no a la lista de reclutadores.
+
+**CA-21.4 — Candidatos vetados excluidos:** Igual que en `/reclutador/pipeline`, los candidatos con `vetado = true` no aparecen en este Kanban (ver CA-19.3) — quedan visibles únicamente desde el panel de "Candidatos vetados" (CA-19.6).
+
+> **Nota de seguridad pendiente:** al construir esta tarea se confirmó que la política RLS `postulaciones_select_publico` tiene `qual = true` (sin restricción alguna) — cualquier cliente con la key `anon` puede leer todas las postulaciones de todas las agencias, no solo la propia. Se documenta aquí como hallazgo para la auditoría general de RLS (Sprint 7/QA); no se corrigió al construir esta tarea para no desviar su alcance.
+
+---
+
+### HU-22: Chat interno coordinador↔reclutador
+**Como** coordinador o reclutador, **quiero** un canal de chat directo entre nosotros dentro de la plataforma, **para** resolver dudas operativas sin depender de WhatsApp personal, consistente con el principio de "generador de confianza" (chat interno trazable en vez de WhatsApp personal).
+
+> *Origen: alcance definido desde plan MVP (portal coordinador, sección 6). Implementado y verificado en vivo 2026-08-10 a 2026-08-16 en `app/coordinador/chat-reclutadores/page.tsx` y `app/reclutador/chat-coordinador/page.tsx`.*
+
+**CA-22.1 — Un solo chat general por par (simplificado, decisión de José 2026-08-16):** El chat es de tipo `reclutador_coordinador`, con **un solo chat general por cada par** reclutador–coordinador — no hay un chat distinto por vacante. El campo `vacante_id` del esquema queda disponible sin usar, como mejora futura si se decide dar contexto por vacante más adelante; no requiere cambios de estructura para activarse.
+
+**CA-22.2 — Mensajería en tiempo real bidireccional:** Ambos lados envían y reciben mensajes en tiempo real vía Supabase Realtime, con componente dedicado `ChatCoordinadorReclutador.tsx` (no reutiliza `ChatWindow.tsx`, que tiene lógica específica del chat con candidato).
+
+**CA-22.3 — Indicador de no leído:** Columna `leido_coordinador` controla el estado de lectura. El coordinador ve un punto rojo en `CoordinadorNav.tsx` (mismo patrón que `ReclutadorNav.tsx` ya usa), y en su lista de conversaciones los chats con mensajes sin leer se muestran con fondo verde, texto en negrita y un puntito indicador.
+
+**CA-22.4 — Ordenar sin ocultar:** La lista de conversaciones del coordinador tiene un selector "Ordenar por": Más reciente / Nombre / Sin leer. Los chats sin leer suben al principio de la lista cuando se elige esa opción, pero nunca se ocultan ni se filtran — el coordinador siempre ve la lista completa (aclaración explícita de José: quería orden, no filtro).
+
+**CA-22.5 — Un único chat garantizado por par (integridad de datos):** La creación del chat general está protegida por un índice único a nivel de base de datos (`tipo`, `reclutador_id`, `coordinador_id`, solo cuando `vacante_id is null`), para que nunca se generen chats duplicados aunque ambos lados intenten "buscar o crear" el chat casi al mismo tiempo al cargar sus páginas. Si la creación falla por el índice, el sistema vuelve a buscar el chat ya existente en vez de fallar.
+
+**CA-22.6 — Sonido de notificación descartado por ahora:** Se decidió priorizar el contador numérico visible en el nav en vez de un sonido de notificación, evitando además las limitaciones de autoplay de audio en navegadores. Queda como posible mejora futura, no como pendiente bloqueante.

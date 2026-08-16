@@ -54,7 +54,8 @@ Anthropic Claude API (claude-sonnet-4-... — el más reciente disponible)
 ### Deploy e Infraestructura
 ```
 Vercel (Next.js nativo — zero config, auto-deploy desde GitHub main)
-GitHub (repositorio + sync automático de sitemap.xml)
+GitHub (repositorio de código, sin ningún rol en el sitemap desde el 10/08/2026 —
+  ver corrección abajo, §9)
 ```
 
 ### Monitoreo (desde el MVP)
@@ -95,7 +96,7 @@ FORMATO DE SPEC: compatible con OpenSpec — legible por Claude Code,
 
 ## 2. ESTRUCTURA DE REPOSITORIO (Next.js App Router)
 
-> **Estado:** Actualizado al Sprint 5 (01/08/2026). Las rutas marcadas con ✅ ya existen en producción.
+> **Estado:** Actualizado al Sprint 5 (10/08/2026 — sesión larga, ver tasks.md para detalle de cada tarea). Las rutas marcadas con ✅ ya existen en producción. Reescrita por completo — la versión anterior (01/08) estaba desactualizada y tenía un fragmento de código huérfano al final.
 
 ```
 tuchamba-v2/
@@ -103,40 +104,50 @@ tuchamba-v2/
 ├── .gitignore
 ├── CLAUDE.md                     ← Reglas permanentes para el copiloto IA
 ├── spec.md                       ← Especificación funcional completa
-├── plan.md                       ← Arquitectura técnica
+├── plan.md                       ← Arquitectura técnica (este archivo)
 ├── tasks.md                      ← Sprints con tareas atómicas
+├── middleware.ts                 ✅ NUEVO — protege /coordinador/* (sesión + status activo)
 ├── next.config.js                ✅
 ├── tailwind.config.ts            ✅
-├── tsconfig.json                 ✅
-├── package.json                  ✅
+├── tsconfig.json                 ✅ (⚠️ moduleResolution "node" obsoleto, ver tasks.md 7.13)
+├── package.json                  ✅ (+ xlsx, ver tasks.md 7.13 para riesgo conocido sin fix)
 ├── public/                       ✅
 │   ├── manifest.json             ✅ PWA manifest
-│   ├── favicon.png               ✅ Favicon portal candidato
-│   ├── Logo_Header.png           ✅ Logo horizontal (portal candidato)
-│   ├── Logo_Header_02.png        ✅ Logo alternativo (portales internos)
-│   ├── icon-192.png              ✅ Ícono PWA 192x192
-│   ├── icon-512.png              ✅ Ícono PWA 512x512
-│   ├── ojo-abierto.png           ✅ Botón ver contraseña
-│   └── ojo-cerrado.png           ✅ Botón ocultar contraseña
+│   ├── favicon.png               ✅
+│   ├── Logo_Header.png           ✅
+│   ├── Logo_Header_02.png        ✅
+│   ├── icon-192.png / icon-512.png ✅
+│   └── ojo-abierto.png / ojo-cerrado.png ✅
 ├── supabase/
 │   └── functions/
 │       └── API.md                ✅ Endpoints documentados
 ├── hooks/                        ✅
 │   ├── useReferido.ts            ✅ Captura ?ref= en localStorage
 │   ├── useTrafico.ts             ✅ Detecta fuente de tráfico
-│   └── useAlertas.ts             ✅ Genera alertas automáticas
+│   └── useAlertas.ts             ✅ Genera alertas automáticas (sin_movimiento,
+│                                     garantia_proxima, entrevista_proxima,
+│                                     confirmar_asistencia)
 ├── lib/                          ✅
-│   ├── utils.ts                  ✅ cn, getSemanaISO, calcularComision, calcularGarantiaFin
+│   ├── utils.ts                  ✅ cn, getSemanaISO, calcularComision,
+│   │                                 calcularGarantiaFin (legado),
+│   │                                 calcularGarantiaFinHabil (CA-02.8, días hábiles)
+│   ├── excel-vacantes.ts         ✅ NUEVO — columnas, mapas de traducción
+│   │                                 bidireccionales, parser de fechas,
+│   │                                 normalización de nombres de empresa
 │   └── supabase/
 │       ├── client.ts             ✅ Cliente browser
 │       └── server.ts             ✅ Cliente servidor
 ├── components/
 │   ├── ui/
-│   │   └── button.tsx            ✅ Shadcn/ui
+│   │   ├── button.tsx            ✅ Shadcn/ui
+│   │   └── InfoTooltip.tsx       ✅ NUEVO — tooltip "!" estilo nota de Excel,
+│   │                                 usado en VacanteModal
 │   ├── candidato/
 │   │   ├── VacantesPortal.tsx    ✅ Layout split + búsqueda + filtros + paginación
+│   │   │                            + Realtime (vacantes y documentos_negocio)
 │   │   ├── VacanteCard.tsx       ✅ Card de vacante en lista
-│   │   ├── VacanteDetalle.tsx    ✅ Panel detalle + botón postular
+│   │   ├── VacanteDetalle.tsx    ✅ Panel detalle + botón postular + PDFs de ruta
+│   │   │                            + examen médico/antidoping visibles
 │   │   ├── ChatModal.tsx         ✅ Modal postulación + chat candidato
 │   │   ├── ChatWindow.tsx        ✅ Chat Realtime (candidato y reclutador)
 │   │   └── TraficoTracker.tsx    ✅ Tracker de fuente en página vacante individual
@@ -145,76 +156,95 @@ tuchamba-v2/
 │   ├── admin/
 │   │   └── SolicitudesPanel.tsx  ✅ Panel aprobar/rechazar agencias
 │   ├── reclutador/
-│   │   ├── KanbanBoard.tsx       ✅ Tablero principal (desktop + móvil)
-│   │   ├── KanbanColumn.tsx      ✅ Columna por etapa
-│   │   └── KanbanCard.tsx        ✅ Card candidato con modales descarte/contratado/entrevista
+│   │   ├── KanbanBoard.tsx       ✅ Tablero principal (desktop + móvil), incluye
+│   │   │                            columna "Descartados", Realtime, historial previo
+│   │   ├── KanbanColumn.tsx      ✅ Columna por etapa (incl. "Descartado")
+│   │   ├── KanbanCard.tsx        ✅ Card candidato — modales descarte/inducción/
+│   │   │                            firma contrato/entrevista/documentos/detalle
+│   │   │                            descarte; badges historial previo, sin actividad
+│   │   └── ReclutadorNav.tsx     ✅ NUEVO — nav compartido, contadores Realtime
+│   │                                 de chats y alertas sin leer
+│   ├── coordinador/              ✅ NUEVA CARPETA
+│   │   ├── CoordinadorNav.tsx    ✅ Nav compartido, contador de chats sin leer
+│   │   ├── VacanteModal.tsx      ✅ Modal de 8 secciones — crear/editar/duplicar
+│   │   │                            vacante, selector de negocio con creación
+│   │   │                            inline y filtro anti-duplicados, toggle
+│   │   │                            Vigente/No vigente
+│   │   └── KanbanCardSoloLectura.tsx ✅ Card sin botones de acción, para el
+│   │                                     pipeline global del coordinador (5.11)
+│   ├── shared/                   ✅ NUEVA CARPETA
+│   │   └── ChatCoordinadorReclutador.tsx ✅ Chat general único por par
+│   │                                          reclutador-coordinador
+│   ├── forms/
+│   │   └── EditableList.tsx      ✅ Lista editable con drag-and-drop (@dnd-kit) —
+│   │                                 requisitos, beneficios, documentos, zonas_ruta
 │   └── seo/
 │       └── JobPostingSchema.tsx  ✅ JSON-LD para Google Jobs
 └── app/
     ├── layout.tsx                ✅ Root layout con metadata PWA
-    ├── globals.css               ✅ Tailwind base
-    ├── page.tsx                  ✅ Portal Candidato (Home pública)
+    ├── globals.css                ✅ Tailwind base
+    ├── page.tsx                  ✅ Portal Candidato (Home pública), revalidate=0,
+    │                                 Realtime, salario_periodo/turno incluidos
+    ├── sitemap.ts                ✅ NUEVO — sitemap dinámico nativo de Next.js
+    │                                 (reemplaza el mecanismo de sync a GitHub de V1,
+    │                                 ver spec.md CA-05.3 corregida)
     ├── vacante/[id]/
-    │   └── page.tsx              ✅ Detalle vacante SSR + SEO + JSON-LD
+    │   └── page.tsx              ✅ Detalle vacante SSR + SEO + JSON-LD, revalidate=0
     ├── invitacion/[token]/
     │   └── page.tsx              ✅ Registro agencia + coordinador
     ├── admin/
-    │   ├── invitaciones/
-    │   │   └── page.tsx          ✅ Generador de links de invitación
-    │   └── solicitudes/
-    │       └── page.tsx          ✅ Panel aprobar/rechazar agencias
+    │   ├── invitaciones/page.tsx ✅ Generador de links de invitación
+    │   └── solicitudes/page.tsx  ✅ Panel aprobar/rechazar agencias
     ├── reclutador/
     │   ├── layout.tsx            ✅
     │   ├── login/page.tsx        ✅ Login por código
     │   ├── dashboard/page.tsx    ✅ Métricas + link referido + filtro fechas
-    │   ├── pipeline/page.tsx     ✅ Kanban con modales
-    │   ├── chats/page.tsx        ✅ Lista chats + ChatWindow Realtime
+    │   ├── pipeline/page.tsx     ✅ Kanban con modales (⚠️ sin Realtime todavía,
+    │   │                            a diferencia de chats/vacantes coordinador —
+    │   │                            pendiente anotado)
+    │   ├── chats/page.tsx        ✅ Lista chats + ChatWindow Realtime, "Ordenar por"
+    │   ├── chat-coordinador/     ✅ NUEVO — chat con su coordinador (5.13)
+    │   │   └── page.tsx
     │   ├── detalle/[id]/
-    │   │   └── page.tsx          ✅ Ficha operativa de vacante
+    │   │   └── page.tsx          ✅ Ficha operativa de vacante, revalidate=0,
+    │   │                            incluye PDFs de ruta de la empresa
     │   ├── comisiones/page.tsx   ✅ Panel comisiones con día de pago por agencia
     │   └── alertas/page.tsx      ✅ Panel alertas automáticas
     ├── coordinador/
     │   ├── layout.tsx            ✅
     │   ├── login/page.tsx        ✅ Login email+password Supabase Auth
     │   ├── dashboard/page.tsx    ✅ Dashboard base con accesos rápidos
-    │   ├── vacantes/             ⏳ Sprint 5
-    │   ├── reclutadores/         ⏳ Sprint 5
-    │   ├── pipeline/             ⏳ Sprint 5
-    │   └── corte-semanal/        ⏳ Sprint 5
+    │   ├── en-revision/page.tsx  ✅ NUEVO — pantalla para coordinador pendiente
+    │   │                            de aprobación (CA-08.3, protegida por middleware)
+    │   ├── vacantes/page.tsx     ✅ Listado + filtros + Exportar/Importar Excel +
+    │   │                            botón Duplicar, Realtime
+    │   ├── reclutadores/page.tsx ✅ NUEVO — CRUD reclutadores, LADA internacional
+    │   ├── pipeline/page.tsx     ✅ NUEVO — panel de reclutadores → Kanban
+    │   │                            solo-lectura por reclutador (5.11)
+    │   ├── chat-reclutadores/    ✅ NUEVO — chat con cada reclutador (5.13)
+    │   │   └── page.tsx
+    │   ├── faq/                  ⏸️ PENDIENTE — depende de 4.14/4.15 (Sprint 6)
+    │   └── corte-semanal/        ⏳ Sprint 5, aún no construido
     └── api/
         ├── postular/route.ts     ✅ Crea candidato + postulación + chat
         ├── trafico/route.ts      ✅ Registra fuente de tráfico
         ├── invitaciones/route.ts ✅ Genera token de invitación (protegido admin)
         ├── registro-agencia/route.ts ✅ Registra agencia + coordinador
+        ├── documentos/route.ts   ✅ NUEVO — documentos del candidato (bucket privado,
+        │                            links firmados)
+        ├── documentos-negocio/route.ts ✅ NUEVO — PDFs de rutas por empresa
+        │                                    (bucket público, getPublicUrl)
+        ├── exportar-vacantes/route.ts  ✅ NUEVO — Excel con hoja Vacantes +
+        │                                    hoja Instrucciones (38+ columnas)
+        ├── importar-vacantes/route.ts  ✅ NUEVO — parser con columnas dinámicas
+        │                                    REQUISITO_N/BENEFICIO_N/DOCUMENTO_N,
+        │                                    crea o actualiza, reporte por fila
         ├── reclutador/
         │   └── login/route.ts    ✅ Verifica código de reclutador
         └── admin/
             ├── aprobar-agencia/route.ts  ✅ Activa agencia + crea cuenta Auth
             ├── rechazar-agencia/route.ts ✅ Rechaza solicitud
             └── reset-password/route.ts  ✅ Reset password via Admin API
-```
-    │   ├── ChatBubble.tsx
-    │   └── ChatInput.tsx
-    ├── kanban/
-    │   ├── KanbanBoard.tsx
-    │   ├── KanbanColumn.tsx
-    │   └── KanbanCard.tsx
-    ├── seo/
-    │   └── JobPostingSchema.tsx   ← JSON-LD como Server Component
-    ├── forms/
-    │   └── EditableList.tsx        ← Componente reusable: requisitos,
-    │                                  beneficios, documentos_requeridos,
-    │                                  zonas_ruta, tags (ver §13)
-    └── ui/                          ← Shadcn/ui components
-└── lib/
-    ├── supabase/
-    │   ├── client.ts             ← Cliente browser
-    │   └── server.ts              ← Cliente Server Components
-    └── utils.ts                    ← getSemanaISO, calcularComision, etc.
-└── hooks/
-    ├── useRealtime.ts
-    ├── useAlertas.ts
-    └── useReferido.ts
 ```
 
 ---
@@ -228,10 +258,9 @@ NEXT_PUBLIC_SUPABASE_URL=https://TU_PROYECTO.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_anon_key_aqui
 SUPABASE_SERVICE_ROLE_KEY=tu_service_role_key_aqui
 
-# GitHub (para sync automático de sitemap)
-GITHUB_TOKEN=tu_github_token_aqui
-GITHUB_REPO=usuario/tuchamba-v2
-GITHUB_SITEMAP_PATH=public/sitemap.xml
+# GitHub — ya NO se usa para sitemap (corregido 2026-08-10, ver §9).
+# Sin variables de GITHUB_TOKEN/GITHUB_REPO/GITHUB_SITEMAP_PATH — el
+# sitemap dinámico (app/sitemap.ts) no necesita ningún acceso a GitHub.
 
 # Anthropic (SOLO en Edge Functions — nunca en NEXT_PUBLIC_*)
 ANTHROPIC_API_KEY=tu_api_key_aqui
@@ -510,59 +539,20 @@ export function JobPostingSchema({ vacante }: { vacante: any }) {
 
 ---
 
-## 9. SITEMAP AUTO-SYNC A GITHUB (Edge Function)
+## 9. SITEMAP — dinámico con Next.js (corregido 2026-08-10)
 
-```typescript
-// supabase/functions/sync-sitemap/index.ts
-import { createClient } from 'jsr:@supabase/supabase-js@2'
+> **Reemplaza por completo el mecanismo de V1** (Edge Function que generaba
+> el XML y lo commiteaba a GitHub vía API, con trigger manual en cada
+> guardado). Se detectó que Next.js 14 App Router soporta sitemaps dinámicos
+> de forma nativa — más simple, sin GitHub token que administrar, sin
+> despliegues extra, y siempre actualizado por diseño (se genera fresco en
+> cada visita a `/sitemap.xml`, no depende de que un trigger se ejecute
+> correctamente). Ver spec.md CA-05.3 corregida.
 
-Deno.serve(async () => {
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-  )
-
-  const { data: vacantes } = await supabase
-    .from('vacantes')
-    .select('id, updated_at')
-    .eq('status', 'vigente')
-
-  const baseUrl = Deno.env.get('APP_URL')
-  const hoy = new Date().toISOString().split('T')[0]
-
-  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
-  xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-  xml += `  <url><loc>${baseUrl}/</loc><lastmod>${hoy}</lastmod><priority>1.0</priority></url>\n`
-
-  for (const v of vacantes ?? []) {
-    xml += `  <url><loc>${baseUrl}/vacante/${v.id}</loc>`
-    xml += `<lastmod>${v.updated_at?.split('T')[0]}</lastmod><priority>0.8</priority></url>\n`
-  }
-  xml += '</urlset>'
-
-  const repo = Deno.env.get('GITHUB_REPO')
-  const path = Deno.env.get('GITHUB_SITEMAP_PATH')
-  const token = Deno.env.get('GITHUB_TOKEN')
-
-  const getRes = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
-    headers: { Authorization: `Bearer ${token}` }
-  })
-  const existing = getRes.ok ? await getRes.json() : null
-
-  await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
-    method: 'PUT',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      message: 'sitemap: actualización automática',
-      content: btoa(xml),
-      ...(existing?.sha ? { sha: existing.sha } : {})
-    })
-  })
-
-  return new Response('ok')
-})
-```
-> Se invoca vía trigger de base de datos o llamada directa al guardar/editar/cerrar una vacante desde el portal coordinador.
+**Implementación real:** `app/sitemap.ts` — ver §2 (estructura de repositorio)
+para su ubicación. Consulta Supabase en vivo, filtra `status = 'vigente'`,
+usa `updated_at` como `lastModified`. No requiere ninguna Edge Function,
+ningún `GITHUB_TOKEN`, ningún trigger de base de datos.
 
 ---
 
