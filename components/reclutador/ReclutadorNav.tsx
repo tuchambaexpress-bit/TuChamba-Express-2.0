@@ -83,6 +83,7 @@ export default function ReclutadorNav({ titulo = 'Tu Chamba Express', subtitulo 
         <div className="flex gap-4 items-center">
           <a href="/reclutador/dashboard" className="text-green-200 hover:text-white text-sm">Dashboard</a>
           <a href="/reclutador/pipeline" className="text-green-200 hover:text-white text-sm">Pipeline</a>
+          <a href="/reclutador/vacantes" className="text-green-200 hover:text-white text-sm">Vacantes</a>
           <a href="/reclutador/chats" className="relative text-green-200 hover:text-white text-sm">
             Chats
             {chatsSinLeer > 0 && (

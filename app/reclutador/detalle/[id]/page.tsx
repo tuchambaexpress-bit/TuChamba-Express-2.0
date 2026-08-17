@@ -6,9 +6,13 @@ export const revalidate = 0 // nunca cachear — siempre datos frescos de Supaba
 
 interface Props {
   params: { id: string }
+  searchParams: { from?: string }
 }
 
-export default async function FichaVacante({ params }: Props) {
+export default async function FichaVacante({ params, searchParams }: Props) {
+  const origen = searchParams?.from === 'vacantes'
+    ? { href: '/reclutador/vacantes', label: '← Vacantes' }
+    : { href: '/reclutador/pipeline', label: '← Pipeline' }
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -20,14 +24,14 @@ export default async function FichaVacante({ params }: Props) {
       id, titulo, descripcion, requisitos, beneficios,
       letras_chiquitas, salario_min, salario_max, salario_tipo,
       salario_visible, ciudad, estado, colonia_zona,
-      modalidad, jornada, horario, tipo_contrato,
+      modalidad, jornada, horario, tipo_contrato, turno, salario_periodo, turno,
       tiene_ruta, zonas_ruta, ruta_para_entrevista,
       estacionamiento, comedor, uniforme,
       empresa_visible, destacada, status,
       dias_garantia, dias_induccion, induccion_dentro_garantia,
       comision_base_mxn, tiene_promocion, promocion_monto_mxn, promocion_fin,
       contacto_rrhh, contacto_rrhh_telefono, contacto_rrhh_horario,
-      punto_reunion, documentos_requeridos,
+      punto_reunion, documentos_requeridos, guion_candidato,
       negocios(nombre, documentos_negocio(id, nombre_archivo, archivo_url))
     `)
     .eq('id', params.id)
@@ -39,9 +43,15 @@ export default async function FichaVacante({ params }: Props) {
     ? (vacante.negocios as any)?.nombre ?? 'Empresa'
     : 'Empresa Confidencial'
 
-  const salario = vacante.salario_visible && vacante.salario_min
-    ? `$${vacante.salario_min.toLocaleString('es-MX')}${vacante.salario_max ? ` - $${vacante.salario_max.toLocaleString('es-MX')}` : ''} ${vacante.salario_tipo ?? ''}`
+  // El reclutador siempre ve el salario real (salario_visible solo aplica
+  // al portal público de candidatos, no a la ficha operativa interna).
+  const salario = vacante.salario_min
+    ? `$${vacante.salario_min.toLocaleString('es-MX')}${vacante.salario_max ? ` - $${vacante.salario_max.toLocaleString('es-MX')}` : ''} ${vacante.salario_tipo ?? ''} ${vacante.salario_periodo ?? ''}`
     : 'A convenir'
+
+  const TURNOS: Record<string, string> = {
+    matutino: 'Matutino', vespertino: 'Vespertino', nocturno: 'Nocturno', rotativo: 'Rotativo',
+  }
 
   const hoy = new Date().toISOString().split('T')[0]
   const tienePromoActiva = vacante.tiene_promocion && vacante.promocion_fin && hoy <= vacante.promocion_fin
@@ -55,8 +65,8 @@ export default async function FichaVacante({ params }: Props) {
             <h1 className="text-white font-bold text-xl">Tu Chamba Express</h1>
             <p className="text-green-200 text-sm">Ficha operativa</p>
           </div>
-          <Link href="/reclutador/pipeline" className="text-green-200 hover:text-white text-sm">
-            ← Pipeline
+          <Link href={origen.href} className="text-green-200 hover:text-white text-sm">
+            {origen.label}
           </Link>
         </div>
       </header>
@@ -122,15 +132,16 @@ export default async function FichaVacante({ params }: Props) {
         <div className="bg-white rounded-2xl p-5 shadow-sm">
           <h3 className="font-bold text-gray-900 mb-3">💵 Salario del candidato</h3>
           <p className="text-lg font-bold text-gray-900">{salario}</p>
+          {vacante.turno && TURNOS[vacante.turno] && <p className="text-sm text-gray-500 mt-1">🔄 Turno {TURNOS[vacante.turno]}</p>}
           {vacante.horario && <p className="text-sm text-gray-500 mt-1">🕐 {vacante.horario}</p>}
           {vacante.tipo_contrato && <p className="text-sm text-gray-500 mt-1">📋 {vacante.tipo_contrato}</p>}
         </div>
 
-        {/* Qué decirle al candidato */}
+        {/* Qué decirle al candidato (CA-09.2) */}
         <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 shadow-sm">
           <h3 className="font-bold text-blue-900 mb-2">💬 Qué decirle al candidato</h3>
-          <p className="text-sm text-blue-800">
-            {vacante.descripcion ?? 'El coordinador aún no ha agregado instrucciones específicas para esta vacante.'}
+          <p className="text-sm text-blue-800 whitespace-pre-line">
+            {vacante.guion_candidato ?? 'El coordinador aún no ha agregado instrucciones específicas para esta vacante.'}
           </p>
           {vacante.punto_reunion && (
             <div className="mt-3 bg-white rounded-xl p-3">

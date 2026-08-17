@@ -80,6 +80,7 @@ const FORM_INICIAL = {
   contacto_rrhh_nombre: '',
   contacto_rrhh_telefono: '',
   mejor_horario_contacto: '',
+  guion_candidato: '',
 }
 
 function normalizarNombreNegocio(texto: string) {
@@ -289,6 +290,7 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
       contacto_rrhh_nombre: form.contacto_rrhh_nombre || null,
       contacto_rrhh_telefono: form.contacto_rrhh_telefono || null,
       mejor_horario_contacto: form.mejor_horario_contacto || null,
+      guion_candidato: form.guion_candidato?.trim() || null,
     }
 
     const { error: errorGuardado } = vacanteId && !vacanteDuplicar
@@ -655,6 +657,20 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
                           onChange={e => setForm({ ...form, mejor_horario_contacto: e.target.value })}
                           placeholder="Mejor horario para contactarlo (ej. 9am-2pm)"
                           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-2 focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
+                        />
+                      </div>
+
+                      <div className="pt-3">
+                        <p className="text-xs font-medium text-gray-700 flex items-center mb-1">
+                          💬 Qué decirle al candidato
+                          <InfoTooltip texto="Lo mínimo que el reclutador debe comunicar: salario, horario, punto de reunión, qué llevar, con quién preguntar. Esto se le muestra directo en su ficha operativa." />
+                        </p>
+                        <textarea
+                          value={form.guion_candidato}
+                          onChange={e => setForm({ ...form, guion_candidato: e.target.value })}
+                          placeholder="Ej. Preséntate en punto a las 8am con INE y CURP. Pregunta por Lic. Ana Torres. Sueldo $3,360 semanal, turno rotativo."
+                          rows={4}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
                         />
                       </div>
                     </>

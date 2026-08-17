@@ -679,11 +679,13 @@ Cada archivo se guarda en Supabase Storage y genera una fila en `documentos_cand
 ### HU-03: Reclutador consulta la ficha operativa de una vacante
 **Como** reclutador, **quiero** ver todos los detalles operativos de una vacante en un solo lugar, **para** no tener que preguntarle al coordinador información básica.
 
-**CA-03.1:** La ficha operativa visible para el reclutador incluye: contacto RRHH, teléfono, mejor horario de contacto, etapas del proceso, documentos requeridos, rutas disponibles, días de garantía, comisión base y promoción activa (si existe), y todas las preguntas del FAQ respondidas.
+**CA-03.1:** La ficha operativa visible para el reclutador incluye: contacto RRHH, teléfono, mejor horario de contacto, etapas del proceso, documentos requeridos, rutas disponibles, días de garantía, comisión base y promoción activa (si existe), y todas las preguntas del FAQ respondidas. El salario real y el turno se muestran siempre al reclutador — `salario_visible` solo controla si el salario aparece en el portal público de candidatos, nunca oculta esa información al reclutador (corregido 2026-08-17, bug detectado al probar 5.20).
 
 **CA-03.2:** Dado que el reclutador tiene una duda no resuelta en el FAQ, cuando envía una pregunta al coordinador desde la ficha, entonces el sistema crea un `mensaje_interno` vinculado a esa vacante y genera una alerta al coordinador.
 
 **CA-03.3:** Dado que el coordinador responde una pregunta y activa el toggle "Agregar al FAQ", entonces la respuesta queda visible en la ficha de esa vacante para todos los reclutadores de la agencia automáticamente.
+
+**CA-03.5 — Listado de vacantes para consulta libre (agregado 2026-08-17, detectado por José durante prueba de 5.15):** El reclutador tiene una pantalla `/reclutador/vacantes` con el listado de todas las vacantes de su agencia (vigentes y pausadas, con badge de status), independiente de si ya tiene un candidato postulado ahí o no. Cada vacante de la lista lleva a su ficha operativa completa (`/reclutador/detalle/[id]`, ver CA-03.1). Antes de esto, la única forma de llegar a la ficha operativa era desde una tarjeta del Kanban — es decir, solo después de que un candidato ya estaba postulado, sin poder "consultar antes" una vacante.
 
 #### CA-03.4 — Priorización del Agente FAQ (evita cuello de botella del coordinador)
 

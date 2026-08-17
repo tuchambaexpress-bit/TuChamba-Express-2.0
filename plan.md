@@ -208,6 +208,8 @@ tuchamba-v2/
     │   ├── detalle/[id]/
     │   │   └── page.tsx          ✅ Ficha operativa de vacante, revalidate=0,
     │   │                            incluye PDFs de ruta de la empresa
+    │   ├── vacantes/page.tsx     🔲 NUEVO — 5.20, listado para consulta libre
+    │   │                            (sin depender de tener un candidato postulado)
     │   ├── comisiones/page.tsx   ✅ Panel comisiones con día de pago por agencia
     │   └── alertas/page.tsx      ✅ Panel alertas automáticas
     ├── coordinador/
