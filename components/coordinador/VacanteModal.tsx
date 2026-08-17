@@ -9,6 +9,7 @@ import { EditableList } from '@/components/forms/EditableList'
 interface Negocio {
   id: string
   nombre: string
+  dias_descanso: number[]
 }
 
 interface Props {
@@ -82,6 +83,8 @@ const FORM_INICIAL = {
   mejor_horario_contacto: '',
   guion_candidato: '',
   punto_reunion: '',
+  dias_induccion: 0,
+  induccion_dentro_garantia: true,
 }
 
 function normalizarNombreNegocio(texto: string) {
@@ -103,15 +106,19 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
     return () => document.removeEventListener('keydown', handleEsc)
   }, [abierto, onCerrar])
   const [form, setForm] = useState<any>(FORM_INICIAL)
+  const [ciudadesExistentes, setCiudadesExistentes] = useState<string[]>([])
+  const [estadosExistentes, setEstadosExistentes] = useState<string[]>([])
 
-  // CA-09.3: campos críticos para que el reclutador pueda operar la vacante sin fricción
-  const faltantes: string[] = []
-  if (!form.contacto_rrhh_nombre?.trim()) faltantes.push('Nombre de contacto RRHH')
-  if (!form.contacto_rrhh_telefono?.trim()) faltantes.push('Teléfono de contacto RRHH')
-  if (!form.punto_reunion?.trim()) faltantes.push('Punto de reunión')
-  if (!form.documentos_requeridos || form.documentos_requeridos.length === 0) faltantes.push('Documentos requeridos')
   const [negocios, setNegocios] = useState<Negocio[]>([])
   const [creandoNegocio, setCreandoNegocio] = useState(false)
+  const [diasDescanso, setDiasDescanso] = useState<number[]>([0])
+
+  // Al elegir una empresa existente, carga sus días de descanso ya guardados
+  useEffect(() => {
+    if (creandoNegocio || !form.negocio_id) return
+    const negocio = negocios.find(n => n.id === form.negocio_id)
+    if (negocio) setDiasDescanso(negocio.dias_descanso ?? [0])
+  }, [form.negocio_id, negocios, creandoNegocio])
   const [documentosRuta, setDocumentosRuta] = useState<any[]>([])
   const [cargandoDocsRuta, setCargandoDocsRuta] = useState(false)
   const [subiendoDocRuta, setSubiendoDocRuta] = useState(false)
@@ -145,7 +152,7 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
     const supabase = createClient()
     const { data } = await supabase
       .from('negocios')
-      .select('id, nombre')
+      .select('id, nombre, dias_descanso')
       .order('nombre')
     if (data) setNegocios(data)
   }
@@ -184,6 +191,19 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
     await fetch(`/api/documentos-negocio?id=${id}`, { method: 'DELETE' })
     if (form.negocio_id) await cargarDocumentosRuta(form.negocio_id)
   }
+
+  async function cargarCiudadesYEstados() {
+    const supabase = createClient()
+    const { data } = await supabase.from('vacantes').select('ciudad, estado').eq('agencia_id', agenciaId)
+    if (data) {
+      setCiudadesExistentes([...new Set(data.map((v: any) => v.ciudad).filter(Boolean))] as string[])
+      setEstadosExistentes([...new Set(data.map((v: any) => v.estado).filter(Boolean))] as string[])
+    }
+  }
+
+  useEffect(() => {
+    if (abierto) cargarCiudadesYEstados()
+  }, [abierto])
 
   async function cargarVacante(id: string) {
     const supabase = createClient()
@@ -245,7 +265,7 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
 
       const { data: negocioCreado, error: errorNegocio } = await supabase
         .from('negocios')
-        .insert({ ...nuevoNegocio, nombre: nombreLimpio })
+        .insert({ ...nuevoNegocio, nombre: nombreLimpio, dias_descanso: diasDescanso })
         .select('id')
         .single()
 
@@ -255,6 +275,9 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
         return
       }
       negocioId = negocioCreado.id
+    } else if (negocioId) {
+      // Empresa existente: los días de descanso aplican a TODAS sus vacantes
+      await supabase.from('negocios').update({ dias_descanso: diasDescanso }).eq('id', negocioId)
     }
 
     const payload = {
@@ -301,6 +324,8 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
       mejor_horario_contacto: form.mejor_horario_contacto || null,
       guion_candidato: form.guion_candidato?.trim() || null,
       punto_reunion: form.punto_reunion?.trim() || null,
+      dias_induccion: form.dias_induccion ? Number(form.dias_induccion) : 0,
+      induccion_dentro_garantia: form.induccion_dentro_garantia,
     }
 
     const { error: errorGuardado } = vacanteId && !vacanteDuplicar
@@ -323,7 +348,9 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
   const seccionesConFaltantes = new Set<string>()
 
   if (!form.titulo?.trim()) { faltantesObligatorios.push('título'); seccionesConFaltantes.add('identidad') }
-  if (!form.negocio_id) { faltantesObligatorios.push('empresa'); seccionesConFaltantes.add('identidad') }
+  if (!form.negocio_id && !(creandoNegocio && nuevoNegocio.nombre?.trim())) {
+    faltantesObligatorios.push('empresa'); seccionesConFaltantes.add('identidad')
+  }
   if (!form.ciudad?.trim() || !form.estado?.trim()) { faltantesObligatorios.push('ciudad/estado'); seccionesConFaltantes.add('ubicacion') }
   if (!form.horario?.trim()) { faltantesObligatorios.push('horario detallado'); seccionesConFaltantes.add('condiciones') }
   if (!form.salario_min) { faltantesObligatorios.push('salario'); seccionesConFaltantes.add('condiciones') }
@@ -555,12 +582,6 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
                     </>
                   ) : s.id === 'proceso' ? (
                     <>
-                      <div className="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 mb-1">
-                        <p className="text-[11px] text-blue-700">
-                          ℹ️ Esta sección es información para el <strong>reclutador</strong> — el candidato nunca la ve.
-                        </p>
-                      </div>
-
                       <div>
                         <label className="text-xs font-medium text-gray-700 flex items-center mb-1">
                           Documentos tronco común
@@ -639,6 +660,12 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
                         </label>
                       </div>
 
+                      <div className="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 my-1">
+                        <p className="text-[11px] text-blue-700">
+                          ℹ️ ↓ Esta información es para el <strong>reclutador</strong> — el candidato nunca la ve.
+                        </p>
+                      </div>
+
                       <div className="border-t border-gray-100 pt-3">
                         <label className="flex items-center justify-between cursor-pointer">
                           <span className="text-sm font-medium text-gray-700">
@@ -708,6 +735,27 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
                           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
                         />
                       </div>
+
+                      <div className="pt-3">
+                        <p className="text-xs font-medium text-gray-700 mb-1">Días de inducción</p>
+                        <input
+                          type="number"
+                          min={0}
+                          value={form.dias_induccion}
+                          onChange={e => setForm({ ...form, dias_induccion: e.target.value })}
+                          placeholder="0"
+                          className="w-32 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
+                        />
+                        <label className="flex items-center gap-2 cursor-pointer mt-2">
+                          <input
+                            type="checkbox"
+                            checked={form.induccion_dentro_garantia}
+                            onChange={e => setForm({ ...form, induccion_dentro_garantia: e.target.checked })}
+                            className="accent-[#1A6B3C]"
+                          />
+                          <span className="text-xs text-gray-700">La inducción va dentro de los días de garantía</span>
+                        </label>
+                      </div>
                     </>
                   ) : s.id === 'identidad' ? (
                     <>
@@ -765,6 +813,36 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
                           </div>
                         )}
                       </div>
+
+                      {(form.negocio_id || creandoNegocio) && (
+                        <div>
+                          <p className="text-xs font-medium text-gray-700 flex items-center mb-1">
+                            Días de descanso de esta empresa
+                            <InfoTooltip texto="Estos días NO cuentan al calcular cuándo se cumple la garantía de un candidato (aplica a TODAS las vacantes de esta empresa, no solo a esta). Ej. si la empresa no da inducción los domingos, márcalo aquí." />
+                          </p>
+                          <div className="flex gap-1.5">
+                            {[
+                              { label: 'L', dia: 1 }, { label: 'M', dia: 2 }, { label: 'M', dia: 3 },
+                              { label: 'J', dia: 4 }, { label: 'V', dia: 5 }, { label: 'S', dia: 6 }, { label: 'D', dia: 0 },
+                            ].map(({ label, dia }) => (
+                              <button
+                                key={dia}
+                                type="button"
+                                onClick={() => setDiasDescanso(prev =>
+                                  prev.includes(dia) ? prev.filter(d => d !== dia) : [...prev, dia]
+                                )}
+                                className={`w-9 h-9 rounded-lg text-xs font-medium border transition-colors ${
+                                  diasDescanso.includes(dia)
+                                    ? 'bg-[#1A6B3C] text-white border-[#1A6B3C]'
+                                    : 'bg-white text-gray-600 border-gray-300'
+                                }`}
+                              >
+                                {label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="checkbox"
@@ -795,16 +873,24 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
                           <input
                             value={form.ciudad}
                             onChange={e => setForm({ ...form, ciudad: e.target.value })}
+                            list="lista-ciudades"
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
                           />
+                          <datalist id="lista-ciudades">
+                            {ciudadesExistentes.map(c => <option key={c} value={c} />)}
+                          </datalist>
                         </div>
                         <div>
                           <label className="text-xs font-medium text-gray-700 block mb-1">Estado *</label>
                           <input
                             value={form.estado}
                             onChange={e => setForm({ ...form, estado: e.target.value })}
+                            list="lista-estados"
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
                           />
+                          <datalist id="lista-estados">
+                            {estadosExistentes.map(e => <option key={e} value={e} />)}
+                          </datalist>
                         </div>
                       </div>
                       <div>

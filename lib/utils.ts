@@ -58,12 +58,19 @@ export function calcularGarantiaFin(
 export function calcularGarantiaFinHabil(
   fechaInicio: string,
   diasGarantia: number,
-  diasDescanso: number[] = [0]
+  diasDescanso: number[] = [0],
+  diasInduccion: number = 0,
+  induccionDentroGarantia: boolean = true
 ): string {
   const fecha = new Date(fechaInicio + 'T00:00:00')
   let diasContados = 0
 
-  while (diasContados < diasGarantia) {
+  // Si la inducción NO va dentro de la garantía, la garantía empieza a
+  // contar hasta que terminan los días de inducción — equivale a contar
+  // diasInduccion + diasGarantia días hábiles de corrido desde el inicio.
+  const diasTotales = induccionDentroGarantia ? diasGarantia : diasGarantia + diasInduccion
+
+  while (diasContados < diasTotales) {
     fecha.setDate(fecha.getDate() + 1)
     if (!diasDescanso.includes(fecha.getDay())) {
       diasContados++

@@ -26,6 +26,8 @@ interface Postulacion {
     tiene_promocion?: boolean
     promocion_fin?: string | null
     promocion_monto_mxn?: number | null
+    dias_induccion?: number
+    induccion_dentro_garantia?: boolean
     negocios: { dias_descanso: number[] } | null
   }
   chats: { id: string }[]
@@ -59,7 +61,7 @@ export default function KanbanBoard() {
         id, etapa_actual, candidato_id, vacante_id, agencia_id, created_at, updated_at,
         motivo_descarte, motivo_descarte_detalle, fecha_garantia_fin, garantia_cumplida,
         candidatos(id, nombre, telefono),
-        vacantes(titulo, etapas_personalizadas, dias_garantia, comision_base_mxn, tiene_promocion, promocion_fin, promocion_monto_mxn, negocios(dias_descanso)),
+        vacantes(titulo, etapas_personalizadas, dias_garantia, comision_base_mxn, tiene_promocion, promocion_fin, promocion_monto_mxn, dias_induccion, induccion_dentro_garantia, negocios(dias_descanso)),
         chats(id)
       `)
       .eq('reclutador_id', reclutadorId)

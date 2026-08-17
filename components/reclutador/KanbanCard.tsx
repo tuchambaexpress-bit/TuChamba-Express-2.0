@@ -129,7 +129,9 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
       const hoy = new Date().toISOString().split('T')[0]
       const monto = tienePromo && promoFin && hoy <= promoFin ? promoMonto : comisionBase
       setComisionCalculada(monto)
-      setGarantiaFin(calcularGarantiaFinHabil(fechaInduccion, diasGarantia, diasDescanso))
+      const diasInduccion = postulacion.vacantes?.dias_induccion ?? 0
+      const induccionDentroGarantia = postulacion.vacantes?.induccion_dentro_garantia ?? true
+      setGarantiaFin(calcularGarantiaFinHabil(fechaInduccion, diasGarantia, diasDescanso, diasInduccion, induccionDentroGarantia))
       setMostrarModalInduccion(true)
       return
     }
@@ -328,7 +330,9 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
     const supabase = createClient()
     const diasGarantia = postulacion.vacantes?.dias_garantia ?? 30
     const diasDescanso = postulacion.vacantes?.negocios?.dias_descanso ?? [0]
-    const fechaFin = calcularGarantiaFinHabil(fechaInduccion, diasGarantia, diasDescanso)
+    const diasInduccion = postulacion.vacantes?.dias_induccion ?? 0
+    const induccionDentroGarantia = postulacion.vacantes?.induccion_dentro_garantia ?? true
+    const fechaFin = calcularGarantiaFinHabil(fechaInduccion, diasGarantia, diasDescanso, diasInduccion, induccionDentroGarantia)
 
     await supabase
       .from('postulaciones')
@@ -724,7 +728,9 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
                     setFechaInduccion(e.target.value)
                     const diasGarantia = postulacion.vacantes?.dias_garantia ?? 30
                     const diasDescanso = postulacion.vacantes?.negocios?.dias_descanso ?? [0]
-                    setGarantiaFin(calcularGarantiaFinHabil(e.target.value, diasGarantia, diasDescanso))
+                    const diasInduccion = postulacion.vacantes?.dias_induccion ?? 0
+                    const induccionDentroGarantia = postulacion.vacantes?.induccion_dentro_garantia ?? true
+                    setGarantiaFin(calcularGarantiaFinHabil(e.target.value, diasGarantia, diasDescanso, diasInduccion, induccionDentroGarantia))
                   }}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
                 />
