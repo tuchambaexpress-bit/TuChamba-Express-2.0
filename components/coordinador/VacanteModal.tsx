@@ -39,6 +39,7 @@ const DOCUMENTOS_TRONCO_COMUN = [
   'CURP',
   'NSS (Hoja de seguridad social IMSS)',
   'Acta de nacimiento',
+  'Hoja de retención Infonavit (de contar con crédito)',
 ]
 
 const FORM_INICIAL = {
@@ -63,6 +64,7 @@ const FORM_INICIAL = {
   requisitos: [] as string[],
   beneficios: [] as string[],
   salario_min: '',
+  comentarios_salario: '',
   salario_max: '',
   salario_tipo: 'neto',
   salario_periodo: 'semanal',
@@ -304,6 +306,7 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
       requisitos: form.requisitos,
       beneficios: form.beneficios,
       salario_min: form.salario_min ? Number(form.salario_min) : null,
+      comentarios_salario: form.comentarios_salario?.trim() || null,
       salario_max: form.salario_max ? Number(form.salario_max) : null,
       salario_tipo: form.salario_tipo,
       salario_periodo: form.salario_periodo,
@@ -582,6 +585,12 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
                     </>
                   ) : s.id === 'proceso' ? (
                     <>
+                      <div className="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 mb-1">
+                        <p className="text-[11px] text-blue-700">
+                          ℹ️ Esta sección es información para el <strong>reclutador</strong> — el candidato nunca la ve.
+                        </p>
+                      </div>
+
                       <div>
                         <label className="text-xs font-medium text-gray-700 flex items-center mb-1">
                           Documentos tronco común
@@ -658,12 +667,6 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
                           />
                           <span className="text-sm text-gray-700">📋 Socioeconómico</span>
                         </label>
-                      </div>
-
-                      <div className="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 my-1">
-                        <p className="text-[11px] text-blue-700">
-                          ℹ️ ↓ Esta información es para el <strong>reclutador</strong> — el candidato nunca la ve.
-                        </p>
                       </div>
 
                       <div className="border-t border-gray-100 pt-3">
@@ -1006,6 +1009,20 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
                           />
                           <span className="text-xs text-gray-600">Mostrar el salario al candidato</span>
                         </label>
+
+                        <div className="mt-2">
+                          <label className="text-xs font-medium text-gray-700 flex items-center mb-1">
+                            Comentarios del salario
+                            <InfoTooltip texto="Solo para el reclutador — ej. 'Empieza en $3,267, sube conforme a experiencia y antigüedad hasta $4,487'. El candidato nunca ve esto." />
+                          </label>
+                          <textarea
+                            value={form.comentarios_salario}
+                            onChange={e => setForm({ ...form, comentarios_salario: e.target.value })}
+                            placeholder="Ej. Empieza en el mínimo, sube conforme a experiencia y antigüedad."
+                            rows={2}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C] resize-none"
+                          />
+                        </div>
                       </div>
                     </>
                   ) : s.id === 'letras' ? (

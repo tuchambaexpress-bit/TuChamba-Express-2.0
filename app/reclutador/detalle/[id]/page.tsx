@@ -31,7 +31,7 @@ export default async function FichaVacante({ params, searchParams }: Props) {
       dias_garantia, dias_induccion, induccion_dentro_garantia,
       comision_base_mxn, tiene_promocion, promocion_monto_mxn, promocion_fin,
       contacto_rrhh, contacto_rrhh_telefono, contacto_rrhh_horario,
-      punto_reunion, documentos_requeridos, guion_candidato,
+      punto_reunion, documentos_requeridos, guion_candidato, comentarios_salario,
       negocios(nombre, documentos_negocio(id, nombre_archivo, archivo_url))
     `)
     .eq('id', params.id)
@@ -132,9 +132,22 @@ export default async function FichaVacante({ params, searchParams }: Props) {
         <div className="bg-white rounded-2xl p-5 shadow-sm">
           <h3 className="font-bold text-gray-900 mb-3">💵 Salario del candidato</h3>
           <p className="text-lg font-bold text-gray-900">{salario}</p>
+          {vacante.comentarios_salario && (
+            <div className="mt-2 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
+              <p className="text-xs text-blue-700">💬 {vacante.comentarios_salario}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Horario y turno */}
+        <div className="bg-white rounded-2xl p-5 shadow-sm">
+          <h3 className="font-bold text-gray-900 mb-3">🕐 Horario y turno</h3>
           {vacante.turno && TURNOS[vacante.turno] && <p className="text-sm text-gray-500 mt-1">🔄 Turno {TURNOS[vacante.turno]}</p>}
           {vacante.horario && <p className="text-sm text-gray-500 mt-1">🕐 {vacante.horario}</p>}
           {vacante.tipo_contrato && <p className="text-sm text-gray-500 mt-1">📋 {vacante.tipo_contrato}</p>}
+          {!vacante.turno && !vacante.horario && !vacante.tipo_contrato && (
+            <p className="text-sm text-gray-400">Sin información adicional de horario.</p>
+          )}
         </div>
 
         {/* Qué decirle al candidato (CA-09.2) */}
@@ -150,6 +163,20 @@ export default async function FichaVacante({ params, searchParams }: Props) {
             </div>
           )}
         </div>
+
+        {/* Documentos requeridos */}
+        {vacante.documentos_requeridos?.length > 0 && (
+          <div className="bg-white rounded-2xl p-5 shadow-sm">
+            <h3 className="font-bold text-gray-900 mb-3">📄 Documentos que debe llevar</h3>
+            <ul className="space-y-1">
+              {vacante.documentos_requeridos.map((d: string, i: number) => (
+                <li key={i} className="text-sm text-gray-700 flex gap-2">
+                  <span className="text-[#1A6B3C]">•</span>{d}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {/* Contacto RRHH */}
         {vacante.contacto_rrhh && (

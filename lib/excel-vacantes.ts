@@ -34,6 +34,28 @@ export function parsearFecha(fecha: string): string | null {
   return `${anio}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`
 }
 
+// 5 de agosto 2026-08-18: mapa de días de la semana para DÍAS DE DESCANSO EMPRESA.
+// Se usan 3 letras (no 1 sola) porque una sola letra es ambigua entre Martes y Miércoles.
+export const DIAS_SEMANA_INVERSO: Record<string, number> = {
+  DOM: 0, LUN: 1, MAR: 2, MIE: 3, JUE: 4, VIE: 5, SAB: 6,
+}
+export const DIAS_SEMANA_NOMBRES: Record<number, string> = {
+  0: 'DOM', 1: 'LUN', 2: 'MAR', 3: 'MIE', 4: 'JUE', 5: 'VIE', 6: 'SAB',
+}
+
+export function parsearDiasDescanso(texto: string): number[] {
+  if (!texto) return []
+  return texto
+    .split(',')
+    .map(d => DIAS_SEMANA_INVERSO[d.trim().toUpperCase()])
+    .filter((d): d is number => d !== undefined)
+}
+
+export function formatearDiasDescanso(dias: number[] | null | undefined): string {
+  if (!dias || dias.length === 0) return ''
+  return [...dias].sort((a, b) => a - b).map(d => DIAS_SEMANA_NOMBRES[d]).join(', ')
+}
+
 export function normalizarNombre(texto: string): string {
   return texto
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -54,7 +76,9 @@ export const COLUMNAS_FIJAS = [
   'DÍAS DE GARANTÍA', 'COMISIÓN',
   'TIENE PROMOCIÓN', 'DESCRIPCIÓN PROMOCIÓN', 'MONTO PROMOCIÓN', 'VENCE PROMOCIÓN',
   'EXAMEN MÉDICO', 'ANTIDOPING', 'ESTUDIO SOCIOECONÓMICO',
-  'CONTACTO RRHH NOMBRE', 'CONTACTO RRHH TELÉFONO', 'MEJOR HORARIO CONTACTO',
+  'CONTACTO RRHH NOMBRE', 'CONTACTO RRHH TELÉFONO', 'MEJOR HORARIO CONTACTO', 'PUNTO DE REUNIÓN',
+  'QUÉ DECIRLE AL CANDIDATO', 'COMENTARIOS SALARIO',
+  'DÍAS DE INDUCCIÓN', 'INDUCCIÓN DENTRO DE GARANTÍA', 'DÍAS DE DESCANSO EMPRESA',
   'ESTATUS',
 ]
 
@@ -71,6 +95,7 @@ export const INSTRUCCIONES: { columna: string; campoSistema: string; descripcion
   { columna: 'MODALIDAD', campoSistema: 'Sección 2 — Modalidad', descripcion: 'Presencial, Híbrido o Remoto.', ejemplo: 'Presencial' },
   { columna: 'SALARIO MÍNIMO', campoSistema: 'Sección 3 — Salario', descripcion: 'Solo el número, sin signo de pesos ni comas.', ejemplo: '2500' },
   { columna: 'SALARIO MÁXIMO', campoSistema: 'Sección 3 — Salario', descripcion: 'Opcional, si el salario es un rango.', ejemplo: '3000' },
+  { columna: 'COMENTARIOS SALARIO', campoSistema: 'Sección 3 — Comentarios del salario', descripcion: 'Solo para el reclutador, el candidato nunca lo ve. Ej. cómo sube el salario con la experiencia.', ejemplo: 'Empieza en el mínimo, sube con antigüedad' },
   { columna: 'TIPO SALARIO', campoSistema: 'Sección 3 — Salario', descripcion: 'Neto, Bruto o A convenir.', ejemplo: 'Bruto' },
   { columna: 'PERIODO SALARIO', campoSistema: 'Sección 3 — Salario', descripcion: 'Semanales, Quincenales, Mensuales o Por hora.', ejemplo: 'Semanales' },
   { columna: 'MOSTRAR SALARIO', campoSistema: 'Sección 3 — Mostrar salario', descripcion: 'SI = visible al candidato. NO = aparece "A convenir".', ejemplo: 'SI' },
@@ -89,6 +114,8 @@ export const INSTRUCCIONES: { columna: string; campoSistema: string; descripcion
   { columna: 'UNIFORME', campoSistema: 'Sección 5 — Uniforme', descripcion: 'SI o NO.', ejemplo: 'NO' },
   { columna: 'LETRAS CHIQUITAS', campoSistema: 'Sección 6 — Letras chiquitas', descripcion: 'Avisos que el candidato debe saber antes de llegar.', ejemplo: 'Sin tatuajes en la cara' },
   { columna: 'DÍAS DE GARANTÍA', campoSistema: 'Sección 7 — Días de garantía', descripcion: 'Número entero. Obligatorio.', ejemplo: '30' },
+  { columna: 'DÍAS DE INDUCCIÓN', campoSistema: 'Sección 7 — Días de inducción', descripcion: 'Número entero. Déjalo en 0 o vacío si no aplica.', ejemplo: '2' },
+  { columna: 'INDUCCIÓN DENTRO DE GARANTÍA', campoSistema: 'Sección 7 — Inducción dentro de garantía', descripcion: 'SI = los días de inducción cuentan como parte de la garantía. NO = la garantía empieza a contar hasta que termina la inducción.', ejemplo: 'SI' },
   { columna: 'COMISIÓN', campoSistema: 'Sección 7 — Comisión base', descripcion: 'Solo el número, sin signo de pesos. Obligatorio.', ejemplo: '2500' },
   { columna: 'TIENE PROMOCIÓN', campoSistema: 'Sección 7 — Promoción', descripcion: 'SI o NO.', ejemplo: 'NO' },
   { columna: 'DESCRIPCIÓN PROMOCIÓN', campoSistema: 'Sección 7 — Promoción', descripcion: 'Solo si TIENE PROMOCIÓN = SI.', ejemplo: 'Bono de lanzamiento' },
@@ -101,6 +128,9 @@ export const INSTRUCCIONES: { columna: string; campoSistema: string; descripcion
   { columna: 'CONTACTO RRHH TELÉFONO', campoSistema: 'Sección 8 — Contacto RRHH (opcional)', descripcion: '10 dígitos, sin espacios ni guiones.', ejemplo: '(vacío)' },
   { columna: 'DOCUMENTO_1, DOCUMENTO_2...', campoSistema: 'Sección 8 — Documentos requeridos', descripcion: 'Un documento por columna (incluye los 6 de "tronco común" si aplican: RFC, INE, Comprobante de domicilio, CURP, NSS, Acta de nacimiento, más cualquier extra). Mismo patrón que Requisitos/Beneficios.', ejemplo: 'RFC (Constancia de situación fiscal)' },
   { columna: 'MEJOR HORARIO CONTACTO', campoSistema: 'Sección 8 — Contacto RRHH (opcional)', descripcion: 'Texto libre.', ejemplo: '(vacío)' },
+  { columna: 'PUNTO DE REUNIÓN', campoSistema: 'Sección 8 — Punto de reunión (opcional)', descripcion: 'Dónde debe presentarse el candidato.', ejemplo: 'Recepción de planta, entrada principal' },
+  { columna: 'QUÉ DECIRLE AL CANDIDATO', campoSistema: 'Sección 8 — Qué decirle al candidato', descripcion: 'Instrucciones para el reclutador: salario, horario, qué llevar, con quién preguntar.', ejemplo: 'Preséntate con INE y CURP, pregunta por Lic. Torres' },
+  { columna: 'DÍAS DE DESCANSO EMPRESA', campoSistema: '(campo de la EMPRESA, no de la vacante)', descripcion: 'Días que NO cuentan para calcular la garantía. Abreviaturas de 3 letras separadas por coma: LUN, MAR, MIE, JUE, VIE, SAB, DOM. Aplica a TODAS las vacantes de esa empresa — si la misma EMPRESA aparece en varias filas con valores distintos, gana el de la última fila.', ejemplo: 'SAB, DOM' },
   { columna: 'ESTATUS', campoSistema: 'Vigente/No vigente (toggle Sección 8)', descripcion: 'Vigente o No vigente.', ejemplo: 'Vigente' },
 ]
 

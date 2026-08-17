@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import * as XLSX from 'xlsx'
 import {
   JORNADA_INVERSO, MODALIDAD_INVERSO, SALARIO_TIPO_INVERSO, PERIODO_INVERSO,
-  esSiNo, parsearFecha, normalizarNombre,
+  esSiNo, parsearFecha, normalizarNombre, parsearDiasDescanso,
 } from '@/lib/excel-vacantes'
 
 function getServiceClient() {
@@ -52,6 +52,9 @@ export async function POST(req: NextRequest) {
     let creadas = 0
     let actualizadas = 0
     const errores: { fila: number; motivo: string }[] = []
+    // CA-08.8: dias_descanso vive en negocios, no en vacantes — se juntan aquí
+    // y se aplican en un solo UPDATE por empresa al final (última fila gana)
+    const diasDescansoPorNegocio = new Map<string, number[]>()
 
     for (let idx = 0; idx < filas.length; idx++) {
       const fila = filas[idx]
@@ -136,8 +139,20 @@ export async function POST(req: NextRequest) {
           contacto_rrhh_nombre: String(fila['CONTACTO RRHH NOMBRE'] ?? '').trim() || null,
           contacto_rrhh_telefono: String(fila['CONTACTO RRHH TELÉFONO'] ?? '').trim() || null,
           mejor_horario_contacto: String(fila['MEJOR HORARIO CONTACTO'] ?? '').trim() || null,
+          punto_reunion: String(fila['PUNTO DE REUNIÓN'] ?? '').trim() || null,
+          guion_candidato: String(fila['QUÉ DECIRLE AL CANDIDATO'] ?? '').trim() || null,
+          comentarios_salario: String(fila['COMENTARIOS SALARIO'] ?? '').trim() || null,
+          dias_induccion: fila['DÍAS DE INDUCCIÓN'] ? Number(fila['DÍAS DE INDUCCIÓN']) : 0,
+          induccion_dentro_garantia: esSiNo(fila['INDUCCIÓN DENTRO DE GARANTÍA'] ?? 'SI'),
           status: String(fila['ESTATUS'] ?? '').trim().toLowerCase() === 'vigente' ? 'vigente' : 'pausada',
           agencia_id: agenciaId,
+        }
+
+        // CA-08.8: guarda los días de descanso de esta fila para aplicarlos
+        // a la empresa al final (si viene vacío, no se toca lo que ya tenía)
+        const diasDescansoTexto = String(fila['DÍAS DE DESCANSO EMPRESA'] ?? '').trim()
+        if (negocioId && diasDescansoTexto) {
+          diasDescansoPorNegocio.set(negocioId, parsearDiasDescanso(diasDescansoTexto))
         }
 
         // CA-08.5: actualizar si ya existe (por ID, o por título+empresa en la misma agencia)
@@ -171,6 +186,11 @@ export async function POST(req: NextRequest) {
       } catch (errFila: any) {
         errores.push({ fila: numFila, motivo: errFila?.message ?? 'Error inesperado en esta fila' })
       }
+    }
+
+    // CA-08.8: aplica los días de descanso acumulados, uno por empresa
+    for (const [negocioId, dias] of diasDescansoPorNegocio) {
+      await supabase.from('negocios').update({ dias_descanso: dias }).eq('id', negocioId)
     }
 
     return NextResponse.json({ ok: true, creadas, actualizadas, errores })

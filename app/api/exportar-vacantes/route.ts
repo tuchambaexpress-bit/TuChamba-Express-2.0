@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import * as XLSX from 'xlsx'
 import {
   NOMBRES_JORNADA, NOMBRES_MODALIDAD, NOMBRES_SALARIO_TIPO, NOMBRES_PERIODO,
-  generarHojaInstrucciones,
+  generarHojaInstrucciones, formatearDiasDescanso,
 } from '@/lib/excel-vacantes'
 
 function getServiceClient() {
@@ -46,8 +46,10 @@ export async function GET(req: NextRequest) {
         requiere_examen_medico, requiere_antidoping, requiere_estudio_socioeconomico,
         documentos_requeridos,
         contacto_rrhh_nombre, contacto_rrhh_telefono, mejor_horario_contacto,
+        punto_reunion, guion_candidato, comentarios_salario,
+        dias_induccion, induccion_dentro_garantia,
         status,
-        negocios(nombre)
+        negocios(nombre, dias_descanso)
       `)
       .eq('agencia_id', agenciaId)
       .order('created_at', { ascending: false })
@@ -113,6 +115,12 @@ export async function GET(req: NextRequest) {
       fila['CONTACTO RRHH NOMBRE'] = v.contacto_rrhh_nombre ?? ''
       fila['CONTACTO RRHH TELÉFONO'] = v.contacto_rrhh_telefono ?? ''
       fila['MEJOR HORARIO CONTACTO'] = v.mejor_horario_contacto ?? ''
+      fila['PUNTO DE REUNIÓN'] = v.punto_reunion ?? ''
+      fila['QUÉ DECIRLE AL CANDIDATO'] = v.guion_candidato ?? ''
+      fila['COMENTARIOS SALARIO'] = v.comentarios_salario ?? ''
+      fila['DÍAS DE INDUCCIÓN'] = v.dias_induccion ?? ''
+      fila['INDUCCIÓN DENTRO DE GARANTÍA'] = v.induccion_dentro_garantia === false ? 'NO' : 'SI'
+      fila['DÍAS DE DESCANSO EMPRESA'] = formatearDiasDescanso(v.negocios?.dias_descanso)
       fila['ESTATUS'] = v.status === 'vigente' ? 'Vigente' : v.status === 'pausada' ? 'Pausada' : 'Cerrada'
 
       return fila
