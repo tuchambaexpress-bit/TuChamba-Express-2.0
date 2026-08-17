@@ -17,6 +17,22 @@ interface Vacante {
   cupo_cubierto: number
   created_at: string
   negocios: { nombre: string } | null
+  horario: string | null
+  salario_min: number | null
+  requisitos: string[] | null
+  beneficios: string[] | null
+  documentos_requeridos: string[] | null
+}
+
+// CA-09.3: misma lista de OBLIGATORIOS que bloquea guardar en el VacanteModal
+function esVacanteCompleta(v: Vacante) {
+  return !!v.titulo?.trim()
+    && !!v.ciudad?.trim() && !!v.estado?.trim()
+    && !!v.horario?.trim()
+    && !!v.salario_min
+    && !!(v.requisitos && v.requisitos.length > 0)
+    && !!(v.beneficios && v.beneficios.length > 0)
+    && !!(v.documentos_requeridos && v.documentos_requeridos.length > 0)
 }
 
 const COLORES_STATUS: Record<string, string> = {
@@ -94,6 +110,7 @@ export default function VacantesCoordinador() {
       .select(`
         id, titulo, ciudad, estado, status, prioridad,
         cupo_requerido, cupo_cubierto, created_at,
+        horario, salario_min, requisitos, beneficios, documentos_requeridos,
         negocios(nombre)
       `)
       .eq('agencia_id', agenciaId)
@@ -199,9 +216,13 @@ export default function VacantesCoordinador() {
                     <td className="px-4 py-3">
                       <button
                         onClick={() => { setVacanteEditar(v.id); setVacanteDuplicar(null); setModalAbierto(true) }}
-                        className="font-medium text-gray-900 hover:text-[#1A6B3C] hover:underline text-left"
+                        className="font-medium text-gray-900 hover:text-[#1A6B3C] hover:underline text-left flex items-center gap-1.5"
                       >
                         {v.titulo}
+                        <span
+                          className={`w-2 h-2 rounded-full flex-shrink-0 ${esVacanteCompleta(v) ? 'bg-green-500' : 'bg-amber-400'}`}
+                          title={esVacanteCompleta(v) ? 'Ficha completa' : 'Faltan campos recomendados (contacto RRHH, punto de reunión o documentos)'}
+                        />
                       </button>
                     </td>
                     <td className="px-4 py-3 text-gray-600">{v.negocios?.nombre ?? '—'}</td>

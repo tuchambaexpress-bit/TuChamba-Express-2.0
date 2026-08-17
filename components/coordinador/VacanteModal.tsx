@@ -81,6 +81,7 @@ const FORM_INICIAL = {
   contacto_rrhh_telefono: '',
   mejor_horario_contacto: '',
   guion_candidato: '',
+  punto_reunion: '',
 }
 
 function normalizarNombreNegocio(texto: string) {
@@ -102,6 +103,13 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
     return () => document.removeEventListener('keydown', handleEsc)
   }, [abierto, onCerrar])
   const [form, setForm] = useState<any>(FORM_INICIAL)
+
+  // CA-09.3: campos críticos para que el reclutador pueda operar la vacante sin fricción
+  const faltantes: string[] = []
+  if (!form.contacto_rrhh_nombre?.trim()) faltantes.push('Nombre de contacto RRHH')
+  if (!form.contacto_rrhh_telefono?.trim()) faltantes.push('Teléfono de contacto RRHH')
+  if (!form.punto_reunion?.trim()) faltantes.push('Punto de reunión')
+  if (!form.documentos_requeridos || form.documentos_requeridos.length === 0) faltantes.push('Documentos requeridos')
   const [negocios, setNegocios] = useState<Negocio[]>([])
   const [creandoNegocio, setCreandoNegocio] = useState(false)
   const [documentosRuta, setDocumentosRuta] = useState<any[]>([])
@@ -205,6 +213,7 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
     if (!form.jornada) return setError('La jornada es obligatoria')
     if (form.dias_garantia === '' || Number(form.dias_garantia) <= 0) return setError('Los días de garantía deben ser mayores a 0')
     if (form.comision_base_mxn === '' || form.comision_base_mxn === null || isNaN(Number(form.comision_base_mxn))) return setError('La comisión base es obligatoria')
+    if (faltantesObligatorios.length > 0) return setError(`Faltan campos obligatorios: ${faltantesObligatorios.join(', ')}`)
 
     setGuardando(true)
     const supabase = createClient()
@@ -291,6 +300,7 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
       contacto_rrhh_telefono: form.contacto_rrhh_telefono || null,
       mejor_horario_contacto: form.mejor_horario_contacto || null,
       guion_candidato: form.guion_candidato?.trim() || null,
+      punto_reunion: form.punto_reunion?.trim() || null,
     }
 
     const { error: errorGuardado } = vacanteId && !vacanteDuplicar
@@ -308,14 +318,22 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
     onCerrar()
   }
 
-  // 5.6: mapa de qué sección tiene qué campos obligatorios, para el indicador visual
+  // 5.6 + 5.16: lista real de OBLIGATORIOS por sección (tabla de José, 2026-08-17)
+  const faltantesObligatorios: string[] = []
   const seccionesConFaltantes = new Set<string>()
-  if (!form.titulo?.trim()) seccionesConFaltantes.add('identidad')
-  if (!form.ciudad?.trim() || !form.estado?.trim()) seccionesConFaltantes.add('ubicacion')
-  if (!form.jornada) seccionesConFaltantes.add('condiciones')
+
+  if (!form.titulo?.trim()) { faltantesObligatorios.push('título'); seccionesConFaltantes.add('identidad') }
+  if (!form.negocio_id) { faltantesObligatorios.push('empresa'); seccionesConFaltantes.add('identidad') }
+  if (!form.ciudad?.trim() || !form.estado?.trim()) { faltantesObligatorios.push('ciudad/estado'); seccionesConFaltantes.add('ubicacion') }
+  if (!form.horario?.trim()) { faltantesObligatorios.push('horario detallado'); seccionesConFaltantes.add('condiciones') }
+  if (!form.salario_min) { faltantesObligatorios.push('salario'); seccionesConFaltantes.add('condiciones') }
+  if (!form.requisitos || form.requisitos.length === 0) { faltantesObligatorios.push('requisitos (mínimo 1)'); seccionesConFaltantes.add('descripcion') }
+  if (!form.beneficios || form.beneficios.length === 0) { faltantesObligatorios.push('beneficios (mínimo 1)'); seccionesConFaltantes.add('descripcion') }
   if (form.dias_garantia === '' || Number(form.dias_garantia) <= 0 || form.comision_base_mxn === '' || form.comision_base_mxn === null || isNaN(Number(form.comision_base_mxn))) {
-    seccionesConFaltantes.add('reclutamiento')
+    faltantesObligatorios.push('días de garantía / comisión base'); seccionesConFaltantes.add('reclutamiento')
   }
+  const troncoComunSeleccionados = (form.documentos_requeridos ?? []).filter((d: string) => DOCUMENTOS_TRONCO_COMUN.includes(d))
+  if (troncoComunSeleccionados.length === 0) { faltantesObligatorios.push('documentos tronco común (mínimo 1)'); seccionesConFaltantes.add('proceso') }
 
   if (!abierto) return null
 
@@ -332,6 +350,13 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
                 {form.titulo}
                 {negocios.find(n => n.id === form.negocio_id)?.nombre ? ` — ${negocios.find(n => n.id === form.negocio_id)?.nombre}` : ''}
               </p>
+            )}
+            {faltantesObligatorios.length > 0 ? (
+              <p className="text-[11px] text-red-600 mt-1">
+                ⚠️ Incompleta: falta {faltantesObligatorios.join(', ')}
+              </p>
+            ) : (
+              <p className="text-[11px] text-green-600 mt-1">✅ Ficha completa</p>
             )}
           </div>
           <button onClick={onCerrar} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500">
@@ -670,6 +695,16 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
                           onChange={e => setForm({ ...form, guion_candidato: e.target.value })}
                           placeholder="Ej. Preséntate en punto a las 8am con INE y CURP. Pregunta por Lic. Ana Torres. Sueldo $3,360 semanal, turno rotativo."
                           rows={4}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
+                        />
+                      </div>
+
+                      <div className="pt-3">
+                        <p className="text-xs font-medium text-gray-700 mb-1">Punto de reunión / entrevista</p>
+                        <input
+                          value={form.punto_reunion}
+                          onChange={e => setForm({ ...form, punto_reunion: e.target.value })}
+                          placeholder="Ej. Recepción de planta, entrada principal sobre Av. Industrias"
                           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
                         />
                       </div>

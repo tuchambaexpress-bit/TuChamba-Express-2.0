@@ -830,7 +830,7 @@ No se incluye el PDF de rutas de transporte (`documentos_negocio`) — es un arc
 
 **CA-09.2:** La ficha operativa de cada vacante incluye una sección **"Qué decirle al candidato"** — un texto pregenerado por el coordinador (o sugerido por IA) con la información mínima que el reclutador necesita comunicar: salario, horario, punto de reunión, qué llevar, con quién preguntar. Esto resuelve directamente el dolor de reclutadores que no saben qué información dar y pierden al candidato en el proceso.
 
-**CA-09.3:** El sistema incluye un indicador de "Nivel de completitud" de la ficha de vacante — si faltan campos críticos (contacto RRHH, punto de reunión, documentos requeridos), el coordinador ve un badge de advertencia antes de publicarla.
+**CA-09.3 (rediseñada 2026-08-17):** El sistema bloquea el guardado de una vacante si faltan campos obligatorios, y muestra un mensaje explícito de qué falta (no solo un punto rojo por sección). Lista completa de obligatorios: título, empresa, ciudad/estado, horario detallado, salario, requisitos (mínimo 1), beneficios (mínimo 1), días de garantía, comisión base, y documentos tronco común (mínimo 1). **Contacto RRHH y punto de reunión son opcionales** — decisión explícita de José, ya documentada desde antes en el tooltip del campo ("llenar solo si el reclutador tendrá contacto directo con la empresa"); no deben marcarse como incompletos. El mismo criterio de completitud se usa en dos lugares: dentro del `VacanteModal` (mensaje + punto rojo por sección) y en el listado del coordinador (`app/coordinador/vacantes/page.tsx`, punto verde/ámbar junto al título — útil para detectar vacantes ya guardadas antes de este cambio que no cumplen la lista completa).
 
 ---
 
