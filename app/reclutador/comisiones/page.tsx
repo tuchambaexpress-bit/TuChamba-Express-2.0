@@ -71,11 +71,11 @@ export default function ComisionesReclutador() {
   })
 
   const totalPendiente = comisiones
-    .filter(c => !c.pagado && c.garantia_cumplida)
+    .filter(c => !c.pagado && garantiaYaCumplida(c.fecha_garantia_fin))
     .reduce((sum, c) => sum + (c.comision_aplicada_mxn ?? 0), 0)
 
   const totalEnGarantia = comisiones
-    .filter(c => !c.pagado && !c.garantia_cumplida)
+    .filter(c => !c.pagado && !garantiaYaCumplida(c.fecha_garantia_fin))
     .reduce((sum, c) => sum + (c.comision_aplicada_mxn ?? 0), 0)
 
   const totalCobrado = comisiones
@@ -84,6 +84,14 @@ export default function ComisionesReclutador() {
 
   const semanaActual = getSemanaISO()
   const [diaPago, setDiaPago] = useState<string>('viernes')
+
+  // garantia_cumplida y semana_corte nunca se actualizan automáticamente
+  // (mismo hueco detectado en 5.1c y confirmado de nuevo en 5.17) — se
+  // calcula en vivo comparando fecha_garantia_fin contra hoy.
+  function garantiaYaCumplida(fechaGarantiaFin: string | null): boolean {
+    if (!fechaGarantiaFin) return false
+    return new Date(fechaGarantiaFin + 'T00:00:00') <= new Date()
+  }
 
   const DIAS: Record<number, string> = {
     1: 'lunes', 2: 'martes', 3: 'miércoles', 
@@ -146,12 +154,15 @@ export default function ComisionesReclutador() {
               const diasRestantes = c.fecha_garantia_fin
                 ? Math.ceil((new Date(c.fecha_garantia_fin).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
                 : null
-              const esEstaSemana = c.semana_corte === semanaActual
+              const cumplida = garantiaYaCumplida(c.fecha_garantia_fin)
+              // "Esta semana" = la semana calendario donde cae fecha_garantia_fin,
+              // no el semana_corte guardado (ese se graba al INICIO de inducción)
+              const esEstaSemana = c.fecha_garantia_fin ? getSemanaISO(new Date(c.fecha_garantia_fin + 'T00:00:00')) === semanaActual : false
 
               return (
                 <div key={c.id} className={`bg-white rounded-2xl p-4 shadow-sm border-l-4 ${
                   c.pagado ? 'border-l-gray-300' :
-                  c.garantia_cumplida ? 'border-l-[#1A6B3C]' :
+                  cumplida ? 'border-l-[#1A6B3C]' :
                   'border-l-amber-400'
                 }`}>
                   <div className="flex items-start justify-between">
@@ -161,12 +172,12 @@ export default function ComisionesReclutador() {
                       <p className="text-xs text-gray-400 mt-1">
                         Contratado: {c.fecha_contratacion ? new Date(c.fecha_contratacion).toLocaleDateString('es-MX') : '—'}
                       </p>
-                      {!c.garantia_cumplida && diasRestantes !== null && (
+                      {!cumplida && diasRestantes !== null && (
                         <p className={`text-xs mt-1 font-medium ${diasRestantes <= 3 ? 'text-red-500' : 'text-amber-600'}`}>
                           ⏳ {diasRestantes > 0 ? `${diasRestantes} días para cumplir garantía` : 'Garantía vencida'}
                         </p>
                       )}
-                      {esEstaSemana && !c.pagado && c.garantia_cumplida && (
+                      {esEstaSemana && !c.pagado && cumplida && (
                         <p className="text-xs text-[#1A6B3C] font-medium mt-1">✅ Se paga este {diaPago}</p>
                       )}
                     </div>
@@ -176,10 +187,10 @@ export default function ComisionesReclutador() {
                       </p>
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                         c.pagado ? 'bg-gray-100 text-gray-500' :
-                        c.garantia_cumplida ? 'bg-green-100 text-green-700' :
+                        cumplida ? 'bg-green-100 text-green-700' :
                         'bg-amber-100 text-amber-700'
                       }`}>
-                        {c.pagado ? 'Cobrada' : c.garantia_cumplida ? 'Por cobrar' : 'En garantía'}
+                        {c.pagado ? 'Cobrada' : cumplida ? 'Por cobrar' : 'En garantía'}
                       </span>
                     </div>
                   </div>

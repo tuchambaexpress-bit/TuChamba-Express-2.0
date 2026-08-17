@@ -79,3 +79,39 @@ export function calcularGarantiaFinHabil(
 
   return fecha.toISOString().split('T')[0]
 }
+
+/**
+ * 5.17 — Calcula el periodo de corte (7 días) que termina en el `diaCorte`
+ * configurado para la agencia (1=Lunes...7=Domingo), más cercano a `fechaFin`
+ * (o el propio `fechaFin` si coincide). Evita depender de semana_corte /
+ * garantia_cumplida, que nunca se actualizan automáticamente (hueco conocido).
+ */
+export function obtenerPeriodoCorte(diaCorteAgencia: number, fechaFin: Date = new Date()): { inicio: string; fin: string } {
+  // El periodo siempre es la semana calendario completa (lunes a domingo),
+  // sin importar dia_corte — eso solo indica cuándo dentro de la semana se
+  // procesa el pago, no cambia qué se cuenta.
+  const fecha = new Date(fechaFin)
+  fecha.setHours(0, 0, 0, 0)
+  const diasDesdeLunes = (fecha.getDay() + 6) % 7
+  const inicio = new Date(fecha)
+  inicio.setDate(fecha.getDate() - diasDesdeLunes)
+  const fin = new Date(inicio)
+  fin.setDate(inicio.getDate() + 6)
+
+  return {
+    inicio: inicio.toISOString().split('T')[0],
+    fin: fin.toISOString().split('T')[0],
+  }
+}
+
+export function periodoCorteAdyacente(inicioActual: string, direccion: 'anterior' | 'siguiente'): { inicio: string; fin: string } {
+  const desplazamiento = direccion === 'anterior' ? -7 : 7
+  const nuevoInicio = new Date(inicioActual + 'T00:00:00')
+  nuevoInicio.setDate(nuevoInicio.getDate() + desplazamiento)
+  const nuevoFin = new Date(nuevoInicio)
+  nuevoFin.setDate(nuevoInicio.getDate() + 6)
+  return {
+    inicio: nuevoInicio.toISOString().split('T')[0],
+    fin: nuevoFin.toISOString().split('T')[0],
+  }
+}
