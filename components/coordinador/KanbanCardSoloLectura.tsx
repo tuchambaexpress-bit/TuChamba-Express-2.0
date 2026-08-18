@@ -9,6 +9,10 @@ export default function KanbanCardSoloLectura({ postulacion, tieneHistorialPrevi
   const nombre = postulacion.candidatos?.nombre
   const telefono = postulacion.candidatos?.telefono
   const vacante = postulacion.vacantes?.titulo
+  const empresa = postulacion.vacantes?.negocios?.nombre
+  const rutaOPunto = postulacion.vacantes?.ruta_para_entrevista && postulacion.vacantes?.punto_reunion
+    ? postulacion.vacantes.punto_reunion
+    : 'Directo a Empresa'
 
   const horasSinMovimiento = (Date.now() - new Date(postulacion.updated_at).getTime()) / (1000 * 60 * 60)
   const etapasActivas = ['Aplicado', 'Contactado', 'Entrevista', 'Inducción']
@@ -30,8 +34,25 @@ export default function KanbanCardSoloLectura({ postulacion, tieneHistorialPrevi
       )}
 
       <p className="font-semibold text-gray-900 text-sm">{nombre}</p>
-      <p className="text-xs text-[#1A6B3C] mt-0.5">{vacante}</p>
+      <p className="text-xs text-[#1A6B3C] mt-0.5">{vacante}{empresa ? ` — ${empresa}` : ''}</p>
       <p className="text-xs text-gray-400 mt-0.5">📱 {telefono}</p>
+
+      {/* HU-23: datos de entrevista + ficha del candidato — se muestran en
+          cualquier etapa donde exista el dato, sin restringir por etapa_actual */}
+      {postulacion.fecha_entrevista && (
+        <div className="mt-1.5 pt-1.5 border-t border-gray-100 text-xs text-gray-500 space-y-0.5">
+          <p>📅 {new Date(postulacion.fecha_entrevista).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })} · {new Date(postulacion.fecha_entrevista).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}</p>
+          <p>🚌 {rutaOPunto}</p>
+        </div>
+      )}
+
+      {(postulacion.candidatos?.edad || postulacion.candidatos?.escolaridad || postulacion.candidatos?.residencia) && (
+        <div className="mt-1.5 pt-1.5 border-t border-gray-100 text-xs text-gray-500 space-y-0.5">
+          {postulacion.candidatos?.edad && <p>🎂 {postulacion.candidatos.edad} años</p>}
+          {postulacion.candidatos?.escolaridad && <p>🎓 {postulacion.candidatos.escolaridad}</p>}
+          {postulacion.candidatos?.residencia && <p>📍 {postulacion.candidatos.residencia}</p>}
+        </div>
+      )}
 
       {postulacion.score > 0 && (
         <div className="flex gap-0.5 mt-1.5">

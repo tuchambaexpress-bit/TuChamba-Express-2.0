@@ -85,6 +85,9 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
   const [fechaEntrevista, setFechaEntrevista] = useState('')
   const [horaEntrevista, setHoraEntrevista] = useState('')
   const [lugarEntrevista, setLugarEntrevista] = useState('')
+  const [edadCandidato, setEdadCandidato] = useState('')
+  const [escolaridadCandidato, setEscolaridadCandidato] = useState('')
+  const [residenciaCandidato, setResidenciaCandidato] = useState('')
 
   const diasEnEtapa = Math.floor(
     (Date.now() - new Date(postulacion.created_at).getTime()) / (1000 * 60 * 60 * 24)
@@ -313,7 +316,89 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
       })
       .eq('id', postulacion.id)
 
+    // HU-23: ficha del candidato — solo actualiza si el reclutador capturó algo
+    if (edadCandidato || escolaridadCandidato || residenciaCandidato) {
+      await supabase
+        .from('candidatos')
+        .update({
+          ...(edadCandidato ? { edad: Number(edadCandidato) } : {}),
+          ...(escolaridadCandidato ? { escolaridad: escolaridadCandidato } : {}),
+          ...(residenciaCandidato ? { residencia: residenciaCandidato } : {}),
+        })
+        .eq('id', postulacion.candidato_id)
+    }
+
+    await enviarResumenAlCoordinador(fechaCompleta)
     setMostrarModalEntrevista(false)
+  }
+
+  // HU-23: arma y envía el resumen automático (mismo formato que ya usan los
+  // reclutadores por WhatsApp) como mensaje de sistema al chat con el coordinador.
+  async function enviarResumenAlCoordinador(fechaCompleta: Date) {
+    const supabase = createClient()
+
+    const { data: coordinadorData } = await supabase
+      .from('coordinadores')
+      .select('id, nombre')
+      .eq('agencia_id', postulacion.agencia_id)
+      .eq('status', 'activo')
+      .maybeSingle()
+    if (!coordinadorData) return // no hay coordinador activo en esta agencia, no hay a quién avisar
+
+    const { data: reclutadorData } = await supabase
+      .from('reclutadores')
+      .select('nombre')
+      .eq('id', reclutadorId)
+      .maybeSingle()
+
+    const v = postulacion.vacantes
+    const empresa = v?.negocios?.nombre ?? 'Empresa'
+    const rutaOPunto = v?.ruta_para_entrevista && v?.punto_reunion
+      ? v.punto_reunion
+      : 'Directo a Empresa'
+
+    const resumen =
+      `🏭 Empresa: ${empresa}\n` +
+      `📅 Fecha de entrevista: ${fechaCompleta.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}\n` +
+      `✅ Vacante: ${v?.titulo ?? ''}\n` +
+      `🔰 Nombre Candidato: ${nombre}\n` +
+      (edadCandidato ? `💠 Edad: ${edadCandidato} años\n` : '') +
+      (escolaridadCandidato ? `🧑🏻‍🎓 Escolaridad: ${escolaridadCandidato}\n` : '') +
+      (residenciaCandidato ? `📌 Residencia: ${residenciaCandidato}\n` : '') +
+      (v?.horario ? `🕛 Horario Laboral: ${v.horario}\n` : '') +
+      `🚌 Ruta o Punto de Reclutamiento: ${rutaOPunto}\n` +
+      `🕛 Hora: ${fechaCompleta.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}\n` +
+      `⭕ Reclutador: ${reclutadorData?.nombre ?? ''}\n` +
+      `⭕ Coordinador: ${coordinadorData.nombre}`
+
+    // Mismo chat único por par reclutador-coordinador ya usado en HU-22 (5.13)
+    let { data: chat } = await supabase
+      .from('chats')
+      .select('id')
+      .eq('tipo', 'reclutador_coordinador')
+      .eq('reclutador_id', reclutadorId)
+      .eq('coordinador_id', coordinadorData.id)
+      .is('vacante_id', null)
+      .maybeSingle()
+
+    if (!chat) {
+      const { data: nuevoChat } = await supabase
+        .from('chats')
+        .insert({ tipo: 'reclutador_coordinador', reclutador_id: reclutadorId, coordinador_id: coordinadorData.id })
+        .select('id')
+        .maybeSingle()
+      chat = nuevoChat
+    }
+    if (!chat) return
+
+    await supabase.from('mensajes').insert({
+      chat_id: chat.id,
+      sender_tipo: 'reclutador',
+      sender_id: reclutadorId,
+      sender_nombre: reclutadorData?.nombre ?? 'Reclutador',
+      texto: resumen,
+      es_sistema: true,
+    })
   }
 
   async function guardarScore(nuevoScore: number) {
@@ -988,6 +1073,33 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
                   onChange={e => setLugarEntrevista(e.target.value)}
                   placeholder="Ej. Av. Constitución 100, Col. Centro"
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
+                />
+              </div>
+
+              <div className="border-t border-gray-100 pt-3">
+                <p className="text-xs font-medium text-gray-700 mb-2">Ficha del candidato (opcional)</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <input type="number" value={edadCandidato}
+                    onChange={e => setEdadCandidato(e.target.value)}
+                    placeholder="Edad"
+                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
+                  />
+                  <select value={escolaridadCandidato}
+                    onChange={e => setEscolaridadCandidato(e.target.value)}
+                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
+                  >
+                    <option value="">Escolaridad</option>
+                    <option value="Primaria">Primaria</option>
+                    <option value="Secundaria">Secundaria</option>
+                    <option value="Preparatoria">Preparatoria</option>
+                    <option value="Universidad">Universidad</option>
+                    <option value="Otro">Otro</option>
+                  </select>
+                </div>
+                <input type="text" value={residenciaCandidato}
+                  onChange={e => setResidenciaCandidato(e.target.value)}
+                  placeholder="Residencia (ciudad o colonia)"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-2 focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
                 />
               </div>
             </div>

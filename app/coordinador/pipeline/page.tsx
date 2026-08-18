@@ -62,8 +62,9 @@ export default function PipelineCoordinador() {
       .from('postulaciones')
       .select(`
         id, etapa_actual, candidato_id, updated_at, score, motivo_descarte,
-        candidatos(nombre, telefono),
-        vacantes(titulo)
+        fecha_entrevista, lugar_entrevista,
+        candidatos(nombre, telefono, edad, escolaridad, residencia),
+        vacantes(titulo, ruta_para_entrevista, punto_reunion, negocios(nombre))
       `)
       .eq('reclutador_id', reclutador.id)
       .order('created_at', { ascending: false })

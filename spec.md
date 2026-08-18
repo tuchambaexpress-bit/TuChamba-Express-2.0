@@ -175,6 +175,12 @@ Un reclutador puede pertenecer a más de una agencia. La clave única es `reclut
 id uuid PK
 nombre text NOT NULL
 logo_url text
+status text DEFAULT 'pendiente_aprobacion'
+invitacion_id uuid
+aprobado_por uuid
+aprobado_at timestamptz
+dia_corte integer DEFAULT 4          -- 1=Lunes...7=Domingo, día de la semana en que se procesa el pago
+dia_pago integer DEFAULT 5           -- corregido 2026-08-18: faltaban estas 6 columnas en este bloque, ya existían en producción desde antes
 created_at timestamptz DEFAULT now()
 ```
 
@@ -185,7 +191,7 @@ agencia_id uuid FK → agencias.id
 nombre text NOT NULL
 email text UNIQUE NOT NULL
 telefono text
-activo bool DEFAULT true
+status text                          -- corregido 2026-08-18: NO es 'activo bool' como decía antes, es texto (ej. 'activo')
 created_at timestamptz DEFAULT now()
 ```
 
@@ -724,13 +730,13 @@ NIVEL 3 — Escalación al coordinador
 ### HU-04: Coordinador gestiona comisiones y corte semanal
 **Como** coordinador, **quiero** ver un resumen semanal de candidatos colocados por reclutador con su estado de garantía, **para** procesar el pago del viernes con un solo clic.
 
-**CA-04.1:** El panel de corte muestra por reclutador: candidatos colocados en la semana, cuántos cumplieron garantía, cuántos no fueron efectivos (con motivo), y el total a pagar.
+**CA-04.1:** El panel de corte muestra por reclutador: candidatos efectivos (garantía cumplida, comisión pendiente de pago) y no efectivos (con motivo), y el total a pagar.
 
-**CA-04.2:** Dado que la fecha actual es jueves, cuando el coordinador abre el panel de corte, entonces el sistema muestra automáticamente el resumen de la semana actual (lunes a jueves) calculado desde `postulaciones` donde `garantia_cumplida = true` y `semana_corte` coincide con la semana ISO actual.
+**CA-04.2 (corregida 2026-08-18):** Dado que el coordinador abre el panel de corte, entonces el sistema muestra automáticamente el periodo semanal actual (lunes a domingo, la semana calendario donde cae la fecha de hoy — `dia_corte`/`dia_pago` de la agencia indican cuándo dentro de esa semana se procesa el pago, no cambian qué semana se cuenta). "Efectivo" se calcula al vuelo comparando `fecha_garantia_fin` contra el rango del periodo — **no** se usa `garantia_cumplida` ni `semana_corte`: ambos campos existen en la base de datos pero nunca se actualizan automáticamente en ningún lugar del sistema (hueco detectado 2026-08-06 en 5.1c, confirmado de nuevo al construir esta tarea — `semana_corte` se graba con la semana en que el candidato *entra* a Inducción, no la semana en que la garantía se *cumple*, lo cual haría que el filtro mostrara los candidatos equivocados). El coordinador puede navegar a periodos anteriores.
 
 **CA-04.3:** Dado que el coordinador hace clic en "Marcar semana como pagada", cuando confirma la acción, entonces `cortes_semana.pagado = true`, `postulaciones.pagado = true` para todos los registros de esa semana, y el sistema genera un resumen descargable por reclutador.
 
-**CA-04.4:** Un candidato cuyo motivo de baja es `despido_empresa` o `renuncia` antes de cumplir garantía tiene `comision_aplicable = false` y no aparece en el total a pagar, independientemente de la causa.
+**CA-04.4 (corregida 2026-08-18):** Un candidato descartado **después de haber entrado a Inducción** (`fecha_contratacion` no nulo) cuenta como "no efectivo" en el corte, con el motivo que corresponda (renuncia, despido por la empresa, no concluyó inducción, etc. — cualquier motivo vale, no una lista fija). Un candidato descartado **antes** de llegar a Inducción (`fecha_contratacion` nulo — ej. "No cumple perfil", "No contesta") nunca estuvo en la ruta de cobrar comisión y no aparece en el corte en absoluto, ni como efectivo ni como no efectivo.
 
 ---
 
@@ -1231,6 +1237,20 @@ cualquier sugerencia del agente sería especulación sin base.
 Se diseña su Edge Function específica cuando exista ese histórico.
 
 ---
+
+### HU-23: Ficha del candidato al agendar entrevista + seguimiento automático al coordinador
+**Como** reclutador, **quiero** capturar los datos básicos del candidato (edad, escolaridad, residencia) en el mismo momento en que agendo su entrevista, **para** no tener que reportárselos al coordinador por WhatsApp aparte. **Como** coordinador, **quiero** ver esos datos reflejados automáticamente en mi seguimiento por etapas, **para** no depender de mensajes sueltos de WhatsApp para dar seguimiento a los candidatos que sí llegaron a entrevista.
+
+> *Origen: José compartió el formato real que los reclutadores le mandan a Roxana por WhatsApp al agendar una entrevista (2026-08-18). La mayoría de los campos ya existen o se derivan solos (empresa, vacante, horario, ruta, reclutador, coordinador) — solo edad, escolaridad y residencia son datos nuevos que no existen en ningún lado del sistema.*
+
+**CA-23.1:** El modal "Agendar entrevista" (ya existente en `KanbanCard.tsx`, CA-15.2) agrega una sección "Ficha del candidato": edad (número), escolaridad (Primaria/Secundaria/Preparatoria/Universidad/Otro), residencia (texto libre — ciudad o colonia). Campos opcionales, capturados por el reclutador mientras habla con el candidato para agendar. Se guardan en `candidatos`, no en `postulaciones` (son datos de la persona, no de esa postulación específica).
+
+**CA-23.2:** Al guardar la entrevista, el sistema arma automáticamente un resumen (mismo formato que ya usan los reclutadores por WhatsApp) y lo envía como mensaje de sistema (`es_sistema = true`) al chat reclutador↔coordinador que ya existe (HU-22) — sin abrir WhatsApp. Campos autocompletados sin pedirle nada al reclutador: Empresa, Vacante, Horario laboral, Ruta o Punto de Reclutamiento (derivado de `vacantes.ruta_para_entrevista`/`punto_reunion` — "Directo a Empresa" si no aplica ruta), Reclutador, Coordinador. Campos capturados en el modal: Fecha y hora de entrevista, Nombre, Edad, Escolaridad, Residencia.
+
+**CA-23.3:** El Kanban global de solo lectura del coordinador (`KanbanCardSoloLectura.tsx`, ver HU-11 sección 6/5.11) muestra edad, escolaridad y residencia en la tarjeta cuando el candidato está en etapa "Entrevista" o posterior y esos datos existen — para que el seguimiento por etapas del coordinador tenga la información completa sin tener que buscarla en el chat.
+
+---
+
 
 ### HU-19: Política de retención y limpieza de datos (Sprint 8 — backlog, no MVP inmediato)
 **Como** coordinador, **quiero** poder limpiar manualmente los registros de candidatos que ya cumplieron su ciclo (descartados, contratados, vetados), **para** mantener la base de datos ligera sin perder información mientras es útil ni comprometer la trazabilidad de comisiones ya pagadas.
