@@ -182,7 +182,7 @@ tuchamba-v2/
 │       └── JobPostingSchema.tsx  ✅ JSON-LD para Google Jobs
 └── app/
     ├── layout.tsx                ✅ Root layout con metadata PWA
-    ├── globals.css                ✅ Tailwind base
+    ├── globals.css               ✅ Tailwind base
     ├── page.tsx                  ✅ Portal Candidato (Home pública), revalidate=0,
     │                                 Realtime, salario_periodo/turno incluidos
     ├── sitemap.ts                ✅ NUEVO — sitemap dinámico nativo de Next.js

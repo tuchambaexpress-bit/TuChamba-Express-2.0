@@ -556,6 +556,13 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
         {/* Nombre candidato */}
         <p className="font-semibold text-gray-900 text-sm">{nombre}</p>
 
+        {/* Badge de pre-calificado (CA-17.3) */}
+        {postulacion.precalificado && (
+          <span className="inline-block text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium mt-1 mr-1">
+            ✅ Pre-calificado
+          </span>
+        )}
+
         {/* Badge de inactividad prolongada (CA-02.11) */}
         {(() => {
           const etapasActivas = ['Aplicado', 'Contactado', 'Entrevista', 'Inducción']

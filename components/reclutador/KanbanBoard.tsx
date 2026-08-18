@@ -62,7 +62,7 @@ export default function KanbanBoard() {
       .from('postulaciones')
       .select(`
         id, etapa_actual, candidato_id, vacante_id, agencia_id, created_at, updated_at,
-        motivo_descarte, motivo_descarte_detalle, fecha_garantia_fin, garantia_cumplida,
+        motivo_descarte, motivo_descarte_detalle, fecha_garantia_fin, garantia_cumplida, precalificado,
         candidatos(id, nombre, telefono),
         vacantes(titulo, horario, ruta_para_entrevista, punto_reunion, etapas_personalizadas, dias_garantia, comision_base_mxn, tiene_promocion, promocion_fin, promocion_monto_mxn, dias_induccion, induccion_dentro_garantia, negocios(nombre, dias_descanso)),
         chats(id)

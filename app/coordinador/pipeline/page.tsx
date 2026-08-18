@@ -61,7 +61,7 @@ export default function PipelineCoordinador() {
     const { data } = await supabase
       .from('postulaciones')
       .select(`
-        id, etapa_actual, candidato_id, updated_at, score, motivo_descarte,
+        id, etapa_actual, candidato_id, updated_at, score, motivo_descarte, precalificado,
         fecha_entrevista, lugar_entrevista,
         candidatos(nombre, telefono, edad, escolaridad, residencia),
         vacantes(titulo, ruta_para_entrevista, punto_reunion, negocios(nombre))

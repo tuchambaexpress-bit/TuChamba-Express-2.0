@@ -34,6 +34,11 @@ export default function KanbanCardSoloLectura({ postulacion, tieneHistorialPrevi
       )}
 
       <p className="font-semibold text-gray-900 text-sm">{nombre}</p>
+      {postulacion.precalificado && (
+        <span className="inline-block text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium mb-1">
+          ✅ Pre-calificado
+        </span>
+      )}
       <p className="text-xs text-[#1A6B3C] mt-0.5">{vacante}{empresa ? ` — ${empresa}` : ''}</p>
       <p className="text-xs text-gray-400 mt-0.5">📱 {telefono}</p>
 

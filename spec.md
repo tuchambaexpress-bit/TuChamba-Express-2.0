@@ -998,7 +998,7 @@ FEMSA Operador — Cupo: 5
 
 **CA-17.3:** Si el candidato cumple todos los requisitos, pasa al reclutador con un badge visible en su card del Kanban: **"✅ Pre-calificado"** — el reclutador sabe que ese candidato ya pasó el filtro inicial.
 
-**CA-17.4:** El coordinador define las preguntas de pre-calificación por vacante (máximo 5 preguntas de sí/no o opción múltiple). El sistema las genera automáticamente a partir de los `requisitos` de la vacante, pero el coordinador puede editarlas.
+**CA-17.4:** El coordinador define las preguntas de pre-calificación por vacante (máximo 5). Ampliada 2026-08-19 con lo aprendido al construirla: 3 tipos disponibles — Sí/No, Opción múltiple (mínimo 2 opciones; con checkbox "¿Tiene respuesta correcta?" — si no se marca, la pregunta es solo informativa, no filtra, ej. "¿Te queda alguna ruta?"), y Texto libre (siempre informativa, nunca filtra, ej. "¿Ya has trabajado antes para esta empresa?" — sirve para capturar datos como el "Reingreso" que Roxana ya registraba por WhatsApp, ver backlog Fase 2). Las respuestas de preguntas informativas se guardan en `postulaciones.respuestas_precalificacion` para que el reclutador/coordinador las consulten. **Pendiente (Fase 2):** el sistema generándolas automáticamente a partir de `requisitos` vía Claude — hoy el coordinador las escribe a mano.
 
 **CA-17.5:** Los candidatos que no pasan el filtro quedan registrados en el sistema como "No calificado" — el coordinador puede ver qué requisito falló más frecuentemente para ajustar el perfil de la vacante si es necesario.
 

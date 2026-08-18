@@ -6,7 +6,7 @@ export async function POST(request: Request) {
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
-  const { nombre, telefono, vacanteId, reclutadorId, codigoRef } = await request.json()
+  const { nombre, telefono, vacanteId, reclutadorId, codigoRef, precalificado, respuestasPrecalificacion } = await request.json()
 
   // Si no viene reclutadorId pero sí codigoRef, buscar por código
   let reclutadorIdFinal = reclutadorId ?? null
@@ -97,7 +97,9 @@ export async function POST(request: Request) {
       reclutador_id: reclutadorIdFinal ?? null,
       agencia_id: vacante.agencia_id,
       etapa_actual: 'Aplicado',
-      es_manual: false
+      es_manual: false,
+      precalificado: precalificado ?? false,
+      respuestas_precalificacion: respuestasPrecalificacion ?? {}
     })
     .select('id')
     .single()

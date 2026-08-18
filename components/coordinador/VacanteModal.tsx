@@ -63,6 +63,7 @@ const FORM_INICIAL = {
   descripcion: '',
   requisitos: [] as string[],
   beneficios: [] as string[],
+  preguntas_precalificacion: [] as any[],
   salario_min: '',
   comentarios_salario: '',
   salario_max: '',
@@ -228,6 +229,12 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
   async function guardar() {
     setError('')
 
+    for (const p of form.preguntas_precalificacion) {
+      if (p.tipo === 'opcion_multiple' && (p.opciones ?? []).length < 2) {
+        return setError(`La pregunta "${p.pregunta || '(sin texto)'}" necesita al menos 2 opciones`)
+      }
+    }
+
     // Campos siempre requeridos (ver spec.md CA-06 / tasks.md 5.6)
     if (!form.titulo?.trim()) return setError('El título es obligatorio')
     if (!form.ciudad?.trim()) return setError('La ciudad es obligatoria')
@@ -305,6 +312,7 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
       descripcion: form.descripcion?.trim() || form.titulo.trim(),
       requisitos: form.requisitos,
       beneficios: form.beneficios,
+      preguntas_precalificacion: form.preguntas_precalificacion,
       salario_min: form.salario_min ? Number(form.salario_min) : null,
       comentarios_salario: form.comentarios_salario?.trim() || null,
       salario_max: form.salario_max ? Number(form.salario_max) : null,
@@ -458,6 +466,123 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
                           onChange={(items) => setForm({ ...form, beneficios: items })}
                           placeholder="Ej. Vales de despensa"
                         />
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-medium text-gray-700 flex items-center mb-1">
+                          Preguntas de pre-calificación (máximo 5)
+                          <InfoTooltip texto="El candidato las responde antes de conectarse con el reclutador. Si falla una, se le muestran vacantes alternativas en vez de conectarlo. Déjalo vacío si no quieres filtro." />
+                        </label>
+                        {form.preguntas_precalificacion.map((p: any, i: number) => (
+                          <div key={p.id} className="border border-gray-200 rounded-xl p-3 mb-2 space-y-2">
+                            <div className="flex items-start gap-2">
+                              <input
+                                value={p.pregunta}
+                                onChange={e => {
+                                  const nuevas = [...form.preguntas_precalificacion]
+                                  nuevas[i] = { ...p, pregunta: e.target.value }
+                                  setForm({ ...form, preguntas_precalificacion: nuevas })
+                                }}
+                                placeholder="Ej. ¿Tienes secundaria terminada?"
+                                className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setForm({ ...form, preguntas_precalificacion: form.preguntas_precalificacion.filter((_: any, idx: number) => idx !== i) })}
+                                className="text-red-400 hover:text-red-600 text-sm px-2"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                            <div className="flex gap-2">
+                              <select
+                                value={p.tipo}
+                                onChange={e => {
+                                  const nuevas = [...form.preguntas_precalificacion]
+                                  nuevas[i] = { ...p, tipo: e.target.value, opciones: e.target.value === 'si_no' ? undefined : [], respuesta_correcta: '', filtra: true }
+                                  setForm({ ...form, preguntas_precalificacion: nuevas })
+                                }}
+                                className="border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
+                              >
+                                <option value="si_no">Sí / No</option>
+                                <option value="opcion_multiple">Opción múltiple</option>
+                                <option value="texto_libre">Texto libre (no filtra, solo informativa)</option>
+                              </select>
+                              {p.tipo === 'si_no' && (
+                                <select
+                                  value={p.respuesta_correcta}
+                                  onChange={e => {
+                                    const nuevas = [...form.preguntas_precalificacion]
+                                    nuevas[i] = { ...p, respuesta_correcta: e.target.value }
+                                    setForm({ ...form, preguntas_precalificacion: nuevas })
+                                  }}
+                                  className="border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
+                                >
+                                  <option value="">Respuesta correcta...</option>
+                                  <option value="Sí">Sí</option>
+                                  <option value="No">No</option>
+                                </select>
+                              )}
+                            </div>
+
+                            {p.tipo === 'opcion_multiple' && (
+                              <div className="space-y-2">
+                                <EditableList
+                                  items={p.opciones ?? []}
+                                  onChange={(items) => {
+                                    const nuevas = [...form.preguntas_precalificacion]
+                                    const siguenValida = items.includes(p.respuesta_correcta)
+                                    nuevas[i] = { ...p, opciones: items, respuesta_correcta: siguenValida ? p.respuesta_correcta : '' }
+                                    setForm({ ...form, preguntas_precalificacion: nuevas })
+                                  }}
+                                  placeholder="Ej. Ruta 1"
+                                />
+                                {(p.opciones ?? []).length < 2 && (
+                                  <p className="text-[11px] text-amber-600">Agrega al menos 2 opciones.</p>
+                                )}
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={p.filtra !== false}
+                                    onChange={e => {
+                                      const nuevas = [...form.preguntas_precalificacion]
+                                      nuevas[i] = { ...p, filtra: e.target.checked, respuesta_correcta: e.target.checked ? p.respuesta_correcta : '' }
+                                      setForm({ ...form, preguntas_precalificacion: nuevas })
+                                    }}
+                                    className="accent-[#1A6B3C]"
+                                  />
+                                  <span className="text-xs text-gray-600">¿Tiene respuesta correcta? (si no, solo es informativa)</span>
+                                </label>
+                                {p.filtra !== false && (
+                                  <select
+                                    value={p.respuesta_correcta}
+                                    onChange={e => {
+                                      const nuevas = [...form.preguntas_precalificacion]
+                                      nuevas[i] = { ...p, respuesta_correcta: e.target.value }
+                                      setForm({ ...form, preguntas_precalificacion: nuevas })
+                                    }}
+                                    className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
+                                  >
+                                    <option value="">Respuesta correcta...</option>
+                                    {(p.opciones ?? []).map((op: string) => <option key={op} value={op}>{op}</option>)}
+                                  </select>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                        {form.preguntas_precalificacion.length < 5 && (
+                          <button
+                            type="button"
+                            onClick={() => setForm({
+                              ...form,
+                              preguntas_precalificacion: [...form.preguntas_precalificacion, { id: crypto.randomUUID(), pregunta: '', tipo: 'si_no', respuesta_correcta: '' }]
+                            })}
+                            className="text-xs text-[#1A6B3C] hover:underline"
+                          >
+                            + Agregar pregunta
+                          </button>
+                        )}
                       </div>
                     </>
                   ) : s.id === 'logistica' ? (
