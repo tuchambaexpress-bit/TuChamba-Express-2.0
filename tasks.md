@@ -136,7 +136,7 @@ implement changes → si hay observaciones, se corrige antes de archivar
 - [X] 4.1 `app/reclutador/login/page.tsx`: login por código. Consulta tabla `reclutadores`. Sesión en cookie/localStorage (sin Supabase Auth nativo).
 - [X] 4.2 `app/reclutador/dashboard/page.tsx`: métricas básicas (candidatos activos, colocados este mes, comisión estimada). Para reclutadores nuevos sin actividad: mostrar guía de inicio rápido de 4 pasos en lugar de métricas vacías (ver spec.md CA-09.1).
 - [X] 4.3 `app/reclutador/pipeline/page.tsx`: Kanban con columnas de etapas personalizadas por vacante.
-- [X] 4.4 Cards de candidato: nombre, vacante, días en etapa actual (calculado desde `historial_etapas`), badge mensaje nuevo.
+- [X] 4.4 Cards de candidato: nombre, vacante, días en etapa actual, badge mensaje nuevo. **Corrección de documentación 2026-08-19:** el texto original decía "calculado desde `historial_etapas`" — el código real usa `postulaciones.updated_at` (horas sin movimiento), no lee de `historial_etapas`. No es un bug (`updated_at` funciona correctamente para este propósito), solo la descripción original no coincidía con la implementación real. Detectado al preparar Sprint 6, donde se descubrió que `historial_etapas` nunca tuvo política RLS de `SELECT` — si esta tarea sí hubiera dependido de leerla, habría estado rota en silencio desde Sprint 4.
 - [X] 4.5 Drag and drop con `@dnd-kit` entre columnas.
 - [X] 4.6 Al soltar card: actualizar `postulaciones.etapa_actual` + insertar fila en `historial_etapas` (etapa_anterior, etapa_nueva, cambiado_por).
 - [X] 4.7 Modal de confirmación al mover a "Contratado": pedir fecha de contratación, calcular garantía (`calcularGarantiaFin`), calcular comisión (`calcularComision`).
@@ -366,13 +366,15 @@ implement changes → si hay observaciones, se corrige antes de archivar
 ## SPRINT 6 — DASHBOARD POWER BI + AGENTES RESTANTES
 > **Objetivo:** Coordinador tiene visibilidad completa de su agencia. Los 5 agentes están activos.
 
-- [ ] 6.1 `app/coordinador/dashboard/page.tsx` — Gráfica 1: Vacantes por status (dona).
-- [ ] 6.2 Gráfica 2: Embudo de conversión (candidatos por etapa acumulado).
-- [ ] 6.3 Gráfica 3: Efectividad por reclutador (colocados vs no efectivos).
-- [ ] 6.4 Gráfica 4: Comisiones pagadas vs pendientes vs perdidas (barras apiladas).
-- [ ] 6.5 Gráfica 5: Fuentes de tráfico (dona, desde `trafico_referidos`).
-- [ ] 6.6 Gráfica 6: Tiempo promedio de colocación por vacante (calculado desde `historial_etapas`).
-- [ ] 6.7 Filtros de rango de fechas para todas las gráficas.
+- [X] 6.0 **Verificación previa antes de construir las 6 gráficas** (2026-08-19, siguiendo el patrón de Sprint 5 de confirmar contra la base real antes de programar): columnas de `historial_etapas` y `trafico_referidos` coinciden con lo documentado en spec.md, sin sorpresas. Datos de prueba suficientes en las 4 tablas fuente (5 vacantes, 6 postulaciones, 8 historial_etapas, 6 trafico_referidos). **Bug encontrado y corregido:** ninguna de las 2 tablas tenía política RLS de `SELECT` (solo `INSERT`) — 2 políticas nuevas agregadas, mismo criterio ya usado en el resto del proyecto (`coordinadores.email = auth.email()`, vía `agencia_id` directo en `trafico_referidos`, vía join a `postulaciones` en `historial_etapas` que no tiene `agencia_id` propio).
+- [X] 6.1 `app/coordinador/dashboard/page.tsx` — Gráfica 1: Vacantes por status (dona). Verificado en vivo 2026-08-19.
+- [X] 6.2 Gráfica 2: Embudo de conversión (candidatos por etapa acumulado). Usa `historial_etapas` para contar candidatos que LLEGARON a cada etapa alguna vez (no solo dónde están hoy) — así cada barra es igual o menor que la anterior, comportamiento real de embudo. Verificado en vivo: candidatos de prueba insertados directo por SQL (sin pasar por el Kanban) no generan historial y no cuentan en el embudo — comportamiento correcto, no bug (en producción todo candidato real pasa por el Kanban).
+- [X] 6.3 Gráfica 3: Efectividad por reclutador (colocados vs no efectivos). Mismo criterio de "no efectivo" ya establecido en 5.17/5.22 (descartado después de haber entrado a Inducción, no un rechazo temprano). Verificado en vivo.
+- [X] 6.4 Gráfica 4: Comisiones pagadas vs pendientes vs perdidas (barras apiladas). Verificado en vivo.
+- [X] 6.5 Gráfica 5: Fuentes de tráfico (dona, desde `trafico_referidos`). **Bug real encontrado y corregido en el camino** (no era ambigüedad de diseño, era un bug de Sprint 3 nunca detectado hasta ahora): `app/api/trafico/route.ts` pedía el `agencia_id` del reclutador vía `reclutador_agencia`, pero nunca lo usaba — la línea de `insert` tenía `agencia_id: null` escrito directo, sin condición. Efecto real: **ninguna** fila de `trafico_referidos` tenía agencia asignada, ni siquiera el tráfico que llegaba con código de un reclutador específico — la gráfica 5 habría estado vacía siempre, sin importar cuántas visitas reales llegaran. Corregido: usa el `agencia_id` del reclutador si viene por referido, y si no, intenta derivarlo de la vacante visitada; solo queda `null` el tráfico genuinamente anónimo al portal general (correcto, no hay agencia a la cual atribuirlo). Verificado en vivo generando tráfico real con `?ref=LAURA01`.
+- [X] 6.6 Gráfica 6: Tiempo promedio de colocación por vacante (calculado desde `historial_etapas`: días entre creación de la postulación y el momento en que llegó a "Contratado"). Verificado en vivo pasando un candidato real por el Kanban completo (Entrevista → Inducción → Contratado) y confirmando el cálculo exacto contra SQL.
+- [X] 6.7 Filtros de rango de fechas para todas las gráficas. Verificado en vivo.
+- [X] 6.0b **Bug de RLS encontrado y corregido antes de construir** (2026-08-19, ver 6.0): `historial_etapas` y `trafico_referidos` solo tenían política de `INSERT`, ninguna de `SELECT` — las 6 gráficas habrían salido vacías sin error visible. 2 políticas nuevas agregadas.
 - [ ] 6.8 Edge Function `agente-matching` — pre-calificación automática de candidatos (ver spec.md HU-17):
   - Hace 2-3 preguntas clave al candidato basadas en los requisitos de la vacante
   - Si no cumple → muestra vacantes alternativas, no conecta con el reclutador
