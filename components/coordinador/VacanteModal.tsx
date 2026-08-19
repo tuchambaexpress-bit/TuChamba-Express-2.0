@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { ChevronDown, X } from 'lucide-react'
 import InfoTooltip from '@/components/ui/InfoTooltip'
@@ -88,6 +88,7 @@ const FORM_INICIAL = {
   punto_reunion: '',
   dias_induccion: 0,
   induccion_dentro_garantia: true,
+  cupo_requerido: 1,
 }
 
 function normalizarNombreNegocio(texto: string) {
@@ -113,6 +114,38 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
   const [estadosExistentes, setEstadosExistentes] = useState<string[]>([])
 
   const [negocios, setNegocios] = useState<Negocio[]>([])
+  const [cupoInfo, setCupoInfo] = useState({ contratados: 0, enProceso: 0, disponibles: 0 })
+  const statusOriginal = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (!vacanteId || !abierto) return
+    async function cargarCupo() {
+      const supabase = createClient()
+      const { data: vacanteData } = await supabase
+        .from('vacantes')
+        .select('cupo_desde, status')
+        .eq('id', vacanteId)
+        .maybeSingle()
+
+      statusOriginal.current = vacanteData?.status ?? null
+      const cupoDesde = vacanteData?.cupo_desde ?? '1970-01-01'
+
+      const { data } = await supabase
+        .from('postulaciones')
+        .select('etapa_actual, comision_aplicable, fecha_contratacion')
+        .eq('vacante_id', vacanteId)
+
+      // HU-16 (6.8b): "por rondas" — solo cuenta lo que entró a Inducción
+      // DESPUÉS de la última vez que se reactivó la vacante (cupo_desde).
+      const ocupados = (data ?? []).filter(p =>
+        p.comision_aplicable && p.fecha_contratacion && p.fecha_contratacion >= cupoDesde.split('T')[0]
+      ).length
+      const enProceso = (data ?? []).filter(p => p.etapa_actual === 'Entrevista').length
+      const requerido = Number(form.cupo_requerido) || 1
+      setCupoInfo({ contratados: ocupados, enProceso, disponibles: requerido - ocupados })
+    }
+    cargarCupo()
+  }, [vacanteId, abierto, form.cupo_requerido])
   const [creandoNegocio, setCreandoNegocio] = useState(false)
   const [diasDescanso, setDiasDescanso] = useState<number[]>([0])
 
@@ -309,6 +342,11 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
       promocion_fin: form.tiene_promocion && form.promocion_fin ? form.promocion_fin : null,
       agencia_id: agenciaId,
       status: form.status ?? 'vigente',
+      // HU-16 (6.8b): nueva ronda de cupo — se marca solo cuando de verdad
+      // se reactiva (pasa de algo distinto a "vigente"), no en cada guardado.
+      ...((!vacanteId || (statusOriginal.current && statusOriginal.current !== 'vigente' && form.status === 'vigente'))
+        ? { cupo_desde: new Date().toISOString() }
+        : {}),
       descripcion: form.descripcion?.trim() || form.titulo.trim(),
       requisitos: form.requisitos,
       beneficios: form.beneficios,
@@ -337,6 +375,7 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
       punto_reunion: form.punto_reunion?.trim() || null,
       dias_induccion: form.dias_induccion ? Number(form.dias_induccion) : 0,
       induccion_dentro_garantia: form.induccion_dentro_garantia,
+      cupo_requerido: form.cupo_requerido ? Number(form.cupo_requerido) : 1,
     }
 
     const { error: errorGuardado } = vacanteId && !vacanteDuplicar
@@ -1190,6 +1229,29 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
                           />
                         </div>
+                      </div>
+
+                      <div className="pt-3">
+                        <label className="text-xs font-medium text-gray-700 flex items-center mb-1">
+                          Cupo requerido
+                          <InfoTooltip texto="Cuántas personas necesita la empresa para esta vacante. Cuando se cubre, la vacante se pausa sola automáticamente." />
+                        </label>
+                        <input
+                          type="number"
+                          min={1}
+                          value={form.cupo_requerido}
+                          onChange={e => setForm({ ...form, cupo_requerido: e.target.value })}
+                          className="w-32 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
+                        />
+                        {vacanteId && (
+                          <div className="mt-2 bg-gray-50 rounded-lg p-3 flex gap-4 text-xs">
+                            <span className="text-gray-600">✅ Ocupando cupo: <strong>{cupoInfo.contratados}</strong></span>
+                            <span className="text-gray-600">🔄 En entrevista: <strong>{cupoInfo.enProceso}</strong></span>
+                            <span className={cupoInfo.disponibles <= 0 ? 'text-red-600 font-medium' : 'text-green-700 font-medium'}>
+                              {cupoInfo.disponibles <= 0 ? '🔴 Cupo cubierto' : `🟢 ${cupoInfo.disponibles} disponibles`}
+                            </span>
+                          </div>
+                        )}
                       </div>
 
                       <label className="flex items-center gap-2 cursor-pointer pt-2">

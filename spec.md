@@ -965,26 +965,27 @@ ya definido en CA-14.3) — el sistema propone, el coordinador decide.
 
 ---
 
-### HU-16: Control de cupo máximo por vacante
+### HU-16: Control de cupo máximo por vacante (rediseñada 2026-08-19)
 **Como** coordinador, **quiero** definir cuántas personas necesita cada empresa y que el sistema pause la vacante automáticamente al cubrirlo, **para** no seguir recibiendo candidatos cuando ya está completo el requerimiento.
 
-> *Origen: Documento "Requerimiento Semanal" de HR CONNECT — Roxana define manualmente cuántas personas necesita cada empresa por semana. TuChamba automatiza este control.*
+> *Origen: Documento "Requerimiento Semanal" de HR CONNECT — Roxana define manualmente cuántas personas necesita cada empresa por semana. TuChamba automatiza este control. Rediseñada al construirla (2026-08-19) tras varias rondas de clarificación con José sobre cómo debe comportarse el conteo — ver "por rondas" en CA-16.5.*
 
-**CA-16.1:** El coordinador define `cupo_requerido` en cada vacante (ej. "FEMSA necesita 5 operadores"). Puede modificarlo en cualquier momento.
+**CA-16.1:** El coordinador define `cupo_requerido` en cada vacante (ej. "FEMSA necesita 5 operadores"). Campo nuevo en `VacanteModal` (Sección 7, no existía en el formulario hasta esta tarea aunque la columna en base de datos sí). Puede modificarlo en cualquier momento — si la vacante ya está "Vigente" y solo cambia el número (sin tocar el switch de status), no reinicia nada, solo cambia la meta de la ronda que ya está corriendo.
 
-**CA-16.2:** El sistema muestra en tiempo real el estado del cupo en la ficha de vacante del coordinador:
+**CA-16.2:** El sistema muestra en tiempo real el estado del cupo en la ficha de vacante del coordinador (`VacanteModal`, Sección 7) y en el listado de vacantes (`app/coordinador/vacantes/page.tsx`, columna "Cupo"):
 ```
-FEMSA Operador — Cupo: 5
-✅ Contratados activos: 3
-⏳ En proceso (Entrevista+Inducción): 4
-🔴 Lugares disponibles: 2
+✅ Ocupando cupo: 3   🔄 En entrevista: 2   🟢 2 disponibles
 ```
+"Ocupando cupo" cuenta desde que el candidato entra a Inducción (`comision_aplicable = true`), no hasta que llega a "Contratado" — ese lugar ya está de facto tomado desde Inducción, esperar hasta "Contratado" (que puede tardar semanas, todo el periodo de garantía) generaría el mismo sesgo que ya se corrigió: pedir de más porque en pantalla el cupo se ve libre cuando en realidad ya no lo está.
 
-**CA-16.3:** Cuando `cupo_cubierto >= cupo_requerido`, el sistema pausa automáticamente la vacante (`status = 'pausada'`) y notifica al coordinador: *"✅ Cupo cubierto: FEMSA Operador ya tiene 5 contratados activos. La vacante fue pausada automáticamente."*
+**CA-16.3:** Cuando los "ocupando cupo" de la ronda actual llegan a `cupo_requerido`, el sistema pausa automáticamente la vacante (`status = 'pausada'`) y guarda una alerta para el coordinador (`destinatario_rol = 'coordinador'`) — aunque hoy no existe todavía ningún panel donde el coordinador la vea (hueco anotado en tasks.md 6.8b, pendiente un panel de alertas para coordinador). El chequeo se dispara en 2 momentos: al entrar a Inducción y al confirmar "Contratado" (mismo motivo que arriba — el lugar se ocupa desde Inducción).
 
-**CA-16.4:** Alerta amarilla cuando los candidatos en Entrevista+Inducción igualan o superan el cupo restante — avisa al coordinador antes de que se llene, no después.
+**CA-16.4 (pendiente, no construida en esta pasada):** Alerta amarilla cuando los candidatos en Entrevista igualan o superan el cupo restante — avisa al coordinador antes de que se llene, no después. Depende del mismo panel de alertas de coordinador que CA-16.3 — se recorta por ahora junto con esa dependencia.
 
-**CA-16.5:** `cupo_cubierto` se calcula automáticamente — solo cuenta candidatos en etapa "Contratado" con `garantia_cumplida = false` (garantía activa). No cuenta descartados, no efectivos ni renuncias.
+**CA-16.5 (corregida 2026-08-19) — Cupo "por rondas", no histórico acumulado:** `cupo_requerido` **no** es un total fijo que se acumula para siempre — cada vez que el coordinador reactiva la vacante (pasa el switch de "No vigente" a "Vigente"), empieza una **ronda nueva**: el conteo se reinicia a 0, sin importar cuántos ya se habían colocado en rondas anteriores. Técnicamente: nueva columna `vacantes.cupo_desde` (timestamptz) se actualiza a `now()` solo en esa transición (no vigente → vigente); el conteo de "ocupados" filtra `postulaciones.fecha_contratacion >= cupo_desde`, ignorando todo lo anterior a esa marca.
+  - Aplica igual sin importar el motivo de la reactivación — ya sea porque un candidato se cayó a medias (renuncia/no concluyó inducción) o porque la empresa simplemente pide más personal — siempre es "ronda nueva, empieza en 0", nunca se suma al histórico. Decisión explícita de José tras descartar 2 alternativas más complejas (acumular sin resetear; sumar solo cuando es "más personal" pero resetear cuando es "reemplazo") — se quedó con la más simple de las 3.
+  - Ya NO depende de `garantia_cumplida` (campo roto, nunca se actualiza — mismo hueco ya corregido en 5.17/5.22/Dashboard) ni exige que el candidato llegue hasta "Contratado" — cuenta desde `comision_aplicable = true`, que ya se marca desde Inducción.
+  - **Limitación de calidad conocida y aceptada:** `fecha_contratacion` es una fecha (sin hora) y `cupo_desde` sí tiene hora exacta — la comparación se hace solo por día. Si el mismo día en que se reactiva una vacante alguien entra a Inducción, cuenta como parte de la ronda nueva aunque técnicamente haya sido antes de la hora exacta de reactivación. Caso extremo, poco probable en la práctica, aceptado sin resolver por ahora.
 
 ---
 

@@ -59,6 +59,7 @@ export default function VacantesCoordinador() {
   const [vacanteDuplicar, setVacanteDuplicar] = useState<any | null>(null)
   const [importando, setImportando] = useState(false)
   const [reporteImportacion, setReporteImportacion] = useState<any | null>(null)
+  const [cupoReal, setCupoReal] = useState<Map<string, number>>(new Map())
 
   useEffect(() => {
     const data = localStorage.getItem('coordinador_sesion')
@@ -117,6 +118,34 @@ export default function VacantesCoordinador() {
       .order('created_at', { ascending: false })
 
     if (data) setVacantes(data as any)
+
+    // HU-16 (6.8b): cupo_cubierto (columna) nunca se actualiza — se calcula en
+    // vivo igual que en VacanteModal (comision_aplicable=true, sin importar si
+    // sigue en Inducción o ya llegó a Contratado).
+    // HU-16 (6.8b) "por rondas": solo cuenta lo que entró a Inducción DESPUÉS
+    // de cupo_desde de CADA vacante — necesita ambos datasets para comparar
+    // fila por fila, no se puede hacer en un solo filtro plano.
+    const { data: vacantesCupoDesde } = await supabase
+      .from('vacantes')
+      .select('id, cupo_desde')
+      .eq('agencia_id', agenciaId)
+    const mapaCupoDesde = new Map((vacantesCupoDesde ?? []).map((v: any) => [v.id, (v.cupo_desde ?? '1970-01-01').split('T')[0]]))
+
+    const { data: postulacionesData } = await supabase
+      .from('postulaciones')
+      .select('vacante_id, fecha_contratacion')
+      .eq('agencia_id', agenciaId)
+      .eq('comision_aplicable', true)
+
+    const conteo = new Map<string, number>()
+    ;(postulacionesData ?? []).forEach((p: any) => {
+      const cupoDesde = mapaCupoDesde.get(p.vacante_id)
+      if (p.fecha_contratacion && cupoDesde && p.fecha_contratacion >= cupoDesde) {
+        conteo.set(p.vacante_id, (conteo.get(p.vacante_id) ?? 0) + 1)
+      }
+    })
+    setCupoReal(conteo)
+
     setLoading(false)
   }
 
@@ -237,7 +266,7 @@ export default function VacantesCoordinador() {
                         {v.prioridad}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-600">{v.cupo_cubierto ?? 0}/{v.cupo_requerido ?? 1}</td>
+                    <td className="px-4 py-3 text-gray-600">{cupoReal.get(v.id) ?? 0}/{v.cupo_requerido ?? 1}</td>
                     <td className="px-4 py-3 text-gray-400 text-xs">
                       {new Date(v.created_at).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </td>

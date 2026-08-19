@@ -82,6 +82,7 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
     : MOTIVOS_DESCARTE
 
   // Estado modal entrevista
+  const [mostrarConsulta, setMostrarConsulta] = useState(false)
   const [mostrarModalNoAsistio, setMostrarModalNoAsistio] = useState(false)
   const [motivoNoAsistio, setMotivoNoAsistio] = useState('')
   const [fechaEntrevista, setFechaEntrevista] = useState('')
@@ -98,6 +99,7 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
   const telefono = postulacion.candidatos?.telefono
   const nombre = postulacion.candidatos?.nombre
   const vacante = postulacion.vacantes?.titulo
+  const empresa = postulacion.vacantes?.negocios?.nombre
   const enEntrevista = postulacion.etapa_actual === 'Entrevista'
   const tieneEntrevista = postulacion.fecha_entrevista
 
@@ -420,6 +422,53 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
       .eq('id', postulacion.id)
   }
 
+  // HU-16 (6.8b) — revisa y pausa el cupo si ya se cubrió. Se llama tanto al
+  // entrar a Inducción como al confirmar Contratado, porque el lugar se
+  // "ocupa" desde Inducción (comision_aplicable = true desde ahí), no hasta
+  // el final — evita pedir de más mientras candidatos siguen en proceso.
+  async function verificarYPausarCupo(vacanteId: string) {
+    const supabase = createClient()
+    const { data: vacanteInfo } = await supabase
+      .from('vacantes')
+      .select('id, titulo, cupo_requerido, agencia_id, status, cupo_desde')
+      .eq('id', vacanteId)
+      .maybeSingle()
+
+    if (!vacanteInfo || vacanteInfo.status === 'pausada') return // ya pausada, no duplicar alerta
+
+    // HU-16 (6.8b) "por rondas": solo cuenta lo que entró a Inducción después
+    // de la última reactivación (cupo_desde), no el histórico completo.
+    const cupoDesde = (vacanteInfo.cupo_desde ?? '1970-01-01').split('T')[0]
+    const { count } = await supabase
+      .from('postulaciones')
+      .select('*', { count: 'exact', head: true })
+      .eq('vacante_id', vacanteInfo.id)
+      .eq('comision_aplicable', true)
+      .gte('fecha_contratacion', cupoDesde)
+
+    if ((count ?? 0) >= (vacanteInfo.cupo_requerido ?? 1)) {
+      await supabase.from('vacantes').update({ status: 'pausada' }).eq('id', vacanteInfo.id)
+
+      const { data: coordinador } = await supabase
+        .from('coordinadores')
+        .select('id')
+        .eq('agencia_id', vacanteInfo.agencia_id)
+        .eq('status', 'activo')
+        .maybeSingle()
+
+      if (coordinador) {
+        await supabase.from('alertas').insert({
+          tipo: 'cupo_cubierto',
+          destinatario_id: coordinador.id,
+          destinatario_rol: 'coordinador',
+          vacante_id: vacanteInfo.id,
+          mensaje: `✅ Cupo cubierto: "${vacanteInfo.titulo}" ya tiene ${count} lugares ocupados. La vacante fue pausada automáticamente.`,
+          leida: false,
+        })
+      }
+    }
+  }
+
   async function confirmarInduccion() {
     setMoviendo(true)
     const supabase = createClient()
@@ -450,6 +499,8 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
       nota: `Inicia inducción ${fechaInduccion}. Garantía hasta ${fechaFin}`
     })
 
+    await verificarYPausarCupo(postulacion.vacante_id)
+
     onActualizarEtapa(postulacion.id, 'Inducción')
     setMostrarModalInduccion(false)
     setMoviendo(false)
@@ -475,6 +526,8 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
       cambiado_por: reclutadorId,
       nota: `Firma de contrato: ${fechaFirmaContrato}. Garantía y comisión ya fijadas desde Inducción.`
     })
+
+    await verificarYPausarCupo(postulacion.vacante_id)
 
     onActualizarEtapa(postulacion.id, 'Contratado')
     setMostrarModalFirmaContrato(false)
@@ -549,9 +602,12 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
       : ''
     const lugar = postulacion.lugar_entrevista ?? 'las instalaciones de la empresa'
 
-    const mensaje = tieneEntrevista
-      ? `Hola ${nombre}, te recordamos que tienes entrevista para ${vacante} el ${fecha} a las ${hora} en ${lugar}. ¿Confirmas tu asistencia?`
-      : `Hola ${nombre}, te contactamos de Tu Chamba Express sobre la vacante de ${vacante}. ¿Sigues interesado?`
+    let mensaje = `Hola ${nombre}, te contactamos de Tu Chamba Express sobre la vacante de ${vacante}. ¿Sigues interesado?`
+    if (postulacion.etapa_actual === 'Entrevista' && tieneEntrevista) {
+      mensaje = `Hola ${nombre}, te recordamos que tienes entrevista para ${vacante} el ${fecha} a las ${hora} en ${lugar}. ¿Confirmas tu asistencia?`
+    } else if (postulacion.etapa_actual === 'Inducción' && postulacion.fecha_contratacion) {
+      mensaje = `Hola ${nombre}, ¿todo bien con tu inducción en ${vacante}? Cualquier duda, aquí estamos.`
+    }
 
     return `https://wa.me/52${telefono}?text=${encodeURIComponent(mensaje)}`
   }
@@ -564,7 +620,12 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
           : 'bg-white border-gray-100'
       } ${moviendo ? 'opacity-50' : ''}`}>
         {/* Nombre candidato */}
-        <p className="font-semibold text-gray-900 text-sm">{nombre}</p>
+        <button
+          onClick={() => setMostrarConsulta(true)}
+          className="font-semibold text-gray-900 text-sm hover:text-[#1A6B3C] hover:underline text-left"
+        >
+          {nombre}
+        </button>
 
         {/* Badge de pre-calificado (CA-17.3) */}
         {postulacion.precalificado && (
@@ -596,7 +657,7 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
         )}
 
         {/* Vacante */}
-        <p className="text-xs text-[#1A6B3C] mt-0.5">{vacante}</p>
+        <p className="text-xs text-[#1A6B3C] mt-0.5">{vacante}{empresa ? ` — ${empresa}` : ''}</p>
 
         {/* Confirmación de asistencia (CA-15.5) — solo si ya pasó la fecha y no se ha contestado */}
         {postulacion.etapa_actual === 'Entrevista' && postulacion.fecha_entrevista && new Date(postulacion.fecha_entrevista) < new Date() && (
@@ -748,17 +809,18 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
           </div>
         </div>
 
-        {/* Botones de entrevista — solo en etapa Entrevista */}
-        {enEntrevista && (
+        {/* Botón de entrevista — solo en etapa Entrevista; WhatsApp — Contactado/Entrevista/Inducción */}
+        {(enEntrevista || postulacion.etapa_actual === 'Contactado' || postulacion.etapa_actual === 'Inducción') && (
           <div className="flex gap-2 mt-2">
-            <button
-              onClick={() => setMostrarModalEntrevista(true)}
-              className="flex-1 text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 py-1.5 rounded-lg border border-blue-200 transition-colors"
-            >
-              📅 {tieneEntrevista ? 'Ver entrevista' : 'Agendar'}
-            </button>
-            
-              <a href={generarLinkWhatsApp()}
+            {enEntrevista && (
+              <button
+                onClick={() => setMostrarModalEntrevista(true)}
+                className="flex-1 text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 py-1.5 rounded-lg border border-blue-200 transition-colors"
+              >
+                📅 {tieneEntrevista ? 'Ver entrevista' : 'Agendar'}
+              </button>
+            )}
+            <a href={generarLinkWhatsApp()}
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 text-center text-xs bg-green-50 hover:bg-green-100 text-green-700 py-1.5 rounded-lg border border-green-200 transition-colors"
@@ -1208,6 +1270,65 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
                 Guardar
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {mostrarConsulta && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setMostrarConsulta(false)}>
+          <div className="bg-white rounded-2xl p-5 max-w-sm w-full shadow-xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-bold text-gray-900">{nombre}</h3>
+              <button onClick={() => setMostrarConsulta(false)} className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">✕</button>
+            </div>
+
+            {tieneHistorialPrevio && (
+              <span className="inline-block text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium mb-2">
+                ⚠️ Candidato con historial previo
+              </span>
+            )}
+
+            <p className="text-sm text-[#1A6B3C] font-medium">{vacante}{empresa ? ` — ${empresa}` : ''}</p>
+            <p className="text-xs text-gray-400 mt-0.5">📱 {telefono}</p>
+
+            {postulacion.fecha_entrevista && (
+              <div className="mt-2 pt-2 border-t border-gray-100 text-xs text-gray-500 space-y-0.5">
+                <p>📅 {new Date(postulacion.fecha_entrevista).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })} · {new Date(postulacion.fecha_entrevista).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}</p>
+                {postulacion.lugar_entrevista && <p>📍 {postulacion.lugar_entrevista}</p>}
+              </div>
+            )}
+
+            {(postulacion.candidatos?.edad || postulacion.candidatos?.escolaridad || postulacion.candidatos?.residencia) && (
+              <div className="mt-2 pt-2 border-t border-gray-100 text-xs text-gray-500 space-y-0.5">
+                {postulacion.candidatos?.edad && <p>🎂 {postulacion.candidatos.edad} años</p>}
+                {postulacion.candidatos?.escolaridad && <p>🎓 {postulacion.candidatos.escolaridad}</p>}
+                {postulacion.candidatos?.residencia && <p>📍 {postulacion.candidatos.residencia}</p>}
+              </div>
+            )}
+
+            {postulacion.asistio_entrevista !== null && postulacion.asistio_entrevista !== undefined && (
+              <div className="mt-2 pt-2 border-t border-gray-100">
+                <p className="text-xs font-medium">
+                  {postulacion.asistio_entrevista ? '✅ Sí se presentó a entrevista' : '❌ No se presentó a entrevista'}
+                </p>
+                {postulacion.motivo_no_asistencia && (
+                  <p className="text-xs text-gray-400 mt-0.5">Razón: {postulacion.motivo_no_asistencia}</p>
+                )}
+              </div>
+            )}
+
+            {postulacion.precalificado && (
+              <span className="inline-block text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium mt-2">
+                ✅ Pre-calificado
+              </span>
+            )}
+
+            <button
+              onClick={() => setMostrarConsulta(false)}
+              className="w-full mt-4 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-xl text-sm font-medium"
+            >
+              Cerrar
+            </button>
           </div>
         </div>
       )}
