@@ -32,12 +32,23 @@ export default async function FichaVacante({ params, searchParams }: Props) {
       comision_base_mxn, tiene_promocion, promocion_monto_mxn, promocion_fin,
       contacto_rrhh, contacto_rrhh_telefono, contacto_rrhh_horario,
       punto_reunion, documentos_requeridos, guion_candidato, comentarios_salario,
+      cupo_requerido, cupo_desde,
       negocios(nombre, documentos_negocio(id, nombre_archivo, archivo_url))
     `)
     .eq('id', params.id)
     .single()
 
   if (!vacante) notFound()
+
+  // HU-16 (6.8b): mismo criterio "por rondas" ya usado en el resto —
+  // solo cuenta desde la última reactivación (cupo_desde).
+  const cupoDesde = (vacante.cupo_desde ?? '1970-01-01').split('T')[0]
+  const { count: cupoOcupado } = await supabase
+    .from('postulaciones')
+    .select('*', { count: 'exact', head: true })
+    .eq('vacante_id', params.id)
+    .eq('comision_aplicable', true)
+    .gte('fecha_contratacion', cupoDesde)
 
   const empresa = vacante.empresa_visible
     ? (vacante.negocios as any)?.nombre ?? 'Empresa'
@@ -156,6 +167,10 @@ export default async function FichaVacante({ params, searchParams }: Props) {
           <p className="text-sm text-blue-800 whitespace-pre-line">
             {vacante.guion_candidato ?? 'El coordinador aún no ha agregado instrucciones específicas para esta vacante.'}
           </p>
+          <div className="inline-flex items-center gap-1.5 bg-white rounded-lg px-3 py-1.5 mt-3">
+            <p className="text-xs text-gray-500">Requerimiento:</p>
+            <p className="text-sm font-bold text-gray-900">{cupoOcupado ?? 0}/{vacante.cupo_requerido ?? 1}</p>
+          </div>
           {vacante.punto_reunion && (
             <div className="mt-3 bg-white rounded-xl p-3">
               <p className="text-xs text-gray-500">Punto de reunión / entrevista</p>

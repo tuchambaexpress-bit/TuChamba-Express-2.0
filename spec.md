@@ -963,6 +963,8 @@ ya definido en CA-14.3) — el sistema propone, el coordinador decide.
 
 **Distinción importante con "Descartar" (aclarada por José tras ver la primera versión en vivo):** el botón "❌ No" **nunca mueve al candidato de columna** — se queda en "Entrevista". Es deliberadamente distinto de "Descartar" (que sí mueve a la columna final): "No se presentó" da al candidato una segunda oportunidad para el caso de que algo fuera de su control le haya impedido llegar; "Descartar" sigue siendo la decisión final e independiente de que el reclutador ya no tiene interés en ese candidato (ej. deja de contestar). Al contestar "No" se puede anotar una razón opcional (`postulaciones.motivo_no_asistencia`). Reagendar la entrevista (nueva `fecha_entrevista`) resetea `asistio_entrevista` y `motivo_no_asistencia` a `null`, para que se pueda volver a preguntar en la nueva fecha.
 
+**CA-15.6 (nueva, 2026-08-19) — Candado de datos completos antes de "Inducción":** el reclutador no puede mover a un candidato de "Entrevista" a "Inducción" si falta cualquiera de: fecha de entrevista agendada, edad, escolaridad, residencia (ficha del candidato, HU-23), o confirmación explícita de que sí se presentó (`asistio_entrevista = true`, CA-15.5). Si falta algo, se bloquea con un mensaje listando exactamente qué falta. La tarjeta de consulta del candidato (clic en su nombre) muestra los 5 datos siempre — en rojo los que falten, en gris los que ya estén — para poder diagnosticar visualmente qué falta sin tener que intentar mover al candidato primero.
+
 ---
 
 ### HU-16: Control de cupo máximo por vacante (rediseñada 2026-08-19)
@@ -970,7 +972,7 @@ ya definido en CA-14.3) — el sistema propone, el coordinador decide.
 
 > *Origen: Documento "Requerimiento Semanal" de HR CONNECT — Roxana define manualmente cuántas personas necesita cada empresa por semana. TuChamba automatiza este control. Rediseñada al construirla (2026-08-19) tras varias rondas de clarificación con José sobre cómo debe comportarse el conteo — ver "por rondas" en CA-16.5.*
 
-**CA-16.1:** El coordinador define `cupo_requerido` en cada vacante (ej. "FEMSA necesita 5 operadores"). Campo nuevo en `VacanteModal` (Sección 7, no existía en el formulario hasta esta tarea aunque la columna en base de datos sí). Puede modificarlo en cualquier momento — si la vacante ya está "Vigente" y solo cambia el número (sin tocar el switch de status), no reinicia nada, solo cambia la meta de la ronda que ya está corriendo.
+**CA-16.1:** El coordinador define `cupo_requerido` en cada vacante (ej. "FEMSA necesita 5 operadores"). Campo nuevo en `VacanteModal` (Sección 7, no existía en el formulario hasta esta tarea aunque la columna en base de datos sí). Puede modificarlo en cualquier momento — si la vacante ya está "Vigente" y solo cambia el número (sin tocar el switch de status), no reinicia nada, solo cambia la meta de la ronda que ya está corriendo. **Candado (agregado 2026-08-19):** no se puede guardar un `cupo_requerido` menor a los que ya están ocupando lugar en la ronda actual — el mínimo posible es igual al número ya ocupado (para pausarla exactamente ahí), nunca menos.
 
 **CA-16.2:** El sistema muestra en tiempo real el estado del cupo en la ficha de vacante del coordinador (`VacanteModal`, Sección 7) y en el listado de vacantes (`app/coordinador/vacantes/page.tsx`, columna "Cupo"):
 ```

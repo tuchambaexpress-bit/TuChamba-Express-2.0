@@ -56,6 +56,23 @@ export default function KanbanBoard() {
     cargarPostulaciones(s.id)
   }, [])
 
+  // Realtime: recarga sola cuando llega un candidato nuevo, o cualquier
+  // postulación de este reclutador cambia (antes solo cargaba una vez al abrir).
+  useEffect(() => {
+    if (!sesion?.id) return
+    const supabase = createClient()
+    const canal = supabase
+      .channel(`pipeline-reclutador-${sesion.id}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'postulaciones',
+        filter: `reclutador_id=eq.${sesion.id}`
+      }, () => cargarPostulaciones(sesion.id))
+      .subscribe((status) => console.log('🔌 Canal Realtime pipeline:', status))
+    return () => { supabase.removeChannel(canal) }
+  }, [sesion?.id])
+
   async function cargarPostulaciones(reclutadorId: string) {
     const supabase = createClient()
     const { data } = await supabase

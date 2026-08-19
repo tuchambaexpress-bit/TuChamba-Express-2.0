@@ -83,6 +83,15 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
 
   // Estado modal entrevista
   const [mostrarConsulta, setMostrarConsulta] = useState(false)
+
+  useEffect(() => {
+    if (!mostrarConsulta) return
+    function handleEsc(e: KeyboardEvent) {
+      if (e.key === 'Escape') setMostrarConsulta(false)
+    }
+    document.addEventListener('keydown', handleEsc)
+    return () => document.removeEventListener('keydown', handleEsc)
+  }, [mostrarConsulta])
   const [mostrarModalNoAsistio, setMostrarModalNoAsistio] = useState(false)
   const [motivoNoAsistio, setMotivoNoAsistio] = useState('')
   const [fechaEntrevista, setFechaEntrevista] = useState('')
@@ -91,6 +100,20 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
   const [edadCandidato, setEdadCandidato] = useState('')
   const [escolaridadCandidato, setEscolaridadCandidato] = useState('')
   const [residenciaCandidato, setResidenciaCandidato] = useState('')
+
+  // Precarga el formulario con lo que ya esté guardado, cada vez que se abre
+  // esta tarjeta — antes siempre arrancaba en blanco, aunque ya hubiera datos.
+  useEffect(() => {
+    if (postulacion.fecha_entrevista) {
+      const d = new Date(postulacion.fecha_entrevista)
+      setFechaEntrevista(d.toISOString().split('T')[0])
+      setHoraEntrevista(d.toTimeString().slice(0, 5))
+    }
+    setLugarEntrevista(postulacion.lugar_entrevista ?? '')
+    setEdadCandidato(postulacion.candidatos?.edad ? String(postulacion.candidatos.edad) : '')
+    setEscolaridadCandidato(postulacion.candidatos?.escolaridad ?? '')
+    setResidenciaCandidato(postulacion.candidatos?.residencia ?? '')
+  }, [postulacion.id])
 
   const diasEnEtapa = Math.floor(
     (Date.now() - new Date(postulacion.created_at).getTime()) / (1000 * 60 * 60 * 24)
@@ -125,6 +148,21 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
       return
     }
     if (nuevaEtapa === 'Inducción') {
+      // Candado: no se puede pasar a Inducción sin fecha de entrevista,
+      // ficha del candidato completa, y confirmación de asistencia.
+      const faltantes: string[] = []
+      if (!postulacion.fecha_entrevista) faltantes.push('fecha de entrevista agendada')
+      if (!postulacion.candidatos?.edad) faltantes.push('edad')
+      if (!postulacion.candidatos?.escolaridad) faltantes.push('escolaridad')
+      if (!postulacion.candidatos?.residencia) faltantes.push('residencia')
+      if (postulacion.asistio_entrevista !== true) faltantes.push('confirmar que sí se presentó a la entrevista')
+
+      if (faltantes.length > 0) {
+        setMostrarMenu(false)
+        alert(`Antes de pasar a Inducción, completa: ${faltantes.join(', ')}.`)
+        return
+      }
+
       setMostrarMenu(false)
       // Calcular comisión y garantía preview (CA-02.8: se fija aquí, no en Contratado)
       const diasGarantia = postulacion.vacantes?.dias_garantia ?? 30
@@ -337,6 +375,14 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
           ...(residenciaCandidato ? { residencia: residenciaCandidato } : {}),
         })
         .eq('id', postulacion.candidato_id)
+
+      // Actualiza la copia en memoria para que la tarjeta se vea al instante,
+      // sin esperar a recargar la página.
+      if (postulacion.candidatos) {
+        if (edadCandidato) postulacion.candidatos.edad = Number(edadCandidato)
+        if (escolaridadCandidato) postulacion.candidatos.escolaridad = escolaridadCandidato
+        if (residenciaCandidato) postulacion.candidatos.residencia = residenciaCandidato
+      }
     }
 
     await enviarResumenAlCoordinador(fechaCompleta)
@@ -1291,31 +1337,32 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
             <p className="text-sm text-[#1A6B3C] font-medium">{vacante}{empresa ? ` — ${empresa}` : ''}</p>
             <p className="text-xs text-gray-400 mt-0.5">📱 {telefono}</p>
 
-            {postulacion.fecha_entrevista && (
-              <div className="mt-2 pt-2 border-t border-gray-100 text-xs text-gray-500 space-y-0.5">
-                <p>📅 {new Date(postulacion.fecha_entrevista).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })} · {new Date(postulacion.fecha_entrevista).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}</p>
-                {postulacion.lugar_entrevista && <p>📍 {postulacion.lugar_entrevista}</p>}
-              </div>
-            )}
-
-            {(postulacion.candidatos?.edad || postulacion.candidatos?.escolaridad || postulacion.candidatos?.residencia) && (
-              <div className="mt-2 pt-2 border-t border-gray-100 text-xs text-gray-500 space-y-0.5">
-                {postulacion.candidatos?.edad && <p>🎂 {postulacion.candidatos.edad} años</p>}
-                {postulacion.candidatos?.escolaridad && <p>🎓 {postulacion.candidatos.escolaridad}</p>}
-                {postulacion.candidatos?.residencia && <p>📍 {postulacion.candidatos.residencia}</p>}
-              </div>
-            )}
-
-            {postulacion.asistio_entrevista !== null && postulacion.asistio_entrevista !== undefined && (
-              <div className="mt-2 pt-2 border-t border-gray-100">
-                <p className="text-xs font-medium">
-                  {postulacion.asistio_entrevista ? '✅ Sí se presentó a entrevista' : '❌ No se presentó a entrevista'}
-                </p>
-                {postulacion.motivo_no_asistencia && (
-                  <p className="text-xs text-gray-400 mt-0.5">Razón: {postulacion.motivo_no_asistencia}</p>
-                )}
-              </div>
-            )}
+            <div className="mt-2 pt-2 border-t border-gray-100 text-xs space-y-0.5">
+              <p className="text-gray-400 font-medium mb-1">Requisitos para pasar a Inducción:</p>
+              <p className={postulacion.fecha_entrevista ? 'text-gray-600' : 'text-red-500'}>
+                📅 {postulacion.fecha_entrevista
+                  ? `${new Date(postulacion.fecha_entrevista).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })} · ${new Date(postulacion.fecha_entrevista).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}`
+                  : 'Fecha de entrevista: sin capturar'}
+              </p>
+              {postulacion.lugar_entrevista && <p className="text-gray-500">📍 {postulacion.lugar_entrevista}</p>}
+              <p className={postulacion.candidatos?.edad ? 'text-gray-600' : 'text-red-500'}>
+                🎂 {postulacion.candidatos?.edad ? `${postulacion.candidatos.edad} años` : 'Edad: sin capturar'}
+              </p>
+              <p className={postulacion.candidatos?.escolaridad ? 'text-gray-600' : 'text-red-500'}>
+                🎓 {postulacion.candidatos?.escolaridad || 'Escolaridad: sin capturar'}
+              </p>
+              <p className={postulacion.candidatos?.residencia ? 'text-gray-600' : 'text-red-500'}>
+                📍 {postulacion.candidatos?.residencia || 'Residencia: sin capturar'}
+              </p>
+              <p className={postulacion.asistio_entrevista === true ? 'text-gray-600' : 'text-red-500'}>
+                {postulacion.asistio_entrevista === true ? '✅ Sí se presentó a entrevista'
+                  : postulacion.asistio_entrevista === false ? '❌ No se presentó a entrevista'
+                  : '⏳ Asistencia: sin confirmar'}
+              </p>
+              {postulacion.motivo_no_asistencia && (
+                <p className="text-gray-400">Razón: {postulacion.motivo_no_asistencia}</p>
+              )}
+            </div>
 
             {postulacion.precalificado && (
               <span className="inline-block text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium mt-2">

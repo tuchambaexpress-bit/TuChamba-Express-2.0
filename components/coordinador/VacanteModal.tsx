@@ -341,7 +341,10 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
       promocion_monto_mxn: form.tiene_promocion && form.promocion_monto_mxn ? Number(form.promocion_monto_mxn) : null,
       promocion_fin: form.tiene_promocion && form.promocion_fin ? form.promocion_fin : null,
       agencia_id: agenciaId,
-      status: form.status ?? 'vigente',
+      // HU-16 (6.8b): si al guardar el nuevo cupo_requerido ya queda cubierto
+      // con lo que hay, se pausa aquí también — no solo cuando el candidato
+      // avanza, sino cuando el coordinador ajusta el número hacia abajo.
+      status: (form.status === 'vigente' && cupoInfo.disponibles <= 0) ? 'pausada' : (form.status ?? 'vigente'),
       // HU-16 (6.8b): nueva ronda de cupo — se marca solo cuando de verdad
       // se reactiva (pasa de algo distinto a "vigente"), no en cada guardado.
       ...((!vacanteId || (statusOriginal.current && statusOriginal.current !== 'vigente' && form.status === 'vigente'))
