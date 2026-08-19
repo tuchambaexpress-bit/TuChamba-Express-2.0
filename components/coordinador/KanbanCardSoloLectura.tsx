@@ -1,11 +1,16 @@
 'use client'
 
+import { useState } from 'react'
+import ChatWindow from '@/components/candidato/ChatWindow'
+
 interface Props {
   postulacion: any
   tieneHistorialPrevio?: boolean
 }
 
 export default function KanbanCardSoloLectura({ postulacion, tieneHistorialPrevio }: Props) {
+  const [chatAbierto, setChatAbierto] = useState(false)
+  const chatId = postulacion.chats?.[0]?.id
   const nombre = postulacion.candidatos?.nombre
   const telefono = postulacion.candidatos?.telefono
   const vacante = postulacion.vacantes?.titulo
@@ -67,8 +72,38 @@ export default function KanbanCardSoloLectura({ postulacion, tieneHistorialPrevi
         </div>
       )}
 
+      {postulacion.asistio_entrevista !== null && postulacion.asistio_entrevista !== undefined && (
+        <p className="text-[10px] mt-1.5 font-medium">
+          {postulacion.asistio_entrevista ? '✅ Sí se presentó a entrevista' : '❌ No se presentó a entrevista'}
+        </p>
+      )}
+
       {esNoEfectivo && (
         <p className="text-[10px] text-red-600 mt-1.5">No concluyó inducción</p>
+      )}
+
+      {chatId && (
+        <button
+          onClick={() => setChatAbierto(true)}
+          className="w-full mt-2 text-[11px] bg-gray-50 hover:bg-gray-100 text-gray-600 py-1 rounded-lg border border-gray-200 transition-colors"
+        >
+          💬 Ver chat
+        </button>
+      )}
+
+      {chatAbierto && chatId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setChatAbierto(false)}>
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl flex flex-col" style={{ height: '75vh', maxHeight: '550px' }} onClick={e => e.stopPropagation()}>
+            <ChatWindow
+              chatId={chatId}
+              nombreCandidato={postulacion.candidatos?.nombre ?? ''}
+              etapaActual={postulacion.etapa_actual}
+              senderTipo="reclutador"
+              soloLectura
+              onClose={() => setChatAbierto(false)}
+            />
+          </div>
+        </div>
       )}
     </div>
   )

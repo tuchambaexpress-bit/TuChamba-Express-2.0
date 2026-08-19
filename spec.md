@@ -959,6 +959,10 @@ ya definido en CA-14.3) — el sistema propone, el coordinador decide.
 
 **CA-15.4:** El sistema detecta automáticamente si un candidato que tenía entrevista no avanzó de etapa "Entrevista" en 48 horas → genera la alerta CA-15.3 automáticamente sin que el reclutador tenga que recordarlo.
 
+**CA-15.5 (nueva, 2026-08-19) — Confirmación de asistencia registrada:** a diferencia de la alerta CA-15.3/15.4 (que es solo un recordatorio pasivo que desaparece), esta es un dato permanente de seguimiento. Cuando un candidato en etapa "Entrevista" ya tiene `fecha_entrevista` pasada y `asistio_entrevista` sin contestar (`null`), su card en el Kanban del reclutador muestra 2 botones: "✅ Sí se presentó" / "❌ No se presentó", que guardan `postulaciones.asistio_entrevista` (boolean). Una vez contestada, se reemplaza por un badge fijo con el resultado. Es independiente de mover al candidato a "Inducción" — confirmar asistencia no avanza la etapa automáticamente, son 2 acciones separadas (el reclutador sigue moviéndolo manualmente con su fecha de inicio, CA-15.2). El coordinador ve el mismo badge en su Kanban global (`KanbanCardSoloLectura.tsx`) — le sirve para confirmar que el reclutador está dando seguimiento real a sus candidatos, no solo agendando y olvidando.
+
+**Distinción importante con "Descartar" (aclarada por José tras ver la primera versión en vivo):** el botón "❌ No" **nunca mueve al candidato de columna** — se queda en "Entrevista". Es deliberadamente distinto de "Descartar" (que sí mueve a la columna final): "No se presentó" da al candidato una segunda oportunidad para el caso de que algo fuera de su control le haya impedido llegar; "Descartar" sigue siendo la decisión final e independiente de que el reclutador ya no tiene interés en ese candidato (ej. deja de contestar). Al contestar "No" se puede anotar una razón opcional (`postulaciones.motivo_no_asistencia`). Reagendar la entrevista (nueva `fecha_entrevista`) resetea `asistio_entrevista` y `motivo_no_asistencia` a `null`, para que se pueda volver a preguntar en la nueva fecha.
+
 ---
 
 ### HU-16: Control de cupo máximo por vacante
@@ -1349,6 +1353,8 @@ En la Sección 8 de `VacanteModal`, arriba del campo de texto libre "Documentos 
 **CA-21.1 — Panel de reclutadores:** La pantalla muestra primero una lista de los reclutadores de la agencia. Al seleccionar uno, se despliega su pipeline (Kanban) completo, filtrado únicamente a las postulaciones que ese reclutador gestiona.
 
 **CA-21.2 — Modo solo lectura, sin excepción:** El Kanban global usa un componente dedicado, `KanbanCardSoloLectura.tsx`, sin ningún botón de acción (mover etapa, descartar, contactar, etc.) — decisión explícita para que el coordinador nunca pueda alterar por accidente el pipeline operativo de un reclutador. Reutiliza los mismos badges ya definidos para el Kanban del reclutador: "Sin actividad 72h", "Historial previo" y "No efectivo".
+
+**CA-21.4 (nueva, 2026-08-19) — Chat visible al coordinador (solo lectura):** cada tarjeta del Kanban global tiene un botón "💬 Ver chat" que abre, en modal, la conversación completa entre el reclutador y ese candidato — sin caja de texto para escribir, sin marcar mensajes como leídos. No contradice CA-21.2: esa regla prohíbe botones que **alteren** el pipeline (mover etapa, descartar, contactar); ver una conversación ya existente es consulta pura, mismo criterio que ya se usó en CA-13.4. `ChatWindow.tsx` gana un prop nuevo `soloLectura` para este caso — reutiliza el mismo componente en vez de duplicar la lógica de mensajería.
 
 **CA-21.3 — Layout de pantalla completa:** A diferencia del resto del portal coordinador, esta vista específica no usa el contenedor `max-w-7xl` — el Kanban ocupa el ancho completo de la pantalla, con altura ajustada al viewport (`calc(100vh - 180px)`), para dar espacio real a las columnas horizontales. Este ajuste aplica solo a la vista del Kanban seleccionado, no a la lista de reclutadores.
 

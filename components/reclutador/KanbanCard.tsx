@@ -82,6 +82,8 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
     : MOTIVOS_DESCARTE
 
   // Estado modal entrevista
+  const [mostrarModalNoAsistio, setMostrarModalNoAsistio] = useState(false)
+  const [motivoNoAsistio, setMotivoNoAsistio] = useState('')
   const [fechaEntrevista, setFechaEntrevista] = useState('')
   const [horaEntrevista, setHoraEntrevista] = useState('')
   const [lugarEntrevista, setLugarEntrevista] = useState('')
@@ -312,9 +314,16 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
       .from('postulaciones')
       .update({
         fecha_entrevista: fechaCompleta.toISOString(),
-        lugar_entrevista: lugarEntrevista || null
+        lugar_entrevista: lugarEntrevista || null,
+        asistio_entrevista: null,
+        motivo_no_asistencia: null
       })
       .eq('id', postulacion.id)
+
+    postulacion.fecha_entrevista = fechaCompleta.toISOString()
+    postulacion.lugar_entrevista = lugarEntrevista || null
+    postulacion.asistio_entrevista = null
+    postulacion.motivo_no_asistencia = null
 
     // HU-23: ficha del candidato — solo actualiza si el reclutador capturó algo
     if (edadCandidato || escolaridadCandidato || residenciaCandidato) {
@@ -330,6 +339,7 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
 
     await enviarResumenAlCoordinador(fechaCompleta)
     setMostrarModalEntrevista(false)
+    onActualizarEtapa(postulacion.id, postulacion.etapa_actual)
   }
 
   // HU-23: arma y envía el resumen automático (mismo formato que ya usan los
@@ -587,6 +597,78 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
 
         {/* Vacante */}
         <p className="text-xs text-[#1A6B3C] mt-0.5">{vacante}</p>
+
+        {/* Confirmación de asistencia (CA-15.5) — solo si ya pasó la fecha y no se ha contestado */}
+        {postulacion.etapa_actual === 'Entrevista' && postulacion.fecha_entrevista && new Date(postulacion.fecha_entrevista) < new Date() && (
+          postulacion.asistio_entrevista === null || postulacion.asistio_entrevista === undefined
+        ) && (
+          <div className="mt-2 bg-blue-50 border border-blue-100 rounded-lg p-2">
+            <p className="text-[11px] text-blue-700 mb-1.5">¿Se presentó a la entrevista?</p>
+            <div className="flex gap-1.5">
+              <button
+                onClick={async () => {
+                  const supabase = createClient()
+                  await supabase.from('postulaciones').update({ asistio_entrevista: true }).eq('id', postulacion.id)
+                  postulacion.asistio_entrevista = true
+                  onActualizarEtapa(postulacion.id, postulacion.etapa_actual)
+                }}
+                className="flex-1 text-[11px] bg-green-100 hover:bg-green-200 text-green-700 py-1 rounded-lg font-medium"
+              >
+                ✅ Sí
+              </button>
+              <button
+                onClick={() => setMostrarModalNoAsistio(true)}
+                className="flex-1 text-[11px] bg-red-100 hover:bg-red-200 text-red-700 py-1 rounded-lg font-medium"
+              >
+                ❌ No
+              </button>
+            </div>
+          </div>
+        )}
+
+        {mostrarModalNoAsistio && (
+          <div className="mt-2 bg-red-50 border border-red-100 rounded-lg p-2" onClick={e => e.stopPropagation()}>
+            <p className="text-[11px] text-red-700 mb-1.5">¿Alguna razón? (opcional — algo fuera de su control cuenta distinto que si ya no contesta)</p>
+            <textarea
+              value={motivoNoAsistio}
+              onChange={e => setMotivoNoAsistio(e.target.value)}
+              placeholder="Ej. Se enfermó, le surgió una emergencia..."
+              rows={2}
+              className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-red-400 resize-none"
+            />
+            <div className="flex gap-1.5 mt-1.5">
+              <button
+                onClick={async () => {
+                  const supabase = createClient()
+                  await supabase.from('postulaciones').update({
+                    asistio_entrevista: false,
+                    motivo_no_asistencia: motivoNoAsistio.trim() || null
+                  }).eq('id', postulacion.id)
+                  postulacion.asistio_entrevista = false
+                  postulacion.motivo_no_asistencia = motivoNoAsistio.trim() || null
+                  setMostrarModalNoAsistio(false)
+                  setMotivoNoAsistio('')
+                  onActualizarEtapa(postulacion.id, postulacion.etapa_actual)
+                }}
+                className="flex-1 text-[11px] bg-red-600 hover:bg-red-700 text-white py-1 rounded-lg font-medium"
+              >
+                Guardar
+              </button>
+              <button
+                onClick={() => { setMostrarModalNoAsistio(false); setMotivoNoAsistio('') }}
+                className="flex-1 text-[11px] bg-gray-100 hover:bg-gray-200 text-gray-600 py-1 rounded-lg font-medium"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        )}
+
+        {postulacion.asistio_entrevista !== null && postulacion.asistio_entrevista !== undefined && (
+          <p className="text-[10px] mt-1.5 font-medium">
+            {postulacion.asistio_entrevista ? '✅ Sí se presentó a entrevista' : '❌ No se presentó a entrevista'}
+          </p>
+        )}
 
         {/* Fecha entrevista si existe */}
         {tieneEntrevista && (

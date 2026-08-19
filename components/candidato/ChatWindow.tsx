@@ -16,10 +16,11 @@ interface Props {
   nombreCandidato: string
   etapaActual?: string
   senderTipo?: 'candidato' | 'reclutador'
+  soloLectura?: boolean
   onClose: () => void
 }
 
-export default function ChatWindow({ chatId, nombreCandidato, etapaActual, senderTipo = 'candidato', onClose }: Props) {
+export default function ChatWindow({ chatId, nombreCandidato, etapaActual, senderTipo = 'candidato', soloLectura = false, onClose }: Props) {
   const [mensajes, setMensajes] = useState<Mensaje[]>([])
   const [texto, setTexto] = useState('')
   const [enviando, setEnviando] = useState(false)
@@ -50,8 +51,8 @@ export default function ChatWindow({ chatId, nombreCandidato, etapaActual, sende
     }
     cargarEstadoChat()
 
-    // Marcar como leído cuando el reclutador abre el chat
-    if (senderTipo === 'reclutador') {
+    // Marcar como leído cuando el reclutador abre el chat (nunca si es solo consulta del coordinador)
+    if (senderTipo === 'reclutador' && !soloLectura) {
       supabase.from('chats')
         .update({ leido_reclutador: true })
         .eq('id', chatId)
@@ -201,8 +202,12 @@ export default function ChatWindow({ chatId, nombreCandidato, etapaActual, sende
         <div ref={bottomRef} />
       </div>
 
-      {/* Input — bloqueado si la postulación fue descartada (CA-10.4) */}
-      {archivado && senderTipo === 'candidato' ? (
+      {/* Input — bloqueado si la postulación fue descartada (CA-10.4), o si es solo consulta */}
+      {soloLectura ? (
+        <div className="border-t border-gray-100 p-3 text-center">
+          <p className="text-xs text-gray-400">👁️ Solo consulta — el coordinador no puede escribir aquí.</p>
+        </div>
+      ) : archivado && senderTipo === 'candidato' ? (
         <div className="border-t border-gray-100 p-3 text-center">
           <p className="text-xs text-gray-400">
             Esta postulación ha sido cerrada. Puedes aplicar a otras vacantes en TuChamba.
