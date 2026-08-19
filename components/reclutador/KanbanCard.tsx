@@ -126,6 +126,22 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
   const enEntrevista = postulacion.etapa_actual === 'Entrevista'
   const tieneEntrevista = postulacion.fecha_entrevista
 
+  // HU-24: mismo criterio que la alerta "sin_movimiento" ya existente (CA-07.2)
+  const horasSinMovimientoSeguimiento = (Date.now() - new Date(postulacion.updated_at).getTime()) / (1000 * 60 * 60)
+  const etapasActivasSeguimiento = ['Aplicado', 'Contactado', 'Entrevista', 'Inducción']
+  const sinMovimiento48h = etapasActivasSeguimiento.includes(postulacion.etapa_actual) && horasSinMovimientoSeguimiento > 48
+
+  function generarLinkSeguimiento() {
+    const mensajesPorEtapa: Record<string, string> = {
+      'Aplicado': `Hola ${nombre}, vimos tu interés en la vacante de ${vacante}. ¿Sigues buscando trabajo? Contáctanos para continuar tu proceso.`,
+      'Contactado': `Hola ${nombre}, ¿pudiste ver mi mensaje anterior sobre la vacante de ${vacante}? Quedamos al pendiente de ti.`,
+      'Entrevista': `Hola ${nombre}, seguimos con la vacante de ${vacante} disponible para ti. ¿Agendamos tu entrevista?`,
+      'Inducción': `Hola ${nombre}, ¿cómo vas con tu proceso de inducción en ${vacante}? Cualquier duda, aquí estamos para apoyarte.`,
+    }
+    const mensaje = mensajesPorEtapa[postulacion.etapa_actual] ?? `Hola ${nombre}, seguimos en contacto por la vacante de ${vacante}.`
+    return `https://wa.me/52${telefono}?text=${encodeURIComponent(mensaje)}`
+  }
+
   // CA-02.9: flujo secuencial, un paso a la vez (adelante o atrás, tipo Ctrl+Z)
   const ORDEN_ETAPAS = ['Aplicado', 'Contactado', 'Entrevista', 'Inducción', 'Contratado']
   const indiceActual = ORDEN_ETAPAS.indexOf(postulacion.etapa_actual)
@@ -856,7 +872,13 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
         </div>
 
         {/* Botón de entrevista — solo en etapa Entrevista; WhatsApp — Contactado/Entrevista/Inducción */}
-        {(enEntrevista || postulacion.etapa_actual === 'Contactado' || postulacion.etapa_actual === 'Inducción') && (
+        {sinMovimiento48h && (
+          <span className="inline-block text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium mt-2">
+            🔔 Sin movimiento 48h
+          </span>
+        )}
+
+        {(enEntrevista || postulacion.etapa_actual === 'Contactado' || postulacion.etapa_actual === 'Inducción' || sinMovimiento48h) && (
           <div className="flex gap-2 mt-2">
             {enEntrevista && (
               <button
@@ -866,12 +888,16 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
                 📅 {tieneEntrevista ? 'Ver entrevista' : 'Agendar'}
               </button>
             )}
-            <a href={generarLinkWhatsApp()}
+            <a href={sinMovimiento48h ? generarLinkSeguimiento() : generarLinkWhatsApp()}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 text-center text-xs bg-green-50 hover:bg-green-100 text-green-700 py-1.5 rounded-lg border border-green-200 transition-colors"
+              className={`flex-1 text-center text-xs py-1.5 rounded-lg border transition-colors ${
+                sinMovimiento48h
+                  ? 'bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200'
+                  : 'bg-green-50 hover:bg-green-100 text-green-700 border-green-200'
+              }`}
             >
-              📱 WhatsApp
+              {sinMovimiento48h ? '🔔 Enviar seguimiento' : '📱 WhatsApp'}
             </a>
           </div>
         )}

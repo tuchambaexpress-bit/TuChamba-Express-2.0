@@ -1011,7 +1011,22 @@ ya definido en CA-14.3) — el sistema propone, el coordinador decide.
 
 ---
 
-### HU-18: Mis postulaciones — historial del candidato
+### HU-24: Mensaje de seguimiento sugerido para candidatos sin movimiento
+**Como** reclutador, **quiero** un mensaje ya redactado para reactivar a un candidato cuando la alerta de "sin movimiento 48h" se dispara, **para** no tener que pensar qué escribirle cada vez ni dejarlo enfriar por no saber cómo retomar el contacto.
+
+> *Origen: José, 2026-08-19. Decisión explícita de alcance: por ahora mensajes prefabricados por reglas (mismo patrón ya usado en `generarLinkWhatsApp()`, 6.8b), sin IA en tiempo real — la visión a mediano plazo (~4-5 meses) es que todo el filtro y seguimiento de candidatos lo hagan agentes de IA, dejando al reclutador enfocado solo en ampliar su red y compartir su link de TuChamba Express. Esta tarea es la versión "regla simple" que sienta la base; se reemplazará por IA real cuando llegue ese momento — no antes.*
+
+**CA-24.1:** Cuando un candidato en cualquier etapa activa (Aplicado, Contactado, Entrevista, Inducción — mismo criterio que la alerta `sin_movimiento` ya existente, CA-07.2) lleva 48h sin `updated_at`, su tarjeta en el Kanban del reclutador muestra un botón "🔔 Enviar seguimiento" — distinto del botón general de WhatsApp por etapa (6.8b), porque este es específicamente para reactivar, no para contacto normal.
+
+**CA-24.2:** El mensaje varía según la etapa actual del candidato (plantillas fijas, sin IA):
+- Aplicado: recordatorio de que sigue en el proceso, invitación a continuar.
+- Contactado: pregunta si vio el mensaje anterior.
+- Entrevista (sin fecha agendada aún): invitación a agendar.
+- Inducción: pregunta de seguimiento sobre cómo va el proceso.
+
+---
+
+
 **Como** candidato, **quiero** poder ver todas las vacantes a las que me he postulado y el estado de cada una, **para** no perderme entre conversaciones cuando hay muchas vacantes disponibles.
 
 > *Origen: Pain point identificado en sesión de desarrollo — con 100+ vacantes un candidato no tiene forma de saber a cuáles ya aplicó ni en qué etapa está cada proceso.*
