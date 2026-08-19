@@ -96,7 +96,7 @@ FORMATO DE SPEC: compatible con OpenSpec — legible por Claude Code,
 
 ## 2. ESTRUCTURA DE REPOSITORIO (Next.js App Router)
 
-> **Estado:** Actualizado al Sprint 5 (10/08/2026 — sesión larga, ver tasks.md para detalle de cada tarea). Las rutas marcadas con ✅ ya existen en producción. Reescrita por completo — la versión anterior (01/08) estaba desactualizada y tenía un fragmento de código huérfano al final.
+> **Estado:** Actualizado al Sprint 6 (19/08/2026 — sesión larga, ver tasks.md para detalle de cada tarea). Las rutas marcadas con ✅ ya existen en producción.
 
 ```
 tuchamba-v2/
@@ -106,11 +106,11 @@ tuchamba-v2/
 ├── spec.md                       ← Especificación funcional completa
 ├── plan.md                       ← Arquitectura técnica (este archivo)
 ├── tasks.md                      ← Sprints con tareas atómicas
-├── middleware.ts                 ✅ NUEVO — protege /coordinador/* (sesión + status activo)
+├── middleware.ts                 ✅ Protege /coordinador/* (sesión + status activo)
 ├── next.config.js                ✅
 ├── tailwind.config.ts            ✅
 ├── tsconfig.json                 ✅ (⚠️ moduleResolution "node" obsoleto, ver tasks.md 7.13)
-├── package.json                  ✅ (+ xlsx, ver tasks.md 7.13 para riesgo conocido sin fix)
+├── package.json                  ✅ (+ xlsx, recharts, ver tasks.md 7.13 riesgo conocido)
 ├── public/                       ✅
 │   ├── manifest.json             ✅ PWA manifest
 │   ├── favicon.png               ✅
@@ -120,7 +120,9 @@ tuchamba-v2/
 │   └── ojo-abierto.png / ojo-cerrado.png ✅
 ├── supabase/
 │   └── functions/
-│       └── API.md                ✅ Endpoints documentados
+│       └── API.md                ✅ Endpoints documentados (aún sin Edge Functions
+│                                     reales desplegadas — 6.8/6.9/6.10 se construyeron
+│                                     deliberadamente sin IA en tiempo real, ver backlog)
 ├── hooks/                        ✅
 │   ├── useReferido.ts            ✅ Captura ?ref= en localStorage
 │   ├── useTrafico.ts             ✅ Detecta fuente de tráfico
@@ -130,26 +132,33 @@ tuchamba-v2/
 ├── lib/                          ✅
 │   ├── utils.ts                  ✅ cn, getSemanaISO, calcularComision,
 │   │                                 calcularGarantiaFin (legado),
-│   │                                 calcularGarantiaFinHabil (CA-02.8, días hábiles)
-│   ├── excel-vacantes.ts         ✅ NUEVO — columnas, mapas de traducción
-│   │                                 bidireccionales, parser de fechas,
-│   │                                 normalización de nombres de empresa
+│   │                                 calcularGarantiaFinHabil (CA-02.8, días hábiles +
+│   │                                 días de inducción, 5.16b),
+│   │                                 obtenerPeriodoCorte / periodoCorteAdyacente
+│   │                                 (5.17, semana calendario completa lun-dom)
+│   ├── excel-vacantes.ts         ✅ Columnas (44+, ver spec.md CA-08.8), mapas de
+│   │                                 traducción bidireccionales, parser de fechas,
+│   │                                 normalización de nombres de empresa, mapa de
+│   │                                 días de la semana (LUN..DOM, 3 letras — 1 sola
+│   │                                 letra es ambigua entre Martes y Miércoles)
 │   └── supabase/
 │       ├── client.ts             ✅ Cliente browser
 │       └── server.ts             ✅ Cliente servidor
 ├── components/
 │   ├── ui/
 │   │   ├── button.tsx            ✅ Shadcn/ui
-│   │   └── InfoTooltip.tsx       ✅ NUEVO — tooltip "!" estilo nota de Excel,
-│   │                                 usado en VacanteModal
+│   │   └── InfoTooltip.tsx       ✅ Tooltip "!" estilo nota de Excel, usado en VacanteModal
 │   ├── candidato/
 │   │   ├── VacantesPortal.tsx    ✅ Layout split + búsqueda + filtros + paginación
 │   │   │                            + Realtime (vacantes y documentos_negocio)
 │   │   ├── VacanteCard.tsx       ✅ Card de vacante en lista
 │   │   ├── VacanteDetalle.tsx    ✅ Panel detalle + botón postular + PDFs de ruta
 │   │   │                            + examen médico/antidoping visibles
-│   │   ├── ChatModal.tsx         ✅ Modal postulación + chat candidato
-│   │   ├── ChatWindow.tsx        ✅ Chat Realtime (candidato y reclutador)
+│   │   ├── ChatModal.tsx         ✅ Modal postulación + chat candidato + quiz de
+│   │   │                            pre-calificación (HU-17/6.8, antes del formulario
+│   │   │                            si la vacante tiene preguntas configuradas)
+│   │   ├── ChatWindow.tsx        ✅ Chat Realtime (candidato y reclutador), + prop
+│   │   │                            `soloLectura` (consulta del coordinador, HU-21)
 │   │   └── TraficoTracker.tsx    ✅ Tracker de fuente en página vacante individual
 │   ├── invitacion/
 │   │   └── FormularioInvitacion.tsx ✅ Formulario 2 pasos registro agencia
@@ -157,37 +166,51 @@ tuchamba-v2/
 │   │   └── SolicitudesPanel.tsx  ✅ Panel aprobar/rechazar agencias
 │   ├── reclutador/
 │   │   ├── KanbanBoard.tsx       ✅ Tablero principal (desktop + móvil), incluye
-│   │   │                            columna "Descartados", Realtime, historial previo
+│   │   │                            columna "Descartados", Realtime (canal sobre
+│   │   │                            `postulaciones`, agregado 6.8b — antes no existía
+│   │   │                            ningún Realtime en esta pantalla), historial previo
 │   │   ├── KanbanColumn.tsx      ✅ Columna por etapa (incl. "Descartado")
-│   │   ├── KanbanCard.tsx        ✅ Card candidato — modales descarte/inducción/
-│   │   │                            firma contrato/entrevista/documentos/detalle
-│   │   │                            descarte; badges historial previo, sin actividad
-│   │   └── ReclutadorNav.tsx     ✅ NUEVO — nav compartido, contadores Realtime
-│   │                                 de chats y alertas sin leer
-│   ├── coordinador/              ✅ NUEVA CARPETA
+│   │   ├── KanbanCard.tsx        ✅ Card candidato — modales descarte/inducción/firma
+│   │   │                            contrato/entrevista/documentos; botón único de
+│   │   │                            WhatsApp que cambia a "seguimiento" tras 48h sin
+│   │   │                            movimiento (6.9); botones ✅/❌ de confirmación de
+│   │   │                            asistencia (5.24, no mueve de columna, distinto de
+│   │   │                            Descartar); candado de datos completos antes de
+│   │   │                            Inducción (CA-15.6); modal de consulta del
+│   │   │                            candidato al hacer clic en su nombre (Esc cierra);
+│   │   │                            control de cupo por vacante al entrar a Inducción
+│   │   │                            y al confirmar Contratado (6.8b); botón de chat
+│   │   │                            interno oculto si `es_manual = true` (HU-25)
+│   │   └── ReclutadorNav.tsx     ✅ Nav compartido, contadores Realtime de chats/alertas
+│   ├── coordinador/
 │   │   ├── CoordinadorNav.tsx    ✅ Nav compartido, contador de chats sin leer
 │   │   ├── VacanteModal.tsx      ✅ Modal de 8 secciones — crear/editar/duplicar
-│   │   │                            vacante, selector de negocio con creación
-│   │   │                            inline y filtro anti-duplicados, toggle
-│   │   │                            Vigente/No vigente
-│   │   └── KanbanCardSoloLectura.tsx ✅ Card sin botones de acción, para el
-│   │                                     pipeline global del coordinador (5.11)
-│   ├── shared/                   ✅ NUEVA CARPETA
+│   │   │                            vacante, selector de negocio con creación inline
+│   │   │                            y filtro anti-duplicados + selector de días de
+│   │   │                            descanso (por empresa, HU-16), toggle Vigente/No
+│   │   │                            vigente, indicador de completitud (bloquea guardar,
+│   │   │                            CA-09.3), preguntas de pre-calificación (HU-17,
+│   │   │                            máx 5, 3 tipos), campo cupo_requerido + indicador
+│   │   │                            en tiempo real "por rondas" (HU-16)
+│   │   └── KanbanCardSoloLectura.tsx ✅ Card sin botones de acción para el Kanban
+│   │                                     global (5.11) — sí incluye botón "Ver chat"
+│   │                                     (solo lectura, CA-21.4) y badges de ficha del
+│   │                                     candidato/asistencia/pre-calificado
+│   ├── shared/
 │   │   └── ChatCoordinadorReclutador.tsx ✅ Chat general único por par
 │   │                                          reclutador-coordinador
 │   ├── forms/
 │   │   └── EditableList.tsx      ✅ Lista editable con drag-and-drop (@dnd-kit) —
-│   │                                 requisitos, beneficios, documentos, zonas_ruta
+│   │                                 requisitos, beneficios, documentos, zonas_ruta,
+│   │                                 opciones de pregunta de opción múltiple (HU-17)
 │   └── seo/
 │       └── JobPostingSchema.tsx  ✅ JSON-LD para Google Jobs
 └── app/
     ├── layout.tsx                ✅ Root layout con metadata PWA
-    ├── globals.css               ✅ Tailwind base
+    ├── globals.css                ✅ Tailwind base
     ├── page.tsx                  ✅ Portal Candidato (Home pública), revalidate=0,
     │                                 Realtime, salario_periodo/turno incluidos
-    ├── sitemap.ts                ✅ NUEVO — sitemap dinámico nativo de Next.js
-    │                                 (reemplaza el mecanismo de sync a GitHub de V1,
-    │                                 ver spec.md CA-05.3 corregida)
+    ├── sitemap.ts                ✅ Sitemap dinámico nativo de Next.js
     ├── vacante/[id]/
     │   └── page.tsx              ✅ Detalle vacante SSR + SEO + JSON-LD, revalidate=0
     ├── invitacion/[token]/
@@ -199,48 +222,69 @@ tuchamba-v2/
     │   ├── layout.tsx            ✅
     │   ├── login/page.tsx        ✅ Login por código
     │   ├── dashboard/page.tsx    ✅ Métricas + link referido + filtro fechas
-    │   ├── pipeline/page.tsx     ✅ Kanban con modales (⚠️ sin Realtime todavía,
-    │   │                            a diferencia de chats/vacantes coordinador —
-    │   │                            pendiente anotado)
+    │   ├── pipeline/page.tsx     ✅ Client Component (antes Server, la conexión a
+    │   │                            Supabase del servidor nunca se usaba) — botón
+    │   │                            "+ Candidato" junto al título (HU-25, alta manual
+    │   │                            para candidatos que llegan por redes/WhatsApp/
+    │   │                            presencial), envuelve KanbanBoard
     │   ├── chats/page.tsx        ✅ Lista chats + ChatWindow Realtime, "Ordenar por"
-    │   ├── chat-coordinador/     ✅ NUEVO — chat con su coordinador (5.13)
+    │   ├── chat-coordinador/     ✅ Chat con su coordinador (5.13)
     │   │   └── page.tsx
     │   ├── detalle/[id]/
-    │   │   └── page.tsx          ✅ Ficha operativa de vacante, revalidate=0,
-    │   │                            incluye PDFs de ruta de la empresa
-    │   ├── vacantes/page.tsx     🔲 NUEVO — 5.20, listado para consulta libre
-    │   │                            (sin depender de tener un candidato postulado)
-    │   ├── comisiones/page.tsx   ✅ Panel comisiones con día de pago por agencia
+    │   │   └── page.tsx          ✅ Ficha operativa, revalidate=0, PDFs de ruta de
+    │   │                            empresa, salario/turno siempre reales al reclutador
+    │   │                            (`salario_visible` solo aplica al portal público),
+    │   │                            recuadro "Requerimiento" (cupo real, HU-16)
+    │   ├── vacantes/page.tsx     ✅ Listado para consulta libre (5.20)
+    │   ├── comisiones/page.tsx   ✅ Panel comisiones — corregido para calcular
+    │   │                            "cumplida" en vivo desde `fecha_garantia_fin`,
+    │   │                            no desde `garantia_cumplida` (campo roto, nunca
+    │   │                            se actualiza, mismo hueco de 5.1c/5.17/Dashboard)
     │   └── alertas/page.tsx      ✅ Panel alertas automáticas
     ├── coordinador/
     │   ├── layout.tsx            ✅
     │   ├── login/page.tsx        ✅ Login email+password Supabase Auth
-    │   ├── dashboard/page.tsx    ✅ Dashboard base con accesos rápidos
-    │   ├── en-revision/page.tsx  ✅ NUEVO — pantalla para coordinador pendiente
-    │   │                            de aprobación (CA-08.3, protegida por middleware)
+    │   ├── dashboard/page.tsx    ✅ 6 gráficas (Recharts, Sprint 6): vacantes por
+    │   │                            status, embudo de conversión (vía historial_etapas,
+    │   │                            cuenta candidatos que llegaron a cada etapa alguna
+    │   │                            vez), efectividad por reclutador, comisiones
+    │   │                            pagadas/pendientes/perdidas, fuentes de tráfico,
+    │   │                            días promedio de colocación; filtro de fechas
+    │   │                            compartido; botón "📝 Ver resumen" (6.10, texto por
+    │   │                            reglas, sin IA/Cron todavía — ver backlog)
+    │   ├── en-revision/page.tsx  ✅ Pantalla coordinador pendiente de aprobación
     │   ├── vacantes/page.tsx     ✅ Listado + filtros + Exportar/Importar Excel +
-    │   │                            botón Duplicar, Realtime
-    │   ├── reclutadores/page.tsx ✅ NUEVO — CRUD reclutadores, LADA internacional
-    │   ├── pipeline/page.tsx     ✅ NUEVO — panel de reclutadores → Kanban
-    │   │                            solo-lectura por reclutador (5.11)
-    │   ├── chat-reclutadores/    ✅ NUEVO — chat con cada reclutador (5.13)
+    │   │                            Duplicar, Realtime, columna "Cupo" calculada en
+    │   │                            vivo (HU-16, no depende de `cupo_cubierto`)
+    │   ├── reclutadores/page.tsx ✅ CRUD reclutadores, LADA internacional
+    │   ├── pipeline/page.tsx     ✅ Panel de reclutadores → Kanban solo-lectura (5.11),
+    │   │                            botón "Ver chat" por tarjeta, badge de asistencia
+    │   ├── chat-reclutadores/    ✅ Chat con cada reclutador (5.13)
     │   │   └── page.tsx
-    │   ├── faq/                  ⏸️ PENDIENTE — depende de 4.14/4.15 (Sprint 6)
-    │   └── corte-semanal/        ⏳ Sprint 5, aún no construido
+    │   ├── corte-semanal/        ✅ Resumen por reclutador (efectivos/no efectivos/
+    │   │   └── page.tsx              total), navegación entre periodos, botón "Marcar
+    │   │                             como pagada" (Excel de 3 hojas: Resumen/Pagados/
+    │   │                             No efectivos), indicador "✅ Periodo pagado" (5.17/5.18)
+    │   ├── contratados/          ✅ Histórico completo de "Contratado", filtrable por
+    │   │   └── page.tsx              reclutador y rango de fechas, exportable (5.22)
+    │   └── faq/                  ⏸️ PENDIENTE — depende de 4.14/4.15 (Sprint 6)
     └── api/
-        ├── postular/route.ts     ✅ Crea candidato + postulación + chat
-        ├── trafico/route.ts      ✅ Registra fuente de tráfico
+        ├── postular/route.ts     ✅ Crea candidato + postulación + chat; guarda
+        │                            `precalificado` y `respuestas_precalificacion` (HU-17)
+        ├── trafico/route.ts      ✅ Registra fuente de tráfico — corregido: sí guarda
+        │                            `agencia_id` (bug de Sprint 3, nunca se usaba el
+        │                            dato aunque sí se consultaba)
         ├── invitaciones/route.ts ✅ Genera token de invitación (protegido admin)
         ├── registro-agencia/route.ts ✅ Registra agencia + coordinador
-        ├── documentos/route.ts   ✅ NUEVO — documentos del candidato (bucket privado,
-        │                            links firmados)
-        ├── documentos-negocio/route.ts ✅ NUEVO — PDFs de rutas por empresa
-        │                                    (bucket público, getPublicUrl)
-        ├── exportar-vacantes/route.ts  ✅ NUEVO — Excel con hoja Vacantes +
-        │                                    hoja Instrucciones (38+ columnas)
-        ├── importar-vacantes/route.ts  ✅ NUEVO — parser con columnas dinámicas
-        │                                    REQUISITO_N/BENEFICIO_N/DOCUMENTO_N,
-        │                                    crea o actualiza, reporte por fila
+        ├── documentos/route.ts   ✅ Documentos del candidato (bucket privado, links firmados)
+        ├── documentos-negocio/route.ts ✅ PDFs de rutas por empresa (bucket público)
+        ├── exportar-vacantes/route.ts  ✅ Excel hoja Vacantes + hoja Instrucciones
+        │                                    (44+ columnas, incluye DÍAS DE DESCANSO
+        │                                    EMPRESA — campo de `negocios`, no `vacantes`)
+        ├── importar-vacantes/route.ts  ✅ Parser con columnas dinámicas REQUISITO_N/
+        │                                    BENEFICIO_N/DOCUMENTO_N, crea o actualiza,
+        │                                    reporte por fila, aplica días de descanso
+        │                                    por empresa ("última fila gana")
         ├── reclutador/
         │   └── login/route.ts    ✅ Verifica código de reclutador
         └── admin/

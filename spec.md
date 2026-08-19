@@ -1273,6 +1273,21 @@ Se diseña su Edge Function específica cuando exista ese histórico.
 
 ---
 
+### HU-25: Alta manual de candidato + resumen semanal del dashboard (2026-08-19)
+**Como** reclutador, **quiero** poder dar de alta a un candidato que me llegó por otro medio (redes sociales, WhatsApp personal, presencial), **para** no perder candidatos reales solo porque no entraron por el portal público.
+
+> *Origen: tarea 4.12 (Sprint 4) estaba documentada como completa desde hace semanas, pero José confirmó al buscarla que no existe ningún botón ni pantalla para esto en la app real — se reabre y se construye de verdad. Detectado mientras probaba 6.10.*
+
+**CA-25.1:** Botón "+ Candidato" en `/reclutador/pipeline`, alineado junto al título de la pantalla. Abre un formulario: nombre, teléfono, vacante (solo vigentes de las agencias del reclutador), y "¿Por dónde llegó?" (Facebook, Instagram, TikTok, WhatsApp personal, Presencial/volanteo, Otro medio).
+
+**CA-25.2:** Al guardar, crea (o reutiliza, si el teléfono ya existe) el candidato, la postulación (`etapa_actual = 'Aplicado'`, `es_manual = true`), el chat con el reclutador, y un registro en `trafico_referidos` con la fuente seleccionada — para que el Dashboard (gráfica "Fuentes de tráfico", 6.5) refleje de dónde llegan los candidatos reales, no solo los que pasaron por el portal. Valida que no se duplique la postulación si ese candidato ya estaba aplicado a esa misma vacante.
+
+**CA-25.3:** El chat interno (`💬 Chat`) que normalmente aparece en cada tarjeta del Kanban **no se muestra** cuando `es_manual = true` — ese candidato nunca entró por el portal, nunca tuvo sesión para acceder a esa conversación, así que cualquier mensaje ahí se perdería sin que nadie lo leyera. Solo se le puede contactar por WhatsApp (botón ya existente, 6.8b/6.9).
+
+**CA-25.4 (resumen semanal, 6.10):** El coordinador tiene un botón "📝 Ver resumen" en su Dashboard que arma un resumen en texto a partir de los mismos datos ya cargados en las 6 gráficas (vacantes por status, candidatos nuevos/contratados, mejor reclutador, comisiones pagadas/pendientes/perdidas, fuente de tráfico principal) — respeta el filtro de fechas activo en ese momento. **Decisión de alcance explícita (José, 2026-08-19):** sin Supabase Cron ni narrativa generada por IA todavía — resumen bajo demanda, con reglas simples, mismo criterio que 6.8/6.9. La versión automática (cada jueves, con IA real) queda en el backlog de "agentes de IA reales" (~4-5 meses, ver nota en tasks.md) — también depende de que exista un panel de alertas para coordinador, que tampoco existe hoy (hueco ya anotado en 6.8b).
+
+---
+
 
 ### HU-19: Política de retención y limpieza de datos (Sprint 8 — backlog, no MVP inmediato)
 **Como** coordinador, **quiero** poder limpiar manualmente los registros de candidatos que ya cumplieron su ciclo (descartados, contratados, vetados), **para** mantener la base de datos ligera sin perder información mientras es útil ni comprometer la trazabilidad de comisiones ya pagadas.

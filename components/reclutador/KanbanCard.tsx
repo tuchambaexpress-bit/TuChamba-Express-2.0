@@ -822,12 +822,13 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
 
         {/* Botones principales */}
         <div className="flex gap-2 mt-3">
-          
+          {!postulacion.es_manual && (
             <a href={`/reclutador/chats?chat=${postulacion.chats?.[0]?.id}`}
-            className="flex-1 text-center text-xs bg-gray-50 hover:bg-gray-100 text-gray-600 py-1.5 rounded-lg border border-gray-200 transition-colors"
-          >
-            💬 Chat
-          </a>
+              className="flex-1 text-center text-xs bg-gray-50 hover:bg-gray-100 text-gray-600 py-1.5 rounded-lg border border-gray-200 transition-colors"
+            >
+              💬 Chat
+            </a>
+          )}
           <a href={`/reclutador/detalle/${postulacion.vacante_id}?from=pipeline`} className="text-sm bg-gray-50 hover:bg-gray-100 text-gray-600 w-7 h-7 rounded-lg border border-gray-200 transition-colors flex items-center justify-center flex-shrink-0">📋</a>
           <button
             onClick={abrirModalDocumentos}

@@ -28,6 +28,16 @@ export default function DashboardCoordinador() {
   const [datosComisiones, setDatosComisiones] = useState<{ reclutador: string; pagadas: number; pendientes: number; perdidas: number }[]>([])
   const [datosTrafico, setDatosTrafico] = useState<{ name: string; value: number }[]>([])
   const [datosTiempo, setDatosTiempo] = useState<{ vacante: string; dias: number }[]>([])
+  const [mostrarResumen, setMostrarResumen] = useState(false)
+
+  useEffect(() => {
+    if (!mostrarResumen) return
+    function handleEsc(e: KeyboardEvent) {
+      if (e.key === 'Escape') setMostrarResumen(false)
+    }
+    document.addEventListener('keydown', handleEsc)
+    return () => document.removeEventListener('keydown', handleEsc)
+  }, [mostrarResumen])
 
   useEffect(() => {
     const data = localStorage.getItem('coordinador_sesion')
@@ -157,6 +167,39 @@ export default function DashboardCoordinador() {
     setLoading(false)
   }
 
+  // 6.10 — resumen narrativo bajo demanda, con reglas (sin IA), reutilizando
+  // los mismos datos que ya cargan las 6 gráficas. Decisión de José 2026-08-19:
+  // sin Supabase Cron ni narrativa de IA todavía — eso queda para cuando se
+  // construyan los agentes de IA reales (backlog, ~4-5 meses).
+  function generarResumen(): string[] {
+    const totalVacantes = datosStatus.reduce((s, d) => s + d.value, 0)
+    const vigentes = datosStatus.find(d => d.name === 'vigente')?.value ?? 0
+    const pausadas = datosStatus.find(d => d.name === 'pausada')?.value ?? 0
+    const aplicados = datosFunnel.find(f => f.etapa === 'Aplicado')?.candidatos ?? 0
+    const contratados = datosFunnel.find(f => f.etapa === 'Contratado')?.candidatos ?? 0
+    const totalPagado = datosComisiones.reduce((s, r) => s + r.pagadas, 0)
+    const totalPendiente = datosComisiones.reduce((s, r) => s + r.pendientes, 0)
+    const totalPerdido = datosComisiones.reduce((s, r) => s + r.perdidas, 0)
+    const mejorReclutador = [...datosEfectividad].sort((a, b) => b.colocados - a.colocados)[0]
+    const fuentePrincipal = [...datosTrafico].sort((a, b) => b.value - a.value)[0]
+
+    const partes: string[] = []
+    partes.push(totalVacantes > 0
+      ? `Tienes ${totalVacantes} vacante(s) en este periodo: ${vigentes} vigente(s) y ${pausadas} pausada(s).`
+      : 'No hay vacantes registradas en este periodo.')
+    partes.push(aplicados > 0 || contratados > 0
+      ? `Llegaron ${aplicados} candidato(s) nuevo(s), y ${contratados} llegaron a "Contratado".`
+      : 'No hubo candidatos nuevos ni contrataciones en este periodo.')
+    if (mejorReclutador && mejorReclutador.colocados > 0) {
+      partes.push(`${mejorReclutador.reclutador} fue quien más colocó, con ${mejorReclutador.colocados} candidato(s).`)
+    }
+    partes.push(`Comisiones: $${totalPagado.toLocaleString('es-MX')} ya pagadas, $${totalPendiente.toLocaleString('es-MX')} pendientes${totalPerdido > 0 ? `, $${totalPerdido.toLocaleString('es-MX')} perdidas` : ''}.`)
+    if (fuentePrincipal && fuentePrincipal.value > 0) {
+      partes.push(`La fuente de tráfico principal fue "${fuentePrincipal.name}" con ${fuentePrincipal.value} visita(s).`)
+    }
+    return partes
+  }
+
   if (!sesion) return null
 
   return (
@@ -178,8 +221,41 @@ export default function DashboardCoordinador() {
                 Limpiar
               </button>
             )}
+            <button
+              onClick={() => setMostrarResumen(true)}
+              className="bg-[#1A6B3C] hover:bg-[#155c33] text-white text-sm px-4 py-2 rounded-lg font-medium"
+            >
+              📝 Ver resumen
+            </button>
           </div>
         </div>
+
+        {mostrarResumen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setMostrarResumen(false)}>
+            <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-gray-900">📝 Resumen del periodo</h3>
+                <button onClick={() => setMostrarResumen(false)} className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">✕</button>
+              </div>
+              <p className="text-xs text-gray-400 mb-3">
+                {fechaDesde || fechaHasta
+                  ? `${fechaDesde || '...'} — ${fechaHasta || 'hoy'}`
+                  : 'Todo el tiempo (sin filtro de fecha)'}
+              </p>
+              <div className="space-y-2">
+                {generarResumen().map((linea, i) => (
+                  <p key={i} className="text-sm text-gray-700 leading-relaxed">{linea}</p>
+                ))}
+              </div>
+              <button
+                onClick={() => setMostrarResumen(false)}
+                className="w-full mt-4 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-xl text-sm font-medium"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Accesos rápidos */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">

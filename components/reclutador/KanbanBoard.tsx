@@ -40,6 +40,7 @@ interface Postulacion {
   motivo_descarte_detalle: string | null
   fecha_garantia_fin: string | null
   garantia_cumplida: boolean
+  es_manual: boolean
 }
 
 export default function KanbanBoard() {
@@ -79,7 +80,7 @@ export default function KanbanBoard() {
       .from('postulaciones')
       .select(`
         id, etapa_actual, candidato_id, vacante_id, agencia_id, created_at, updated_at,
-        motivo_descarte, motivo_descarte_detalle, fecha_garantia_fin, garantia_cumplida, precalificado, asistio_entrevista, fecha_entrevista,
+        motivo_descarte, motivo_descarte_detalle, fecha_garantia_fin, garantia_cumplida, precalificado, asistio_entrevista, fecha_entrevista, es_manual,
         candidatos(id, nombre, telefono, edad, escolaridad, residencia),
         vacantes(titulo, horario, ruta_para_entrevista, punto_reunion, etapas_personalizadas, dias_garantia, comision_base_mxn, tiene_promocion, promocion_fin, promocion_monto_mxn, dias_induccion, induccion_dentro_garantia, negocios(nombre, dias_descanso)),
         chats(id)
@@ -145,22 +146,20 @@ export default function KanbanBoard() {
     )
   }
 
-  if (postulaciones.length === 0) {
-    return (
-      <div className="bg-white rounded-2xl p-8 text-center shadow-sm">
-        <p className="text-4xl mb-3">📋</p>
-        <p className="text-gray-500 font-medium">No tienes candidatos activos</p>
-        <p className="text-gray-400 text-sm mt-1">
-          Comparte tu link de referido para empezar a recibir candidatos
-        </p>
-      </div>
-    )
-  }
-
   // Obtener etapas únicas de todas las vacantes (CA-13.3: se agrega "Descartados" al final)
   const todasEtapas = ['Aplicado', 'Contactado', 'Entrevista', 'Inducción', 'Contratado', 'Descartado']
 
   return (
+    <>
+    {postulaciones.length === 0 ? (
+      <div className="bg-white rounded-2xl p-8 text-center shadow-sm">
+        <p className="text-4xl mb-3">📋</p>
+        <p className="text-gray-500 font-medium">No tienes candidatos activos</p>
+        <p className="text-gray-400 text-sm mt-1">
+          Comparte tu link de referido, o agrégalo tú mismo con "+ Candidato" si te llegó por otro medio
+        </p>
+      </div>
+    ) : (
     <>
     {/* Vista móvil — lista con filtro de etapa */}
     <div className="md:hidden">
@@ -211,6 +210,8 @@ export default function KanbanBoard() {
         ))}
       </div>
     </div>
+    </>
+    )}
     </>
   )
 }
