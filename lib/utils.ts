@@ -87,16 +87,20 @@ export function calcularGarantiaFinHabil(
  * garantia_cumplida, que nunca se actualizan automáticamente (hueco conocido).
  */
 export function obtenerPeriodoCorte(diaCorteAgencia: number, fechaFin: Date = new Date()): { inicio: string; fin: string } {
-  // El periodo siempre es la semana calendario completa (lunes a domingo),
-  // sin importar dia_corte — eso solo indica cuándo dentro de la semana se
-  // procesa el pago, no cambia qué se cuenta.
+  // El periodo SÍ depende de dia_corte (corregido 2026-08-19): termina en la
+  // próxima ocurrencia del día de corte (hoy o en los próximos días), y
+  // empieza 6 días antes de esa fecha — un ciclo de 7 días que se repite,
+  // igual que un estacionamiento con corte fijo cada semana.
+  const diaCorteJS = diaCorteAgencia % 7 // 7 (domingo) -> 0, resto igual
   const fecha = new Date(fechaFin)
   fecha.setHours(0, 0, 0, 0)
-  const diasDesdeLunes = (fecha.getDay() + 6) % 7
-  const inicio = new Date(fecha)
-  inicio.setDate(fecha.getDate() - diasDesdeLunes)
-  const fin = new Date(inicio)
-  fin.setDate(inicio.getDate() + 6)
+
+  const diasHastaCorte = (diaCorteJS - fecha.getDay() + 7) % 7
+  const fin = new Date(fecha)
+  fin.setDate(fecha.getDate() + diasHastaCorte)
+
+  const inicio = new Date(fin)
+  inicio.setDate(fin.getDate() - 6)
 
   return {
     inicio: inicio.toISOString().split('T')[0],

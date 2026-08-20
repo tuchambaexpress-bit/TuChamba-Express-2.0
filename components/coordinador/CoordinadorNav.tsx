@@ -68,6 +68,7 @@ export default function CoordinadorNav({ subtitulo }: Props) {
             )}
           </a>
           <a href="/coordinador/corte-semanal" className="text-green-200 hover:text-white text-sm">Corte semanal</a>
+          <a href="/coordinador/perfil-agencia" className="text-green-200 hover:text-white text-sm">Perfil</a>
           <a href="/coordinador/contratados" className="text-green-200 hover:text-white text-sm">Histórico</a>
           {sesion?.nombre && (
             <span className="text-green-200 text-sm hidden lg:inline">Hola, {sesion.nombre}</span>
