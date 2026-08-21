@@ -398,6 +398,19 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
       return
     }
 
+    // 5.12: si la vacante ya no queda vigente, las preguntas pendientes sin
+    // contestar dejan de tener sentido — se borran (las ya contestadas se quedan).
+    if (payload.status !== 'vigente') {
+      const idVacanteAfectada = vacanteId && !vacanteDuplicar ? vacanteId : null
+      if (idVacanteAfectada) {
+        await supabase
+          .from('faq_escalaciones')
+          .delete()
+          .eq('vacante_id', idVacanteAfectada)
+          .is('respuesta', null)
+      }
+    }
+
     onGuardado()
     onCerrar()
   }

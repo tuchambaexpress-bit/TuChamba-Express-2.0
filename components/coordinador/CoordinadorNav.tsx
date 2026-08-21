@@ -12,6 +12,7 @@ export default function CoordinadorNav({ subtitulo }: Props) {
   const router = useRouter()
   const [chatsSinLeer, setChatsSinLeer] = useState(0)
   const [avisoCorte, setAvisoCorte] = useState(0)
+  const [preguntasSinContestar, setPreguntasSinContestar] = useState(0)
 
   function obtenerSesion() {
     if (typeof window === 'undefined') return null
@@ -90,6 +91,34 @@ export default function CoordinadorNav({ subtitulo }: Props) {
     return () => { supabase.removeChannel(canal) }
   }, [sesion?.agencia_id])
 
+  // 5.12: preguntas escaladas sin contestar
+  useEffect(() => {
+    if (!sesion?.agencia_id) return
+    const supabase = createClient()
+
+    async function cargarConteoFaq() {
+      const { count } = await supabase
+        .from('faq_escalaciones')
+        .select('*', { count: 'exact', head: true })
+        .eq('agencia_id', sesion.agencia_id)
+        .is('respuesta', null)
+      setPreguntasSinContestar(count ?? 0)
+    }
+    cargarConteoFaq()
+
+    const canal = supabase
+      .channel(`faq-nav-coordinador-${sesion.agencia_id}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'faq_escalaciones',
+        filter: `agencia_id=eq.${sesion.agencia_id}`
+      }, () => cargarConteoFaq())
+      .subscribe()
+
+    return () => { supabase.removeChannel(canal) }
+  }, [sesion?.agencia_id])
+
   return (
     <header className="bg-[#1A6B3C] px-6 py-4 shadow-md">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -115,6 +144,14 @@ export default function CoordinadorNav({ subtitulo }: Props) {
             {avisoCorte > 0 && (
               <span className="absolute -top-2 -right-3 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">
                 {avisoCorte > 9 ? '9+' : avisoCorte}
+              </span>
+            )}
+          </a>
+          <a href="/coordinador/faq" className="relative text-green-200 hover:text-white text-sm">
+            FAQ
+            {preguntasSinContestar > 0 && (
+              <span className="absolute -top-2 -right-3 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">
+                {preguntasSinContestar > 9 ? '9+' : preguntasSinContestar}
               </span>
             )}
           </a>

@@ -687,11 +687,7 @@ Cada archivo se guarda en Supabase Storage y genera una fila en `documentos_cand
 
 **CA-03.1:** La ficha operativa visible para el reclutador incluye: contacto RRHH, teléfono, mejor horario de contacto, etapas del proceso, documentos requeridos, rutas disponibles, días de garantía, comisión base y promoción activa (si existe), y todas las preguntas del FAQ respondidas. El salario real y el turno se muestran siempre al reclutador — `salario_visible` solo controla si el salario aparece en el portal público de candidatos, nunca oculta esa información al reclutador (corregido 2026-08-17, bug detectado al probar 5.20).
 
-**CA-03.2:** Dado que el reclutador tiene una duda no resuelta en el FAQ, cuando envía una pregunta al coordinador desde la ficha, entonces el sistema crea un `mensaje_interno` vinculado a esa vacante y genera una alerta al coordinador.
-
-**CA-03.3:** Dado que el coordinador responde una pregunta y activa el toggle "Agregar al FAQ", entonces la respuesta queda visible en la ficha de esa vacante para todos los reclutadores de la agencia automáticamente.
-
-**CA-03.5 — Listado de vacantes para consulta libre (agregado 2026-08-17, detectado por José durante prueba de 5.15):** El reclutador tiene una pantalla `/reclutador/vacantes` con el listado de todas las vacantes de su agencia (vigentes y pausadas, con badge de status), independiente de si ya tiene un candidato postulado ahí o no. Cada vacante de la lista lleva a su ficha operativa completa (`/reclutador/detalle/[id]`, ver CA-03.1). Antes de esto, la única forma de llegar a la ficha operativa era desde una tarjeta del Kanban — es decir, solo después de que un candidato ya estaba postulado, sin poder "consultar antes" una vacante.
+**CA-03.7 — Listado de vacantes para consulta libre (agregado 2026-08-17, detectado por José durante prueba de 5.15):** El reclutador tiene una pantalla `/reclutador/vacantes` con el listado de todas las vacantes de su agencia (vigentes y pausadas, con badge de status), independiente de si ya tiene un candidato postulado ahí o no. Cada vacante de la lista lleva a su ficha operativa completa (`/reclutador/detalle/[id]`, ver CA-03.1). Antes de esto, la única forma de llegar a la ficha operativa era desde una tarjeta del Kanban — es decir, solo después de que un candidato ya estaba postulado, sin poder "consultar antes" una vacante.
 
 #### CA-03.4 — Priorización del Agente FAQ (evita cuello de botella del coordinador)
 
@@ -702,8 +698,9 @@ Reclutador pregunta (texto libre desde la ficha de vacante)
   ↓
 NIVEL 1 — Campo estructurado de la vacante
   ¿La pregunta coincide con un campo que ya existe?
-  (status, tiene_ruta, ruta_para_entrevista, salario_visible,
-   estacionamiento, comedor, uniforme, horario, dias_garantia)
+  (status, tiene_ruta, ruta_para_entrevista, dias_entrevista,
+   estacionamiento, comedor, uniforme, horario, turno,
+   dias_garantia, comision_base_mxn, punto_reunion)
   → SÍ: respuesta instantánea desde la base de datos.
         Cero IA, cero costo, cero espera.
   → NO: continúa al Nivel 2
@@ -714,16 +711,24 @@ NIVEL 2 — Búsqueda en faqs_vacante de esa vacante
   → NO: continúa al Nivel 3
   ↓
 NIVEL 3 — Escalación al coordinador
-  Se crea mensaje_interno + alerta al coordinador
+  Se crea una fila en faq_escalaciones + alerta al coordinador
   Al responder, el coordinador decide con un toggle
   si esa respuesta se guarda en faqs_vacante
   (así la siguiente vez que alguien pregunte algo similar,
    se resuelve en el Nivel 2 sin esperar a nadie)
 ```
 
-**CA-03.5:** Dado que la pregunta del reclutador coincide con un campo estructurado de la vacante (ej. "¿sigue vigente?", "¿tiene ruta?"), cuando el sistema la procesa, entonces responde de inmediato consultando ese campo directamente — sin invocar la API de Claude y sin generar alerta al coordinador.
+**CA-03.5:** Dado que la pregunta del reclutador coincide con un campo estructurado de la vacante (ej. "¿sigue vigente?", "¿tiene ruta?"), cuando el sistema la procesa, entonces responde de inmediato consultando ese campo directamente — sin invocar ninguna API externa y sin generar alerta al coordinador.
 
-**CA-03.6:** Solo cuando una pregunta no se resuelve en Nivel 1 ni Nivel 2 se invoca la Edge Function `agente-faq` con Claude API. La mayoría de preguntas repetidas (vigencia, horario, ruta, salario) nunca llegan a consumir tokens de IA.
+**CA-03.6 (rediseñada 2026-08-20 — construida por completo, ver tasks.md 6.11):** El diseño original preveía invocar una Edge Function `agente-faq` con Claude API en el Nivel 3. **Decisión de alcance explícita:** se construyó sin IA en tiempo real, mismo criterio ya aplicado en 6.9/6.10 — Nivel 3 escala directo al coordinador vía la tabla `faq_escalaciones`, sin que Claude intente responder primero. Queda anotado en el mismo backlog de "agentes de IA reales" (~4-5 meses) para cuando se retome.
+
+**CA-03.2 (corregida 2026-08-20):** El diseño original mencionaba una tabla `mensaje_interno` que nunca se construyó como tal — la escalación al Nivel 3 usa una tabla nueva y dedicada, `faq_escalaciones` (distinta de `faqs_vacante`, que ya existía desde Sprint 1 y solo guarda FAQs *ya contestados* — su columna `respuesta` es `NOT NULL`, nunca fue pensada para preguntas pendientes). `faq_escalaciones` sí soporta el estado "pendiente" (`respuesta` nullable). Genera una alerta (`tipo = 'pregunta_faq'`) al coordinador activo de la agencia.
+
+**CA-03.3 (verificada 2026-08-20):** Al responder desde `/coordinador/faq` (5.12), el coordinador activa el toggle "Agregar al FAQ" — si lo activa, se inserta una fila en `faqs_vacante` (`visible_reclutadores = true`), lo que hace que el Nivel 2 la encuentre automáticamente la próxima vez que alguien pregunte algo parecido para esa misma vacante. Si no lo activa, la respuesta solo la ve el reclutador que preguntó (vía Realtime en su propia ficha), sin quedar disponible para nadie más.
+
+**CA-03.8 (nueva, 2026-08-20) — Limpieza:** las preguntas ya contestadas se pueden borrar manualmente (botón individual + "Borrar todo") tanto por el reclutador como por el coordinador — decisión explícita de no auto-borrar por tiempo, para no perder algo que el usuario quería conservar. Las preguntas **pendientes** (sin contestar) de una vacante se borran automáticamente cuando esa vacante deja de estar "vigente" (se pausa o se cierra) — ya no tiene sentido que el coordinador conteste algo de una posición que ya no está activa.
+
+---
 
 ---
 

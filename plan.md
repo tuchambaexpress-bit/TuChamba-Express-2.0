@@ -144,6 +144,10 @@ tuchamba-v2/
 │   │                                 normalización de nombres de empresa, mapa de
 │   │                                 días de la semana (LUN..DOM, 3 letras — 1 sola
 │   │                                 letra es ambigua entre Martes y Miércoles)
+│   ├── faq.ts                    ✅ NUEVO (4.14/4.15) — buscarRespuestaNivel1()
+│   │                                 (~10 reglas por palabra clave, sin IA),
+│   │                                 buscarRespuestaNivel2() (overlap de palabras
+│   │                                 clave contra faqs_vacante, sin IA)
 │   └── supabase/
 │       ├── client.ts             ✅ Cliente browser
 │       └── server.ts             ✅ Cliente servidor
@@ -185,6 +189,9 @@ tuchamba-v2/
 │   │   │                            y al confirmar Contratado (6.8b); botón de chat
 │   │   │                            interno oculto si `es_manual = true` (HU-25)
 │   │   └── ReclutadorNav.tsx     ✅ Nav compartido, contadores Realtime de chats/alertas
+│   │   FaqWidget.tsx (en carpeta reclutador) ✅ NUEVO (4.14/4.15) — cascada 3
+│   │                                 niveles, modal "Ejemplos de preguntas",
+│   │                                 borrado manual, Realtime
 │   ├── coordinador/
 │   │   ├── CoordinadorNav.tsx    ✅ Nav compartido, contador de chats sin leer
 │   │   ├── VacanteModal.tsx      ✅ Modal de 8 secciones — crear/editar/duplicar
@@ -273,7 +280,9 @@ tuchamba-v2/
     │   │   └── page.tsx
     │   ├── contratados/          ✅ Histórico completo de "Contratado", filtrable por
     │   │   └── page.tsx              reclutador y rango de fechas, exportable (5.22)
-    │   └── faq/                  ⏸️ PENDIENTE — depende de 4.14/4.15 (Sprint 6)
+    │   └── faq/                  ✅ Preguntas escaladas (5.12/6.11, 2026-08-20) —
+    │       └── page.tsx              pendientes + contestadas (borrado manual,
+    │                                 Realtime), toggle "Agregar al FAQ"
     └── api/
         ├── postular/route.ts     ✅ Crea candidato + postulación + chat; guarda
         │                            `precalificado` y `respuestas_precalificacion` (HU-17)
@@ -646,39 +655,23 @@ Deno.serve(async (req) => {
 })
 ```
 
-```typescript
-// supabase/functions/agente-faq/index.ts — Cascada de 3 niveles (ver spec.md HU-03)
-Deno.serve(async (req) => {
-  const { vacante_id, pregunta, reclutador_id } = await req.json()
-  const supabase = createClient(/* service role */)
+```
+Nota (2026-08-20): el diseño original de esta sección proponía una Edge
+Function `agente-faq` con Claude API para el Nivel 3. Se construyó distinto
+(ver spec.md CA-03.6, tasks.md 4.14/4.15/5.12) — decisión explícita de no
+usar Edge Function ni IA todavía:
 
-  // NIVEL 1 — campo estructurado (sin IA, sin costo)
-  const { data: vacante } = await supabase
-    .from('vacantes').select('*').eq('id', vacante_id).single()
+- Niveles 1 y 2: lib/faq.ts, funciones puras client-side (buscarRespuestaNivel1,
+  buscarRespuestaNivel2), sin llamada a ningún servidor — se ejecutan en el
+  navegador del reclutador, instantáneo.
+- Nivel 3: en vez de un mensaje_interno + Claude, inserta directo en la tabla
+  faq_escalaciones (nueva, distinta de faqs_vacante que ya existía) + una
+  alerta al coordinador. El coordinador responde en /coordinador/faq (5.12),
+  con un toggle para guardar la respuesta en faqs_vacante y así habilitar el
+  Nivel 2 la próxima vez.
 
-  const respuestaEstructurada = buscarEnCamposEstructurados(pregunta, vacante)
-  if (respuestaEstructurada) {
-    return new Response(JSON.stringify({ respuesta: respuestaEstructurada, fuente: 'estructurado' }))
-  }
-
-  // NIVEL 2 — FAQ existente (sin IA, sin costo)
-  const { data: faqs } = await supabase
-    .from('faqs_vacante').select('*').eq('vacante_id', vacante_id)
-  const faqMatch = buscarFaqSimilar(pregunta, faqs ?? [])
-  if (faqMatch) {
-    return new Response(JSON.stringify({ respuesta: faqMatch.respuesta, fuente: 'faq' }))
-  }
-
-  // NIVEL 3 — escalar al coordinador (genera mensaje_interno + alerta)
-  await supabase.from('mensajes').insert({ /* ...crea el chat/mensaje hacia el coordinador... */ })
-  await supabase.from('alertas').insert({
-    tipo: 'pregunta_sin_responder',
-    destinatario_rol: 'coordinador',
-    vacante_id, mensaje: `Nueva pregunta sin responder: "${pregunta}"`
-  })
-
-  return new Response(JSON.stringify({ respuesta: null, fuente: 'escalado_coordinador' }))
-})
+La versión con Edge Function + Claude queda en el backlog de "agentes de IA
+reales" (tasks.md, ~4-5 meses) — se retomará cuando llegue ese momento.
 ```
 
 ### Endpoints internos disponibles para agentes (humano o autónomo)

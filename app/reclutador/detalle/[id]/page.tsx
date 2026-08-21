@@ -1,6 +1,7 @@
 import { createClient as createServerClient } from '@supabase/supabase-js'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import FaqWidget from '@/components/reclutador/FaqWidget'
 
 export const revalidate = 0 // nunca cachear — siempre datos frescos de Supabase
 
@@ -32,7 +33,7 @@ export default async function FichaVacante({ params, searchParams }: Props) {
       comision_base_mxn, tiene_promocion, promocion_monto_mxn, promocion_fin,
       contacto_rrhh, contacto_rrhh_telefono, contacto_rrhh_horario,
       punto_reunion, documentos_requeridos, guion_candidato, comentarios_salario,
-      cupo_requerido, cupo_desde,
+      cupo_requerido, cupo_desde, agencia_id,
       negocios(nombre, dias_entrevista, documentos_negocio(id, nombre_archivo, archivo_url))
     `)
     .eq('id', params.id)
@@ -288,6 +289,29 @@ export default async function FichaVacante({ params, searchParams }: Props) {
             <p className="text-sm text-amber-700">{vacante.letras_chiquitas}</p>
           </div>
         )}
+
+        {/* 4.14/4.15 — Agente FAQ (3 niveles: campo estructurado, FAQ guardado, escalación) */}
+        <div className="md:col-span-2">
+          <FaqWidget
+            vacanteId={vacante.id}
+            agenciaId={vacante.agencia_id}
+            vacante={{
+              status: vacante.status,
+              tiene_ruta: vacante.tiene_ruta,
+              zonas_ruta: vacante.zonas_ruta ?? [],
+              ruta_para_entrevista: vacante.ruta_para_entrevista,
+              estacionamiento: vacante.estacionamiento,
+              comedor: vacante.comedor,
+              uniforme: vacante.uniforme,
+              horario: vacante.horario,
+              turno: vacante.turno,
+              dias_garantia: vacante.dias_garantia,
+              comision_base_mxn: vacante.comision_base_mxn,
+              punto_reunion: vacante.punto_reunion,
+              dias_entrevista: (vacante.negocios as any)?.dias_entrevista ?? [],
+            }}
+          />
+        </div>
 
       </div>
     </div>
