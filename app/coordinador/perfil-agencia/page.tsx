@@ -16,6 +16,7 @@ export default function PerfilAgencia() {
   const [nombreAgencia, setNombreAgencia] = useState('')
   const [diaCorte, setDiaCorte] = useState(4)
   const [diaPago, setDiaPago] = useState(5)
+  const [horaCorte, setHoraCorte] = useState('12:00')
   const [guardando, setGuardando] = useState(false)
   const [guardado, setGuardado] = useState(false)
 
@@ -31,13 +32,14 @@ export default function PerfilAgencia() {
     const supabase = createClient()
     const { data } = await supabase
       .from('agencias')
-      .select('nombre, dia_corte, dia_pago')
+      .select('nombre, dia_corte, dia_pago, hora_corte')
       .eq('id', agenciaId)
       .single()
     if (data) {
       setNombreAgencia(data.nombre)
       setDiaCorte(data.dia_corte ?? 4)
       setDiaPago(data.dia_pago ?? 5)
+      setHoraCorte((data.hora_corte ?? '12:00:00').slice(0, 5))
     }
     setLoading(false)
   }
@@ -48,7 +50,7 @@ export default function PerfilAgencia() {
     const supabase = createClient()
     await supabase
       .from('agencias')
-      .update({ dia_corte: diaCorte, dia_pago: diaPago })
+      .update({ dia_corte: diaCorte, dia_pago: diaPago, hora_corte: horaCorte })
       .eq('id', sesion.agencia_id)
     setGuardando(false)
     setGuardado(true)
@@ -100,8 +102,18 @@ export default function PerfilAgencia() {
               </div>
             </div>
 
+            <div className="mb-5">
+              <label className="text-xs font-medium text-gray-700 block mb-1">Hora del corte</label>
+              <input
+                type="time"
+                value={horaCorte}
+                onChange={e => setHoraCorte(e.target.value)}
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
+              />
+            </div>
+
             <p className="text-xs text-gray-400 mb-5">
-              Estos días se usan en "Corte semanal" (el periodo siempre es la semana completa, de lunes a domingo) y en "Mis comisiones" del reclutador — solo indican cuándo dentro de la semana se procesa el pago.
+              El día y la hora son solo un recordatorio — el corte real siempre se genera con el botón "Generar Corte" en el momento que tú decidas, no de forma automática.
             </p>
 
             <button

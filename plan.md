@@ -133,9 +133,12 @@ tuchamba-v2/
 │   ├── utils.ts                  ✅ cn, getSemanaISO, calcularComision,
 │   │                                 calcularGarantiaFin (legado),
 │   │                                 calcularGarantiaFinHabil (CA-02.8, días hábiles +
-│   │                                 días de inducción, 5.16b),
-│   │                                 obtenerPeriodoCorte / periodoCorteAdyacente
-│   │                                 (5.17, semana calendario completa lun-dom)
+│   │                                 días de inducción, 5.16b)
+│   │                                 (⚠️ obtenerPeriodoCorte/periodoCorteAdyacente,
+│   │                                 usadas por el sistema de periodo automático de
+│   │                                 5.17, eliminadas 2026-08-20 al reemplazar por el
+│   │                                 corte manual de 5.26 — código muerto confirmado
+│   │                                 y limpiado, no quedó ninguna referencia)
 │   ├── excel-vacantes.ts         ✅ Columnas (44+, ver spec.md CA-08.8), mapas de
 │   │                                 traducción bidireccionales, parser de fechas,
 │   │                                 normalización de nombres de empresa, mapa de
@@ -261,10 +264,13 @@ tuchamba-v2/
     │   │                            botón "Ver chat" por tarjeta, badge de asistencia
     │   ├── chat-reclutadores/    ✅ Chat con cada reclutador (5.13)
     │   │   └── page.tsx
-    │   ├── corte-semanal/        ✅ Resumen por reclutador (efectivos/no efectivos/
-    │   │   └── page.tsx              total), navegación entre periodos, botón "Marcar
-    │   │                             como pagada" (Excel de 3 hojas: Resumen/Pagados/
-    │   │                             No efectivos), indicador "✅ Periodo pagado" (5.17/5.18)
+    │   ├── corte-semanal/        ✅ Corte 100% manual (5.26, reescrito 2026-08-20 —
+    │   │   └── page.tsx              reemplaza la navegación por periodos automáticos):
+    │   │                             botón "✅ Generar Corte", pendiente en vivo desde
+    │   │                             `ultimo_corte_at`, historial con hora exacta por
+    │   │                             corte + descarga individual/completa
+    │   ├── perfil-agencia/        ✅ dia_corte/dia_pago/hora_corte (informativos, 5.19/5.26)
+    │   │   └── page.tsx
     │   ├── contratados/          ✅ Histórico completo de "Contratado", filtrable por
     │   │   └── page.tsx              reclutador y rango de fechas, exportable (5.22)
     │   └── faq/                  ⏸️ PENDIENTE — depende de 4.14/4.15 (Sprint 6)

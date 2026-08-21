@@ -11,6 +11,7 @@ interface Props {
 export default function CoordinadorNav({ subtitulo }: Props) {
   const router = useRouter()
   const [chatsSinLeer, setChatsSinLeer] = useState(0)
+  const [avisoCorte, setAvisoCorte] = useState(0)
 
   function obtenerSesion() {
     if (typeof window === 'undefined') return null
@@ -47,6 +48,48 @@ export default function CoordinadorNav({ subtitulo }: Props) {
     return () => { supabase.removeChannel(canal) }
   }, [sesion?.id])
 
+  // 5.26: si hoy es el día de corte configurado, avisa cuántas comisiones
+  // siguen pendientes de generar — mismo estilo que el badge de chats.
+  useEffect(() => {
+    if (!sesion?.agencia_id) return
+    const supabase = createClient()
+
+    async function revisarCorte() {
+      const { data: agencia } = await supabase
+        .from('agencias')
+        .select('dia_corte')
+        .eq('id', sesion.agencia_id)
+        .single()
+
+      const hoyEsDiaCorte = new Date().getDay() === ((agencia?.dia_corte ?? 4) % 7)
+      if (!hoyEsDiaCorte) { setAvisoCorte(0); return }
+
+      const d = new Date()
+      const hoy = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+      const { count } = await supabase
+        .from('postulaciones')
+        .select('*', { count: 'exact', head: true })
+        .eq('agencia_id', sesion.agencia_id)
+        .eq('comision_aplicable', true)
+        .eq('pagado', false)
+        .lt('fecha_garantia_fin', hoy)
+      setAvisoCorte(count ?? 0)
+    }
+    revisarCorte()
+
+    const canal = supabase
+      .channel(`corte-nav-coordinador-${sesion.agencia_id}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'postulaciones',
+        filter: `agencia_id=eq.${sesion.agencia_id}`
+      }, () => revisarCorte())
+      .subscribe()
+
+    return () => { supabase.removeChannel(canal) }
+  }, [sesion?.agencia_id])
+
   return (
     <header className="bg-[#1A6B3C] px-6 py-4 shadow-md">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -67,7 +110,14 @@ export default function CoordinadorNav({ subtitulo }: Props) {
               </span>
             )}
           </a>
-          <a href="/coordinador/corte-semanal" className="text-green-200 hover:text-white text-sm">Corte semanal</a>
+          <a href="/coordinador/corte-semanal" className="relative text-green-200 hover:text-white text-sm">
+            Corte semanal
+            {avisoCorte > 0 && (
+              <span className="absolute -top-2 -right-3 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">
+                {avisoCorte > 9 ? '9+' : avisoCorte}
+              </span>
+            )}
+          </a>
           <a href="/coordinador/perfil-agencia" className="text-green-200 hover:text-white text-sm">Perfil</a>
           <a href="/coordinador/contratados" className="text-green-200 hover:text-white text-sm">Histórico</a>
           {sesion?.nombre && (
