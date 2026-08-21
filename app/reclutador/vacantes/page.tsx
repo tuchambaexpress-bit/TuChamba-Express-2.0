@@ -16,7 +16,11 @@ interface Vacante {
   dias_garantia: number
   tiene_promocion: boolean
   promocion_fin: string | null
-  negocios: { nombre: string } | null
+  negocios: { nombre: string; dias_entrevista: number[] } | null
+}
+
+const NOMBRES_DIA_CORTO: Record<number, string> = {
+  0: 'Dom', 1: 'Lun', 2: 'Mar', 3: 'Mié', 4: 'Jue', 5: 'Vie', 6: 'Sáb',
 }
 
 export default function VacantesReclutador() {
@@ -47,7 +51,7 @@ export default function VacantesReclutador() {
 
     const { data } = await supabase
       .from('vacantes')
-      .select('id, titulo, ciudad, estado, status, comision_base_mxn, dias_garantia, tiene_promocion, promocion_fin, negocios(nombre)')
+      .select('id, titulo, ciudad, estado, status, comision_base_mxn, dias_garantia, tiene_promocion, promocion_fin, negocios(nombre, dias_entrevista)')
       .in('agencia_id', agenciaIds)
       .order('status', { ascending: true }) // 'pausada' < 'vigente' alfabéticamente — se reordena abajo
       .order('created_at', { ascending: false })
@@ -115,6 +119,11 @@ export default function VacantesReclutador() {
                     <span>🛡️ {v.dias_garantia} días</span>
                     {promoActiva && <span className="text-amber-600 font-medium">🔥 Bono activo</span>}
                   </div>
+                  {(v.negocios as any)?.dias_entrevista?.length > 0 && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      📅 Entrevistas: {(v.negocios as any).dias_entrevista.sort().map((d: number) => NOMBRES_DIA_CORTO[d]).join(', ')}
+                    </p>
+                  )}
                 </Link>
               )
             })}

@@ -727,16 +727,20 @@ NIVEL 3 — Escalación al coordinador
 
 ---
 
-### HU-04: Coordinador gestiona comisiones y corte semanal
-**Como** coordinador, **quiero** ver un resumen semanal de candidatos colocados por reclutador con su estado de garantía, **para** procesar el pago del viernes con un solo clic.
+### HU-04: Coordinador gestiona comisiones y corte semanal (rediseñada 2026-08-20)
+**Como** coordinador, **quiero** generar el corte de comisiones cuando yo decida, con un botón, **para** no depender de que el sistema adivine bien un periodo automático que se rompe cada vez que cambio mi día de corte.
 
-**CA-04.1:** El panel de corte muestra por reclutador: candidatos efectivos (garantía cumplida, comisión pendiente de pago) y no efectivos (con motivo), y el total a pagar.
+> *Origen: el diseño original (CA-04.2, ver historial abajo) calculaba un periodo automático semana a semana. José detectó en vivo (2026-08-19) que cambiar `dia_corte` a medio periodo podía dejar comisiones sin poder pagarse nunca ("se pierden pagos de comisiones"). Se diseñó primero un sistema híbrido con "ancla" de periodo, pero José propuso algo más simple y mejor: corte 100% manual, con un botón — resuelto en sesión siguiente (2026-08-20).*
 
-**CA-04.2 (corregida 2026-08-18):** Dado que el coordinador abre el panel de corte, entonces el sistema muestra automáticamente el periodo semanal actual (lunes a domingo, la semana calendario donde cae la fecha de hoy — `dia_corte`/`dia_pago` de la agencia indican cuándo dentro de esa semana se procesa el pago, no cambian qué semana se cuenta). "Efectivo" se calcula al vuelo comparando `fecha_garantia_fin` contra el rango del periodo — **no** se usa `garantia_cumplida` ni `semana_corte`: ambos campos existen en la base de datos pero nunca se actualizan automáticamente en ningún lugar del sistema (hueco detectado 2026-08-06 en 5.1c, confirmado de nuevo al construir esta tarea — `semana_corte` se graba con la semana en que el candidato *entra* a Inducción, no la semana en que la garantía se *cumple*, lo cual haría que el filtro mostrara los candidatos equivocados). El coordinador puede navegar a periodos anteriores.
+**CA-04.1 (vigente):** El panel de corte muestra, por reclutador, todo lo pendiente de pago (comisión aplicable, garantía cumplida, sin pagar todavía) y el total.
 
-**CA-04.3:** Dado que el coordinador hace clic en "Marcar semana como pagada", cuando confirma la acción, entonces `cortes_semana.pagado = true`, `postulaciones.pagado = true` para todos los registros de esa semana, y el sistema genera un resumen descargable por reclutador.
+**CA-04.2 (reemplazada 2026-08-20 — la versión de periodo automático semanal queda obsoleta):** El corte **no** se calcula automáticamente por semana. `dia_corte`/`dia_pago` (configurables en `/coordinador/perfil-agencia`) son **solo un recordatorio visual** — no determinan qué se paga ni cuándo. El coordinador da clic en el botón **"✅ Generar Corte"** cuando decide hacerlo. El sistema calcula "pendiente de generar" como: todo con `comision_aplicable = true`, `pagado = false`, y `fecha_garantia_fin` **antes de hoy** (nunca el mismo día — el candidato debe terminar su jornada laboral de ese día antes de contar para el corte, regla de negocio explícita de José). No usa `garantia_cumplida` ni `semana_corte` (ambos rotos, nunca se actualizan — mismo hueco documentado desde 5.1c).
 
-**CA-04.4 (corregida 2026-08-18):** Un candidato descartado **después de haber entrado a Inducción** (`fecha_contratacion` no nulo) cuenta como "no efectivo" en el corte, con el motivo que corresponda (renuncia, despido por la empresa, no concluyó inducción, etc. — cualquier motivo vale, no una lista fija). Un candidato descartado **antes** de llegar a Inducción (`fecha_contratacion` nulo — ej. "No cumple perfil", "No contesta") nunca estuvo en la ruta de cobrar comisión y no aparece en el corte en absoluto, ni como efectivo ni como no efectivo.
+**CA-04.2b (nueva, 2026-08-20) — Ancla persistida y aviso:** `agencias.ultimo_corte_at` guarda cuándo se generó el último corte — se actualiza únicamente al generar uno nuevo, nunca al cambiar `dia_corte`/`dia_pago`/`hora_corte` (por eso ya no hay riesgo de comisiones huérfanas: lo pendiente siempre se muestra hasta que se pague, sin importar cuántas veces cambie la configuración informativa). Cuando el día de hoy coincide con `dia_corte` configurado y hay algo pendiente, aparece un badge rojo junto a "Corte semanal" en el menú (mismo estilo que chats sin leer), con Realtime — desaparece solo al generar el corte, sin recargar.
+
+**CA-04.3 (corregida 2026-08-20):** Al confirmar "Generar Corte" (con ventana de confirmación mostrando cuántas comisiones y el total), el sistema vuelve a consultar lo pendiente en ese momento (evita usar datos obsoletos en pantalla), marca `postulaciones.pagado = true` y las liga a un `cortes_semana.id` nuevo vía `postulaciones.corte_id` (para poder reconstruir el detalle de cualquier corte pasado después), actualiza `agencias.ultimo_corte_at`, y descarga un Excel de comprobante. El historial de cortes ya generados muestra cada uno con sus horas exactas de inicio/fin (`cortes_semana.periodo_inicio`/`periodo_fin`) y un botón de descarga individual — más un botón "Descargar todo" que arma un Excel con el histórico completo.
+
+**CA-04.4 (vigente):** Un candidato descartado **después de haber entrado a Inducción** (`fecha_contratacion` no nulo) cuenta como "no efectivo" en el corte, con el motivo que corresponda (renuncia, despido por la empresa, no concluyó inducción, etc. — cualquier motivo vale, no una lista fija). Un candidato descartado **antes** de llegar a Inducción (`fecha_contratacion` nulo — ej. "No cumple perfil", "No contesta") nunca estuvo en la ruta de cobrar comisión y no aparece en el corte en absoluto, ni como efectivo ni como no efectivo.
 
 ---
 
@@ -965,6 +969,8 @@ ya definido en CA-14.3) — el sistema propone, el coordinador decide.
 
 **CA-15.6 (nueva, 2026-08-19) — Candado de datos completos antes de "Inducción":** el reclutador no puede mover a un candidato de "Entrevista" a "Inducción" si falta cualquiera de: fecha de entrevista agendada, edad, escolaridad, residencia (ficha del candidato, HU-23), o confirmación explícita de que sí se presentó (`asistio_entrevista = true`, CA-15.5). Si falta algo, se bloquea con un mensaje listando exactamente qué falta. La tarjeta de consulta del candidato (clic en su nombre) muestra los 5 datos siempre — en rojo los que falten, en gris los que ya estén — para poder diagnosticar visualmente qué falta sin tener que intentar mover al candidato primero.
 
+**CA-15.7 (nueva, 2026-08-20) — Días de entrevista por empresa:** cada empresa tiene días fijos de la semana en los que recibe candidatos a entrevista (`negocios.dias_entrevista`, dato compartido por empresa — igual que `dias_descanso`, cambia en una vacante afecta a todas las de esa misma empresa). El coordinador lo configura en `VacanteModal`, Sección 8 (Proceso de selección) — deliberadamente distinto de dónde vive `dias_descanso` (Sección 1), ya que son conceptos distintos: uno afecta el cálculo de garantía, el otro cuándo se puede agendar. El reclutador lo ve (solo lectura) en el listado de "Vacantes" y en la ficha operativa de cada vacante (dentro de "Qué decirle al candidato"). **Es un candado real, no solo informativo:** al agendar una entrevista (CA-15.2), si la fecha elegida cae en un día fuera de los configurados, el sistema bloquea el guardado con el mensaje "Fecha fuera de días de entrevista de la empresa." Si la empresa no tiene el campo configurado (array vacío), no aplica ninguna restricción — no rompe vacantes de empresas que no lo hayan definido.
+
 ---
 
 ### HU-16: Control de cupo máximo por vacante (rediseñada 2026-08-19)
@@ -1068,29 +1074,29 @@ DE LO CONTRARIO
 
 > **Nota:** No existe comisión parcial en ningún caso. Es todo o nada al cumplir la garantía.
 
-### 5.3 Corte semanal
+### 5.3 Corte semanal (rediseñado 2026-08-20 — ver HU-04)
 
-**Día de corte configurable por agencia:**
-- El coordinador define el día de corte y día de pago para su agencia
-- Por defecto: corte jueves (dia_corte=4), pago viernes (dia_pago=5)
-- Campos ya existentes en tabla `agencias`: `dia_corte` (int, 1=Lun...7=Dom), `dia_pago` (int)
-- El sistema calcula automáticamente las fechas de corte basándose en estos campos
+**Día/hora de corte configurables por agencia — solo informativos:**
+- El coordinador define día de corte, día de pago, y hora de corte para su agencia (`/coordinador/perfil-agencia`)
+- Por defecto: corte jueves 12:00 (dia_corte=4, hora_corte=12:00), pago viernes (dia_pago=5)
+- Campos en tabla `agencias`: `dia_corte` (int, 1=Lun...7=Dom), `dia_pago` (int), `hora_corte` (time)
+- **Ya no calculan nada automáticamente** — son solo un recordatorio visual, y disparan el badge de aviso en el menú del coordinador cuando coincide el día y hay algo pendiente
 
-**Reglas del corte:**
-- Solo entran candidatos con `garantia_cumplida = true` en esa semana
-- El coordinador marca el corte como pagado manualmente después de transferir
-- El campo `semana_corte` en `postulaciones` usa formato ISO (ej. "2026-W22")
+**El corte es 100% manual:**
+- El coordinador da clic en "✅ Generar Corte" cuando decide procesarlo — no hay periodo ni fecha programada
+- `agencias.ultimo_corte_at` (timestamptz) guarda cuándo fue el último corte generado — se actualiza solo al generar uno nuevo
+- "Pendiente de generar" = todo con `comision_aplicable = true`, `pagado = false`, `fecha_garantia_fin` **antes de hoy** (nunca el mismo día — el candidato debe terminar su jornada laboral de ese día)
+- Al generar: marca como pagado, liga cada postulación al corte vía `postulaciones.corte_id`, guarda `cortes_semana.periodo_inicio`/`periodo_fin` (timestamps exactos, para mostrar hora en el historial)
+- `semana_corte` (campo viejo en `postulaciones`, formato ISO) ya no se usa para nada — queda como campo muerto
 
 **Vista del reclutador — Comisión estimada:**
-- El reclutador puede seleccionar "semana en curso" o semanas anteriores
-- La semana en curso se calcula considerando el `dia_corte` de su agencia
 - Se muestra: candidatos en garantía activa, candidatos efectivos pendientes de pago, y total estimado a cobrar en el próximo corte
-- Solo se suman candidatos con `garantia_cumplida = true` y `pagado = false`
+- Se calcula en vivo comparando `fecha_garantia_fin` contra hoy — no depende de `garantia_cumplida` (roto)
 
 **Vista del coordinador — Panel de corte:**
-- Resumen semanal por reclutador: colocados, efectivos, no efectivos, total a pagar
-- Botón "Marcar semana como pagada" actualiza `postulaciones.pagado = true` para todos los registros de esa semana
-- Genera resumen descargable por reclutador para comprobante de pago
+- "Pendiente de generar" (en vivo, sin navegación por periodos) + detalle por reclutador
+- Botón "✅ Generar Corte" — confirma antes de ejecutar, descarga Excel de comprobante automáticamente
+- Historial de cortes ya generados, con hora exacta de inicio/fin de cada uno, botón de descarga individual (reconstruye el detalle vía `corte_id`) y botón "Descargar todo" (histórico completo en un solo Excel)
 
 **Comisiones variables por vacante/empresa:**
 - Cada vacante tiene su propia `comision_base_mxn` definida por el coordinador

@@ -33,7 +33,7 @@ export default async function FichaVacante({ params, searchParams }: Props) {
       contacto_rrhh, contacto_rrhh_telefono, contacto_rrhh_horario,
       punto_reunion, documentos_requeridos, guion_candidato, comentarios_salario,
       cupo_requerido, cupo_desde,
-      negocios(nombre, documentos_negocio(id, nombre_archivo, archivo_url))
+      negocios(nombre, dias_entrevista, documentos_negocio(id, nombre_archivo, archivo_url))
     `)
     .eq('id', params.id)
     .single()
@@ -62,6 +62,9 @@ export default async function FichaVacante({ params, searchParams }: Props) {
 
   const TURNOS: Record<string, string> = {
     matutino: 'Matutino', vespertino: 'Vespertino', nocturno: 'Nocturno', rotativo: 'Rotativo',
+  }
+  const NOMBRES_DIA_CORTO: Record<number, string> = {
+    0: 'Dom', 1: 'Lun', 2: 'Mar', 3: 'Mié', 4: 'Jue', 5: 'Vie', 6: 'Sáb',
   }
 
   const hoy = new Date().toISOString().split('T')[0]
@@ -175,6 +178,14 @@ export default async function FichaVacante({ params, searchParams }: Props) {
             <div className="mt-3 bg-white rounded-xl p-3">
               <p className="text-xs text-gray-500">Punto de reunión / entrevista</p>
               <p className="text-sm font-medium text-gray-800">{vacante.punto_reunion}</p>
+            </div>
+          )}
+          {(vacante.negocios as any)?.dias_entrevista?.length > 0 && (
+            <div className="mt-3 bg-white rounded-xl p-3">
+              <p className="text-xs text-gray-500">📅 Días de entrevista de la empresa</p>
+              <p className="text-sm font-medium text-gray-800">
+                {(vacante.negocios as any).dias_entrevista.sort().map((d: number) => NOMBRES_DIA_CORTO[d]).join(', ')}
+              </p>
             </div>
           )}
         </div>

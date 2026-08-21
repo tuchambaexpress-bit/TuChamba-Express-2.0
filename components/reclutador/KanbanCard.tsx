@@ -366,6 +366,14 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
     const supabase = createClient()
     const fechaCompleta = new Date(`${fechaEntrevista}T${horaEntrevista}`)
 
+    // 5.25 — candado: no se puede agendar fuera de los días de entrevista
+    // configurados para esa empresa (si la empresa tiene el dato configurado)
+    const diasEntrevista = postulacion.vacantes?.negocios?.dias_entrevista
+    if (diasEntrevista && diasEntrevista.length > 0 && !diasEntrevista.includes(fechaCompleta.getDay())) {
+      alert('Fecha fuera de días de entrevista de la empresa.')
+      return
+    }
+
     await supabase
       .from('postulaciones')
       .update({

@@ -10,6 +10,7 @@ interface Negocio {
   id: string
   nombre: string
   dias_descanso: number[]
+  dias_entrevista: number[]
 }
 
 interface Props {
@@ -148,12 +149,17 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
   }, [vacanteId, abierto, form.cupo_requerido])
   const [creandoNegocio, setCreandoNegocio] = useState(false)
   const [diasDescanso, setDiasDescanso] = useState<number[]>([0])
+  const [diasEntrevista, setDiasEntrevista] = useState<number[]>([1, 2, 3, 4, 5])
 
-  // Al elegir una empresa existente, carga sus días de descanso ya guardados
+  // Al elegir una empresa existente, carga sus días de descanso y de
+  // entrevista ya guardados
   useEffect(() => {
     if (creandoNegocio || !form.negocio_id) return
     const negocio = negocios.find(n => n.id === form.negocio_id)
-    if (negocio) setDiasDescanso(negocio.dias_descanso ?? [0])
+    if (negocio) {
+      setDiasDescanso(negocio.dias_descanso ?? [0])
+      setDiasEntrevista(negocio.dias_entrevista ?? [1, 2, 3, 4, 5])
+    }
   }, [form.negocio_id, negocios, creandoNegocio])
   const [documentosRuta, setDocumentosRuta] = useState<any[]>([])
   const [cargandoDocsRuta, setCargandoDocsRuta] = useState(false)
@@ -188,7 +194,7 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
     const supabase = createClient()
     const { data } = await supabase
       .from('negocios')
-      .select('id, nombre, dias_descanso')
+      .select('id, nombre, dias_descanso, dias_entrevista')
       .order('nombre')
     if (data) setNegocios(data)
   }
@@ -307,7 +313,7 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
 
       const { data: negocioCreado, error: errorNegocio } = await supabase
         .from('negocios')
-        .insert({ ...nuevoNegocio, nombre: nombreLimpio, dias_descanso: diasDescanso })
+        .insert({ ...nuevoNegocio, nombre: nombreLimpio, dias_descanso: diasDescanso, dias_entrevista: diasEntrevista })
         .select('id')
         .single()
 
@@ -318,8 +324,8 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
       }
       negocioId = negocioCreado.id
     } else if (negocioId) {
-      // Empresa existente: los días de descanso aplican a TODAS sus vacantes
-      await supabase.from('negocios').update({ dias_descanso: diasDescanso }).eq('id', negocioId)
+      // Empresa existente: días de descanso y de entrevista aplican a TODAS sus vacantes
+      await supabase.from('negocios').update({ dias_descanso: diasDescanso, dias_entrevista: diasEntrevista }).eq('id', negocioId)
     }
 
     const payload = {
@@ -905,6 +911,36 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
                           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
                         />
                       </div>
+
+                      {(form.negocio_id || creandoNegocio) && (
+                        <div className="pt-3">
+                          <p className="text-xs font-medium text-gray-700 flex items-center mb-1">
+                            Días de entrevista
+                            <InfoTooltip texto="Los únicos días de la semana en que esta empresa recibe candidatos a entrevista (aplica a TODAS las vacantes de esta empresa, no solo a esta). El reclutador no podrá agendar entrevistas fuera de estos días." />
+                          </p>
+                          <div className="flex gap-1.5">
+                            {[
+                              { label: 'L', dia: 1 }, { label: 'M', dia: 2 }, { label: 'M', dia: 3 },
+                              { label: 'J', dia: 4 }, { label: 'V', dia: 5 }, { label: 'S', dia: 6 }, { label: 'D', dia: 0 },
+                            ].map(({ label, dia }) => (
+                              <button
+                                key={dia}
+                                type="button"
+                                onClick={() => setDiasEntrevista(prev =>
+                                  prev.includes(dia) ? prev.filter(d => d !== dia) : [...prev, dia]
+                                )}
+                                className={`w-9 h-9 rounded-lg text-xs font-medium border transition-colors ${
+                                  diasEntrevista.includes(dia)
+                                    ? 'bg-[#1A6B3C] text-white border-[#1A6B3C]'
+                                    : 'bg-white text-gray-600 border-gray-300'
+                                }`}
+                              >
+                                {label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
                       <div className="pt-3">
                         <p className="text-xs font-medium text-gray-700 mb-1">Días de inducción</p>
