@@ -2,6 +2,7 @@ import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { validarPassword } from '@/lib/validarPassword'
 
 export async function POST(request: Request) {
   // Autenticación real: sesión de Supabase Auth + administradores.status = 'activo'.
@@ -30,13 +31,32 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
   }
 
-  const { nombreAgencia, nombreCoordinador, emailCoordinador, telefonoCoordinador } = await request.json()
+  const { nombreAgencia, nombreCoordinador, emailCoordinador, telefonoCoordinador, password } = await request.json()
 
   if (!nombreAgencia?.trim() || !nombreCoordinador?.trim() || !emailCoordinador?.trim()) {
     return NextResponse.json({ error: 'Nombre de agencia, nombre y email del coordinador son obligatorios.' }, { status: 400 })
   }
 
-  // 1. Crear agencia ya activa (sin pasar por pendiente_aprobacion)
+  const mensajeValidacion = validarPassword(password ?? '')
+  if (mensajeValidacion) {
+    return NextResponse.json({ error: mensajeValidacion }, { status: 400 })
+  }
+
+  // 1. Crear la cuenta en Supabase Auth PRIMERO (sin correo — Camino B es
+  // 100% manual, José comparte la contraseña temporal él mismo). Si el
+  // email ya existe, no queremos agencia/coordinador huérfanos.
+  const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
+    email: emailCoordinador.trim(),
+    password,
+    email_confirm: true,
+    user_metadata: { rol: 'coordinador' },
+  })
+
+  if (authError || !authUser?.user) {
+    return NextResponse.json({ error: authError?.message ?? 'No se pudo crear la cuenta. ¿El email ya está registrado?' }, { status: 400 })
+  }
+
+  // 2. Crear agencia ya activa (sin pasar por pendiente_aprobacion)
   const { data: agencia, error: agenciaError } = await supabase
     .from('agencias')
     .insert({ nombre: nombreAgencia.trim(), status: 'activa', aprobado_at: new Date().toISOString() })
@@ -44,10 +64,12 @@ export async function POST(request: Request) {
     .single()
 
   if (agenciaError || !agencia) {
+    await supabase.auth.admin.deleteUser(authUser.user.id) // rollback
     return NextResponse.json({ error: 'No se pudo crear la agencia.' }, { status: 500 })
   }
 
-  // 2. Crear coordinador ya activo
+  // 3. Crear coordinador ya activo, con auth_user_id para poder borrar su
+  // cuenta de Auth limpiamente si algún día se elimina (7.15)
   const { data: coordinador, error: coordinadorError } = await supabase
     .from('coordinadores')
     .insert({
@@ -56,30 +78,15 @@ export async function POST(request: Request) {
       email: emailCoordinador.trim(),
       telefono: telefonoCoordinador?.trim() || null,
       status: 'activo',
+      auth_user_id: authUser.user.id,
     })
     .select('id')
     .single()
 
   if (coordinadorError || !coordinador) {
-    // Rollback manual: si falla el coordinador (ej. email duplicado), no
-    // dejamos una agencia huérfana sin coordinador.
-    await supabase.from('agencias').delete().eq('id', agencia.id)
-    return NextResponse.json({ error: 'No se pudo crear el coordinador (¿el email ya está registrado?)' }, { status: 500 })
-  }
-
-  // 3. Invitar al coordinador vía Supabase Auth — crea su cuenta y le manda
-  // el correo para establecer su propia contraseña, reutilizando la misma
-  // página que ya construimos para recuperación (/coordinador/reset-password).
-  const origin = request.headers.get('origin') ?? new URL(request.url).origin
-  const { error: authError } = await supabase.auth.admin.inviteUserByEmail(emailCoordinador.trim(), {
-    data: { coordinador_id: coordinador.id, agencia_id: agencia.id, rol: 'coordinador' },
-    redirectTo: `${origin}/coordinador/reset-password`,
-  })
-
-  if (authError) {
-    console.error('Error al invitar coordinador:', authError)
-    // No revertimos agencia/coordinador — mismo criterio que aprobar-agencia:
-    // no bloqueamos el alta aunque falle el correo, se puede reenviar después.
+    await supabase.from('agencias').delete().eq('id', agencia.id) // rollback
+    await supabase.auth.admin.deleteUser(authUser.user.id) // rollback
+    return NextResponse.json({ error: 'No se pudo crear el coordinador.' }, { status: 500 })
   }
 
   // 4. Bitácora

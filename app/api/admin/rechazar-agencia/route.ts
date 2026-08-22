@@ -14,15 +14,25 @@ export async function POST(request: Request) {
 
   const { agenciaId, coordinadorId } = await request.json()
 
-  await supabase
-    .from('agencias')
-    .update({ status: 'rechazada' })
-    .eq('id', agenciaId)
-
-  await supabase
+  // Antes de borrar, recuperamos la cuenta de Auth para eliminarla también
+  // — si no, queda un usuario "fantasma" sin agencia, con contraseña activa
+  // que nadie debería poder usar.
+  const { data: coordinador } = await supabase
     .from('coordinadores')
-    .update({ status: 'rechazado' })
+    .select('auth_user_id')
     .eq('id', coordinadorId)
+    .single()
+
+  if (coordinador?.auth_user_id) {
+    await supabase.auth.admin.deleteUser(coordinador.auth_user_id)
+  }
+
+  // Rechazar significa eliminar de verdad — no dejar basura marcada
+  // "rechazada" acumulándose para siempre (decisión de José, 2026-08-22).
+  await supabase.from('invitaciones').update({ agencia_id: null }).eq('agencia_id', agenciaId)
+  await supabase.from('agencias').update({ invitacion_id: null }).eq('id', agenciaId)
+  await supabase.from('coordinadores').delete().eq('id', coordinadorId)
+  await supabase.from('agencias').delete().eq('id', agenciaId)
 
   return NextResponse.json({ ok: true })
 }

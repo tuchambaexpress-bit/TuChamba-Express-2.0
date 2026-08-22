@@ -77,7 +77,8 @@ export async function POST(request: Request) {
       nombre: coordinador.nombre,
       email: coordinador.email,
       telefono: coordinador.telefono ?? null,
-      status: 'pendiente_aprobacion'
+      status: 'pendiente_aprobacion',
+      auth_user_id: authUser.user.id
     })
 
   if (errorCoord) {

@@ -101,14 +101,15 @@ export default function InvitacionesPanel({ invitacionesIniciales }: Props) {
         </div>
       ) : (
         <div className="space-y-3">
-          {invitacionesIniciales.map(inv => (
+          {invitacionesIniciales.map((inv, i) => (
             <div
               key={inv.token}
               className="bg-[#12151C] border border-[#1E2330] p-4"
               style={{ clipPath: 'polygon(0 10px, 10px 0, 100% 0, 100% 100%, 0 100%)' }}
             >
               <p className="text-[10px] text-[#5B6478] mb-2" style={mono}>
-                Generado el {new Date(inv.created_at).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })}
+                <span className="text-[#00D9FF]">#{i + 1}{i === 0 ? ' · MÁS RECIENTE' : ''}</span>
+                {' · '}Generado el {new Date(inv.created_at).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })}
                 {' · '}Expira el {new Date(inv.expira_at).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })}
                 {inv.telefono_esperado && <> {' · '}Dirigido a: {inv.telefono_esperado}</>}
               </p>

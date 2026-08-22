@@ -200,6 +200,10 @@ nombre text NOT NULL
 email text UNIQUE NOT NULL
 telefono text
 status text                          -- corregido 2026-08-18: NO es 'activo bool' como decía antes, es texto (ej. 'activo')
+auth_user_id uuid                    -- nueva (2026-08-22): id de la cuenta de
+                                      -- Supabase Auth de este coordinador, para
+                                      -- poder borrarla limpiamente (rechazar,
+                                      -- eliminar futuro) sin buscar por email
 created_at timestamptz DEFAULT now()
 ```
 
@@ -570,6 +574,10 @@ creado_por uuid                     -- admin que generó el link
 usado bool DEFAULT false
 expira_at timestamptz NOT NULL
 agencia_id uuid                     -- se llena cuando se usa
+telefono_esperado text              -- nueva (2026-08-22), opcional — si se
+                                     -- especifica al generar el link, el
+                                     -- registro público solo se completa si
+                                     -- el teléfono capturado coincide exacto
 created_at timestamptz DEFAULT now()
 ```
 
@@ -1249,16 +1257,17 @@ DE LO CONTRARIO
 
 ### Portal Admin (web — tú y, eventualmente, 1-2 administradores más)
 - **Acceso:** login real vía Supabase Auth (no llave compartida), 2 roles — **Maestro** (control total, único que gestiona otros administradores) y **Limitado** (gestión operativa del día a día, sin poder tocar la tabla de administradores). Sesión con cierre automático a los 20 min de inactividad (aviso de 4 seg, sin opción de cancelar).
-- **Recuperación de contraseña (2026-08-22):** self-service vía "¿Olvidaste tu contraseña?" en el login, para Maestro y Limitado igual. Contraseña: 8-12 caracteres, debe incluir letra + número + símbolo. Mismo mecanismo reutilizado por `/coordinador/login`.
-- **Home ("Torre de Control", 2026-08-21):** telemetría en vivo (agencias activas, coordinadores activos, reclutadores activos, vacantes vigentes) + accesos a los módulos.
+- **Recuperación de contraseña (2026-08-22):** self-service vía "¿Olvidaste tu contraseña?" en el login, para Maestro y Limitado igual. Contraseña: 8-12 caracteres, debe incluir letra + número + símbolo. Mismo mecanismo reutilizado por `/coordinador/login`. **Sigue dependiendo del correo de Supabase, sin resolver** — ver `plan.md` para el límite conocido.
+- **Home** (renombrado por José 2026-08-22 de "Torre de Control" a **"Panel de Control"**): telemetría en vivo (agencias activas, coordinadores activos, reclutadores activos, vacantes vigentes) + accesos a los módulos.
 - Todo lo del coordinador pero sin filtro de agencia
-- CRUD de agencias — **pendiente de construir**, incluyendo alta manual de agencia + su primer coordinador sin pasar por el flujo de Invitación/Solicitud (7.1 y 7.14 en tasks.md; hoy solo existe la base de acceso/seguridad, no el CRUD en sí)
-- CRUD de coordinadores — pendiente (7.15 en tasks.md): listado global, crear, resetear contraseña (vía el mecanismo de recuperación de arriba), activar/desactivar. Sin eliminar (ver Sprint 8, política de fin de año fiscal). Asume 1 coordinador por agencia — ver Feature futuro abajo.
-- Control de reclutadores desde el admin (7.16 en tasks.md) — escalación para cuando el coordinador no puede/debe desactivar uno directo desde su propio panel
+- **CRUD de agencias — construido y probado 2026-08-22** (`/admin/agencias`): listado con coordinador anidado, alta manual de agencia + coordinador (con contraseña propia, sin correo — ver `plan.md`), editar (email del coordinador fijo, no editable), activar/desactivar ambos juntos, resetear contraseña del coordinador.
+- CRUD de coordinadores — la parte de "coordinador anidado en su agencia" ya construida (arriba). Pendiente: listado global independiente, crear coordinador nuevo para agencia existente (7.15 en tasks.md). Sin eliminar (ver Sprint 8, política de fin de año fiscal). Asume 1 coordinador por agencia — ver Feature futuro abajo.
+- Control de reclutadores desde el admin (7.16 en tasks.md, pendiente) — escalación para cuando el coordinador no puede/debe desactivar uno directo desde su propio panel
 - Vista global de todas las postulaciones
 - Métricas globales de la plataforma
-- Ya existente antes de esta sesión: Invitaciones (generar link de alta de agencia), Solicitudes (aprobar/rechazar agencias pendientes) — ambas restyled 2026-08-21 al mismo tema visual del home, sin cambios de lógica
-- **Feature futuro, sin fecha (2026-08-22):** coordinador con 2 agencias simultáneas / fusión de agencias. Pausado a propósito — cuando se construya, ahí se revisa si el CRUD de coordinadores (arriba) necesita cambiar su supuesto actual de "1 coordinador por agencia".
+- **Invitaciones (generar link de alta de agencia):** restyled 2026-08-21, y ampliado 2026-08-22 con: teléfono esperado opcional por link (el registro solo se completa si coincide), numeración de links activos (`#1` = más reciente), y ya no desaparecen de la lista hasta que expiran o se usan (antes solo vivían en memoria del navegador).
+- **Solicitudes (aprobar/rechazar agencias pendientes):** restyled 2026-08-21. "Rechazar" rediseñado 2026-08-22 — antes solo marcaba `status = 'rechazada'` y acumulaba filas para siempre (se detectaron 11 agencias de prueba así); ahora borra de verdad la agencia, el coordinador, y su cuenta de Supabase Auth.
+- **Feature futuro, sin fecha (2026-08-22):** coordinador con 2 agencias simultáneas / fusión de agencias. Pausado a propósito — el CRUD de arriba asume 1 coordinador por agencia, como hoy.
 - Visión de José sobre soporte/reparación (2026-08-21): confirmado 2026-08-22 que no aplica como pantalla del admin — los bugs de código se corrigen directo en el código, como siempre. La idea real a futuro es un agente de IA con acceso al repositorio para localizar y corregir código — proyecto aparte, se agrupa con la nota existente de "agentes de IA reales" (~4-5 meses, ver CA-03.6, CA-25.4 y tasks.md).
 
 ---

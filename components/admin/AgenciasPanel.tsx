@@ -35,6 +35,8 @@ export default function AgenciasPanel({ agenciasIniciales }: Props) {
   const [nombreCoordinador, setNombreCoordinador] = useState('')
   const [emailCoordinador, setEmailCoordinador] = useState('')
   const [telefonoCoordinador, setTelefonoCoordinador] = useState('')
+  const [passwordCoordinador, setPasswordCoordinador] = useState('')
+  const [verPasswordCoordinador, setVerPasswordCoordinador] = useState(false)
   const [creando, setCreando] = useState(false)
   const [errorCrear, setErrorCrear] = useState('')
 
@@ -51,6 +53,10 @@ export default function AgenciasPanel({ agenciasIniciales }: Props) {
       setErrorCrear('Nombre de agencia, nombre y email del coordinador son obligatorios.')
       return
     }
+    if (!passwordCoordinador.trim()) {
+      setErrorCrear('La contraseña temporal es obligatoria.')
+      return
+    }
     setCreando(true)
     setErrorCrear('')
 
@@ -62,6 +68,7 @@ export default function AgenciasPanel({ agenciasIniciales }: Props) {
         nombreCoordinador: nombreCoordinador.trim(),
         emailCoordinador: emailCoordinador.trim(),
         telefonoCoordinador: telefonoCoordinador.trim(),
+        password: passwordCoordinador,
       }),
     })
     const data = await res.json()
@@ -77,6 +84,7 @@ export default function AgenciasPanel({ agenciasIniciales }: Props) {
     setNombreCoordinador('')
     setEmailCoordinador('')
     setTelefonoCoordinador('')
+    setPasswordCoordinador('')
     router.refresh()
   }
 
@@ -213,6 +221,37 @@ export default function AgenciasPanel({ agenciasIniciales }: Props) {
                 className="w-full bg-[#0B0D12] border border-[#1E2330] text-[#E8EDF4] px-3 py-2 text-sm focus:outline-none focus:border-[#00D9FF]"
                 style={mono}
               />
+            </div>
+            <div>
+              <label className="block text-[10px] text-[#5B6478] uppercase tracking-wide mb-1" style={mono}>
+                Contraseña temporal *
+              </label>
+              <div className="relative">
+                <input
+                  type={verPasswordCoordinador ? 'text' : 'password'}
+                  value={passwordCoordinador}
+                  onChange={e => setPasswordCoordinador(e.target.value)}
+                  maxLength={12}
+                  placeholder="8-12 caracteres, letras, números y símbolos"
+                  className="w-full bg-[#0B0D12] border border-[#1E2330] text-[#E8EDF4] px-3 py-2 pr-10 text-sm focus:outline-none focus:border-[#00D9FF]"
+                  style={mono}
+                />
+                <button
+                  type="button"
+                  onClick={() => setVerPasswordCoordinador(v => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2"
+                >
+                  <img
+                    src={verPasswordCoordinador ? '/ojo-abierto.png' : '/ojo-cerrado.png'}
+                    alt=""
+                    className="w-4 h-4"
+                    style={{ filter: 'brightness(0) invert(1)', opacity: 0.6 }}
+                  />
+                </button>
+              </div>
+              <p className="text-[10px] text-[#5B6478] mt-1" style={mono}>
+                Compártesela tú al coordinador — él puede cambiarla cuando quiera con "¿Olvidaste tu contraseña?".
+              </p>
             </div>
           </div>
           {errorCrear && <p className="text-red-400 text-xs mb-3" style={mono}>⚠ {errorCrear}</p>}
