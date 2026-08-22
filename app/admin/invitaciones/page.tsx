@@ -54,7 +54,7 @@ export default function InvitacionesPage() {
             className="text-xs text-[#5B6478] hover:text-[#00D9FF] uppercase tracking-[0.15em] transition-colors font-medium"
             style={{ fontFamily: "'JetBrains Mono', monospace" }}
           >
-            ← Torre de Control
+            ← Panel de Control
           </Link>
           <h1
             className="text-[#E8EDF4] text-lg uppercase tracking-wide mt-1"

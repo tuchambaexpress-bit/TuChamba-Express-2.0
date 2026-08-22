@@ -1249,14 +1249,17 @@ DE LO CONTRARIO
 
 ### Portal Admin (web — tú y, eventualmente, 1-2 administradores más)
 - **Acceso:** login real vía Supabase Auth (no llave compartida), 2 roles — **Maestro** (control total, único que gestiona otros administradores) y **Limitado** (gestión operativa del día a día, sin poder tocar la tabla de administradores). Sesión con cierre automático a los 20 min de inactividad (aviso de 4 seg, sin opción de cancelar).
+- **Recuperación de contraseña (2026-08-22):** self-service vía "¿Olvidaste tu contraseña?" en el login, para Maestro y Limitado igual. Contraseña: 8-12 caracteres, debe incluir letra + número + símbolo. Mismo mecanismo reutilizado por `/coordinador/login`.
 - **Home ("Torre de Control", 2026-08-21):** telemetría en vivo (agencias activas, coordinadores activos, reclutadores activos, vacantes vigentes) + accesos a los módulos.
 - Todo lo del coordinador pero sin filtro de agencia
-- CRUD de agencias — **pendiente de construir** (7.1 en tasks.md; hoy solo existe la base de acceso/seguridad, no el CRUD en sí)
-- CRUD de coordinadores — pendiente
+- CRUD de agencias — **pendiente de construir**, incluyendo alta manual de agencia + su primer coordinador sin pasar por el flujo de Invitación/Solicitud (7.1 y 7.14 en tasks.md; hoy solo existe la base de acceso/seguridad, no el CRUD en sí)
+- CRUD de coordinadores — pendiente (7.15 en tasks.md): listado global, crear, resetear contraseña (vía el mecanismo de recuperación de arriba), activar/desactivar. Sin eliminar (ver Sprint 8, política de fin de año fiscal). Asume 1 coordinador por agencia — ver Feature futuro abajo.
+- Control de reclutadores desde el admin (7.16 en tasks.md) — escalación para cuando el coordinador no puede/debe desactivar uno directo desde su propio panel
 - Vista global de todas las postulaciones
 - Métricas globales de la plataforma
 - Ya existente antes de esta sesión: Invitaciones (generar link de alta de agencia), Solicitudes (aprobar/rechazar agencias pendientes) — ambas restyled 2026-08-21 al mismo tema visual del home, sin cambios de lógica
-- Visión de José (2026-08-21, no desglosada aún en tareas): soporte y "reparación" de errores comunes sobre reclutadores/vacantes desde el admin; a futuro, un agente entrenado para encargarse de soporte/debugging — la arquitectura de roles y bitácora de hoy se construyó pensando en que ese agente eventualmente opere bajo el mismo sistema de permisos
+- **Feature futuro, sin fecha (2026-08-22):** coordinador con 2 agencias simultáneas / fusión de agencias. Pausado a propósito — cuando se construya, ahí se revisa si el CRUD de coordinadores (arriba) necesita cambiar su supuesto actual de "1 coordinador por agencia".
+- Visión de José sobre soporte/reparación (2026-08-21): confirmado 2026-08-22 que no aplica como pantalla del admin — los bugs de código se corrigen directo en el código, como siempre. La idea real a futuro es un agente de IA con acceso al repositorio para localizar y corregir código — proyecto aparte, se agrupa con la nota existente de "agentes de IA reales" (~4-5 meses, ver CA-03.6, CA-25.4 y tasks.md).
 
 ---
 

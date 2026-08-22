@@ -11,6 +11,11 @@ export default function AdminLogin() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [mostrarPassword, setMostrarPassword] = useState(false)
+  const [mostrarRecuperar, setMostrarRecuperar] = useState(false)
+  const [emailRecuperar, setEmailRecuperar] = useState('')
+  const [recuperarEnviado, setRecuperarEnviado] = useState(false)
+  const [recuperarError, setRecuperarError] = useState('')
+  const [recuperarLoading, setRecuperarLoading] = useState(false)
 
   async function entrar(e: React.FormEvent) {
     e.preventDefault()
@@ -28,6 +33,24 @@ export default function AdminLogin() {
 
     router.push('/admin')
     router.refresh()
+  }
+
+  async function enviarReset() {
+    if (!emailRecuperar.trim()) { setRecuperarError('Ingresa tu correo'); return }
+    setRecuperarLoading(true)
+    setRecuperarError('')
+
+    const supabase = createClient()
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(emailRecuperar.trim(), {
+      redirectTo: `${window.location.origin}/admin/reset-password`,
+    })
+
+    setRecuperarLoading(false)
+    if (resetError) {
+      setRecuperarError('No se pudo enviar el correo. Intenta de nuevo.')
+      return
+    }
+    setRecuperarEnviado(true)
   }
 
   return (
@@ -133,6 +156,58 @@ export default function AdminLogin() {
             {loading ? 'Verificando...' : 'Iniciar sesión'}
           </button>
         </form>
+
+        {!mostrarRecuperar ? (
+          <button
+            type="button"
+            onClick={() => { setMostrarRecuperar(true); setEmailRecuperar(email) }}
+            className="w-full text-center text-[10px] text-[#5B6478] hover:text-[#00D9FF] uppercase tracking-[0.15em] mt-6 transition-colors"
+            style={{ fontFamily: "'JetBrains Mono', monospace" }}
+          >
+            ¿Olvidaste tu contraseña?
+          </button>
+        ) : recuperarEnviado ? (
+          <div className="mt-6 border border-[#39FF88]/30 p-3 text-center">
+            <p className="text-[#39FF88] text-xs" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+              ✅ Revisa tu correo
+            </p>
+          </div>
+        ) : (
+          <div className="mt-6 pt-4 border-t border-[#1E2330]">
+            <input
+              type="email"
+              value={emailRecuperar}
+              onChange={e => setEmailRecuperar(e.target.value)}
+              placeholder="admin@tuchamba.com"
+              className="w-full bg-[#0B0D12] border border-[#1E2330] text-[#E8EDF4] px-3 py-2 text-xs mb-2 focus:outline-none focus:border-[#00D9FF]"
+              style={{ fontFamily: "'JetBrains Mono', monospace" }}
+            />
+            {recuperarError && (
+              <p className="text-red-400 text-[10px] mb-2" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                ⚠ {recuperarError}
+              </p>
+            )}
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setMostrarRecuperar(false)}
+                className="flex-1 border border-[#1E2330] text-[#5B6478] text-[10px] uppercase tracking-wide py-2"
+                style={{ fontFamily: "'JetBrains Mono', monospace" }}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={enviarReset}
+                disabled={recuperarLoading}
+                className="flex-1 bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-50 text-white text-[10px] uppercase tracking-wide py-2"
+                style={{ fontFamily: "'JetBrains Mono', monospace" }}
+              >
+                {recuperarLoading ? 'Enviando...' : 'Enviar'}
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="flex items-center gap-2 mt-8 pt-6 border-t border-[#1E2330]">
           <span

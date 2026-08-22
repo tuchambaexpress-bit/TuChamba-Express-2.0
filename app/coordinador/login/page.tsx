@@ -11,6 +11,11 @@ export default function LoginCoordinador() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [verPassword, setVerPassword] = useState(false)
+  const [mostrarRecuperar, setMostrarRecuperar] = useState(false)
+  const [emailRecuperar, setEmailRecuperar] = useState('')
+  const [recuperarEnviado, setRecuperarEnviado] = useState(false)
+  const [recuperarError, setRecuperarError] = useState('')
+  const [recuperarLoading, setRecuperarLoading] = useState(false)
 
   async function handleLogin() {
     if (!email.trim()) { setError('Ingresa tu email'); return }
@@ -53,6 +58,24 @@ export default function LoginCoordinador() {
     }))
 
     router.push('/coordinador/dashboard')
+  }
+
+  async function enviarReset() {
+    if (!emailRecuperar.trim()) { setRecuperarError('Ingresa tu email'); return }
+    setRecuperarLoading(true)
+    setRecuperarError('')
+
+    const supabase = createClient()
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(emailRecuperar.trim(), {
+      redirectTo: `${window.location.origin}/coordinador/reset-password`,
+    })
+
+    setRecuperarLoading(false)
+    if (resetError) {
+      setRecuperarError('No se pudo enviar el correo. Intenta de nuevo.')
+      return
+    }
+    setRecuperarEnviado(true)
   }
 
   return (
@@ -111,9 +134,49 @@ export default function LoginCoordinador() {
           </button>
         </div>
 
-        <p className="text-center text-xs text-gray-400 mt-6">
-          ¿Olvidaste tu contraseña? Contacta al administrador.
-        </p>
+        {!mostrarRecuperar ? (
+          <button
+            type="button"
+            onClick={() => { setMostrarRecuperar(true); setEmailRecuperar(email) }}
+            className="w-full text-center text-xs text-gray-400 hover:text-[#1A6B3C] mt-6 transition-colors"
+          >
+            ¿Olvidaste tu contraseña?
+          </button>
+        ) : recuperarEnviado ? (
+          <div className="mt-6 bg-green-50 rounded-xl p-3 text-center">
+            <p className="text-sm text-green-700 font-medium">✅ Revisa tu correo</p>
+            <p className="text-xs text-green-600 mt-1">Te enviamos instrucciones para restablecer tu contraseña.</p>
+          </div>
+        ) : (
+          <div className="mt-6 border-t border-gray-100 pt-4">
+            <label className="text-xs font-medium text-gray-700 block mb-1">Recuperar contraseña</label>
+            <input
+              type="email"
+              value={emailRecuperar}
+              onChange={e => setEmailRecuperar(e.target.value)}
+              placeholder="tu@email.com"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
+            />
+            {recuperarError && <p className="text-red-500 text-xs mb-2">{recuperarError}</p>}
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setMostrarRecuperar(false)}
+                className="flex-1 border border-gray-300 text-gray-600 text-xs font-medium py-2 rounded-lg hover:bg-gray-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={enviarReset}
+                disabled={recuperarLoading}
+                className="flex-1 bg-[#1A6B3C] hover:bg-[#155c33] disabled:opacity-50 text-white text-xs font-medium py-2 rounded-lg"
+              >
+                {recuperarLoading ? 'Enviando...' : 'Enviar instrucciones'}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

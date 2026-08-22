@@ -13,10 +13,10 @@ export async function middleware(request: NextRequest) {
   if (!esRutaCoordinador && !esRutaAdmin) {
     return NextResponse.next()
   }
-  if (pathname === '/coordinador/login' || pathname === '/coordinador/en-revision') {
+  if (pathname === '/coordinador/login' || pathname === '/coordinador/en-revision' || pathname === '/coordinador/reset-password') {
     return NextResponse.next()
   }
-  if (pathname === '/admin/login') {
+  if (pathname === '/admin/login' || pathname === '/admin/reset-password') {
     return NextResponse.next()
   }
 

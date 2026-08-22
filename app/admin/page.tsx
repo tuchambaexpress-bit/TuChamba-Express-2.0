@@ -84,7 +84,7 @@ export default async function AdminHome() {
                 className="text-[#E8EDF4] text-sm uppercase tracking-wide"
                 style={{ fontFamily: "'Chakra Petch', sans-serif", fontWeight: 600 }}
               >
-                Torre de Control
+                Panel de Control
               </p>
               <p className="text-[10px] text-[#5B6478] tracking-[0.15em]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
                 {hora}
