@@ -438,6 +438,57 @@ CREATE POLICY "faq_escalaciones_update_coordinador" ON faq_escalaciones
   );
 ```
 
+### Administradores — dos roles, RLS a nivel de base de datos (2026-08-21)
+
+Mismo patrón de vínculo por email que coordinador (nunca `auth.uid()`), con una diferencia: además de "activo", hay 2 niveles de rol — `maestro` (control total, único que gestiona otros administradores) y `limitado` (gestión operativa, sin poder tocar la tabla `administradores`). La razón de fondo: un panel con acceso total sobre agencias/coordinadores necesita que la diferencia de poder viva en RLS, no solo en la interfaz — así, aunque haya un error de código o alguien manipule el navegador, Supabase igual rechaza la operación si el rol no es el correcto.
+
+```sql
+-- Funciones SECURITY DEFINER: necesarias porque una política de RLS sobre
+-- "administradores" no puede consultar "administradores" dentro de sí misma
+-- sin esto (recursión). Corren con permisos elevados solo para esta
+-- verificación puntual, nunca se usan para lectura/escritura general.
+CREATE OR REPLACE FUNCTION is_admin_activo(check_email text)
+RETURNS boolean LANGUAGE sql SECURITY DEFINER SET search_path = public AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM administradores WHERE email = check_email AND status = 'activo'
+  )
+$$;
+
+CREATE OR REPLACE FUNCTION is_admin_maestro(check_email text)
+RETURNS boolean LANGUAGE sql SECURITY DEFINER SET search_path = public AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM administradores WHERE email = check_email AND status = 'activo' AND rol = 'maestro'
+  )
+$$;
+
+-- administradores: cualquier admin activo puede leer el directorio completo
+-- (para saber quién más tiene acceso), pero solo Maestro puede
+-- crear/editar/eliminar registros — así nadie "limitado" se auto-asciende.
+CREATE POLICY "administradores_lectura_admin_activo" ON administradores
+  FOR SELECT USING ( is_admin_activo(auth.email()) );
+CREATE POLICY "administradores_insert_maestro" ON administradores
+  FOR INSERT WITH CHECK ( is_admin_maestro(auth.email()) );
+CREATE POLICY "administradores_update_maestro" ON administradores
+  FOR UPDATE USING ( is_admin_maestro(auth.email()) ) WITH CHECK ( is_admin_maestro(auth.email()) );
+CREATE POLICY "administradores_delete_maestro" ON administradores
+  FOR DELETE USING ( is_admin_maestro(auth.email()) );
+
+-- bitacora_admin: append-only a propósito. Cualquier admin activo puede
+-- insertar (queda registrada su propia acción), pero SOLO Maestro puede
+-- leerla — y no existe política de UPDATE ni DELETE para nadie, ni
+-- siquiera Maestro: es la protección contra "borrar el rastro".
+CREATE POLICY "bitacora_admin_insert_activo" ON bitacora_admin
+  FOR INSERT WITH CHECK ( is_admin_activo(auth.email()) );
+CREATE POLICY "bitacora_admin_lectura_maestro" ON bitacora_admin
+  FOR SELECT USING ( is_admin_maestro(auth.email()) );
+```
+
+**Nota de arquitectura importante:** estas políticas protegen el acceso *directo* a `administradores`/`bitacora_admin` (ej. si alguien consultara con la llave pública sin pasar por el panel). Las páginas del panel admin en sí (`/admin/solicitudes`, futuras pantallas de CRUD) operan del lado del servidor con `SUPABASE_SERVICE_ROLE_KEY` — la misma llave que ya usa `solicitudes/page.tsx` — que **salta RLS por diseño**. Eso significa que la diferencia Maestro/Limitado sobre `agencias`/`coordinadores` (ej. "Limitado no puede borrar, solo desactivar") debe programarse explícitamente en cada acción del panel, revisando `admin.rol` antes de permitir la operación — RLS no la aplica sola ahí. Se resuelve conforme se construya cada pantalla de CRUD (pendiente, ver tasks.md Sprint 7).
+
+### Autenticación del Portal Admin (2026-08-21)
+
+Login real vía Supabase Auth (no llave compartida — el diseño original de `invitaciones/page.tsx` usaba `NEXT_PUBLIC_ADMIN_KEY`, una variable pública visible en el navegador; se mantiene solo como llave del lado del navegador para esa API puntual, no como mecanismo de acceso al panel). Mismo patrón que coordinador: `middleware.ts` protege `/admin/*` (excepto `/admin/login`), verificando sesión de Supabase Auth + `administradores.status = 'activo'` por email. Sesión con timer de inactividad de 20 minutos (`components/admin/InactivityGuard.tsx`, envuelve todo `/admin/*` vía `app/admin/layout.tsx`): aviso de 4 segundos sin opción de cancelar, después cierra sesión y redirige a `/admin/login`.
+
 ### Recordatorio operativo — el bug más común del proyecto
 
 Antes de construir cualquier función que escriba (`INSERT`/`UPDATE`/`DELETE`) en una tabla, **verificar primero sus políticas** con:

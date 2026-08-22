@@ -4,12 +4,19 @@ import { createServerClient } from '@supabase/ssr'
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Solo protegemos rutas del coordinador, excepto login y en-revision
-  // (evita loops de redirección) y assets estáticos/API internas de Next.
-  if (!pathname.startsWith('/coordinador')) {
+  // Protegemos rutas de coordinador Y de admin. Todo lo demás pasa sin
+  // verificación de este middleware (portal público, reclutador con su
+  // propio login por código, no por Supabase Auth).
+  const esRutaCoordinador = pathname.startsWith('/coordinador')
+  const esRutaAdmin = pathname.startsWith('/admin')
+
+  if (!esRutaCoordinador && !esRutaAdmin) {
     return NextResponse.next()
   }
   if (pathname === '/coordinador/login' || pathname === '/coordinador/en-revision') {
+    return NextResponse.next()
+  }
+  if (pathname === '/admin/login') {
     return NextResponse.next()
   }
 
@@ -36,13 +43,29 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Sin sesión → login
+  // Sin sesión → login correspondiente según a qué ruta intentaba entrar
   if (!user || !user.email) {
-    return NextResponse.redirect(new URL('/coordinador/login', request.url))
+    const loginUrl = esRutaAdmin ? '/admin/login' : '/coordinador/login'
+    return NextResponse.redirect(new URL(loginUrl, request.url))
   }
 
-  // Con sesión: confirmar que existe como coordinador activo.
-  // El vínculo es por email (coordinadores.id NO coincide con auth.users.id).
+  // Con sesión: confirmar que existe como coordinador o admin activo,
+  // según a qué ruta está entrando. Mismo patrón: vínculo por email
+  // (nunca por auth.uid(), que no coincide con el id de estas tablas).
+  if (esRutaAdmin) {
+    const { data: admin } = await supabase
+      .from('administradores')
+      .select('status')
+      .eq('email', user.email)
+      .single()
+
+    if (!admin || admin.status !== 'activo') {
+      return NextResponse.redirect(new URL('/admin/login', request.url))
+    }
+
+    return response
+  }
+
   const { data: coordinador } = await supabase
     .from('coordinadores')
     .select('status')
@@ -57,5 +80,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: '/coordinador/:path*',
+  matcher: ['/coordinador/:path*', '/admin/:path*'],
 }

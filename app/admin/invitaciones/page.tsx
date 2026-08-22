@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 
 export default function InvitacionesPage() {
   const [loading, setLoading] = useState(false)
@@ -35,19 +36,37 @@ export default function InvitacionesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-[#1A6B3C] px-6 py-4">
-        <div className="max-w-3xl mx-auto flex items-center justify-between">
-          <h1 className="text-white font-bold text-xl">Tu Chamba Express</h1>
-          <span className="text-green-200 text-sm">Panel Admin</span>
+    <div className="min-h-screen bg-[#0B0D12] relative">
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" />
+
+      <div
+        className="fixed inset-0 opacity-[0.05] pointer-events-none"
+        style={{
+          backgroundImage: 'linear-gradient(#00D9FF 1px, transparent 1px), linear-gradient(90deg, #00D9FF 1px, transparent 1px)',
+          backgroundSize: '48px 48px',
+        }}
+      />
+
+      <header className="relative border-b border-[#1E2330] bg-[#0F1116]/80 backdrop-blur px-6 py-4">
+        <div className="max-w-3xl mx-auto">
+          <Link
+            href="/admin"
+            className="text-xs text-[#5B6478] hover:text-[#00D9FF] uppercase tracking-[0.15em] transition-colors font-medium"
+            style={{ fontFamily: "'JetBrains Mono', monospace" }}
+          >
+            ← Torre de Control
+          </Link>
+          <h1
+            className="text-[#E8EDF4] text-lg uppercase tracking-wide mt-1"
+            style={{ fontFamily: "'Chakra Petch', sans-serif", fontWeight: 600 }}
+          >
+            Invitaciones
+          </h1>
         </div>
       </header>
 
-      <div className="max-w-3xl mx-auto px-4 py-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          Invitaciones de Agencia
-        </h2>
-        <p className="text-gray-500 text-sm mb-8">
+      <div className="relative max-w-3xl mx-auto px-6 py-8">
+        <p className="text-[#8B94A8] text-sm mb-8" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
           Genera un link único para que una nueva agencia se registre en la plataforma.
           El link expira en 7 días.
         </p>
@@ -55,14 +74,22 @@ export default function InvitacionesPage() {
         <button
           onClick={generarInvitacion}
           disabled={loading}
-          className="bg-[#1A6B3C] hover:bg-[#155c33] disabled:opacity-50 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
+          className="bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-50 text-white py-3 px-6 text-sm uppercase tracking-wide transition-colors"
+          style={{
+            fontFamily: "'Chakra Petch', sans-serif",
+            fontWeight: 600,
+            clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)',
+          }}
         >
           {loading ? 'Generando...' : '+ Generar link de invitación'}
         </button>
 
         {invitacion && (
-          <div className="mt-6 bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-            <p className="text-sm font-medium text-gray-700 mb-3">
+          <div
+            className="mt-6 bg-[#12151C] border border-[#1E2330] p-5"
+            style={{ clipPath: 'polygon(0 12px, 12px 0, 100% 0, 100% 100%, 0 100%)' }}
+          >
+            <p className="text-sm text-[#39FF88] mb-3" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
               ✅ Link generado — válido hasta {new Date(invitacion.expira).toLocaleDateString('es-MX', {
                 day: 'numeric', month: 'long', year: 'numeric'
               })}
@@ -72,16 +99,18 @@ export default function InvitacionesPage() {
                 type="text"
                 readOnly
                 value={invitacion.url}
-                className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-600 bg-gray-50"
+                className="flex-1 bg-[#0B0D12] border border-[#1E2330] text-[#8B94A8] px-3 py-2 text-sm"
+                style={{ fontFamily: "'JetBrains Mono', monospace" }}
               />
               <button
                 onClick={copiarLink}
-                className="bg-[#1A6B3C] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#155c33] transition-colors"
+                className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-4 py-2 text-sm uppercase tracking-wide transition-colors"
+                style={{ fontFamily: "'Chakra Petch', sans-serif", fontWeight: 600 }}
               >
                 {copiado ? '✓ Copiado' : 'Copiar'}
               </button>
             </div>
-            <p className="text-xs text-gray-400 mt-2">
+            <p className="text-[10px] text-[#5B6478] mt-2" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
               Comparte este link con el coordinador de la nueva agencia.
             </p>
           </div>

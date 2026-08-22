@@ -179,8 +179,16 @@ status text DEFAULT 'pendiente_aprobacion'
 invitacion_id uuid
 aprobado_por uuid
 aprobado_at timestamptz
-dia_corte integer DEFAULT 4          -- 1=Lunes...7=Domingo, día de la semana en que se procesa el pago
-dia_pago integer DEFAULT 5           -- corregido 2026-08-18: faltaban estas 6 columnas en este bloque, ya existían en producción desde antes
+dia_corte integer DEFAULT 4          -- 1=Lunes...7=Domingo — SOLO recordatorio
+                                      -- visual desde 5.26 (2026-08-20), ya no
+                                      -- calcula ningún periodo automáticamente
+dia_pago integer DEFAULT 5           -- ídem, solo recordatorio visual
+hora_corte time DEFAULT '12:00:00'   -- nueva (5.26) — también solo informativa,
+                                      -- fecha_garantia_fin no tiene hora, no hay
+                                      -- forma de comparar contra una hora exacta
+ultimo_corte_at timestamptz          -- nueva (5.26) — el ANCLA real del corte
+                                      -- manual: se actualiza solo al generar un
+                                      -- corte con el botón "Generar Corte"
 created_at timestamptz DEFAULT now()
 ```
 
@@ -239,6 +247,14 @@ dias_descanso jsonb DEFAULT '[0]'   -- días de la semana que NO cuentan para
                                      -- (ver CA-02.8). No cubre descansos
                                      -- rolados post-inducción — ver limitación
                                      -- documentada en CA-02.8.
+dias_entrevista jsonb DEFAULT '[]'  -- nueva (5.25, 2026-08-20) — días en que la
+                                     -- empresa RECIBE candidatos a entrevista.
+                                     -- Distinto de dias_descanso (ese afecta
+                                     -- garantía, este bloquea agendar). Mismo
+                                     -- formato (array de días 0-6), pero campo
+                                     -- separado. Editable en VacanteModal
+                                     -- Sección 8, no Sección 1 (deliberado).
+                                     -- Array vacío = sin restricción configurada.
 created_at timestamptz DEFAULT now()
 ```
 
@@ -320,10 +336,29 @@ promocion_fin date
 status text DEFAULT 'vigente'       -- vigente/pausada/cerrada
 empresa_visible bool DEFAULT true
 destacada bool DEFAULT false
-cupo_requerido int DEFAULT 1        -- personas que necesita la empresa para esta vacante
-cupo_cubierto int DEFAULT 0         -- calculado: candidatos en etapa Contratado con garantía activa
-                                    -- Regla: pausar automáticamente cuando cupo_cubierto >= cupo_requerido
-                                    -- Alerta amarilla: cuando candidatos en Entrevista+Inducción >= cupo_requerido
+cupo_requerido int DEFAULT 1        -- personas que necesita la empresa — "por
+                                    -- rondas" desde 6.8b (2026-08-19): NO es un
+                                    -- total acumulado histórico, cada reactivación
+                                    -- reinicia el conteo a 0 (ver cupo_desde)
+cupo_cubierto int DEFAULT 0         -- ⚠️ CAMPO MUERTO desde 6.8b — nunca se
+                                    -- actualiza, el cupo ocupado se calcula
+                                    -- SIEMPRE en vivo (comision_aplicable=true,
+                                    -- filtrado por cupo_desde), nunca leyendo
+                                    -- esta columna. Se deja en el esquema por
+                                    -- compatibilidad, no usar en código nuevo.
+cupo_desde timestamptz              -- nueva (6.8b) — el ANCLA de la ronda actual
+                                    -- de cupo. Se resetea a now() solo cuando la
+                                    -- vacante pasa de "no vigente" a "vigente"
+                                    -- (reactivación). El conteo de ocupados
+                                    -- filtra fecha_contratacion >= cupo_desde.
+preguntas_precalificacion jsonb DEFAULT '[]'  -- nueva (HU-17/6.8) — hasta 5
+                                    -- preguntas de pre-calificación del portal
+                                    -- candidato. Cada una: {id, pregunta, tipo
+                                    -- ('si_no'|'opcion_multiple'|'texto_libre'),
+                                    -- opciones?, respuesta_correcta, filtra?}.
+                                    -- filtra=false (o respuesta_correcta vacía en
+                                    -- opcion_multiple) = pregunta informativa,
+                                    -- nunca bloquea al candidato.
 tags jsonb DEFAULT '[]'
 created_at timestamptz DEFAULT now()
 updated_at timestamptz DEFAULT now()
@@ -365,9 +400,23 @@ fecha_firma_contrato date           -- informativo, capturado al mover a "Contra
 fecha_garantia_fin date             -- calculado: fecha_contratacion + dias_garantia
                                      -- días HÁBILES según negocios.dias_descanso
                                      -- de la empresa (ver CA-02.8), no días corridos
-garantia_cumplida bool DEFAULT false
+garantia_cumplida bool DEFAULT false  -- ⚠️ CAMPO MUERTO — nunca se actualiza
+                                     -- automáticamente en ningún lugar del sistema.
+                                     -- Todo cálculo real usa fecha_garantia_fin
+                                     -- comparado en vivo. No usar en código nuevo.
 motivo_no_efectivo text             -- renuncia/despido_empresa/despido_causa/otro
 comision_aplicable bool DEFAULT false
+
+-- 5.24 (asistencia a entrevista)
+asistio_entrevista bool             -- null=sin confirmar, true/false=confirmado.
+                                     -- NUNCA mueve de etapa — es dato de
+                                     -- seguimiento, distinto de "Descartar"
+motivo_no_asistencia text           -- razón opcional cuando asistio_entrevista=false
+
+-- HU-17 (pre-calificación del candidato)
+precalificado bool DEFAULT false    -- true si pasó el filtro de preguntas al postularse
+respuestas_precalificacion jsonb DEFAULT '{}'  -- respuestas a preguntas informativas
+                                     -- (texto libre, opción múltiple sin filtro)
 
 -- DESCARTE EN PIPELINE
 motivo_descarte text                -- no_cumple_perfil/no_se_presento/rechazo_candidato/
@@ -384,9 +433,15 @@ comision_aplicada_mxn numeric       -- base o promoción según fecha de contrat
 habia_promocion_al_cierre bool DEFAULT false
 
 -- CORTE SEMANAL
-semana_corte text                   -- ej. "2026-W22" (semana ISO)
+semana_corte text                   -- ⚠️ CAMPO MUERTO desde 5.26 (2026-08-20) —
+                                     -- el corte manual ya no agrupa por semana
+                                     -- ISO, usa corte_id. No usar en código nuevo.
 pagado bool DEFAULT false
 fecha_pago date
+corte_id uuid FK → cortes_semana.id -- nueva (5.26) — liga cada postulación al
+                                     -- corte específico donde se pagó, permite
+                                     -- reconstruir el detalle de cualquier corte
+                                     -- histórico después
 
 created_at timestamptz DEFAULT now()
 updated_at timestamptz DEFAULT now()
@@ -481,6 +536,30 @@ respondido_por uuid FK → coordinadores.id
 visible_reclutadores bool DEFAULT true
 created_at timestamptz DEFAULT now()
 ```
+> Solo guarda FAQs **ya contestados y confirmados** (`respuesta` es `NOT NULL`)
+> — nunca preguntas pendientes. Es el Nivel 2 de la cascada del agente FAQ
+> (ver HU-03). Se llena solo cuando el coordinador activa el toggle "Agregar
+> al FAQ" al responder una pregunta escalada en `faq_escalaciones`.
+
+### faq_escalaciones (nueva, 4.14/4.15/6.11, 2026-08-20)
+```sql
+id uuid PK
+vacante_id uuid FK → vacantes.id
+agencia_id uuid FK → agencias.id
+pregunta text NOT NULL
+preguntado_por uuid FK → reclutadores.id
+respuesta text                      -- null = pendiente sin contestar
+respondido_por uuid FK → coordinadores.id
+respondido_at timestamptz
+guardado_en_faq bool DEFAULT false  -- si se activó el toggle al contestar
+created_at timestamptz DEFAULT now()
+```
+> Es la "cola" de preguntas del Nivel 3 (escalación al coordinador) — distinta
+> de `faqs_vacante`, que no soporta el estado "pendiente" (su `respuesta` es
+> `NOT NULL`). Preguntas pendientes se borran automáticamente cuando la
+> vacante deja de estar vigente (se pausa/cierra) — ya no tiene sentido
+> contestarlas. Las contestadas se borran solo manualmente (botón individual
+> o "Borrar todo", tanto reclutador como coordinador).
 
 ### invitaciones (alta controlada de agencias — ver §8)
 ```sql
@@ -502,10 +581,12 @@ tipo text NOT NULL
 --        entrevista_vencida/vacante_sin_candidatos/
 --        mensaje_nuevo/pregunta_sin_responder/
 --        vacante_actualizada/candidato_auto_vetado/confirmar_asistencia/
---        promocion_nueva
+--        promocion_nueva/cupo_cubierto/pregunta_faq
 -- (corregido 2026-08-16: el frontend real usa 'vacante_actualizada', no
 --  'vacante_status_cambio' como decía esta lista antes — ver ICONOS en
---  app/reclutador/alertas/page.tsx. 'promocion_nueva' es nuevo, tarea 5.14.)
+--  app/reclutador/alertas/page.tsx. 'promocion_nueva' es de la tarea 5.14.
+--  'cupo_cubierto' (6.8b) y 'pregunta_faq' (6.11) agregados 2026-08-20 —
+--  ambas van a destinatario_rol='coordinador', no reclutador.)
 destinatario_id uuid NOT NULL
 destinatario_rol text NOT NULL      -- reclutador/coordinador/admin
 vacante_id uuid
@@ -520,12 +601,25 @@ created_at timestamptz DEFAULT now()
 ```sql
 id uuid PK
 agencia_id uuid FK → agencias.id
-semana text NOT NULL                -- ej. "2026-W22"
-fecha_corte date NOT NULL           -- siempre jueves
-fecha_pago date NOT NULL            -- siempre viernes
+semana text NOT NULL                -- desde 5.26 (2026-08-20): texto libre con el
+                                     -- rango de fechas (ej. "20 ago 2026 — 27 ago
+                                     -- 2026"), YA NO formato ISO fijo — el corte es
+                                     -- manual, el rango depende de cuándo se generó.
+                                     -- Registros de antes de 5.26 conservan su
+                                     -- formato viejo (ej. "2026-W34"), sin migrar.
+fecha_corte date NOT NULL           -- fecha real en que se generó ese corte
+                                     -- (ya NO siempre jueves — desde 5.26 es el
+                                     -- día en que el coordinador dio clic al botón)
+fecha_pago date NOT NULL            -- estimada, calculada según dia_pago
+                                     -- configurado (ya NO siempre viernes)
 total_mxn numeric NOT NULL
 pagado bool DEFAULT false
 generado_por uuid FK → coordinadores.id
+periodo_inicio timestamptz          -- nueva (5.26) — timestamp exacto (con hora)
+                                     -- de inicio del periodo cubierto por este
+                                     -- corte. Null en registros de antes de 5.26.
+periodo_fin timestamptz             -- nueva (5.26) — timestamp exacto de fin
+                                     -- (el momento en que se generó el corte)
 created_at timestamptz DEFAULT now()
 UNIQUE(agencia_id, semana)
 ```
@@ -1153,12 +1247,16 @@ DE LO CONTRARIO
 - Panel de corte semanal con generación de resumen por reclutador
 - Generador y sync de sitemap.xml a GitHub
 
-### Portal Admin (web — solo tú)
+### Portal Admin (web — tú y, eventualmente, 1-2 administradores más)
+- **Acceso:** login real vía Supabase Auth (no llave compartida), 2 roles — **Maestro** (control total, único que gestiona otros administradores) y **Limitado** (gestión operativa del día a día, sin poder tocar la tabla de administradores). Sesión con cierre automático a los 20 min de inactividad (aviso de 4 seg, sin opción de cancelar).
+- **Home ("Torre de Control", 2026-08-21):** telemetría en vivo (agencias activas, coordinadores activos, reclutadores activos, vacantes vigentes) + accesos a los módulos.
 - Todo lo del coordinador pero sin filtro de agencia
-- CRUD de agencias
-- CRUD de coordinadores
+- CRUD de agencias — **pendiente de construir** (7.1 en tasks.md; hoy solo existe la base de acceso/seguridad, no el CRUD en sí)
+- CRUD de coordinadores — pendiente
 - Vista global de todas las postulaciones
 - Métricas globales de la plataforma
+- Ya existente antes de esta sesión: Invitaciones (generar link de alta de agencia), Solicitudes (aprobar/rechazar agencias pendientes) — ambas restyled 2026-08-21 al mismo tema visual del home, sin cambios de lógica
+- Visión de José (2026-08-21, no desglosada aún en tareas): soporte y "reparación" de errores comunes sobre reclutadores/vacantes desde el admin; a futuro, un agente entrenado para encargarse de soporte/debugging — la arquitectura de roles y bitácora de hoy se construyó pensando en que ese agente eventualmente opere bajo el mismo sistema de permisos
 
 ---
 

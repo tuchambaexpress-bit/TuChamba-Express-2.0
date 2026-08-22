@@ -66,9 +66,17 @@ export default function SolicitudesPanel({ solicitudes }: Props) {
 
   if (solicitudes.length === 0) {
     return (
-      <div className="bg-white rounded-2xl p-8 text-center shadow-sm">
-        <p className="text-4xl mb-3">✅</p>
-        <p className="text-gray-500">No hay solicitudes pendientes</p>
+      <div
+        className="bg-[#12151C] border border-[#1E2330] p-10 text-center"
+        style={{ clipPath: 'polygon(0 14px, 14px 0, 100% 0, 100% 100%, 0 100%)' }}
+      >
+        <span
+          className="inline-block w-2 h-2 rounded-full bg-[#39FF88] mb-3"
+          style={{ boxShadow: '0 0 8px #39FF88' }}
+        />
+        <p className="text-[#5B6478] text-sm" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+          No hay solicitudes pendientes
+        </p>
       </div>
     )
   }
@@ -80,41 +88,56 @@ export default function SolicitudesPanel({ solicitudes }: Props) {
         const yaActuado = resultado[s.id]
 
         return (
-          <div key={s.id} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+          <div
+            key={s.id}
+            className="bg-[#12151C] border border-[#1E2330] p-5"
+            style={{ clipPath: 'polygon(0 12px, 12px 0, 100% 0, 100% 100%, 0 100%)' }}
+          >
             {/* Agencia */}
             <div className="flex items-start justify-between mb-4">
               <div>
-                <h3 className="font-bold text-gray-900 text-lg">{s.nombre}</h3>
-                <p className="text-xs text-gray-400">
+                <h3
+                  className="text-[#E8EDF4] text-lg uppercase tracking-wide"
+                  style={{ fontFamily: "'Chakra Petch', sans-serif", fontWeight: 600 }}
+                >
+                  {s.nombre}
+                </h3>
+                <p className="text-[10px] text-[#5B6478] mt-1" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
                   Registrada el {new Date(s.created_at).toLocaleDateString('es-MX', {
                     day: 'numeric', month: 'long', year: 'numeric'
                   })}
                 </p>
               </div>
-              <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full font-medium">
+              <span
+                className="text-[10px] text-amber-400 border border-amber-400/30 px-2 py-1 uppercase tracking-wide"
+                style={{ fontFamily: "'JetBrains Mono', monospace" }}
+              >
                 ⏳ Pendiente
               </span>
             </div>
 
             {/* Coordinador */}
             {coord && (
-              <div className="bg-gray-50 rounded-xl p-3 mb-4">
-                <p className="text-xs text-gray-500 mb-1">Coordinador</p>
-                <p className="font-semibold text-gray-800">{coord.nombre}</p>
-                <p className="text-sm text-gray-600">{coord.email}</p>
+              <div className="bg-[#0B0D12] border border-[#1E2330] p-3 mb-4">
+                <p className="text-[10px] text-[#5B6478] uppercase tracking-wide mb-1" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                  Coordinador
+                </p>
+                <p className="text-[#E8EDF4] font-medium">{coord.nombre}</p>
+                <p className="text-sm text-[#8B94A8]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{coord.email}</p>
                 {coord.telefono && (
-                  <p className="text-sm text-gray-600">{coord.telefono}</p>
+                  <p className="text-sm text-[#8B94A8]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{coord.telefono}</p>
                 )}
               </div>
             )}
 
             {/* Acciones */}
             {yaActuado ? (
-              <div className={`rounded-xl p-3 text-center text-sm font-medium ${
-                yaActuado === 'aprobado'
-                  ? 'bg-green-50 text-green-700'
-                  : 'bg-red-50 text-red-700'
-              }`}>
+              <div
+                className={`p-3 text-center text-sm uppercase tracking-wide ${
+                  yaActuado === 'aprobado' ? 'text-[#39FF88] border border-[#39FF88]/30' : 'text-red-400 border border-red-400/30'
+                }`}
+                style={{ fontFamily: "'JetBrains Mono', monospace" }}
+              >
                 {yaActuado === 'aprobado' ? '✅ Aprobada' : '❌ Rechazada'}
               </div>
             ) : (
@@ -122,16 +145,18 @@ export default function SolicitudesPanel({ solicitudes }: Props) {
                 <button
                   onClick={() => rechazar(s.id, coord?.id ?? '')}
                   disabled={loading === s.id}
-                  className="flex-1 border border-red-200 text-red-600 font-semibold py-2.5 rounded-xl hover:bg-red-50 transition-colors disabled:opacity-50 text-sm"
+                  className="flex-1 border border-red-400/40 text-red-400 hover:bg-red-400/10 disabled:opacity-50 py-2.5 text-sm uppercase tracking-wide transition-colors"
+                  style={{ fontFamily: "'Chakra Petch', sans-serif", fontWeight: 600 }}
                 >
-                  {loading === s.id ? '...' : '❌ Rechazar'}
+                  {loading === s.id ? '...' : '✕ Rechazar'}
                 </button>
                 <button
                   onClick={() => aprobar(s.id, coord?.id ?? '', coord?.email ?? '')}
                   disabled={loading === s.id}
-                  className="flex-1 bg-[#1A6B3C] hover:bg-[#155c33] text-white font-semibold py-2.5 rounded-xl transition-colors disabled:opacity-50 text-sm"
+                  className="flex-1 bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-50 text-white py-2.5 text-sm uppercase tracking-wide transition-colors"
+                  style={{ fontFamily: "'Chakra Petch', sans-serif", fontWeight: 600 }}
                 >
-                  {loading === s.id ? '...' : '✅ Aprobar'}
+                  {loading === s.id ? '...' : '✓ Aprobar'}
                 </button>
               </div>
             )}
