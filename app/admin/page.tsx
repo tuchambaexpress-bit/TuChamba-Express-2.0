@@ -46,6 +46,7 @@ export default async function AdminHome() {
   ])
 
   const modulos = [
+    { nombre: 'Agencias', desc: 'Alta manual, editar, activar/desactivar', href: '/admin/agencias', badge: null as number | null },
     { nombre: 'Solicitudes', desc: 'Agencias esperando aprobación', href: '/admin/solicitudes', badge: solicitudesPendientes ?? 0 },
     { nombre: 'Invitaciones', desc: 'Generar links de alta de agencia', href: '/admin/invitaciones', badge: null as number | null },
   ]
@@ -157,7 +158,7 @@ export default async function AdminHome() {
           ))}
 
           {/* Placeholders de los módulos que siguen en el desglose de Sprint 7 */}
-          {['Coordinadores', 'Reclutadores', 'Bitácora'].map(nombre => (
+          {['Reclutadores', 'Bitácora'].map(nombre => (
             <div
               key={nombre}
               className="bg-[#0F1116] border border-dashed border-[#1E2330] p-5 opacity-40"

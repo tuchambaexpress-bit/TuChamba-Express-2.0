@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { validarPassword } from '@/lib/validarPassword'
 
 interface Props {
   token: string
@@ -22,6 +23,9 @@ export default function FormularioInvitacion({ token, invitacionId }: Props) {
   const [coordNombre, setCoordNombre] = useState('')
   const [coordEmail, setCoordEmail] = useState('')
   const [coordTelefono, setCoordTelefono] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmarPassword, setConfirmarPassword] = useState('')
+  const [verPassword, setVerPassword] = useState(false)
 
   async function handlePaso1() {
     if (!agenciaNombre.trim()) { setError('El nombre de la agencia es requerido'); return }
@@ -32,6 +36,10 @@ export default function FormularioInvitacion({ token, invitacionId }: Props) {
   async function handlePaso2() {
     if (!coordNombre.trim()) { setError('Tu nombre es requerido'); return }
     if (!coordEmail.trim()) { setError('Tu email es requerido'); return }
+    if (!coordTelefono.trim()) { setError('Tu teléfono es requerido'); return }
+    const mensajeValidacion = validarPassword(password)
+    if (mensajeValidacion) { setError(mensajeValidacion); return }
+    if (password !== confirmarPassword) { setError('Las contraseñas no coinciden'); return }
     setError('')
     setLoading(true)
 
@@ -46,7 +54,8 @@ export default function FormularioInvitacion({ token, invitacionId }: Props) {
           nombre: coordNombre.trim(),
           email: coordEmail.trim(),
           telefono: coordTelefono.trim()
-        }
+        },
+        password
       })
     })
 
@@ -152,12 +161,47 @@ export default function FormularioInvitacion({ token, invitacionId }: Props) {
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700 block mb-1">Teléfono (opcional)</label>
+              <label className="text-sm font-medium text-gray-700 block mb-1">Teléfono *</label>
               <input
                 type="tel"
                 value={coordTelefono}
                 onChange={e => setCoordTelefono(e.target.value)}
                 placeholder="Ej. 8112345678"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 block mb-1">Crea una contraseña *</label>
+              <div className="relative">
+                <input
+                  type={verPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  maxLength={12}
+                  placeholder="8-12 caracteres, letras, números y símbolos"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C] pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setVerPassword(!verPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2"
+                >
+                  <img
+                    src={verPassword ? '/ojo-cerrado.png' : '/ojo-abierto.png'}
+                    alt={verPassword ? 'Ocultar' : 'Ver'}
+                    className="w-5 h-5 object-contain"
+                  />
+                </button>
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 block mb-1">Confirma tu contraseña *</label>
+              <input
+                type={verPassword ? 'text' : 'password'}
+                value={confirmarPassword}
+                onChange={e => setConfirmarPassword(e.target.value)}
+                maxLength={12}
+                placeholder="Repite la contraseña"
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
               />
             </div>

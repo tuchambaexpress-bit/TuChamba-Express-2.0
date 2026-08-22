@@ -21,24 +21,14 @@ export async function POST(request: Request) {
     .eq('id', agenciaId)
 
   // 2. Activar coordinador
+  // Nota (2026-08-22): ya NO se crea la cuenta de Supabase Auth aquí — nace
+  // completa (con la contraseña que el propio coordinador eligió) desde
+  // app/api/registro-agencia/route.ts, en el momento del registro. Aprobar
+  // solo enciende el permiso de entrar (status), no crea nada nuevo.
   await supabase
     .from('coordinadores')
     .update({ status: 'activo' })
     .eq('id', coordinadorId)
-
-  // 3. Crear cuenta en Supabase Auth para el coordinador
-  const { error: authError } = await supabase.auth.admin.inviteUserByEmail(email, {
-    data: {
-      coordinador_id: coordinadorId,
-      agencia_id: agenciaId,
-      rol: 'coordinador'
-    }
-  })
-
-  if (authError) {
-    console.error('Error al crear cuenta Auth:', authError)
-    // No bloqueamos el flujo — la agencia queda activa aunque falle el email
-  }
 
   return NextResponse.json({ ok: true })
 }

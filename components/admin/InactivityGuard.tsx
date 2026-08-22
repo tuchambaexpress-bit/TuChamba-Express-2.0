@@ -19,7 +19,11 @@ export default function InactivityGuard({ children }: { children: React.ReactNod
   const activo = pathname !== '/admin/login'
 
   useEffect(() => {
-    if (!activo) return
+    if (!activo) {
+      setMostrarAviso(false)
+      avisoActivo.current = false
+      return
+    }
 
     async function cerrarSesion() {
       const supabase = createClient()

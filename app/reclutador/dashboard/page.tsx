@@ -150,7 +150,7 @@ export default function DashboardReclutador() {
             </div>
             <button
               onClick={() => {
-                navigator.clipboard.writeText(`https://tu-chamba-express-2-0.vercel.app?ref=${sesion.codigo}`)
+                navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_APP_URL ?? 'https://tu-chamba-express.vercel.app'}?ref=${sesion.codigo}`)
                 setCopiadoRef(true)
                 setTimeout(() => setCopiadoRef(false), 2000)
               }}

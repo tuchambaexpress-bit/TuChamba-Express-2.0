@@ -2,6 +2,8 @@ import { createClient as createServerClient } from '@supabase/supabase-js'
 import Link from 'next/link'
 import SolicitudesPanel from '@/components/admin/SolicitudesPanel'
 
+export const revalidate = 0
+
 export default async function SolicitudesPage() {
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

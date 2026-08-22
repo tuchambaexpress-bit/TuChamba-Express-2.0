@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: Props) {
 
   if (!vacante) return {}
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tu-chamba-express-2-0.vercel.app'
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tu-chamba-express.vercel.app'
 
   return {
     title: `${vacante.titulo} en ${vacante.ciudad} | Tu Chamba Express`,

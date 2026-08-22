@@ -12,6 +12,9 @@ export async function POST(request: Request) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
+  const body = await request.json().catch(() => ({}))
+  const telefonoEsperado: string | null = body?.telefonoEsperado || null
+
   const token = crypto.randomUUID()
   const expira = new Date()
   expira.setDate(expira.getDate() + 7)
@@ -22,7 +25,8 @@ export async function POST(request: Request) {
       token,
       tipo: 'nueva_agencia',
       usado: false,
-      expira_at: expira.toISOString()
+      expira_at: expira.toISOString(),
+      telefono_esperado: telefonoEsperado
     })
     .select('token')
     .single()
@@ -31,7 +35,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Error al crear invitación' }, { status: 500 })
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tu-chamba-express-2-0.vercel.app'
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tu-chamba-express.vercel.app'
 
   return NextResponse.json({
     token: data.token,
