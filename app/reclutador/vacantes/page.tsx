@@ -12,6 +12,7 @@ interface Vacante {
   ciudad: string
   estado: string
   status: string
+  prioridad: string
   comision_base_mxn: number
   dias_garantia: number
   tiene_promocion: boolean
@@ -28,13 +29,31 @@ export default function VacantesReclutador() {
   const [vacantes, setVacantes] = useState<Vacante[]>([])
   const [loading, setLoading] = useState(true)
   const [busqueda, setBusqueda] = useState('')
+  const [reclutadorId, setReclutadorId] = useState<string | null>(null)
 
   useEffect(() => {
     const data = localStorage.getItem('reclutador_sesion')
     if (!data) { router.push('/reclutador/login'); return }
     const s = JSON.parse(data)
+    setReclutadorId(s.id)
     cargarVacantes(s.id)
   }, [])
+
+  // 5.21 — Realtime sin filtro por agencia: el reclutador puede estar activo
+  // en varias agencias (reclutador_agencia), y postgres_changes solo soporta
+  // filtro simple de igualdad (no "IN" sobre una lista). Se escucha cualquier
+  // cambio en `vacantes` y se recarga la lista ya filtrada por sus agencias
+  // (cargarVacantes ya hace ese filtro). Decisión B1: sin filtro en el canal
+  // — volumen bajo hoy, más simple que abrir un canal por cada agencia.
+  useEffect(() => {
+    if (!reclutadorId) return
+    const supabase = createClient()
+    const canal = supabase
+      .channel(`vacantes-reclutador-${reclutadorId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'vacantes' }, () => cargarVacantes(reclutadorId))
+      .subscribe()
+    return () => { supabase.removeChannel(canal) }
+  }, [reclutadorId])
 
   async function cargarVacantes(reclutadorId: string) {
     const supabase = createClient()
@@ -51,7 +70,7 @@ export default function VacantesReclutador() {
 
     const { data } = await supabase
       .from('vacantes')
-      .select('id, titulo, ciudad, estado, status, comision_base_mxn, dias_garantia, tiene_promocion, promocion_fin, negocios(nombre, dias_entrevista)')
+      .select('id, titulo, ciudad, estado, status, prioridad, comision_base_mxn, dias_garantia, tiene_promocion, promocion_fin, negocios(nombre, dias_entrevista)')
       .in('agencia_id', agenciaIds)
       .order('status', { ascending: true }) // 'pausada' < 'vigente' alfabéticamente — se reordena abajo
       .order('created_at', { ascending: false })
@@ -108,11 +127,20 @@ export default function VacantesReclutador() {
                       <p className="text-xs text-[#1A6B3C] mt-0.5">{(v.negocios as any)?.nombre ?? 'Empresa'}</p>
                       <p className="text-xs text-gray-400 mt-0.5">📍 {v.ciudad}, {v.estado}</p>
                     </div>
-                    <span className={`flex-shrink-0 text-[10px] px-2 py-1 rounded-full font-medium ${
-                      v.status === 'vigente' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                    }`}>
-                      {v.status}
-                    </span>
+                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                      <span className={`text-[10px] px-2 py-1 rounded-full font-medium ${
+                        v.status === 'vigente' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                      }`}>
+                        {v.status}
+                      </span>
+                      {v.prioridad && v.prioridad !== 'normal' && (
+                        <span className={`text-[10px] px-2 py-1 rounded-full font-medium ${
+                          v.prioridad === 'urgente' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'
+                        }`}>
+                          {v.prioridad === 'urgente' ? '🔴 Urgente' : '🟠 Alta'}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
                     <span>💰 ${v.comision_base_mxn?.toLocaleString('es-MX')} MXN</span>

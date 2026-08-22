@@ -183,21 +183,27 @@ tuchamba-v2/
 │   │   │                            movimiento (6.9); botones ✅/❌ de confirmación de
 │   │   │                            asistencia (5.24, no mueve de columna, distinto de
 │   │   │                            Descartar); candado de datos completos antes de
-│   │   │                            Inducción (CA-15.6); modal de consulta del
+│   │   │                            Inducción (CA-15.6); candado de días de entrevista
+│   │   │                            por empresa al agendar — bloquea de verdad, no solo
+│   │   │                            informativo (5.25); modal de consulta del
 │   │   │                            candidato al hacer clic en su nombre (Esc cierra);
 │   │   │                            control de cupo por vacante al entrar a Inducción
 │   │   │                            y al confirmar Contratado (6.8b); botón de chat
 │   │   │                            interno oculto si `es_manual = true` (HU-25)
+│   │   ├── FaqWidget.tsx         ✅ NUEVO (4.14/4.15) — widget de preguntas del
+│   │   │                            reclutador, montado en la ficha operativa.
+│   │   │                            Cascada 3 niveles, modal "Ejemplos de preguntas",
+│   │   │                            borrado manual, Realtime
 │   │   └── ReclutadorNav.tsx     ✅ Nav compartido, contadores Realtime de chats/alertas
-│   │   FaqWidget.tsx (en carpeta reclutador) ✅ NUEVO (4.14/4.15) — cascada 3
-│   │                                 niveles, modal "Ejemplos de preguntas",
-│   │                                 borrado manual, Realtime
 │   ├── coordinador/
 │   │   ├── CoordinadorNav.tsx    ✅ Nav compartido, contador de chats sin leer
 │   │   ├── VacanteModal.tsx      ✅ Modal de 8 secciones — crear/editar/duplicar
 │   │   │                            vacante, selector de negocio con creación inline
 │   │   │                            y filtro anti-duplicados + selector de días de
-│   │   │                            descanso (por empresa, HU-16), toggle Vigente/No
+│   │   │                            descanso (Sección 1, por empresa, HU-16) y
+│   │   │                            selector de días de entrevista (Sección 8, por
+│   │   │                            empresa, 5.25 — deliberadamente en sección
+│   │   │                            distinta a días de descanso), toggle Vigente/No
 │   │   │                            vigente, indicador de completitud (bloquea guardar,
 │   │   │                            CA-09.3), preguntas de pre-calificación (HU-17,
 │   │   │                            máx 5, 3 tipos), campo cupo_requerido + indicador
@@ -244,8 +250,12 @@ tuchamba-v2/
     │   │   └── page.tsx          ✅ Ficha operativa, revalidate=0, PDFs de ruta de
     │   │                            empresa, salario/turno siempre reales al reclutador
     │   │                            (`salario_visible` solo aplica al portal público),
-    │   │                            recuadro "Requerimiento" (cupo real, HU-16)
-    │   ├── vacantes/page.tsx     ✅ Listado para consulta libre (5.20)
+    │   │                            recuadro "Requerimiento" (cupo real, HU-16), días
+    │   │                            de entrevista de la empresa (5.25, dentro de "Qué
+    │   │                            decirle al candidato"), widget FaqWidget montado
+    │   │                            al final (4.14/4.15, cascada 3 niveles)
+    │   ├── vacantes/page.tsx     ✅ Listado para consulta libre (5.20), incluye días
+    │   │                            de entrevista de la empresa (5.25)
     │   ├── comisiones/page.tsx   ✅ Panel comisiones — corregido para calcular
     │   │                            "cumplida" en vivo desde `fecha_garantia_fin`,
     │   │                            no desde `garantia_cumplida` (campo roto, nunca
@@ -375,72 +385,66 @@ export function createServerSupabaseClient() {
 
 ## 5. ROW LEVEL SECURITY — Políticas por tabla
 
+> ⚠️ **Esta sección es el plan original, previo a construir nada — quedó desactualizada y nunca se corrigió hasta ahora (2026-08-21).** El ejemplo de abajo usaba `auth.uid()` para coordinadores, que es **el bug de origen real** que afectó 14 políticas en 9 tablas (confirmado y corregido en producción — ver tasks.md, sección "RLS — corrección masiva"). Se deja corregido aquí como referencia del patrón correcto, no como lista exhaustiva (hay decenas de políticas reales en producción; para el estado exacto de una tabla, consultar directo en Supabase con `select policyname, cmd, qual from pg_policies where tablename = 'X'` — es más confiable que cualquier documento).
+
 ### Principio general
 - **Lectura pública:** solo `vacantes` con `status = 'vigente'` y campos de capa pública
-- **Escritura:** siempre requiere autenticación o función de servidor
-- **Aislamiento por agencia:** coordinadores y reclutadores solo ven datos de su agencia
+- **Escritura:** el reclutador opera como rol `anon` (sin Supabase Auth) — sus políticas suelen ser abiertas (`qual = true`) en vez de comparar contra `auth.uid()`, ya que no hay sesión de Auth de la cual leer. El coordinador sí usa Supabase Auth.
+- **Aislamiento por agencia:** coordinadores solo ven/editan datos de su propia agencia
 - **Status de aprobación:** agencias/coordinadores en `pendiente_aprobacion` no tienen acceso operativo
 
-### Políticas críticas
+### El patrón correcto — SIEMPRE por email, nunca por `auth.uid()`, para coordinador
+
+```sql
+-- ❌ INCORRECTO — coordinadores.id NUNCA coincide con el id de Supabase Auth
+CREATE POLICY "mal_ejemplo" ON alguna_tabla
+  FOR SELECT USING (
+    agencia_id IN (SELECT agencia_id FROM coordinadores WHERE id = auth.uid())
+  );
+
+-- ✅ CORRECTO — el vínculo real es por email
+CREATE POLICY "buen_ejemplo" ON alguna_tabla
+  FOR SELECT USING (
+    agencia_id IN (SELECT agencia_id FROM coordinadores WHERE email = auth.email())
+  );
+```
+
+### Ejemplos reales ya en producción (patrón, no lista completa)
 
 ```sql
 -- VACANTES: lectura pública solo de vigentes
 CREATE POLICY "vacantes_lectura_publica" ON vacantes
   FOR SELECT USING (status = 'vigente');
 
--- POSTULACIONES: reclutador solo ve las suyas
-CREATE POLICY "postulaciones_reclutador" ON postulaciones
-  FOR SELECT USING (reclutador_id = auth.uid());
+-- POSTULACIONES: reclutador opera como anon — política abierta
+CREATE POLICY "postulaciones_select_publico" ON postulaciones
+  FOR SELECT USING (true);
 
--- MENSAJES: acceso solo si participas en el chat (sistema unificado)
-CREATE POLICY "mensajes_acceso" ON mensajes
-  FOR SELECT USING (
-    chat_id IN (
-      SELECT id FROM chats
-      WHERE reclutador_id = auth.uid()
-         OR coordinador_id = auth.uid()
-    )
+-- AGENCIAS: coordinador SÍ puede editar su propia agencia (5.19, 2026-08-20 —
+-- corrige el plan original de abajo, que decía lo contrario)
+CREATE POLICY "agencias_update_coordinador" ON agencias
+  FOR UPDATE USING (
+    id IN (SELECT agencia_id FROM coordinadores WHERE email = auth.email())
+  )
+  WITH CHECK (
+    id IN (SELECT agencia_id FROM coordinadores WHERE email = auth.email())
   );
 
--- CHATS internos: solo miembros de la agencia
-CREATE POLICY "chats_agencia" ON chats
-  FOR SELECT USING (
-    tipo != 'reclutador_coordinador'
-    OR agencia_id IN (
-      SELECT agencia_id FROM reclutador_agencia
-      WHERE reclutador_id = auth.uid()
-    )
+-- FAQ_ESCALACIONES (nueva, 6.11): insert/select abiertos (reclutador anon),
+-- update/delete solo coordinador de esa agencia
+CREATE POLICY "faq_escalaciones_update_coordinador" ON faq_escalaciones
+  FOR UPDATE USING (
+    agencia_id IN (SELECT agencia_id FROM coordinadores WHERE email = auth.email())
   );
-
--- CORTES_SEMANA: coordinador solo ve su agencia
-CREATE POLICY "cortes_agencia" ON cortes_semana
-  FOR SELECT USING (
-    agencia_id IN (
-      SELECT agencia_id FROM coordinadores
-      WHERE id = auth.uid()
-    )
-  );
-
--- AGENCIAS: coordinador no puede editar ni eliminar su propia agencia
-CREATE POLICY "agencias_solo_lectura_coordinador" ON agencias
-  FOR SELECT USING (
-    id IN (SELECT agencia_id FROM coordinadores WHERE id = auth.uid())
-  );
--- (UPDATE/DELETE en agencias: solo policy de rol admin, sin excepción)
-
--- COORDINADORES pendientes: sin acceso operativo hasta aprobación
-CREATE POLICY "coordinador_activo_acceso" ON vacantes
-  FOR INSERT WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM coordinadores
-      WHERE id = auth.uid() AND status = 'activo'
-    )
-  );
-
--- INVITACIONES: solo el admin puede crear/leer
-CREATE POLICY "invitaciones_solo_admin" ON invitaciones
-  FOR ALL USING (auth.jwt() ->> 'role' = 'admin');
 ```
+
+### Recordatorio operativo — el bug más común del proyecto
+
+Antes de construir cualquier función que escriba (`INSERT`/`UPDATE`/`DELETE`) en una tabla, **verificar primero sus políticas** con:
+```sql
+select policyname, cmd from pg_policies where tablename = 'nombre_tabla';
+```
+Ha pasado **muchísimas veces**: una tabla tiene `SELECT` pero le falta `INSERT`, o tiene `INSERT` pero le falta `DELETE` — Supabase falla en silencio, sin ningún error visible en pantalla, y el síntoma se ve como "no se guarda" o "el botón no hace nada".
 
 ---
 
@@ -473,6 +477,12 @@ const alertasCanal = supabase
   })
   .subscribe()
 ```
+
+> **Recordatorio operativo (bug recurrente #2 del proyecto):** un canal Realtime bien escrito en el código **no sirve de nada** si la tabla no está agregada a la publicación de Supabase. Ha pasado varias veces (`postulaciones`, `historial_etapas`, `trafico_referidos`, `vacantes`, `documentos_negocio`, `faq_escalaciones` — todas tuvieron que agregarse manualmente en algún momento, ninguna lo traía por default). Verificar siempre con:
+> ```sql
+> select tablename from pg_publication_tables where pubname = 'supabase_realtime' and tablename = 'nombre_tabla';
+> ```
+> Si no sale ninguna fila: `alter publication supabase_realtime add table nombre_tabla;`
 
 ---
 

@@ -28,7 +28,7 @@ export default async function FichaVacante({ params, searchParams }: Props) {
       modalidad, jornada, horario, tipo_contrato, turno, salario_periodo, turno,
       tiene_ruta, zonas_ruta, ruta_para_entrevista,
       estacionamiento, comedor, uniforme,
-      empresa_visible, destacada, status,
+      empresa_visible, destacada, status, prioridad,
       dias_garantia, dias_induccion, induccion_dentro_garantia,
       comision_base_mxn, tiene_promocion, promocion_monto_mxn, promocion_fin,
       contacto_rrhh, contacto_rrhh_telefono, contacto_rrhh_horario,
@@ -100,6 +100,11 @@ export default async function FichaVacante({ params, searchParams }: Props) {
             <span className={`text-xs px-2 py-1 rounded-lg font-medium ${vacante.status === 'vigente' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
               {vacante.status}
             </span>
+            {vacante.prioridad && vacante.prioridad !== 'normal' && (
+              <span className={`text-xs px-2 py-1 rounded-lg font-medium ${vacante.prioridad === 'urgente' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>
+                {vacante.prioridad === 'urgente' ? '🔴 Urgente' : '🟠 Alta'}
+              </span>
+            )}
           </div>
         </div>
 

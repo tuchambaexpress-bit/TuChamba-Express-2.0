@@ -90,6 +90,7 @@ const FORM_INICIAL = {
   dias_induccion: 0,
   induccion_dentro_garantia: true,
   cupo_requerido: 1,
+  prioridad: 'normal',
 }
 
 function normalizarNombreNegocio(texto: string) {
@@ -385,6 +386,7 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
       dias_induccion: form.dias_induccion ? Number(form.dias_induccion) : 0,
       induccion_dentro_garantia: form.induccion_dentro_garantia,
       cupo_requerido: form.cupo_requerido ? Number(form.cupo_requerido) : 1,
+      prioridad: form.prioridad || 'normal',
     }
 
     const { error: errorGuardado } = vacanteId && !vacanteDuplicar
@@ -1350,7 +1352,34 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
                         </div>
                       )}
 
-                      <p className="text-xs text-gray-400">Posiciones, reclutadores asignados, deadline y prioridad se agregan en la siguiente pasada.</p>
+                      <div className="pt-3">
+                        <label className="text-xs font-medium text-gray-700 flex items-center mb-1">
+                          Prioridad de la vacante
+                          <InfoTooltip texto="Qué tan urgente es cubrir esta vacante para la empresa. Se usa como filtro en el listado y el reclutador la ve marcada en su ficha." />
+                        </label>
+                        <div className="flex gap-2">
+                          {(['normal', 'alta', 'urgente'] as const).map(p => (
+                            <button
+                              key={p}
+                              type="button"
+                              onClick={() => setForm({ ...form, prioridad: p })}
+                              className={`text-xs px-3 py-1.5 rounded-lg font-medium border transition-colors ${
+                                form.prioridad === p
+                                  ? p === 'urgente'
+                                    ? 'bg-red-100 text-red-700 border-red-300'
+                                    : p === 'alta'
+                                    ? 'bg-orange-100 text-orange-700 border-orange-300'
+                                    : 'bg-gray-200 text-gray-700 border-gray-300'
+                                  : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
+                              }`}
+                            >
+                              {p === 'normal' ? 'Normal' : p === 'alta' ? 'Alta' : '🔴 Urgente'}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <p className="text-xs text-gray-400 pt-2">Posiciones, reclutadores asignados y deadline se agregan en la siguiente pasada.</p>
                     </>
                   ) : null}
                 </div>
