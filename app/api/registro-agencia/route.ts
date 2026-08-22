@@ -81,9 +81,10 @@ export async function POST(request: Request) {
     })
 
   if (errorCoord) {
+    console.error('Error real al crear coordinador:', errorCoord)
     await supabase.from('agencias').delete().eq('id', nuevaAgencia.id) // rollback
     await supabase.auth.admin.deleteUser(authUser.user.id) // rollback
-    return NextResponse.json({ error: 'Error al crear el coordinador' }, { status: 500 })
+    return NextResponse.json({ error: `Error al crear el coordinador: ${errorCoord.message}` }, { status: 500 })
   }
 
   // 4. Marcar invitación como usada
