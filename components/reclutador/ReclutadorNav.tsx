@@ -94,6 +94,7 @@ export default function ReclutadorNav({ titulo = 'Tu Chamba Express', subtitulo 
           </a>
           <a href="/reclutador/comisiones" className="text-green-200 hover:text-white text-sm">Comisiones</a>
           <a href="/reclutador/chat-coordinador" className="text-green-200 hover:text-white text-sm">Coordinador</a>
+          <a href="/reclutador/recursos" className="text-green-200 hover:text-white text-sm">📚 Recursos</a>
           <a href="/reclutador/alertas" className="relative text-green-200 hover:text-white text-sm">
             Alertas
             {alertasSinLeer > 0 && (
