@@ -10,7 +10,13 @@ interface Coordinador {
   telefono: string | null
   status: string
   created_at: string
-  agencias: { nombre: string } | null
+  agencias: { nombre: string }[] | { nombre: string } | null
+}
+
+function nombreAgencia(agencias: Coordinador['agencias']): string {
+  if (!agencias) return ''
+  if (Array.isArray(agencias)) return agencias[0]?.nombre ?? ''
+  return agencias.nombre
 }
 
 interface ReclutadorAgencia {
@@ -56,7 +62,7 @@ export default function PlantillaPanel({ coordinadoresIniciales, reclutadoresIni
 
   const agenciasUnicas = useMemo(() => {
     const set = new Set<string>()
-    coordinadoresIniciales.forEach(c => c.agencias?.nombre && set.add(c.agencias.nombre))
+    coordinadoresIniciales.forEach(c => { const n = nombreAgencia(c.agencias); if (n) set.add(n) })
     reclutadoresIniciales.forEach(r => r.reclutador_agencia.forEach(ra => ra.agencias?.nombre && set.add(ra.agencias.nombre)))
     return Array.from(set).sort()
   }, [coordinadoresIniciales, reclutadoresIniciales])
@@ -72,15 +78,16 @@ export default function PlantillaPanel({ coordinadoresIniciales, reclutadoresIni
 
   const coordinadoresFiltrados = useMemo(() => {
     let lista = coordinadoresIniciales.filter(c => {
-      const texto = `${c.nombre} ${c.email} ${c.agencias?.nombre ?? ''}`.toLowerCase()
+      const agencia = nombreAgencia(c.agencias)
+      const texto = `${c.nombre} ${c.email} ${agencia}`.toLowerCase()
       if (busqueda && !texto.includes(busqueda.toLowerCase())) return false
-      if (filtroAgencia && c.agencias?.nombre !== filtroAgencia) return false
+      if (filtroAgencia && agencia !== filtroAgencia) return false
       return true
     })
     lista = [...lista].sort((a, b) => {
       let av = '', bv = ''
       if (ordenCoord === 'nombre') { av = a.nombre; bv = b.nombre }
-      if (ordenCoord === 'agencia') { av = a.agencias?.nombre ?? ''; bv = b.agencias?.nombre ?? '' }
+      if (ordenCoord === 'agencia') { av = nombreAgencia(a.agencias); bv = nombreAgencia(b.agencias) }
       if (ordenCoord === 'status') { av = a.status; bv = b.status }
       const cmp = av.localeCompare(bv)
       return ordenCoordAsc ? cmp : -cmp
@@ -189,7 +196,7 @@ export default function PlantillaPanel({ coordinadoresIniciales, reclutadoresIni
                   <td className="px-3 py-2 text-[#E8EDF4]">{c.nombre}</td>
                   <td className="px-3 py-2 text-[#8B94A8]" style={mono}>{c.email}</td>
                   <td className="px-3 py-2 text-[#8B94A8]" style={mono}>{c.telefono ?? '—'}</td>
-                  <td className="px-3 py-2 text-[#8B94A8]" style={mono}>{c.agencias?.nombre ?? '—'}</td>
+                  <td className="px-3 py-2 text-[#8B94A8]" style={mono}>{nombreAgencia(c.agencias) || '—'}</td>
                   <td className="px-3 py-2">
                     <span
                       className={`text-[10px] px-2 py-0.5 uppercase ${c.status === 'activo' ? 'text-[#39FF88] border border-[#39FF88]/30' : 'text-[#5B6478] border border-[#1E2330]'}`}
