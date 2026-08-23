@@ -514,6 +514,31 @@ Self-service vía `supabase.auth.resetPasswordForEmail()` (link "¿Olvidaste tu 
 
 **Pendiente, no resuelto hoy:** el límite de "1 reset de contraseña al día" que José pidió para el flujo de "olvidé mi contraseña" (arriba) — no se construyó, requiere columna de fecha + mover la llamada a un endpoint propio que la revise antes de dejar pasar la solicitud.
 
+### RLS faltante para reclutador — 3 tablas encontradas en cadena (2026-08-23)
+
+Al construir `4.12d` (KPIs personales del reclutador en su Dashboard), salieron 3 políticas de `SELECT` faltantes seguidas, todas con el mismo origen: el reclutador opera como rol `anon` (sin sesión de Supabase Auth), y estas 3 tablas nunca antes habían tenido un caso de uso donde el reclutador necesitara leerlas directo desde el navegador — siempre se habían consultado desde el lado del coordinador. El hueco llevaba ahí desde que se crearon las tablas, sin que nada lo hubiera expuesto hasta ahora.
+
+```sql
+-- agencias: el reclutador necesita leer ultimo_corte_at para calcular
+-- "Corte abierto". La única política existente (agencias_lectura_coordinador)
+-- usa auth.email(), que el reclutador nunca tiene.
+CREATE POLICY "agencias_lectura_reclutador" ON agencias
+  FOR SELECT TO anon USING (true);
+
+-- trafico_referidos: el reclutador necesita ver SUS propias fuentes de
+-- tráfico (gráfica de dona). Ya existía trafico_referidos_select_coordinador,
+-- ninguna para anon.
+CREATE POLICY "trafico_referidos_lectura_reclutador" ON trafico_referidos
+  FOR SELECT TO anon USING (true);
+
+-- cortes_semana: el reclutador necesita encontrar el corte_id de su último
+-- corte pagado, para el resumen de "Corte anterior".
+CREATE POLICY "cortes_lectura_reclutador" ON cortes_semana
+  FOR SELECT TO anon USING (true);
+```
+
+**Nota:** las 3 son políticas abiertas (`using (true)`) porque el reclutador no tiene una sesión de la cual verificar identidad — el filtro real (solo sus propios datos) ya lo hace el código del lado del cliente, con el `reclutador_id`/`agencia_id` que trae desde su sesión local (mismo patrón ya documentado arriba para `postulaciones`, `coordinadores`, `reclutador_agencia`).
+
 ### Recordatorio operativo — el bug más común del proyecto
 
 Antes de construir cualquier función que escriba (`INSERT`/`UPDATE`/`DELETE`) en una tabla, **verificar primero sus políticas** con:
