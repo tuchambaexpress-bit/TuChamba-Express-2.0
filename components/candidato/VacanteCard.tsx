@@ -26,6 +26,7 @@ interface Vacante {
   uniforme: boolean
   empresa_visible: boolean
   destacada: boolean
+  prioridad: string
   status: string
   created_at: string
   negocios: { nombre: string } | null
@@ -85,9 +86,16 @@ export default function VacanteCard({ vacante, seleccionada, onClick }: Props) {
       </div>
 
       {/* Título y empresa */}
-      <h3 className="font-semibold text-gray-900 text-base leading-tight">
-        {vacante.titulo}
-      </h3>
+      <div className="flex items-start justify-between gap-2">
+        <h3 className="font-semibold text-gray-900 text-base leading-tight">
+          {vacante.titulo}
+        </h3>
+        {vacante.prioridad === 'urgente' && (
+          <span className="flex-shrink-0 text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-medium whitespace-nowrap">
+            🔴 Urgente
+          </span>
+        )}
+      </div>
       <p className="text-[#1A6B3C] text-sm font-medium mt-0.5">{empresa}</p>
 
       {/* Ubicación */}

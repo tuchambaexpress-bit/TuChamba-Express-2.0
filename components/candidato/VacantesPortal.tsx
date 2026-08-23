@@ -35,6 +35,7 @@ interface Vacante {
   uniforme: boolean
   empresa_visible: boolean
   destacada: boolean
+  prioridad: string
   status: string
   created_at: string
   requiere_examen_medico: boolean
@@ -49,7 +50,7 @@ const SELECT_VACANTES = `
   modalidad, jornada, horario, turno, tipo_contrato,
   tiene_ruta, zonas_ruta, ruta_para_entrevista,
   estacionamiento, comedor, uniforme,
-  empresa_visible, destacada, status, created_at,
+  empresa_visible, destacada, prioridad, status, created_at,
   requiere_examen_medico, requiere_antidoping,
   negocios(nombre, documentos_negocio(id, nombre_archivo, archivo_url))
 `
@@ -60,8 +61,23 @@ interface Props {
 
 const ITEMS_POR_PAGINA = 15
 
+// Destacada siempre gana (es/será el producto pagado de mayor jerarquía).
+// Entre las que empatan en destacada, Urgente > Alta > Normal. Peso explícito
+// en vez de orden alfabético — evita depender de una coincidencia de texto.
+const PESO_PRIORIDAD: Record<string, number> = { urgente: 2, alta: 1, normal: 0 }
+
+function ordenarVacantes(lista: Vacante[]): Vacante[] {
+  return [...lista].sort((a, b) => {
+    if (a.destacada !== b.destacada) return a.destacada ? -1 : 1
+    const pesoA = PESO_PRIORIDAD[a.prioridad] ?? 0
+    const pesoB = PESO_PRIORIDAD[b.prioridad] ?? 0
+    if (pesoA !== pesoB) return pesoB - pesoA
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  })
+}
+
 export default function VacantesPortal({ vacantes: vacantesIniciales }: Props) {
-  const [vacantes, setVacantes] = useState<Vacante[]>(vacantesIniciales)
+  const [vacantes, setVacantes] = useState<Vacante[]>(() => ordenarVacantes(vacantesIniciales))
   const [seleccionada, setSeleccionada] = useState<Vacante | null>(null)
   const [modalAbierto, setModalAbierto] = useState(false)
   const [busqueda, setBusqueda] = useState('')
@@ -93,7 +109,7 @@ export default function VacantesPortal({ vacantes: vacantesIniciales }: Props) {
           ...v,
           negocios: Array.isArray(v.negocios) ? v.negocios[0] ?? null : v.negocios
         }))
-        setVacantes(formateadas)
+        setVacantes(ordenarVacantes(formateadas))
 
         // Si la vacante abierta en el panel sigue vigente, refrescamos su detalle también
         setSeleccionada(prev => {
