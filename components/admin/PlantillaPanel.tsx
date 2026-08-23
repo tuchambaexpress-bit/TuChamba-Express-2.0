@@ -13,7 +13,7 @@ interface Coordinador {
   agencias: { nombre: string }[] | { nombre: string } | null
 }
 
-function nombreAgencia(agencias: Coordinador['agencias']): string {
+function nombreAgencia(agencias: Coordinador['agencias'] | ReclutadorAgencia['agencias']): string {
   if (!agencias) return ''
   if (Array.isArray(agencias)) return agencias[0]?.nombre ?? ''
   return agencias.nombre
@@ -22,7 +22,7 @@ function nombreAgencia(agencias: Coordinador['agencias']): string {
 interface ReclutadorAgencia {
   id: string
   activo: boolean
-  agencias: { nombre: string } | null
+  agencias: { nombre: string }[] | { nombre: string } | null
 }
 
 interface Reclutador {
@@ -63,7 +63,7 @@ export default function PlantillaPanel({ coordinadoresIniciales, reclutadoresIni
   const agenciasUnicas = useMemo(() => {
     const set = new Set<string>()
     coordinadoresIniciales.forEach(c => { const n = nombreAgencia(c.agencias); if (n) set.add(n) })
-    reclutadoresIniciales.forEach(r => r.reclutador_agencia.forEach(ra => ra.agencias?.nombre && set.add(ra.agencias.nombre)))
+    reclutadoresIniciales.forEach(r => r.reclutador_agencia.forEach(ra => { const n = nombreAgencia(ra.agencias); if (n) set.add(n) }))
     return Array.from(set).sort()
   }, [coordinadoresIniciales, reclutadoresIniciales])
 
@@ -97,10 +97,10 @@ export default function PlantillaPanel({ coordinadoresIniciales, reclutadoresIni
 
   const reclutadoresFiltrados = useMemo(() => {
     let lista = reclutadoresIniciales.filter(r => {
-      const agenciasTexto = r.reclutador_agencia.map(ra => ra.agencias?.nombre ?? '').join(' ')
+      const agenciasTexto = r.reclutador_agencia.map(ra => nombreAgencia(ra.agencias)).join(' ')
       const texto = `${r.nombre} ${r.codigo} ${r.email ?? ''} ${agenciasTexto}`.toLowerCase()
       if (busqueda && !texto.includes(busqueda.toLowerCase())) return false
-      if (filtroAgencia && !r.reclutador_agencia.some(ra => ra.agencias?.nombre === filtroAgencia)) return false
+      if (filtroAgencia && !r.reclutador_agencia.some(ra => nombreAgencia(ra.agencias) === filtroAgencia)) return false
       return true
     })
     lista = [...lista].sort((a, b) => {
@@ -250,7 +250,7 @@ export default function PlantillaPanel({ coordinadoresIniciales, reclutadoresIni
                           style={mono}
                           title={ra.activo ? 'Clic para desactivar' : 'Clic para activar'}
                         >
-                          {loadingId === ra.id ? '...' : `${ra.agencias?.nombre ?? '—'} ${ra.activo ? '●' : '○'}`}
+                          {loadingId === ra.id ? '...' : `${nombreAgencia(ra.agencias) || '—'} ${ra.activo ? '●' : '○'}`}
                         </button>
                       ))}
                       {r.reclutador_agencia.length === 0 && <span className="text-[10px] text-[#5B6478]" style={mono}>Sin agencias</span>}
