@@ -38,9 +38,51 @@ interface Reclutador {
   reclutador_agencia: ReclutadorAgencia[]
 }
 
+interface Postulacion {
+  id: string
+  etapa_actual: string
+  created_at: string
+  candidatos: { nombre: string; lada: string; telefono: string }[] | { nombre: string; lada: string; telefono: string } | null
+  vacantes: { titulo: string }[] | { titulo: string } | null
+  agencias: { nombre: string }[] | { nombre: string } | null
+  reclutadores: { nombre: string }[] | { nombre: string } | null
+}
+
+function nombreCandidato(p: Postulacion): string {
+  const c = Array.isArray(p.candidatos) ? p.candidatos[0] : p.candidatos
+  return c?.nombre ?? '—'
+}
+function telefonoCandidato(p: Postulacion): string {
+  const c = Array.isArray(p.candidatos) ? p.candidatos[0] : p.candidatos
+  return c ? `${c.lada} ${c.telefono}` : '—'
+}
+function tituloVacante(p: Postulacion): string {
+  const v = Array.isArray(p.vacantes) ? p.vacantes[0] : p.vacantes
+  return v?.titulo ?? '—'
+}
+function agenciaPostulacion(p: Postulacion): string {
+  const a = Array.isArray(p.agencias) ? p.agencias[0] : p.agencias
+  return a?.nombre ?? '—'
+}
+function reclutadorPostulacion(p: Postulacion): string {
+  const r = Array.isArray(p.reclutadores) ? p.reclutadores[0] : p.reclutadores
+  return r?.nombre ?? '—'
+}
+
+const ETAPAS = ['Aplicado', 'Contactado', 'Entrevista', 'Inducción', 'Contratado', 'Descartado']
+const COLOR_ETAPA: Record<string, string> = {
+  Aplicado: 'text-[#8B94A8] border-[#1E2330]',
+  Contactado: 'text-[#00D9FF] border-[#00D9FF]/30',
+  Entrevista: 'text-amber-400 border-amber-400/30',
+  Inducción: 'text-[#2563EB] border-[#2563EB]/30',
+  Contratado: 'text-[#39FF88] border-[#39FF88]/30',
+  Descartado: 'text-red-400 border-red-400/30',
+}
+
 interface Props {
   coordinadoresIniciales: Coordinador[]
   reclutadoresIniciales: Reclutador[]
+  postulacionesIniciales: Postulacion[]
 }
 
 const mono = { fontFamily: "'JetBrains Mono', monospace" }
@@ -48,24 +90,29 @@ const display = { fontFamily: "'Chakra Petch', sans-serif", fontWeight: 600 }
 
 type OrdenCoord = 'nombre' | 'agencia' | 'status'
 type OrdenReclu = 'nombre' | 'codigo' | 'pais'
+type OrdenPost = 'candidato' | 'vacante' | 'agencia' | 'etapa' | 'fecha'
 
-export default function PlantillaPanel({ coordinadoresIniciales, reclutadoresIniciales }: Props) {
+export default function PlantillaPanel({ coordinadoresIniciales, reclutadoresIniciales, postulacionesIniciales }: Props) {
   const router = useRouter()
-  const [tab, setTab] = useState<'coordinadores' | 'reclutadores'>('coordinadores')
+  const [tab, setTab] = useState<'coordinadores' | 'reclutadores' | 'postulaciones'>('coordinadores')
   const [busqueda, setBusqueda] = useState('')
   const [filtroAgencia, setFiltroAgencia] = useState('')
+  const [filtroEtapa, setFiltroEtapa] = useState('')
   const [ordenCoord, setOrdenCoord] = useState<OrdenCoord>('nombre')
   const [ordenCoordAsc, setOrdenCoordAsc] = useState(true)
   const [ordenReclu, setOrdenReclu] = useState<OrdenReclu>('nombre')
   const [ordenRecluAsc, setOrdenRecluAsc] = useState(true)
+  const [ordenPost, setOrdenPost] = useState<OrdenPost>('fecha')
+  const [ordenPostAsc, setOrdenPostAsc] = useState(false)
   const [loadingId, setLoadingId] = useState<string | null>(null)
 
   const agenciasUnicas = useMemo(() => {
     const set = new Set<string>()
     coordinadoresIniciales.forEach(c => { const n = nombreAgencia(c.agencias); if (n) set.add(n) })
     reclutadoresIniciales.forEach(r => r.reclutador_agencia.forEach(ra => { const n = nombreAgencia(ra.agencias); if (n) set.add(n) }))
+    postulacionesIniciales.forEach(p => { const n = agenciaPostulacion(p); if (n) set.add(n) })
     return Array.from(set).sort()
-  }, [coordinadoresIniciales, reclutadoresIniciales])
+  }, [coordinadoresIniciales, reclutadoresIniciales, postulacionesIniciales])
 
   function ordenarCoord(col: OrdenCoord) {
     if (ordenCoord === col) setOrdenCoordAsc(v => !v)
@@ -74,6 +121,10 @@ export default function PlantillaPanel({ coordinadoresIniciales, reclutadoresIni
   function ordenarReclu(col: OrdenReclu) {
     if (ordenReclu === col) setOrdenRecluAsc(v => !v)
     else { setOrdenReclu(col); setOrdenRecluAsc(true) }
+  }
+  function ordenarPost(col: OrdenPost) {
+    if (ordenPost === col) setOrdenPostAsc(v => !v)
+    else { setOrdenPost(col); setOrdenPostAsc(col !== 'fecha') }
   }
 
   const coordinadoresFiltrados = useMemo(() => {
@@ -94,6 +145,27 @@ export default function PlantillaPanel({ coordinadoresIniciales, reclutadoresIni
     })
     return lista
   }, [coordinadoresIniciales, busqueda, filtroAgencia, ordenCoord, ordenCoordAsc])
+
+  const postulacionesFiltradas = useMemo(() => {
+    let lista = postulacionesIniciales.filter(p => {
+      const texto = `${nombreCandidato(p)} ${tituloVacante(p)} ${agenciaPostulacion(p)} ${reclutadorPostulacion(p)}`.toLowerCase()
+      if (busqueda && !texto.includes(busqueda.toLowerCase())) return false
+      if (filtroAgencia && agenciaPostulacion(p) !== filtroAgencia) return false
+      if (filtroEtapa && p.etapa_actual !== filtroEtapa) return false
+      return true
+    })
+    lista = [...lista].sort((a, b) => {
+      let av = '', bv = ''
+      if (ordenPost === 'candidato') { av = nombreCandidato(a); bv = nombreCandidato(b) }
+      if (ordenPost === 'vacante') { av = tituloVacante(a); bv = tituloVacante(b) }
+      if (ordenPost === 'agencia') { av = agenciaPostulacion(a); bv = agenciaPostulacion(b) }
+      if (ordenPost === 'etapa') { av = a.etapa_actual; bv = b.etapa_actual }
+      if (ordenPost === 'fecha') { av = a.created_at; bv = b.created_at }
+      const cmp = av.localeCompare(bv)
+      return ordenPostAsc ? cmp : -cmp
+    })
+    return lista
+  }, [postulacionesIniciales, busqueda, filtroAgencia, filtroEtapa, ordenPost, ordenPostAsc])
 
   const reclutadoresFiltrados = useMemo(() => {
     let lista = reclutadoresIniciales.filter(r => {
@@ -143,7 +215,7 @@ export default function PlantillaPanel({ coordinadoresIniciales, reclutadoresIni
     <div>
       {/* Pestañas */}
       <div className="flex gap-2 mb-6">
-        {(['coordinadores', 'reclutadores'] as const).map(t => (
+        {(['coordinadores', 'reclutadores', 'postulaciones'] as const).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -152,7 +224,7 @@ export default function PlantillaPanel({ coordinadoresIniciales, reclutadoresIni
             }`}
             style={display}
           >
-            {t === 'coordinadores' ? `Coordinadores (${coordinadoresIniciales.length})` : `Reclutadores (${reclutadoresIniciales.length})`}
+            {t === 'coordinadores' ? `Coordinadores (${coordinadoresIniciales.length})` : t === 'reclutadores' ? `Reclutadores (${reclutadoresIniciales.length})` : `Postulaciones (${postulacionesIniciales.length})`}
           </button>
         ))}
       </div>
@@ -175,13 +247,24 @@ export default function PlantillaPanel({ coordinadoresIniciales, reclutadoresIni
           <option value="">Toda agencia</option>
           {agenciasUnicas.map(a => <option key={a} value={a}>{a}</option>)}
         </select>
+        {tab === 'postulaciones' && (
+          <select
+            value={filtroEtapa}
+            onChange={e => setFiltroEtapa(e.target.value)}
+            className="bg-[#12151C] border border-[#1E2330] text-[#E8EDF4] px-3 py-2 text-sm focus:outline-none focus:border-[#00D9FF]"
+            style={mono}
+          >
+            <option value="">Toda etapa</option>
+            {ETAPAS.map(e => <option key={e} value={e}>{e}</option>)}
+          </select>
+        )}
       </div>
 
       {/* Tabla Coordinadores */}
       {tab === 'coordinadores' && (
-        <div className="bg-[#12151C] border border-[#1E2330] overflow-x-auto" style={{ clipPath: 'polygon(0 10px, 10px 0, 100% 0, 100% 100%, 0 100%)' }}>
+        <div className="bg-[#12151C] border border-[#1E2330] overflow-auto max-h-[600px]" style={{ clipPath: 'polygon(0 10px, 10px 0, 100% 0, 100% 100%, 0 100%)' }}>
           <table className="w-full text-sm">
-            <thead className="border-b border-[#1E2330]">
+            <thead className="border-b border-[#1E2330] sticky top-0 bg-[#12151C] z-10">
               <tr>
                 <Encabezado label="Nombre" col="nombre" activa={ordenCoord === 'nombre'} asc={ordenCoordAsc} onClick={() => ordenarCoord('nombre')} />
                 <th className="px-3 py-2 text-left text-[10px] text-[#E8EDF4] uppercase tracking-wide font-semibold" style={mono}>Email</th>
@@ -217,9 +300,9 @@ export default function PlantillaPanel({ coordinadoresIniciales, reclutadoresIni
 
       {/* Tabla Reclutadores */}
       {tab === 'reclutadores' && (
-        <div className="bg-[#12151C] border border-[#1E2330] overflow-x-auto" style={{ clipPath: 'polygon(0 10px, 10px 0, 100% 0, 100% 100%, 0 100%)' }}>
+        <div className="bg-[#12151C] border border-[#1E2330] overflow-auto max-h-[600px]" style={{ clipPath: 'polygon(0 10px, 10px 0, 100% 0, 100% 100%, 0 100%)' }}>
           <table className="w-full text-sm">
-            <thead className="border-b border-[#1E2330]">
+            <thead className="border-b border-[#1E2330] sticky top-0 bg-[#12151C] z-10">
               <tr>
                 <Encabezado label="Nombre" col="nombre" activa={ordenReclu === 'nombre'} asc={ordenRecluAsc} onClick={() => ordenarReclu('nombre')} />
                 <Encabezado label="Código" col="codigo" activa={ordenReclu === 'codigo'} asc={ordenRecluAsc} onClick={() => ordenarReclu('codigo')} />
@@ -260,6 +343,47 @@ export default function PlantillaPanel({ coordinadoresIniciales, reclutadoresIni
               ))}
               {reclutadoresFiltrados.length === 0 && (
                 <tr><td colSpan={5} className="px-3 py-8 text-center text-[#5B6478] text-sm" style={mono}>Sin resultados</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Tabla Postulaciones — histórico de consulta, sin acciones */}
+      {tab === 'postulaciones' && (
+        <div className="bg-[#12151C] border border-[#1E2330] overflow-auto max-h-[600px]" style={{ clipPath: 'polygon(0 10px, 10px 0, 100% 0, 100% 100%, 0 100%)' }}>
+          <table className="w-full text-sm">
+            <thead className="border-b border-[#1E2330] sticky top-0 bg-[#12151C] z-10">
+              <tr>
+                <Encabezado label="Candidato" col="candidato" activa={ordenPost === 'candidato'} asc={ordenPostAsc} onClick={() => ordenarPost('candidato')} />
+                <th className="px-3 py-2 text-left text-[10px] text-[#E8EDF4] uppercase tracking-wide font-semibold" style={mono}>Teléfono</th>
+                <Encabezado label="Vacante" col="vacante" activa={ordenPost === 'vacante'} asc={ordenPostAsc} onClick={() => ordenarPost('vacante')} />
+                <Encabezado label="Agencia" col="agencia" activa={ordenPost === 'agencia'} asc={ordenPostAsc} onClick={() => ordenarPost('agencia')} />
+                <th className="px-3 py-2 text-left text-[10px] text-[#E8EDF4] uppercase tracking-wide font-semibold" style={mono}>Reclutador</th>
+                <Encabezado label="Etapa" col="etapa" activa={ordenPost === 'etapa'} asc={ordenPostAsc} onClick={() => ordenarPost('etapa')} />
+                <Encabezado label="Fecha" col="fecha" activa={ordenPost === 'fecha'} asc={ordenPostAsc} onClick={() => ordenarPost('fecha')} />
+              </tr>
+            </thead>
+            <tbody>
+              {postulacionesFiltradas.map(p => (
+                <tr key={p.id} className="border-b border-[#1E2330] last:border-0">
+                  <td className="px-3 py-2 text-[#E8EDF4]">{nombreCandidato(p)}</td>
+                  <td className="px-3 py-2 text-[#8B94A8]" style={mono}>{telefonoCandidato(p)}</td>
+                  <td className="px-3 py-2 text-[#8B94A8]" style={mono}>{tituloVacante(p)}</td>
+                  <td className="px-3 py-2 text-[#8B94A8]" style={mono}>{agenciaPostulacion(p)}</td>
+                  <td className="px-3 py-2 text-[#8B94A8]" style={mono}>{reclutadorPostulacion(p)}</td>
+                  <td className="px-3 py-2">
+                    <span className={`text-[10px] px-2 py-0.5 uppercase border ${COLOR_ETAPA[p.etapa_actual] ?? 'text-[#5B6478] border-[#1E2330]'}`} style={mono}>
+                      {p.etapa_actual}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2 text-[#5B6478] text-xs" style={mono}>
+                    {new Date(p.created_at).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </td>
+                </tr>
+              ))}
+              {postulacionesFiltradas.length === 0 && (
+                <tr><td colSpan={7} className="px-3 py-8 text-center text-[#5B6478] text-sm" style={mono}>Sin resultados</td></tr>
               )}
             </tbody>
           </table>

@@ -23,6 +23,21 @@ export default async function PlantillaPage() {
     `)
     .order('nombre', { ascending: true })
 
+  // 7.3 — histórico de consulta, sin acciones. Límite de 500 más recientes
+  // (Principio #4, "Ligero") mientras no exista una estrategia de retención
+  // de datos a largo plazo (nota de José, 2026-08-23, pendiente sin fecha).
+  const { data: postulaciones } = await supabase
+    .from('postulaciones')
+    .select(`
+      id, etapa_actual, created_at,
+      candidatos(nombre, lada, telefono),
+      vacantes(titulo),
+      agencias(nombre),
+      reclutadores(nombre)
+    `)
+    .order('created_at', { ascending: false })
+    .limit(500)
+
   return (
     <div className="min-h-screen bg-[#0B0D12] relative">
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" />
@@ -57,6 +72,7 @@ export default async function PlantillaPage() {
         <PlantillaPanel
           coordinadoresIniciales={coordinadores ?? []}
           reclutadoresIniciales={reclutadores ?? []}
+          postulacionesIniciales={postulaciones ?? []}
         />
       </div>
     </div>
