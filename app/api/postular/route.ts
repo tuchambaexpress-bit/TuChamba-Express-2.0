@@ -19,6 +19,20 @@ export async function POST(request: Request) {
     if (reclutador) reclutadorIdFinal = reclutador.id
   }
 
+  // Sin ningún referido (tráfico orgánico del link original): se asigna al
+  // reclutador maestro de José (2026-08-23) — antes se quedaba sin nadie.
+  if (!reclutadorIdFinal) {
+    const { data: maestro } = await supabase
+      .from('reclutadores')
+      .select('id')
+      .eq('es_maestro', true)
+      .eq('activo', true)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle()
+    if (maestro) reclutadorIdFinal = maestro.id
+  }
+
   // Validaciones básicas
   if (!nombre || !telefono || !vacanteId) {
     return NextResponse.json({ error: 'Faltan datos requeridos' }, { status: 400 })

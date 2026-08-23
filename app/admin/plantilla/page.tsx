@@ -18,9 +18,10 @@ export default async function PlantillaPage() {
   const { data: reclutadores } = await supabase
     .from('reclutadores')
     .select(`
-      id, nombre, codigo, email, lada, telefono, pais, activo, created_at,
+      id, nombre, codigo, email, lada, telefono, pais, activo, es_maestro, created_at,
       reclutador_agencia(id, activo, agencias(nombre))
     `)
+    .order('es_maestro', { ascending: false })
     .order('nombre', { ascending: true })
 
   // 7.3 — histórico de consulta, sin acciones. Límite de 500 más recientes

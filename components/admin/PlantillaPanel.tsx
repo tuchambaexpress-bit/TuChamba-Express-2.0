@@ -34,6 +34,7 @@ interface Reclutador {
   telefono: string | null
   pais: string
   activo: boolean
+  es_maestro: boolean
   created_at: string
   reclutador_agencia: ReclutadorAgencia[]
 }
@@ -105,6 +106,12 @@ export default function PlantillaPanel({ coordinadoresIniciales, reclutadoresIni
   const [ordenPost, setOrdenPost] = useState<OrdenPost>('fecha')
   const [ordenPostAsc, setOrdenPostAsc] = useState(false)
   const [loadingId, setLoadingId] = useState<string | null>(null)
+  const [mostrarNuevoMaestro, setMostrarNuevoMaestro] = useState(false)
+  const [nombreMaestro, setNombreMaestro] = useState('')
+  const [codigoMaestro, setCodigoMaestro] = useState('')
+  const [telefonoMaestro, setTelefonoMaestro] = useState('')
+  const [creandoMaestro, setCreandoMaestro] = useState(false)
+  const [errorMaestro, setErrorMaestro] = useState('')
 
   const agenciasUnicas = useMemo(() => {
     const set = new Set<string>()
@@ -185,6 +192,38 @@ export default function PlantillaPanel({ coordinadoresIniciales, reclutadoresIni
     })
     return lista
   }, [reclutadoresIniciales, busqueda, filtroAgencia, ordenReclu, ordenRecluAsc])
+
+  async function crearReclutadorMaestro() {
+    if (!nombreMaestro.trim() || !codigoMaestro.trim()) {
+      setErrorMaestro('Nombre y código son obligatorios.')
+      return
+    }
+    setCreandoMaestro(true)
+    setErrorMaestro('')
+
+    const res = await fetch('/api/admin/crear-reclutador-maestro', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nombre: nombreMaestro.trim(),
+        codigo: codigoMaestro.trim(),
+        telefono: telefonoMaestro.trim(),
+      }),
+    })
+    const data = await res.json()
+    setCreandoMaestro(false)
+
+    if (!res.ok) {
+      setErrorMaestro(data.error ?? 'No se pudo crear el reclutador maestro.')
+      return
+    }
+
+    setMostrarNuevoMaestro(false)
+    setNombreMaestro('')
+    setCodigoMaestro('')
+    setTelefonoMaestro('')
+    router.refresh()
+  }
 
   async function toggleReclutadorAgencia(ra: ReclutadorAgencia) {
     setLoadingId(ra.id)
@@ -298,6 +337,69 @@ export default function PlantillaPanel({ coordinadoresIniciales, reclutadoresIni
         </div>
       )}
 
+      {/* Botón + formulario de Reclutador Maestro */}
+      {tab === 'reclutadores' && (
+        <div className="mb-4">
+          <button
+            onClick={() => setMostrarNuevoMaestro(v => !v)}
+            className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs uppercase tracking-wide px-4 py-2"
+            style={{ ...display, clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}
+          >
+            {mostrarNuevoMaestro ? 'Cancelar' : '+ Nuevo reclutador maestro'}
+          </button>
+
+          {mostrarNuevoMaestro && (
+            <div
+              className="bg-[#12151C] border border-[#00D9FF]/30 p-5 mt-3"
+              style={{ clipPath: 'polygon(0 12px, 12px 0, 100% 0, 100% 100%, 0 100%)' }}
+            >
+              <p className="text-[#E8EDF4] uppercase tracking-wide mb-1" style={display}>Reclutador maestro</p>
+              <p className="text-[10px] text-[#5B6478] mb-4" style={mono}>
+                Recibe automáticamente el tráfico sin link de referido (?ref) y se inscribe solo en cada agencia nueva que se active.
+              </p>
+              <div className="grid md:grid-cols-3 gap-3 mb-3">
+                <div>
+                  <label className="block text-[10px] text-[#5B6478] uppercase tracking-wide mb-1" style={mono}>Nombre</label>
+                  <input
+                    value={nombreMaestro}
+                    onChange={e => setNombreMaestro(e.target.value)}
+                    className="w-full bg-[#0B0D12] border border-[#1E2330] text-[#E8EDF4] px-3 py-2 text-sm focus:outline-none focus:border-[#00D9FF]"
+                    style={mono}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] text-[#5B6478] uppercase tracking-wide mb-1" style={mono}>Código</label>
+                  <input
+                    value={codigoMaestro}
+                    onChange={e => setCodigoMaestro(e.target.value)}
+                    className="w-full bg-[#0B0D12] border border-[#1E2330] text-[#E8EDF4] px-3 py-2 text-sm focus:outline-none focus:border-[#00D9FF]"
+                    style={mono}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] text-[#5B6478] uppercase tracking-wide mb-1" style={mono}>Teléfono (opcional)</label>
+                  <input
+                    value={telefonoMaestro}
+                    onChange={e => setTelefonoMaestro(e.target.value)}
+                    className="w-full bg-[#0B0D12] border border-[#1E2330] text-[#E8EDF4] px-3 py-2 text-sm focus:outline-none focus:border-[#00D9FF]"
+                    style={mono}
+                  />
+                </div>
+              </div>
+              {errorMaestro && <p className="text-red-400 text-xs mb-3" style={mono}>⚠ {errorMaestro}</p>}
+              <button
+                onClick={crearReclutadorMaestro}
+                disabled={creandoMaestro}
+                className="bg-[#39FF88] hover:bg-[#2ee073] disabled:opacity-50 text-[#0B0D12] text-xs uppercase tracking-wide px-4 py-2 font-semibold"
+                style={{ fontFamily: "'Chakra Petch', sans-serif" }}
+              >
+                {creandoMaestro ? 'Creando...' : 'Crear reclutador maestro'}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Tabla Reclutadores */}
       {tab === 'reclutadores' && (
         <div className="bg-[#12151C] border border-[#1E2330] overflow-auto max-h-[600px]" style={{ clipPath: 'polygon(0 10px, 10px 0, 100% 0, 100% 100%, 0 100%)' }}>
@@ -314,7 +416,14 @@ export default function PlantillaPanel({ coordinadoresIniciales, reclutadoresIni
             <tbody>
               {reclutadoresFiltrados.map(r => (
                 <tr key={r.id} className="border-b border-[#1E2330] last:border-0">
-                  <td className="px-3 py-2 text-[#E8EDF4]">{r.nombre}</td>
+                  <td className="px-3 py-2 text-[#E8EDF4]">
+                    {r.nombre}
+                    {r.es_maestro && (
+                      <span className="ml-2 text-[9px] bg-[#00D9FF]/10 text-[#00D9FF] border border-[#00D9FF]/30 px-1.5 py-0.5 uppercase" style={mono}>
+                        Maestro
+                      </span>
+                    )}
+                  </td>
                   <td className="px-3 py-2 text-[#8B94A8]" style={mono}>{r.codigo}</td>
                   <td className="px-3 py-2 text-[#8B94A8]" style={mono}>{r.telefono ? `${r.lada} ${r.telefono}` : '—'}</td>
                   <td className="px-3 py-2 text-[#8B94A8]" style={mono}>{r.pais}</td>

@@ -30,5 +30,19 @@ export async function POST(request: Request) {
     .update({ status: 'activo' })
     .eq('id', coordinadorId)
 
+  // 3. Inscribir automáticamente a los reclutadores maestro (José, 2026-08-23)
+  // — reciben el tráfico sin ?ref de esta agencia nueva desde el día 1.
+  const { data: maestros } = await supabase
+    .from('reclutadores')
+    .select('id')
+    .eq('es_maestro', true)
+    .eq('activo', true)
+
+  if (maestros && maestros.length > 0) {
+    await supabase.from('reclutador_agencia').insert(
+      maestros.map(m => ({ reclutador_id: m.id, agencia_id: agenciaId, activo: true }))
+    )
+  }
+
   return NextResponse.json({ ok: true })
 }
