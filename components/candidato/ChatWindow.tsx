@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import AvisoPrivacidadChat from '@/components/shared/AvisoPrivacidadChat'
 
 interface Mensaje {
   id: string
@@ -143,6 +144,8 @@ export default function ChatWindow({ chatId, nombreCandidato, etapaActual, sende
 
   return (
     <div className="flex flex-col h-full">
+      <AvisoPrivacidadChat />
+
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
         <div>

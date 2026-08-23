@@ -1220,6 +1220,7 @@ DE LO CONTRARIO
 - Detalle de vacante con SEO dinámico + JSON-LD JobPosting
 - Sección visible: letras chiquitas, rutas, beneficios completos
 - Chat interno para postularse (nombre + teléfono al abrir)
+- **Aviso de privacidad (`/aviso-de-privacidad`, 2026-08-22):** página propia con el texto legal completo, independiente del rediseño de Inicio (`7.3b`). Aviso fijo (no cerrable) mostrado arriba de cualquier chat de la plataforma (`components/shared/AvisoPrivacidadChat.tsx`, usado en `ChatWindow.tsx` y `ChatCoordinadorReclutador.tsx`) — no depende de ningún link externo.
 - Estado visible de su postulación en la misma pantalla del chat
 - Sistema de referidos `?ref=CODIGO`
 - Detección y registro de fuente de tráfico
