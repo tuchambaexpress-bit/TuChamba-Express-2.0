@@ -684,15 +684,16 @@ UNIQUE(telefono, agencia_id)
 
 **CA-01.4:** El sistema nunca crea una postulación si el campo `telefono` está vacío o tiene menos de 10 dígitos.
 
-**CA-01.5 — Cero fricción: persistencia del chat sin registro:**
-Dado que un candidato ya se postuló a una vacante en una visita anterior, cuando regresa a esa misma vacante en una visita nueva, entonces el sistema detecta automáticamente su sesión guardada en `localStorage` y le muestra directamente el historial del chat — sin pedirle nombre ni teléfono de nuevo.
+**CA-01.5 — Cero fricción con confirmación: persistencia del chat sin registro completo** (rediseñada 2026-08-24, ver `7.3a` en tasks.md):
+Dado que un candidato ya se postuló a una vacante en una visita anterior, cuando regresa a esa misma vacante, entonces el sistema detecta su sesión guardada en `localStorage` y le pregunta **"¿Sigues siendo [nombre]?"** — si confirma, entra directo al chat sin volver a llenar el formulario; si dice que no, sigue el flujo normal de nombre/teléfono. **Decisión de diseño explícita:** no se salta la pregunta por completo (aunque el nombre técnico original decía "sin pedirle nada de nuevo") — es un punto medio a propósito, porque el teléfono de un candidato puede ser compartido (familia, trabajo) y meter a cualquiera directo al chat de otra persona sería un riesgo de privacidad real, no solo teórico.
+
+**Soporte multi-usuario en el mismo dispositivo:** si 2 o más personas se postulan a la misma vacante desde el mismo teléfono, `localStorage` guarda un **arreglo** de sesiones (máximo 5, Principio de Diseño #4), no solo una — así ninguna persona pierde su conversación cuando otra usa el mismo dispositivo después. La pantalla de confirmación se adapta: con 1 sesión guardada, pregunta "¿Sigues siendo X?" (Sí/No); con 2+, muestra la lista de nombres ("¿Eres alguno de ellos?") más la opción "Ninguno, soy nuevo".
 
 Implementación:
-- Al crear la postulación exitosamente, guardar en `localStorage`:
-  `{ telefono, nombre, chatId, vacanteId }` bajo la clave `chat_sesion_{vacanteId}`
-- Al abrir el modal de una vacante, revisar si existe `chat_sesion_{vacanteId}` en localStorage
-- Si existe → saltar el formulario de nombre/teléfono y mostrar el chat directamente
-- Si no existe → mostrar el formulario normal (primera vez)
+- Al crear la postulación exitosamente, se agrega (no se reemplaza) al arreglo en `localStorage` bajo la clave `chat_sesion_{vacanteId}`: `[{ telefono, nombre, chatId, vacanteId }, ...]` — sin duplicar si el mismo teléfono ya estaba en la lista.
+- Al abrir el modal de una vacante, si el arreglo tiene 1+ sesiones, se muestra la pantalla de confirmación antes que cualquier otra cosa (incluida la precalificación de `HU-17`).
+- Al confirmar "sí, soy yo/uno de ellos", se consulta la etapa real actual de esa postulación (no la que quedó guardada la última vez) antes de abrir el chat.
+- Compatible con el formato viejo (objeto único, de antes de este rediseño) — se envuelve en un arreglo de 1 elemento al leerlo.
 
 Este patrón garantiza que un candidato nunca tenga que volver a llenar sus datos para una vacante en la que ya aplicó, mientras mantiene sesiones independientes por vacante (el candidato puede aplicar a múltiples vacantes simultáneamente con chats separados).
 

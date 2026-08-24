@@ -91,6 +91,24 @@ export default function PipelineCoordinador() {
     setPostulaciones([])
   }
 
+  // Realtime — refresca el Kanban solo cuando el reclutador mueve algo,
+  // sin que el coordinador tenga que recargar la página (7.3a, 2026-08-24)
+  useEffect(() => {
+    if (!reclutadorSeleccionado) return
+    const supabase = createClient()
+    const canal = supabase
+      .channel(`pipeline-coordinador-${reclutadorSeleccionado.id}-${Math.random()}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'postulaciones',
+        filter: `reclutador_id=eq.${reclutadorSeleccionado.id}`
+      }, () => verPipeline(reclutadorSeleccionado))
+      .subscribe()
+
+    return () => { supabase.removeChannel(canal) }
+  }, [reclutadorSeleccionado])
+
   if (!sesion) return null
 
   return (

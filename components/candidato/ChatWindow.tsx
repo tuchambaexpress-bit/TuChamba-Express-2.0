@@ -26,9 +26,16 @@ export default function ChatWindow({ chatId, nombreCandidato, etapaActual, sende
   const [texto, setTexto] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [archivado, setArchivado] = useState(false)
+  const [etapaLocal, setEtapaLocal] = useState(etapaActual)
+  const [postulacionId, setPostulacionId] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const supabase = createClient()
+
+  // Si el padre decide que hay una etapa "base" distinta (ej. al confirmar
+  // identidad en ChatModal), sincronizamos — sin pisar actualizaciones en
+  // vivo que ya hayan llegado por Realtime después.
+  useEffect(() => { setEtapaLocal(etapaActual) }, [etapaActual])
 
   // Cargar mensajes existentes + estado actual del chat
   useEffect(() => {
@@ -45,10 +52,13 @@ export default function ChatWindow({ chatId, nombreCandidato, etapaActual, sende
     async function cargarEstadoChat() {
       const { data } = await supabase
         .from('chats')
-        .select('archivado')
+        .select('archivado, postulacion_id')
         .eq('id', chatId)
         .single()
-      if (data) setArchivado(data.archivado)
+      if (data) {
+        setArchivado(data.archivado)
+        setPostulacionId(data.postulacion_id)
+      }
     }
     cargarEstadoChat()
 
@@ -78,6 +88,26 @@ export default function ChatWindow({ chatId, nombreCandidato, etapaActual, sende
 
     return () => { supabase.removeChannel(canalChat) }
   }, [chatId])
+
+  // Realtime: el badge de etapa se actualiza solo cuando el reclutador
+  // mueve al candidato en su Pipeline, sin que el candidato recargue (7.3a,
+  // 2026-08-24). Antes etapaActual era una prop fija, nunca cambiaba sola.
+  useEffect(() => {
+    if (!postulacionId) return
+    const canalEtapa = supabase
+      .channel(`chat-etapa-${postulacionId}-${Math.random()}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'postulaciones',
+        filter: `id=eq.${postulacionId}`
+      }, (payload) => {
+        setEtapaLocal((payload.new as { etapa_actual: string }).etapa_actual)
+      })
+      .subscribe()
+
+    return () => { supabase.removeChannel(canalEtapa) }
+  }, [postulacionId])
 
   // Suscripción Realtime
   useEffect(() => {
@@ -150,9 +180,9 @@ export default function ChatWindow({ chatId, nombreCandidato, etapaActual, sende
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
         <div>
         <p className="text-sm font-medium text-gray-700">💬 Chat con el reclutador</p>
-        {(archivado || etapaActual) && (
+        {(archivado || etapaLocal) && (
           <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
-            {archivado ? 'Descartado' : etapaActual}
+            {archivado ? 'Descartado' : etapaLocal}
           </span>
         )}
       </div>
