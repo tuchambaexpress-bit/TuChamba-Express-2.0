@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import ChatWindow from './ChatWindow'
 import { createClient } from '@/lib/supabase/client'
+import { getCodigoReferido } from '@/hooks/useReferido'
 
 interface Pregunta {
   id: string
@@ -125,7 +126,7 @@ export default function ChatModal({ vacanteId, vacanteTitulo, reclutadorId, onCl
         telefono: telefono.trim(),
         vacanteId,
         reclutadorId: reclutadorId ?? null,
-        codigoRef: localStorage.getItem('ref_codigo') ?? null,
+        codigoRef: getCodigoReferido(),
         precalificado: preguntas ? preguntas.length > 0 : false,
         respuestasPrecalificacion: respuestas
       })

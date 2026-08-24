@@ -33,6 +33,7 @@ export default function LoginReclutador() {
       id: data.reclutador.id,
       nombre: data.reclutador.nombre,
       codigo: data.reclutador.codigo,
+      token_referido: data.reclutador.token_referido,
       agencia_id: data.reclutador.agencia_id
     }))
 

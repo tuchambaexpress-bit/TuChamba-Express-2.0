@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import ChatModal from './ChatModal'
+import { getCodigoReferido } from '@/hooks/useReferido'
 
 interface Vacante {
   id: string
@@ -47,9 +48,7 @@ interface Props {
 
 export default function VacanteDetalle({ vacante, esModal, reclutadorId }: Props) {
   const [chatAbierto, setChatAbierto] = useState(false)
-const codigoRef = typeof window !== 'undefined'
-  ? localStorage.getItem('ref_codigo')
-  : null
+  const codigoRef = getCodigoReferido()
   const empresa = vacante.empresa_visible
     ? vacante.negocios?.nombre ?? 'Empresa'
     : 'Empresa Confidencial'

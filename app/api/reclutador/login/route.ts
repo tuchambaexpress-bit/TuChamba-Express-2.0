@@ -17,7 +17,7 @@ export async function POST(request: Request) {
   const { data: reclutador, error } = await supabase
     .from('reclutadores')
     .select(`
-      id, nombre, codigo, activo,
+      id, nombre, codigo, token_referido, activo,
       reclutador_agencia(agencia_id, activo)
     `)
     .eq('codigo', codigo.toUpperCase())
@@ -37,6 +37,7 @@ export async function POST(request: Request) {
       id: reclutador.id,
       nombre: reclutador.nombre,
       codigo: reclutador.codigo,
+      token_referido: reclutador.token_referido,
       agencia_id: agenciaActiva?.agencia_id ?? null
     }
   })

@@ -6,6 +6,7 @@ import VacanteDetalle from './VacanteDetalle'
 import { useReferido } from '@/hooks/useReferido'
 import { useTrafico } from '@/hooks/useTrafico'
 import { createClient } from '@/lib/supabase/client'
+import DebugRefIndicator from './DebugRefIndicator'
 
 interface Vacante {
   id: string
@@ -300,6 +301,8 @@ export default function VacantesPortal({ vacantes: vacantesIniciales }: Props) {
           </div>
         </div>
       )}
+
+      <DebugRefIndicator />
     </div>
   )
 }

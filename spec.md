@@ -211,7 +211,16 @@ created_at timestamptz DEFAULT now()
 ```sql
 id uuid PK
 nombre text NOT NULL
-codigo text UNIQUE NOT NULL  -- para login y sistema de referidos
+codigo text UNIQUE NOT NULL  -- SOLO para login (2026-08-23) — ya no se usa
+                              -- en el link público de referido, ver token_referido
+token_referido text UNIQUE NOT NULL DEFAULT substr(replace(gen_random_uuid()::text,'-',''),1,10)
+                              -- nueva (7.25, 2026-08-24): lo que va en ?ref=
+                              -- del link público — no adivinable, no revela
+                              -- el código de acceso del reclutador
+es_maestro bool DEFAULT false -- nueva (7.22, 2026-08-23): recibe automático
+                              -- todo el tráfico sin ?ref= (fallback en
+                              -- api/postular) y se auto-inscribe en cada
+                              -- agencia nueva que se active
 email text
 lada text DEFAULT '+52'      -- prefijo internacional: +52 México, +1 USA/CAN, +54 Argentina, etc.
 telefono text

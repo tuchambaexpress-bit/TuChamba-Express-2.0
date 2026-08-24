@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     const { data } = await supabase
       .from('reclutadores')
       .select('id, reclutador_agencia(agencia_id)')
-      .eq('codigo', codigoRef.toUpperCase())
+      .eq('token_referido', codigoRef)
       .single()
     if (data) {
       reclutadorId = data.id

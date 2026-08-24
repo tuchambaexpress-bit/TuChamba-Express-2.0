@@ -8,13 +8,14 @@ export async function POST(request: Request) {
 )
   const { nombre, telefono, vacanteId, reclutadorId, codigoRef, precalificado, respuestasPrecalificacion } = await request.json()
 
-  // Si no viene reclutadorId pero sí codigoRef, buscar por código
+  // Si no viene reclutadorId pero sí codigoRef, buscar por el TOKEN público
+  // de referido (7.25) — ya no es el mismo código que usa para loguearse.
   let reclutadorIdFinal = reclutadorId ?? null
   if (!reclutadorIdFinal && codigoRef) {
     const { data: reclutador, error: errorRef } = await supabase
       .from('reclutadores')
       .select('id')
-      .eq('codigo', codigoRef.toUpperCase())
+      .eq('token_referido', codigoRef)
       .single()
     if (reclutador) reclutadorIdFinal = reclutador.id
   }

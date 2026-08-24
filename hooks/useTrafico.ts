@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { getCodigoReferido } from './useReferido'
 
 export function useTrafico(vacanteId?: string) {
   const searchParams = useSearchParams()
@@ -27,7 +28,7 @@ export function useTrafico(vacanteId?: string) {
       fuente = 'tiktok'
     }
 
-    const reclutadorCodigo = ref ?? localStorage.getItem('ref_codigo')
+    const reclutadorCodigo = ref ?? getCodigoReferido()
 
     fetch('/api/trafico', {
       method: 'POST',

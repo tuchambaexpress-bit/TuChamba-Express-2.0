@@ -379,11 +379,11 @@ export default function DashboardReclutador() {
           <p className="text-xs text-green-200 mb-3">Comparte este link para que los candidatos queden vinculados a ti automáticamente</p>
           <div className="flex gap-2">
             <div className="flex-1 bg-white/20 rounded-lg px-3 py-2 text-xs text-white truncate">
-              tuchambaexpress.com?ref={sesion.codigo}
+              tuchambaexpress.com?ref={sesion.token_referido}
             </div>
             <button
               onClick={() => {
-                navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_APP_URL ?? 'https://tu-chamba-express.vercel.app'}?ref=${sesion.codigo}`)
+                navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_APP_URL ?? 'https://tu-chamba-express.vercel.app'}?ref=${sesion.token_referido}`)
                 setCopiadoRef(true)
                 setTimeout(() => setCopiadoRef(false), 2000)
               }}
@@ -504,7 +504,7 @@ export default function DashboardReclutador() {
 
             <div className="bg-white rounded-2xl p-5 shadow-sm">
               <h3 className="font-bold text-gray-900 mb-3">Tus fuentes de tráfico</h3>
-              <p className="text-xs text-gray-400 mb-2">De dónde llega la gente que usa tu link (?ref={sesion.codigo})</p>
+              <p className="text-xs text-gray-400 mb-2">De dónde llega la gente que usa tu link (?ref={sesion.token_referido})</p>
               {datosTrafico.length === 0 ? (
                 <p className="text-sm text-gray-400 text-center py-10">Sin datos en este periodo</p>
               ) : (
@@ -572,7 +572,7 @@ export default function DashboardReclutador() {
               <span className="w-7 h-7 bg-[#1A6B3C] text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">2</span>
               <div>
                 <p className="font-medium text-gray-800 text-sm">Comparte tu link de referido</p>
-                <p className="text-gray-500 text-xs">tuchambaexpress.com?ref={sesion.codigo}</p>
+                <p className="text-gray-500 text-xs">tuchambaexpress.com?ref={sesion.token_referido}</p>
               </div>
             </div>
             <div className="flex gap-3 items-start">

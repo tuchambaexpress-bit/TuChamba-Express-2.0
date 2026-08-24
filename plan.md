@@ -514,6 +514,16 @@ Self-service vía `supabase.auth.resetPasswordForEmail()` (link "¿Olvidaste tu 
 
 **Pendiente, no resuelto hoy:** el límite de "1 reset de contraseña al día" que José pidió para el flujo de "olvidé mi contraseña" (arriba) — no se construyó, requiere columna de fecha + mover la llamada a un endpoint propio que la revise antes de dejar pasar la solicitud.
 
+### Sistema de referido — token separado del código de login + expiración (2026-08-23/24)
+
+**Reclutador maestro (`7.22`):** `reclutadores.es_maestro` (boolean). Recibe automáticamente todo el tráfico sin `?ref=` (vía fallback en `app/api/postular/route.ts`) y se auto-inscribe en cada agencia nueva que se active (`aprobar-agencia`/`crear-agencia`). Backfill manual a agencias ya existentes al momento de crear el primer maestro, desde `app/api/admin/crear-reclutador-maestro/route.ts`.
+
+**Token público de referido, separado del código de login (`7.25`):** `reclutadores.token_referido` (10 caracteres, `DEFAULT substr(replace(gen_random_uuid()::text,'-',''),1,10)` a nivel de columna — cualquier reclutador nuevo lo recibe automáticamente, sin depender de que cada endpoint que lo crea "se acuerde" de generarlo). El link de referido usa este token (`?ref=fdc6719e6d`), no el `codigo` (`LAURA01`, que sigue siendo exclusivo para el login). `app/api/postular/route.ts` y `app/api/trafico/route.ts` buscan por `token_referido`.
+
+**`localStorage.ref_codigo` con expiración de 30 días (`7.23`):** cambió de string plano a JSON `{ codigo, guardado_en }`. Función centralizada `getCodigoReferido()` en `hooks/useReferido.ts` (standalone, no atada al hook — así la pueden llamar componentes fuera del árbol de `useSearchParams`) revisa la fecha y descarta el valor si ya expiró.
+
+> ⚠️ **Punto de fricción real, para no repetir la próxima vez que se toque este flujo:** existían/existen **3 lugares** que leen este dato — `useReferido.ts`, `useTrafico.ts`, y `components/candidato/ChatModal.tsx` (el que arma la llamada real a `/api/postular`). El tercero no se detectó en el diseño inicial de `7.23`/`7.25` y siguió leyendo `localStorage.getItem('ref_codigo')` directo — con el nuevo formato JSON, eso rompió la asignación de referido en silencio (ninguna postulación fallaba, simplemente todas caían al reclutador maestro sin ningún error visible). Costó cerca de una hora de diagnóstico en vivo antes de encontrarlo. **Antes de dar por completo cualquier cambio futuro a este dato, buscar el texto exacto `ref_codigo` en todo el repo (`Ctrl+Shift+F`) en vez de confiar en la lista de archivos que el diseño original identificó.**
+
 ### RLS faltante para reclutador — 3 tablas encontradas en cadena (2026-08-23)
 
 Al construir `4.12d` (KPIs personales del reclutador en su Dashboard), salieron 3 políticas de `SELECT` faltantes seguidas, todas con el mismo origen: el reclutador opera como rol `anon` (sin sesión de Supabase Auth), y estas 3 tablas nunca antes habían tenido un caso de uso donde el reclutador necesitara leerlas directo desde el navegador — siempre se habían consultado desde el lado del coordinador. El hueco llevaba ahí desde que se crearon las tablas, sin que nada lo hubiera expuesto hasta ahora.
