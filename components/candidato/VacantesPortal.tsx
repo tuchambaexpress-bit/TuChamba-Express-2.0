@@ -219,16 +219,6 @@ export default function VacantesPortal({ vacantes: vacantesIniciales }: Props) {
             )}
           </div>
         </div>
-        {!tieneRef && (
-          <div className="flex justify-end mt-1">
-            <a 
-              href="/admin" 
-              className="text-xs text-green-300 hover:text-white opacity-50 hover:opacity-100 transition-opacity"
-            >
-              Admin
-            </a>
-          </div>
-        )}
       </header>
 
       {/* Layout dos columnas */}
