@@ -194,9 +194,9 @@ export default function KanbanBoard() {
       </div>
     </div>
 
-    {/* Vista desktop — Kanban horizontal */}
-    <div className="hidden md:block pb-4">
-      <div className="flex gap-4 min-w-max">
+    {/* Vista desktop — Kanban horizontal, cada columna con su propio scroll */}
+    <div className="hidden md:block h-full pb-4">
+      <div className="flex gap-4 min-w-max h-full">
         {todasEtapas.map(etapa => (
           <KanbanColumn
             key={etapa}

@@ -182,7 +182,9 @@ export default function PipelinePage() {
           </button>
         </div>
         <div className="overflow-x-auto h-[calc(100vh-140px)] relative">
-          <KanbanBoard />
+          <div className="h-full">
+            <KanbanBoard />
+          </div>
         </div>
       </div>
 
