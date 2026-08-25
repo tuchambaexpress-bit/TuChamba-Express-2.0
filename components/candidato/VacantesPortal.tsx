@@ -174,7 +174,9 @@ export default function VacantesPortal({ vacantes: vacantesIniciales }: Props) {
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between gap-3 mb-3">
             <div className="flex items-center gap-3">
-              <img src="/Logo_Header.png" alt="Tu Chamba Express" className="h-8 object-contain" />
+              <a href="/">
+                <img src="/Logo_Header.png" alt="Tu Chamba Express" className="h-8 object-contain" />
+              </a>
               <span className="text-sm text-green-200">{vacantesFiltradas.length} vacantes</span>
             </div>
             <a

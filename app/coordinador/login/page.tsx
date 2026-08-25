@@ -30,7 +30,7 @@ export default function LoginCoordinador() {
     })
 
     if (authError || !data.user) {
-      setError('Email o contraseña incorrectos')
+      setError('Usuario o contraseña incorrectos')
       setLoading(false)
       return
     }
@@ -79,7 +79,7 @@ export default function LoginCoordinador() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-green-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-sm">
         <div className="text-center mb-6">
           <img src="/Logo_Header_02.png" alt="Tu Chamba Express" className="h-10 object-contain mx-auto mb-4" />

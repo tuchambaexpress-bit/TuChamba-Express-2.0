@@ -1024,7 +1024,29 @@ FASE 3 — OpenClaw o agente propio (autonomía avanzada),
 - La IA desactiva RLS "para simplificar"
 - La IA intenta saltarse el ciclo SPECBOOT (codear sin `/propose` primero)
 
-### Comandos de reset Git
+### Mapa de dependencias de llaves foráneas — para borrados masivos (2026-08-25)
+
+Al limpiar todos los datos de prueba para el arranque de producción (`8.22`), el orden de borrado intuitivo falló 2 veces por FKs no anticipadas. Mapa completo, consultado vía `information_schema`, para no tener que redescubrirlo si se vuelve a necesitar un borrado masivo:
+
+```
+Depende de → agencias:       chats, coordinadores, cortes_semana, faq_escalaciones,
+                              postulaciones, reclutador_agencia, trafico_referidos, vacantes
+Depende de → candidatos:     chats, documentos_candidato, postulaciones
+Depende de → coordinadores:  chats, cortes_semana (generado_por), faq_escalaciones (respondido_por),
+                              faqs_vacante (respondido_por), vacantes (creado_por)
+Depende de → negocios:       documentos_negocio, vacantes
+Depende de → reclutadores:   alertas, chats, faq_escalaciones (preguntado_por),
+                              faqs_vacante (preguntado_por), postulaciones,
+                              reclutador_agencia, trafico_referidos
+Depende de → vacantes:       chats, faq_escalaciones, faqs_vacante, postulaciones,
+                              precalificaciones_fallidas, trafico_referidos
+```
+
+**Orden seguro de borrado** (hijos antes que padres): `mensajes` → `chats` → `historial_etapas` → `precalificaciones_fallidas` → `faqs_vacante` → `faq_escalaciones` → `documentos_candidato` → `alertas` → `postulaciones` → `trafico_referidos` → `documentos_negocio` → `vacantes` → `negocios` → `cortes_semana` → `invitaciones` → `reclutador_agencia` → `coordinadores` → `reclutadores` → `candidatos` → `agencias`.
+
+**Nota:** borrar `coordinadores` por SQL directo **no borra sus cuentas de Supabase Auth** — quedan huérfanas y hay que borrarlas manualmente desde Authentication → Users, o intentar volver a registrar ese mismo correo fallará por duplicado.
+
+
 ```bash
 git status
 git diff

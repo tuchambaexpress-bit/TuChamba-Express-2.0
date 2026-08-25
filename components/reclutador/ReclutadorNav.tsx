@@ -107,8 +107,8 @@ export default function ReclutadorNav({ titulo = 'Tu Chamba Express', subtitulo 
     <header className="bg-[#1A6B3C] px-6 py-4 shadow-md relative">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div>
-          <h1 className="text-white font-bold text-xl">{titulo}</h1>
-          {subtitulo && <p className="text-green-200 text-sm">{subtitulo}</p>}
+          <img src="/Logo_Header.png" alt="Tu Chamba Express" className="h-8 object-contain" />
+          {subtitulo && <p className="text-green-200 text-sm mt-1">{subtitulo}</p>}
         </div>
 
         {/* Fila normal — solo desktop (7.19, 2026-08-24: antes se veía en

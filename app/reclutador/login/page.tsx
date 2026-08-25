@@ -23,7 +23,7 @@ export default function LoginReclutador() {
     const data = await res.json()
 
     if (!res.ok) {
-      setError(data.error ?? 'Código inválido')
+      setError(data.error ?? 'Usuario o contraseña incorrectos')
       setLoading(false)
       return
     }
@@ -41,11 +41,11 @@ export default function LoginReclutador() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-green-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-sm">
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-[#1A6B3C]">Tu Chamba Express</h1>
-          <p className="text-gray-500 text-sm mt-1">Portal Reclutador</p>
+          <img src="/Logo_Header_02.png" alt="Tu Chamba Express" className="h-10 object-contain mx-auto mb-4" />
+          <p className="text-gray-500 text-sm">Portal Reclutador</p>
         </div>
 
         <div className="space-y-4">
