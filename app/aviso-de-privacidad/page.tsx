@@ -2,9 +2,17 @@ export default function AvisoDePrivacidad() {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-[#1A6B3C] px-6 py-4">
-        <div className="max-w-3xl mx-auto">
-          <h1 className="text-white font-bold text-xl">Tu Chamba Express</h1>
-          <p className="text-green-200 text-sm">Aviso de Privacidad</p>
+        <div className="max-w-3xl mx-auto flex items-center justify-between">
+          <div>
+            <h1 className="text-white font-bold text-xl">Tu Chamba Express</h1>
+            <p className="text-green-200 text-sm">Aviso de Privacidad y Términos de Uso</p>
+          </div>
+          <a
+            href="/"
+            className="text-sm text-green-200 hover:text-white transition-colors flex items-center gap-1"
+          >
+            ← Regresar
+          </a>
         </div>
       </header>
 
@@ -22,7 +30,30 @@ export default function AvisoDePrivacidad() {
           </section>
 
           <section>
-            <h2 className="font-bold text-gray-900 mb-2">2. Datos que recopilamos</h2>
+            <h2 className="font-bold text-gray-900 mb-2">2. Qué es Tu Chamba Express y qué no es</h2>
+            <p>
+              Al usar esta plataforma usted acepta que Tu Chamba Express funciona únicamente como punto de
+              encuentro entre personas que buscan empleo y agencias de reclutamiento o reclutadores
+              independientes. No somos la empresa que contrata, no fijamos las condiciones laborales que
+              cada vacante ofrece, y no participamos en la decisión final de contratación de ninguna
+              agencia. Su relación de trabajo, si llega a concretarse, se forma directamente entre usted y
+              la empresa o agencia correspondiente — nosotros solo facilitamos el primer contacto.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="font-bold text-gray-900 mb-2">3. Uso permitido de la plataforma</h2>
+            <p>
+              Puede usar el buscador, postularse a vacantes y comunicarse por chat con reclutadores
+              siempre que la información que proporcione sea real y lo haga con fines genuinos de búsqueda
+              de empleo. No está permitido usar el chat de la plataforma para enviar publicidad no
+              solicitada, contenido ofensivo, intentar obtener datos de otros usuarios con fines distintos
+              al proceso de reclutamiento, o interferir con el funcionamiento normal del sitio.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="font-bold text-gray-900 mb-2">4. Datos que recopilamos</h2>
             <p>Dependiendo de cómo usa la plataforma, podemos recopilar:</p>
             <ul className="list-disc pl-5 mt-1 space-y-1">
               <li>Nombre y número telefónico, al postularse a una vacante.</li>
@@ -33,7 +64,7 @@ export default function AvisoDePrivacidad() {
           </section>
 
           <section>
-            <h2 className="font-bold text-gray-900 mb-2">3. Finalidad del tratamiento</h2>
+            <h2 className="font-bold text-gray-900 mb-2">5. Finalidad del tratamiento</h2>
             <p>Los datos proporcionados se utilizan exclusivamente para:</p>
             <ul className="list-disc pl-5 mt-1 space-y-1">
               <li>Contactarlo respecto a la vacante de su interés.</li>
@@ -44,7 +75,7 @@ export default function AvisoDePrivacidad() {
           </section>
 
           <section>
-            <h2 className="font-bold text-gray-900 mb-2">4. Con quién compartimos su información</h2>
+            <h2 className="font-bold text-gray-900 mb-2">6. Con quién compartimos su información</h2>
             <p>
               Su información de contacto y sus respuestas de postulación se comparten únicamente con el
               reclutador y la agencia responsable de la vacante a la que usted decida postularse
@@ -54,7 +85,17 @@ export default function AvisoDePrivacidad() {
           </section>
 
           <section>
-            <h2 className="font-bold text-gray-900 mb-2">5. Uso de cookies y almacenamiento local</h2>
+            <h2 className="font-bold text-gray-900 mb-2">7. Propiedad de la plataforma</h2>
+            <p>
+              El nombre, logotipo, diseño visual y funcionamiento de Tu Chamba Express pertenecen a la
+              plataforma. Las descripciones de cada vacante, condiciones y beneficios ofrecidos son
+              responsabilidad exclusiva de la empresa o agencia que las publica — Tu Chamba Express no las
+              redacta ni las garantiza.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="font-bold text-gray-900 mb-2">8. Uso de cookies y almacenamiento local</h2>
             <p>
               Este sitio utiliza almacenamiento local del navegador (localStorage) para recordar, por
               ejemplo, a través de qué reclutador o campaña llegó usted a una vacante — esta información es
@@ -63,7 +104,16 @@ export default function AvisoDePrivacidad() {
           </section>
 
           <section>
-            <h2 className="font-bold text-gray-900 mb-2">6. Aviso sobre exámenes médicos</h2>
+            <h2 className="font-bold text-gray-900 mb-2">9. Enlaces a sitios externos</h2>
+            <p>
+              Esta plataforma incluye enlaces directos a sitios de gobierno (IMSS, SAT, CURP) y a redes
+              sociales, como ayuda para el candidato. No operamos ni tenemos control sobre esos sitios; el
+              uso que usted les dé se rige por sus propios términos y avisos, no por los nuestros.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="font-bold text-gray-900 mb-2">10. Aviso sobre exámenes médicos</h2>
             <p>
               Al utilizar esta plataforma, usted reconoce que algunas empresas contratantes pueden
               requerir, como parte de su proceso de selección y conforme a la ley, la realización de
@@ -74,7 +124,18 @@ export default function AvisoDePrivacidad() {
           </section>
 
           <section>
-            <h2 className="font-bold text-gray-900 mb-2">7. Derechos ARCO</h2>
+            <h2 className="font-bold text-gray-900 mb-2">11. Límites de nuestra responsabilidad</h2>
+            <p>
+              Hacemos nuestro mejor esfuerzo para que la plataforma funcione correctamente y que la
+              información publicada sea veraz, pero no podemos garantizar que el sitio esté disponible sin
+              interrupciones en todo momento, ni verificar de forma exhaustiva cada dato que las agencias
+              publican. Tu Chamba Express no es responsable de acuerdos, condiciones laborales o
+              incumplimientos que ocurran directamente entre usted y la empresa o agencia contratante.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="font-bold text-gray-900 mb-2">12. Derechos ARCO</h2>
             <p>
               Usted tiene derecho a Acceder, Rectificar, Cancelar u Oponerse (derechos ARCO) al tratamiento
               de sus datos personales. Para ejercer estos derechos, puede contactar directamente al
@@ -83,10 +144,19 @@ export default function AvisoDePrivacidad() {
           </section>
 
           <section>
-            <h2 className="font-bold text-gray-900 mb-2">8. Cambios a este aviso</h2>
+            <h2 className="font-bold text-gray-900 mb-2">13. Cambios a este aviso</h2>
             <p>
-              Este aviso de privacidad puede actualizarse conforme evolucione la plataforma. La fecha de
-              última actualización se muestra al inicio de este documento.
+              Este aviso puede actualizarse conforme evolucione la plataforma. La fecha de última
+              actualización se muestra al inicio de este documento. El uso continuo de la plataforma
+              después de una actualización implica su aceptación de los cambios.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="font-bold text-gray-900 mb-2">14. Legislación aplicable</h2>
+            <p>
+              Este aviso se rige por las leyes aplicables en los Estados Unidos Mexicanos, particularmente
+              las relativas a protección de datos personales y comercio electrónico.
             </p>
           </section>
         </div>

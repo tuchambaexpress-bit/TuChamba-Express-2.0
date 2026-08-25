@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import VacanteCard from './VacanteCard'
 import VacanteDetalle from './VacanteDetalle'
 import { useReferido } from '@/hooks/useReferido'
@@ -78,10 +79,13 @@ function ordenarVacantes(lista: Vacante[]): Vacante[] {
 }
 
 export default function VacantesPortal({ vacantes: vacantesIniciales }: Props) {
+  const searchParams = useSearchParams()
   const [vacantes, setVacantes] = useState<Vacante[]>(() => ordenarVacantes(vacantesIniciales))
   const [seleccionada, setSeleccionada] = useState<Vacante | null>(null)
   const [modalAbierto, setModalAbierto] = useState(false)
-  const [busqueda, setBusqueda] = useState('')
+  // Prellenado desde la Home (7.3b, 2026-08-24) — "Buscar empleo" en la
+  // portada manda a /vacantes?q=... con la búsqueda ya escrita.
+  const [busqueda, setBusqueda] = useState(() => searchParams.get('q') ?? '')
   const [filtroEstado, setFiltroEstado] = useState('')
   const [filtroCiudad, setFiltroCiudad] = useState('')
   const [pagina, setPagina] = useState(1)
@@ -168,9 +172,17 @@ export default function VacantesPortal({ vacantes: vacantesIniciales }: Props) {
       {/* Header verde Nuevo León */}
       <header className="bg-[#1A6B3C] px-4 py-4 sticky top-0 z-10 shadow-md">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center gap-3 mb-3">
-            <img src="/Logo_Header.png" alt="Tu Chamba Express" className="h-8 object-contain" />
-            <span className="text-sm text-green-200">{vacantesFiltradas.length} vacantes</span>
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <div className="flex items-center gap-3">
+              <img src="/Logo_Header.png" alt="Tu Chamba Express" className="h-8 object-contain" />
+              <span className="text-sm text-green-200">{vacantesFiltradas.length} vacantes</span>
+            </div>
+            <a
+              href="/"
+              className="text-sm text-green-200 hover:text-white transition-colors flex items-center gap-1"
+            >
+              ← Regresar
+            </a>
           </div>
           <div className="flex gap-2 flex-wrap">
             <input
@@ -225,21 +237,23 @@ export default function VacantesPortal({ vacantes: vacantesIniciales }: Props) {
         {/* Lista izquierda */}
         <div className="w-full md:w-2/5 flex flex-col border-r border-gray-200 bg-white">
           {/* Vacantes */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto px-2 pt-2">
             {vacantesFiltradas.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-gray-400">
                 <p className="text-lg">Sin resultados</p>
                 <p className="text-sm">Intenta con otros términos</p>
               </div>
             ) : (
-              vacantesPaginadas.map(v => (
-                <VacanteCard
-                  key={v.id}
-                  vacante={v}
-                  seleccionada={seleccionada?.id === v.id}
-                  onClick={() => abrirVacante(v)}
-                />
-              ))
+              <div className="space-y-2">
+                {vacantesPaginadas.map(v => (
+                  <VacanteCard
+                    key={v.id}
+                    vacante={v}
+                    seleccionada={seleccionada?.id === v.id}
+                    onClick={() => abrirVacante(v)}
+                  />
+                ))}
+              </div>
             )}
           </div>
 
@@ -280,6 +294,70 @@ export default function VacantesPortal({ vacantes: vacantesIniciales }: Props) {
           )}
         </div>
       </div>
+
+      {/* Footer — mismo contenido que la Home, repetido aquí (José, 2026-08-24) */}
+      <footer className="border-t border-gray-100 px-4 py-6 bg-white">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start w-full">
+          {/* Trámites útiles — movido aquí desde VacanteDetalle.tsx (José,
+              2026-08-24): es información general de la plataforma, no de
+              cada vacante — no debía repetirse en cada ficha. */}
+          <div className="text-left">
+            <p className="text-xs text-gray-500 mb-2">📋 Trámites útiles con el gobierno</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <a
+                href="https://www.imss.gob.mx/tramites/imss02020"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs bg-gray-50 border border-gray-200 hover:border-[#1A6B3C] text-gray-600 hover:text-[#1A6B3C] px-3 py-1.5 rounded-lg transition-colors"
+              >
+                🏥 Consultar tu NSS (IMSS)
+              </a>
+              <a
+                href="https://satid.sat.gob.mx/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs bg-gray-50 border border-gray-200 hover:border-[#1A6B3C] text-gray-600 hover:text-[#1A6B3C] px-3 py-1.5 rounded-lg transition-colors"
+              >
+                🧾 RFC / Identidad (SAT ID)
+              </a>
+              <a
+                href="https://www.gob.mx/curp/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs bg-gray-50 border border-gray-200 hover:border-[#1A6B3C] text-gray-600 hover:text-[#1A6B3C] px-3 py-1.5 rounded-lg transition-colors"
+              >
+                🪪 Consultar tu CURP
+              </a>
+            </div>
+          </div>
+
+          {/* Facebook / Aviso de Privacidad + copyright, columna central
+              de la rejilla de 3 → queda centrado respecto a toda la
+              página, no solo al espacio libre junto a trámites (José,
+              2026-08-24) */}
+          <div className="text-center md:col-start-2">
+            <div className="flex items-center justify-center gap-4 mb-2">
+              <a
+                href="https://www.facebook.com/tuchambaexpressoficial"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-500 hover:text-[#1A6B3C] text-sm flex items-center gap-1.5"
+              >
+                <img src="/fb_icon.png" alt="" className="h-7 w-8 object-contain" />
+                Facebook
+              </a>
+              <span className="text-gray-300">·</span>
+              <a href="/aviso-de-privacidad" className="text-gray-500 hover:text-[#1A6B3C] text-sm underline">
+                Aviso de Privacidad
+              </a>
+            </div>
+            <p className="text-xs text-gray-400 max-w-xl mx-auto">
+              Tu Chamba Express © 2026. Plataforma de vinculación laboral. No somos responsables de las contrataciones ni condiciones laborales (NOM-035) ofrecidas por terceros.
+            </p>
+          </div>
+          <div className="hidden md:block" />
+        </div>
+      </footer>
 
       {/* Modal — solo móvil */}
       {modalAbierto && seleccionada && (

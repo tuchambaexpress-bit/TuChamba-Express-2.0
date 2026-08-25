@@ -80,9 +80,9 @@ export default function VacanteDetalle({ vacante, esModal, reclutadorId }: Props
             </span>
           )}
         </div>
-        <h2 className="text-2xl font-bold text-gray-900">{vacante.titulo}</h2>
-        <p className="text-[#1A6B3C] font-semibold mt-1">{empresa}</p>
-        <p className="text-gray-500 text-sm mt-1">
+        <h2 className="text-3xl font-bold text-gray-900">{vacante.titulo}</h2>
+        <p className="text-[#1A6B3C] font-semibold text-base mt-1">{empresa}</p>
+        <p className="text-gray-500 text-base mt-1">
           📍 {vacante.ciudad}, {vacante.estado}
           {vacante.colonia_zona ? ` · ${vacante.colonia_zona}` : ''}
         </p>
@@ -108,29 +108,29 @@ export default function VacanteDetalle({ vacante, esModal, reclutadorId }: Props
       {/* Info rápida */}
       <div className="grid grid-cols-2 gap-3 mb-6">
         <div className="bg-gray-50 rounded-lg p-3">
-          <p className="text-xs text-gray-500">Salario</p>
-          <p className="text-sm font-semibold text-gray-800">{salario}</p>
+          <p className="text-sm text-gray-500">Salario</p>
+          <p className="text-base font-semibold text-gray-800">{salario}</p>
         </div>
         <div className="bg-gray-50 rounded-lg p-3">
-          <p className="text-xs text-gray-500">Jornada / Turno</p>
-          <p className="text-sm font-semibold text-gray-800">
+          <p className="text-sm text-gray-500">Jornada / Turno</p>
+          <p className="text-base font-semibold text-gray-800">
             {NOMBRES_JORNADA[vacante.jornada] ?? vacante.jornada}{vacante.turno && vacante.turno !== 'no_aplica' ? ` · ${vacante.turno.charAt(0).toUpperCase() + vacante.turno.slice(1)}` : ''}
           </p>
         </div>
         <div className="bg-gray-50 rounded-lg p-3">
-          <p className="text-xs text-gray-500">Modalidad</p>
-          <p className="text-sm font-semibold text-gray-800">{NOMBRES_MODALIDAD[vacante.modalidad] ?? vacante.modalidad}</p>
+          <p className="text-sm text-gray-500">Modalidad</p>
+          <p className="text-base font-semibold text-gray-800">{NOMBRES_MODALIDAD[vacante.modalidad] ?? vacante.modalidad}</p>
         </div>
         {vacante.horario && (
           <div className="bg-gray-50 rounded-lg p-3">
-            <p className="text-xs text-gray-500">Horario</p>
-            <p className="text-sm font-semibold text-gray-800">{vacante.horario}</p>
+            <p className="text-sm text-gray-500">Horario</p>
+            <p className="text-base font-semibold text-gray-800">{vacante.horario}</p>
           </div>
         )}
         {vacante.tipo_contrato && (
           <div className="bg-gray-50 rounded-lg p-3">
-            <p className="text-xs text-gray-500">Contrato</p>
-            <p className="text-sm font-semibold text-gray-800">{vacante.tipo_contrato}</p>
+            <p className="text-sm text-gray-500">Contrato</p>
+            <p className="text-base font-semibold text-gray-800">{vacante.tipo_contrato}</p>
           </div>
         )}
       </div>
@@ -138,18 +138,18 @@ export default function VacanteDetalle({ vacante, esModal, reclutadorId }: Props
       {/* Descripción */}
       {vacante.descripcion && (
         <div className="mb-5">
-          <h3 className="font-semibold text-gray-800 mb-2">Descripción</h3>
-          <p className="text-sm text-gray-600 leading-relaxed">{vacante.descripcion}</p>
+          <h3 className="font-semibold text-lg text-gray-800 mb-2">Descripción</h3>
+          <p className="text-base text-gray-600 leading-relaxed">{vacante.descripcion}</p>
         </div>
       )}
 
       {/* Requisitos */}
       {vacante.requisitos?.length > 0 && (
         <div className="mb-5">
-          <h3 className="font-semibold text-gray-800 mb-2">Requisitos</h3>
+          <h3 className="font-semibold text-lg text-gray-800 mb-2">Requisitos</h3>
           <ul className="space-y-1">
             {vacante.requisitos.map((r, i) => (
-              <li key={i} className="text-sm text-gray-600 flex gap-2">
+              <li key={i} className="text-base text-gray-600 flex gap-2">
                 <span className="text-[#1A6B3C] mt-0.5">•</span>
                 <span>{r}</span>
               </li>
@@ -161,10 +161,10 @@ export default function VacanteDetalle({ vacante, esModal, reclutadorId }: Props
       {/* Beneficios */}
       {vacante.beneficios?.length > 0 && (
         <div className="mb-5">
-          <h3 className="font-semibold text-gray-800 mb-2">Beneficios</h3>
+          <h3 className="font-semibold text-lg text-gray-800 mb-2">Beneficios</h3>
           <ul className="space-y-1">
             {vacante.beneficios.map((b, i) => (
-              <li key={i} className="text-sm text-gray-600 flex gap-2">
+              <li key={i} className="text-base text-gray-600 flex gap-2">
                 <span className="text-green-500 mt-0.5">✓</span>
                 <span>{b}</span>
               </li>
@@ -228,22 +228,32 @@ export default function VacanteDetalle({ vacante, esModal, reclutadorId }: Props
       {/* Letras chiquitas + avisos de examen médico / antidoping */}
       {(vacante.letras_chiquitas || vacante.requiere_examen_medico || vacante.requiere_antidoping) && (
         <div className="mb-5 bg-amber-50 border border-amber-200 rounded-xl p-4">
-          <h3 className="font-semibold text-amber-800 mb-1 text-sm">
+          <h3 className="font-semibold text-amber-800 mb-1 text-base">
             ⚠️ Información importante
           </h3>
           {vacante.letras_chiquitas && (
-            <p className="text-sm text-amber-700 leading-relaxed">
+            <p className="text-base text-amber-700 leading-relaxed">
               {vacante.letras_chiquitas}
             </p>
           )}
           {vacante.requiere_examen_medico && (
-            <p className="text-sm text-amber-700 leading-relaxed">🩺 Se realizará examen médico.</p>
+            <p className="text-base text-amber-700 leading-relaxed">🩺 Se realizará examen médico.</p>
           )}
           {vacante.requiere_antidoping && (
-            <p className="text-sm text-amber-700 leading-relaxed">🧪 Se realizará prueba antidoping.</p>
+            <p className="text-base text-amber-700 leading-relaxed">🧪 Se realizará prueba antidoping.</p>
           )}
         </div>
       )}
+
+      {/* Botón repetido al final (7.3b, 2026-08-24) — reutiliza el mismo
+          estado chatAbierto; el ChatModal ya se renderiza una sola vez,
+          justo después del primer botón, arriba. */}
+      <button
+        onClick={() => setChatAbierto(true)}
+        className="w-full bg-[#1A6B3C] hover:bg-[#155c33] text-white font-semibold py-3 px-6 rounded-xl transition-colors text-sm"
+      >
+        💬 Postularme / Iniciar Chat
+      </button>
     </div>
   )
 }
