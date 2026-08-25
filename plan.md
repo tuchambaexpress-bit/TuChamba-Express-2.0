@@ -719,6 +719,39 @@ export function JobPostingSchema({ vacante }: { vacante: any }) {
 }
 ```
 
+**SEO de sitio completo, independiente del SEO por vacante (agregado 2026-08-25, ver spec.md CA-05.4):** `app/layout.tsx` (raíz) tiene su propio `metadata` estático, aplicado a todo el sitio (Home, `/vacantes`, etc.) — distinto del `generateMetadata` dinámico por vacante de arriba, que solo aplica a `/vacante/[id]`.
+
+```typescript
+// app/layout.tsx
+const SITE_URL = 'https://tu-chamba-express.vercel.app'
+
+export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  title: 'Empleos en Nuevo León, CDMX y más | TuChamba Express — Contratación Directa',
+  description: 'Encuentra vacantes en Nuevo León, CDMX, Estado de México y más...',
+  alternates: { canonical: SITE_URL },
+  openGraph: {
+    title: '...', description: '...', url: SITE_URL,
+    type: 'website', images: ['/Logo_Header.png'],
+  },
+}
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'EmploymentAgency',  // distinto de "JobPosting" — identidad de la organización, no de una vacante
+  name: 'TuChamba Express',
+  url: SITE_URL,
+  areaServed: [/* Nuevo León, CDMX, Estado de México — cobertura real */],
+  sameAs: ['https://www.facebook.com/tuchambaexpressoficial'],
+}
+// inyectado como <script type="application/ld+json"> dentro de <head>, vía JSX manual
+```
+
+**Nota de tooling, no arquitectura (2026-08-25):** al agregar `import './globals.css'` (línea ya existente, sin tocar) apareció el error `TS2882: Cannot find module or type declarations for side-effect import`. Confirmado que **no es un bug real ni relacionado a los cambios de SEO** — es un cambio de comportamiento de TypeScript 6.0 (`noUncheckedSideEffectImports`, activado por defecto), que ahora exige declaración explícita para imports sin exports (como CSS). Next.js aún no incluye esa declaración por defecto. Resuelto agregando `globals.d.ts` en la raíz del repo:
+```typescript
+declare module '*.css';
+```
+
 ---
 
 ## 9. SITEMAP — dinámico con Next.js (corregido 2026-08-10)

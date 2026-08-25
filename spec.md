@@ -868,9 +868,22 @@ NIVEL 3 — Escalación al coordinador
 
 **CA-05.2:** El canonical URL de cada vacante nunca incluye el parámetro `?ref=CODIGO` — siempre apunta a la URL limpia para evitar contenido duplicado en Google.
 
-**CA-05.3 (corregida 2026-08-10):** El sitemap.xml se genera **dinámicamente** vía `app/sitemap.ts` (función nativa de Next.js 14), consultando Supabase en vivo cada vez que se solicita `/sitemap.xml` — solo incluye vacantes con `status = 'vigente'`. No requiere sincronización manual ni automática a ningún repositorio: siempre refleja el estado real de la base de datos en el momento exacto de la consulta, sin necesitar un GitHub token ni disparar despliegues extra. Reemplaza el mecanismo de V1 (archivo estático commiteado a GitHub en cada cambio) por ser más simple, más seguro (sin token que administrar), y consistente con el Principio de Diseño #4 ("Ligero").
+**CA-05.3 (corregida 2026-08-10):** El sitemap.xml se genera **dinámicamente** vía `app/sitemap.ts` (función nativa de Next.js 14), consultando Supabase en vivo cada vez que se solicita `/sitemap.xml` — solo incluye vacantes con `status = 'vigente'`. No requiere sincronización manual ni automática a ningún repositorio: siempre refleja el estado real de la base de datos en el momento exacto de la consulta, sin necesitar un GitHub token ni disparar despliegues extra. Reemplaza el mecanismo de V1 (archivo estático commiteado a GitHub en cada cambio) por ser más simple, más seguro (sin token que administrar), y consistente con el Principio de Diseño #4 ("Ligero"). Confirmado 2026-08-25: sin filtro por `agencia_id`/`negocio_id` — el sitemap incluye todas las vacantes vigentes de la plataforma sin distinguir agencia, consistente con que `/vacantes` tampoco filtra por agencia (marketplace único, no por-agencia).
+
+**CA-05.4 (nueva, 2026-08-25) — SEO de sitio completo, independiente del SEO por vacante:** además del `generateMetadata` dinámico por vacante (`CA-05.1`), `app/layout.tsx` (raíz, aplica a todo el sitio) tiene su propio metadata estático: title y description reales con geo-keywords (Nuevo León, CDMX, Estado de México — alcance real donde José opera como reclutador freelance, ajustado desde la referencia de V1 que mencionaba más estados sin cobertura real), Open Graph completo (`og:title`/`og:description`/`og:image`/`og:url`/`og:type` — inexistente en V1), `canonical` apuntando al dominio real de producción, y JSON-LD tipo `EmploymentAgency` (identidad de la organización — distinto del `JobPosting` por vacante de `CA-05.1`, sirven para cosas distintas y coexisten). Basado en `index.html` de V1 que José compartió como referencia — reescrito desde cero, ninguna oración copiada literal.
 
 ---
+
+### HU-05b: Verificación de propiedad en Google Search Console
+**Como** administrador de la plataforma, **quiero** que Google confirme la propiedad del dominio y lea el sitemap regularmente, **para** que las vacantes puedan aparecer en resultados de búsqueda.
+
+> *Origen: José, 2026-08-25 — verificado en vivo el mismo día.*
+
+**CA-05b.1:** Propiedad `https://tu-chamba-express.vercel.app` dada de alta en Search Console vía verificación por archivo HTML (archivo estático en `/public`, sin lógica). Sitemap enviado manualmente (`sitemap.xml`), estado "Correcto" confirmado, 3 páginas descubiertas (Home + 2 vacantes vigentes de prueba al momento de la verificación) — coincide con el conteo esperado según `CA-05.3`.
+
+---
+
+
 
 ### HU-06: Sistema de referidos
 **Como** reclutador, **quiero** compartir un link con mi código a candidatos potenciales, **para** que cuando se postulen queden vinculados a mí automáticamente aunque no hayan llegado por la app.
