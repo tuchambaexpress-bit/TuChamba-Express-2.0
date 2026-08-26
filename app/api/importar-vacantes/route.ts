@@ -24,6 +24,20 @@ function extraerListaDinamica(fila: Record<string, any>, prefijo: string): strin
   return items
 }
 
+// Extrae pares RUTA_N_NOMBRE / RUTA_N_PARADAS de una fila, uno por ruta
+function extraerRutas(fila: Record<string, any>): { nombre: string; paradas: string[] }[] {
+  const rutas: { nombre: string; paradas: string[] }[] = []
+  let i = 1
+  while (fila[`RUTA_${i}_NOMBRE`] !== undefined || fila[`RUTA_${i}_PARADAS`] !== undefined) {
+    const nombre = String(fila[`RUTA_${i}_NOMBRE`] ?? '').trim()
+    const paradasTexto = String(fila[`RUTA_${i}_PARADAS`] ?? '').trim()
+    const paradas = paradasTexto.split(',').map(p => p.trim()).filter(Boolean)
+    if (nombre && paradas.length > 0) rutas.push({ nombre, paradas })
+    i++
+  }
+  return rutas
+}
+
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData()
@@ -57,6 +71,9 @@ export async function POST(req: NextRequest) {
     const diasDescansoPorNegocio = new Map<string, number[]>()
     // Mismo patrón para dias_entrevista (5.25), campo hermano de dias_descanso
     const diasEntrevistaPorNegocio = new Map<string, number[]>()
+    // Mismo patrón para rutas con nombre (2026-08-26) — vive en negocios,
+    // reemplaza a vacantes.zonas_ruta (en desuso)
+    const rutasPorNegocio = new Map<string, { nombre: string; paradas: string[] }[]>()
 
     for (let idx = 0; idx < filas.length; idx++) {
       const fila = filas[idx]
@@ -123,7 +140,6 @@ export async function POST(req: NextRequest) {
           beneficios: extraerListaDinamica(fila, 'BENEFICIO'),
           documentos_requeridos: extraerListaDinamica(fila, 'DOCUMENTO'),
           tiene_ruta: esSiNo(fila['RUTA']),
-          zonas_ruta: String(fila['ZONAS DE RUTA'] ?? '').split(',').map(z => z.trim()).filter(Boolean),
           ruta_para_entrevista: esSiNo(fila['RUTA PARA ENTREVISTA']),
           estacionamiento: esSiNo(fila['ESTACIONAMIENTO']),
           comedor: esSiNo(fila['COMEDOR']),
@@ -161,6 +177,12 @@ export async function POST(req: NextRequest) {
         const diasEntrevistaTexto = String(fila['DÍAS DE ENTREVISTA EMPRESA'] ?? '').trim()
         if (negocioId && diasEntrevistaTexto) {
           diasEntrevistaPorNegocio.set(negocioId, parsearDiasDescanso(diasEntrevistaTexto))
+        }
+
+        // Rutas con nombre (2026-08-26): mismo patrón, junta y aplica al final
+        const rutasFila = extraerRutas(fila)
+        if (negocioId && rutasFila.length > 0) {
+          rutasPorNegocio.set(negocioId, rutasFila)
         }
 
         // CA-08.5: actualizar si ya existe (por ID, o por título+empresa en la misma agencia)
@@ -204,6 +226,11 @@ export async function POST(req: NextRequest) {
     // 5.25: aplica los días de entrevista acumulados, mismo patrón
     for (const [negocioId, dias] of diasEntrevistaPorNegocio) {
       await supabase.from('negocios').update({ dias_entrevista: dias }).eq('id', negocioId)
+    }
+
+    // Rutas con nombre: aplica las acumuladas, mismo patrón
+    for (const [negocioId, rutas] of rutasPorNegocio) {
+      await supabase.from('negocios').update({ rutas }).eq('id', negocioId)
     }
 
     return NextResponse.json({ ok: true, creadas, actualizadas, errores })

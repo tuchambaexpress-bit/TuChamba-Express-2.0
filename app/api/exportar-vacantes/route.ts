@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
         punto_reunion, guion_candidato, comentarios_salario,
         dias_induccion, induccion_dentro_garantia,
         status,
-        negocios(nombre, dias_descanso, dias_entrevista)
+        negocios(nombre, dias_descanso, dias_entrevista, rutas)
       `)
       .eq('agencia_id', agenciaId)
       .order('created_at', { ascending: false })
@@ -97,7 +97,6 @@ export async function GET(req: NextRequest) {
       }
 
       fila['RUTA'] = v.tiene_ruta ? 'SI' : 'NO'
-      fila['ZONAS DE RUTA'] = Array.isArray(v.zonas_ruta) ? v.zonas_ruta.join(', ') : ''
       fila['RUTA PARA ENTREVISTA'] = v.ruta_para_entrevista ? 'SI' : 'NO'
       fila['ESTACIONAMIENTO'] = v.estacionamiento ? 'SI' : 'NO'
       fila['COMEDOR'] = v.comedor ? 'SI' : 'NO'
@@ -122,6 +121,13 @@ export async function GET(req: NextRequest) {
       fila['INDUCCIÓN DENTRO DE GARANTÍA'] = v.induccion_dentro_garantia === false ? 'NO' : 'SI'
       fila['DÍAS DE DESCANSO EMPRESA'] = formatearDiasDescanso(v.negocios?.dias_descanso)
       fila['DÍAS DE ENTREVISTA EMPRESA'] = formatearDiasDescanso(v.negocios?.dias_entrevista)
+            // Rutas con nombre: exporta pares RUTA_N_NOMBRE/RUTA_N_PARADAS,
+      // uno por cada ruta que tenga la empresa
+      const rutasEmpresa = v.negocios?.rutas ?? []
+      rutasEmpresa.forEach((r: any, i: number) => {
+        fila[`RUTA_${i + 1}_NOMBRE`] = r.nombre
+        fila[`RUTA_${i + 1}_PARADAS`] = Array.isArray(r.paradas) ? r.paradas.join(', ') : ''
+      })
       fila['ESTATUS'] = v.status === 'vigente' ? 'Vigente' : v.status === 'pausada' ? 'Pausada' : 'Cerrada'
 
       return fila

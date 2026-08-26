@@ -16,7 +16,7 @@ export default async function VacantesPage() {
       estacionamiento, comedor, uniforme,
       empresa_visible, destacada, prioridad, status, created_at,
       requiere_examen_medico, requiere_antidoping, 
-      negocios(nombre, documentos_negocio(id, nombre_archivo, archivo_url))
+      negocios(nombre, rutas, documentos_negocio(id, nombre_archivo, archivo_url))
     `)
     .eq('status', 'vigente')
     .order('destacada', { ascending: false })

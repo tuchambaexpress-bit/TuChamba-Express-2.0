@@ -25,7 +25,6 @@ interface Vacante {
   turno: string | null
   tipo_contrato: string | null
   tiene_ruta: boolean
-  zonas_ruta: string[]
   ruta_para_entrevista: boolean
   estacionamiento: boolean
   comedor: boolean
@@ -36,7 +35,7 @@ interface Vacante {
   created_at: string
   requiere_examen_medico: boolean
   requiere_antidoping: boolean
-  negocios: { nombre: string; documentos_negocio?: { id: string; nombre_archivo: string; archivo_url: string }[] } | null
+  negocios: { nombre: string; rutas?: { nombre: string; paradas: string[] }[]; documentos_negocio?: { id: string; nombre_archivo: string; archivo_url: string }[] } | null
 }
 
 interface Props {
@@ -176,21 +175,26 @@ export default function VacanteDetalle({ vacante, esModal, reclutadorId }: Props
       {/* Logística */}
       {(vacante.tiene_ruta || vacante.estacionamiento || vacante.comedor || vacante.uniforme) && (
         <div className="mb-5">
-          <h3 className="font-semibold text-gray-800 mb-2">Logística</h3>
-          <div className="flex flex-wrap gap-2">
+          <h3 className="font-semibold text-lg text-gray-800 mb-2">Logística</h3>
+          <div className="flex flex-wrap items-start gap-2">
             {vacante.tiene_ruta && (
               <div className="bg-green-50 border border-green-200 rounded-lg px-3 py-2">
                 <p className="text-xs font-semibold text-green-700">🚌 Ruta de transporte</p>
-                {vacante.zonas_ruta?.length > 0 && (
-                  <p className="text-xs text-green-600 mt-0.5">
-                    {vacante.zonas_ruta.join(', ')}
-                  </p>
+                {vacante.negocios?.rutas && vacante.negocios.rutas.length > 0 && (
+                  <div className="mt-0.5 space-y-1">
+                    {vacante.negocios.rutas.map((ruta, i) => (
+                      <p key={i} className="text-xs text-green-600">
+                        <span className="font-medium">{ruta.nombre}:</span> {ruta.paradas.join(', ')}
+                      </p>
+                    ))}
+                  </div>
                 )}
                 {vacante.ruta_para_entrevista && (
-                  <p className="text-xs text-green-600">Disponible para entrevista</p>
+                  <p className="text-xs text-green-600 mt-0.5">Disponible para entrevista</p>
                 )}
                 {vacante.negocios?.documentos_negocio && vacante.negocios.documentos_negocio.length > 0 && (
-                  <div className="mt-1.5 space-y-0.5">
+                  <div className="mt-2 pt-2 border-t border-green-200 space-y-0.5">
+                    <p className="text-xs font-semibold text-green-700 mb-0.5">📎 Documentos de la ruta</p>
                     {vacante.negocios.documentos_negocio.map((doc) => (
                       <a
                         key={doc.id}

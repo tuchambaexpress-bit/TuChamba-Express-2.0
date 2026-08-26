@@ -11,6 +11,7 @@ interface Negocio {
   nombre: string
   dias_descanso: number[]
   dias_entrevista: number[]
+  rutas: { nombre: string; paradas: string[] }[]
 }
 
 interface Props {
@@ -152,15 +153,21 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
   const [creandoNegocio, setCreandoNegocio] = useState(false)
   const [diasDescanso, setDiasDescanso] = useState<number[]>([0])
   const [diasEntrevista, setDiasEntrevista] = useState<number[]>([1, 2, 3, 4, 5])
+  // Rutas de la empresa (campo hermano de días descanso/entrevista, mismo
+  // patrón: vive en `negocios`, se carga/guarda junto con ellos). `paradas`
+  // se maneja como texto separado por comas durante la edición, igual que
+  // se captura en el Excel — se convierte a array solo al guardar.
+  const [rutas, setRutas] = useState<{ nombre: string; paradas: string }[]>([])
 
-  // Al elegir una empresa existente, carga sus días de descanso y de
-  // entrevista ya guardados
+  // Al elegir una empresa existente, carga sus días de descanso, entrevista
+  // y rutas ya guardados
   useEffect(() => {
     if (creandoNegocio || !form.negocio_id) return
     const negocio = negocios.find(n => n.id === form.negocio_id)
     if (negocio) {
       setDiasDescanso(negocio.dias_descanso ?? [0])
       setDiasEntrevista(negocio.dias_entrevista ?? [1, 2, 3, 4, 5])
+      setRutas((negocio.rutas ?? []).map(r => ({ nombre: r.nombre, paradas: (r.paradas ?? []).join(', ') })))
     }
   }, [form.negocio_id, negocios, creandoNegocio])
   const [documentosRuta, setDocumentosRuta] = useState<any[]>([])
@@ -196,7 +203,7 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
     const supabase = createClient()
     const { data } = await supabase
       .from('negocios')
-      .select('id, nombre, dias_descanso, dias_entrevista')
+      .select('id, nombre, dias_descanso, dias_entrevista, rutas')
       .order('nombre')
     if (data) setNegocios(data)
   }
@@ -313,9 +320,15 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
         return
       }
 
+      // Rutas: convierte de texto (edición) a array (guardado), ignora
+      // filas incompletas (sin nombre o sin ninguna parada)
+      const rutasLimpias = rutas
+        .map(r => ({ nombre: r.nombre.trim(), paradas: r.paradas.split(',').map(p => p.trim()).filter(Boolean) }))
+        .filter(r => r.nombre && r.paradas.length > 0)
+
       const { data: negocioCreado, error: errorNegocio } = await supabase
         .from('negocios')
-        .insert({ ...nuevoNegocio, nombre: nombreLimpio, dias_descanso: diasDescanso, dias_entrevista: diasEntrevista })
+        .insert({ ...nuevoNegocio, nombre: nombreLimpio, dias_descanso: diasDescanso, dias_entrevista: diasEntrevista, rutas: rutasLimpias })
         .select('id')
         .single()
 
@@ -326,8 +339,11 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
       }
       negocioId = negocioCreado.id
     } else if (negocioId) {
-      // Empresa existente: días de descanso y de entrevista aplican a TODAS sus vacantes
-      await supabase.from('negocios').update({ dias_descanso: diasDescanso, dias_entrevista: diasEntrevista }).eq('id', negocioId)
+      // Empresa existente: días de descanso, entrevista y rutas aplican a TODAS sus vacantes
+      const rutasLimpias = rutas
+        .map(r => ({ nombre: r.nombre.trim(), paradas: r.paradas.split(',').map(p => p.trim()).filter(Boolean) }))
+        .filter(r => r.nombre && r.paradas.length > 0)
+      await supabase.from('negocios').update({ dias_descanso: diasDescanso, dias_entrevista: diasEntrevista, rutas: rutasLimpias }).eq('id', negocioId)
     }
 
     const payload = {
@@ -370,7 +386,6 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
       salario_visible: form.salario_visible,
       destacada: form.destacada,
       tiene_ruta: form.tiene_ruta,
-      zonas_ruta: form.tiene_ruta ? form.zonas_ruta : [],
       ruta_para_entrevista: form.tiene_ruta ? form.ruta_para_entrevista : false,
       estacionamiento: form.estacionamiento,
       comedor: form.comedor,
@@ -714,18 +729,63 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
                         </div>
                       )}
 
-                      {form.tiene_ruta && (
-                        <div className="border border-gray-200 rounded-lg p-3 space-y-2 bg-gray-50">
+                      {form.tiene_ruta && !form.negocio_id && !creandoNegocio && (
+                        <p className="text-xs text-amber-600 bg-amber-50 rounded-lg p-2">
+                          Selecciona primero una empresa en la Sección 1 para poder configurar sus rutas.
+                        </p>
+                      )}
+
+                      {form.tiene_ruta && (form.negocio_id || creandoNegocio) && (
+                        <div className="border border-gray-200 rounded-lg p-3 space-y-3 bg-gray-50">
                           <div>
                             <label className="text-xs font-medium text-gray-700 flex items-center mb-1">
-                              Zonas que cubre la ruta
-                              <InfoTooltip texto="Colonias o puntos de referencia por donde pasa el transporte, uno por uno." />
+                              Rutas de {negocios.find(n => n.id === form.negocio_id)?.nombre ?? 'la empresa'}
+                              <InfoTooltip texto="Compartidas entre todas las vacantes de esta empresa — si las editas aquí, se reflejan en todas. Cada ruta lleva su propio nombre y sus paradas." />
                             </label>
-                            <EditableList
-                              items={form.zonas_ruta}
-                              onChange={(items) => setForm({ ...form, zonas_ruta: items })}
-                              placeholder="Ej. Parque Industrial Apodaca"
-                            />
+                            <div className="space-y-2">
+                              {rutas.map((ruta, i) => (
+                                <div key={i} className="flex gap-2 items-start bg-white border border-gray-200 rounded-lg p-2">
+                                  <div className="flex-1 space-y-1">
+                                    <input
+                                      type="text"
+                                      value={ruta.nombre}
+                                      onChange={e => {
+                                        const nuevas = [...rutas]
+                                        nuevas[i] = { ...nuevas[i], nombre: e.target.value }
+                                        setRutas(nuevas)
+                                      }}
+                                      placeholder="Nombre de la ruta, ej. Ruta Norte"
+                                      className="w-full text-xs font-medium border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#1A6B3C]"
+                                    />
+                                    <input
+                                      type="text"
+                                      value={ruta.paradas}
+                                      onChange={e => {
+                                        const nuevas = [...rutas]
+                                        nuevas[i] = { ...nuevas[i], paradas: e.target.value }
+                                        setRutas(nuevas)
+                                      }}
+                                      placeholder="Paradas separadas por coma, ej. Apodaca, Escobedo, Guadalupe"
+                                      className="w-full text-xs border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#1A6B3C]"
+                                    />
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => setRutas(rutas.filter((_, idx) => idx !== i))}
+                                    className="text-red-400 hover:text-red-600 text-xs mt-1"
+                                  >
+                                    🗑️
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setRutas([...rutas, { nombre: '', paradas: '' }])}
+                              className="mt-2 text-xs text-[#1A6B3C] hover:underline"
+                            >
+                              + Agregar ruta
+                            </button>
                           </div>
                           <label className="flex items-center gap-2 cursor-pointer">
                             <input

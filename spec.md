@@ -268,6 +268,15 @@ dias_entrevista jsonb DEFAULT '[]'  -- nueva (5.25, 2026-08-20) — días en que
                                      -- separado. Editable en VacanteModal
                                      -- Sección 8, no Sección 1 (deliberado).
                                      -- Array vacío = sin restricción configurada.
+rutas jsonb DEFAULT '[]'            -- nueva (2026-08-26, ver CA-20.5) — rutas de
+                                     -- transporte con nombre, por empresa.
+                                     -- Formato: [{"nombre": "Ruta Norte",
+                                     -- "paradas": ["Apodaca", "Escobedo"]}].
+                                     -- Reemplaza a vacantes.zonas_ruta (en
+                                     -- desuso). Editable en VacanteModal
+                                     -- Sección 5, junto al checkbox
+                                     -- "¿Tiene ruta?" (ese campo sigue siendo
+                                     -- de vacante, per-vacante on/off).
 created_at timestamptz DEFAULT now()
 ```
 
@@ -299,7 +308,12 @@ fecha_inicio_estimada date
 
 -- LOGÍSTICA (visible candidato y reclutador)
 tiene_ruta bool DEFAULT false
-zonas_ruta jsonb DEFAULT '[]'
+zonas_ruta jsonb DEFAULT '[]'       -- EN DESUSO desde 2026-08-26 (ver CA-20.3
+                                     -- ampliada). Reemplazado por
+                                     -- negocios.rutas (rutas con nombre,
+                                     -- compartidas por empresa). Columna
+                                     -- no borrada, José confirmó que no
+                                     -- había datos reales que migrar.
 ruta_para_entrevista bool DEFAULT false
 horario_ruta text
 estacionamiento bool DEFAULT false
@@ -918,7 +932,7 @@ Dado que el coordinador modifica cualquiera de estos campos en una vacante:
 - `comision_base_mxn`
 - `dias_garantia`
 - `tiene_promocion` / `promocion_monto_mxn` / `promocion_fin`
-- `tiene_ruta` / `zonas_ruta`
+- `tiene_ruta` (campo de la vacante; las rutas en sí ahora viven en `negocios.rutas` — ver CA-20.5 — este mecanismo de alerta hoy solo vigila campos de `vacantes`, no cubre cambios a las rutas de la empresa)
 
 Cuando confirma el cambio, entonces el sistema genera automáticamente una alerta para TODOS los reclutadores de la agencia con un mensaje que especifica exactamente qué cambió y el valor nuevo. Ejemplos reales:
 
@@ -1499,13 +1513,23 @@ El coordinador ajusta lo que necesite cambiar (horario, salario, etc.) antes de 
 > *Origen: José compartió ejemplos reales de HR CONNECT — una sola empresa (ej. TOPBAND) puede tener más de 15 rutas de transporte distintas, normalmente consolidadas en 1-2 PDFs. El documento pertenece a la empresa, no a una vacante específica — si vive en `vacantes`, se repetiría (o desincronizaría) en cada vacante nueva de la misma empresa.*
 
 En la Sección 5 (Logística especial) de `VacanteModal`, el checkbox **"¿La empresa ofrece ruta de transporte?"** cumple una doble función:
-- **A nivel vacante** (sin cambios respecto al diseño original): controla si `tiene_ruta`/`zonas_ruta`/`ruta_para_entrevista` aplican a *esta* vacante específica — puede que una empresa tenga ruta en general pero una vacante puntual (ej. turno nocturno) no la use.
+- **A nivel vacante** (sin cambios respecto al diseño original): controla si `tiene_ruta`/`ruta_para_entrevista` aplican a *esta* vacante específica — puede que una empresa tenga ruta en general pero una vacante puntual (ej. turno nocturno) no la use.
 - **A nivel empresa** (nuevo): al activarse, muestra el bloque de gestión de PDFs de `documentos_negocio` para la empresa seleccionada en la Sección 1 — subir, ver, eliminar. Estos documentos son **compartidos entre todas las vacantes de esa empresa**: si se sube o borra desde la vacante A, se refleja automáticamente en la vacante B de la misma empresa, sin duplicar el archivo.
 
 Los documentos son visibles en 3 lugares, sin restricción de sesión (bucket público):
 - **Coordinador** — dentro de `VacanteModal`, Sección 5
 - **Reclutador** — en la ficha operativa de la vacante (`/reclutador/detalle/[id]`), dentro del bloque de Logística
 - **Candidato** — en el portal público, dentro de la ficha completa de la vacante (`VacanteDetalle.tsx`)
+
+**CA-20.5 — Rutas con nombre, a nivel empresa (José, 2026-08-26):**
+
+> *Origen: al preparar el Excel real de vacantes de Roxana/HR CONNECT, José detectó que una empresa puede tener varias rutas de transporte, cada una con su propio nombre (ej. "Ruta Norte", "Ruta Sur") y su propio conjunto de paradas — la lista plana de `zonas_ruta` (una sola bolsa de zonas, sin agrupar) no distinguía cuál parada pertenecía a cuál ruta.*
+
+Reemplaza `vacantes.zonas_ruta` (ahora en desuso, ver schema de `vacantes` arriba) por `negocios.rutas` — mismo patrón exacto que `dias_descanso`/`dias_entrevista` (CA-08.8/CA-08.9): campo compartido por **empresa**, no por vacante, editable desde `VacanteModal` Sección 5 (visible solo si `tiene_ruta` está marcado y hay una empresa seleccionada), cargado/guardado junto con los otros 2 campos de empresa en el mismo submit.
+
+Formato: `[{"nombre": "Ruta Norte", "paradas": ["Apodaca", "Escobedo", "Guadalupe"]}]`. En el modal, cada ruta se captura como un par de campos (nombre + paradas separadas por coma en un solo input de texto) con botones "+ Agregar ruta" / 🗑️ por fila.
+
+El candidato ve, dentro del mismo recuadro verde "🚌 Ruta de transporte" (`VacanteDetalle.tsx`), cada ruta con su nombre seguido de sus paradas — ej. *"Ruta Norte: Apodaca, Escobedo, Guadalupe"* — y debajo, con una línea divisoria, los documentos PDF de esa empresa (CA-20.3), bajo la etiqueta "📎 Documentos de la ruta".
 
 **CA-20.4 — Filtro inteligente contra duplicados de empresa (idea de José, 2026-08-09):**
 

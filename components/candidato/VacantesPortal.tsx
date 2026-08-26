@@ -54,7 +54,7 @@ const SELECT_VACANTES = `
   estacionamiento, comedor, uniforme,
   empresa_visible, destacada, prioridad, status, created_at,
   requiere_examen_medico, requiere_antidoping,
-  negocios(nombre, documentos_negocio(id, nombre_archivo, archivo_url))
+  negocios(nombre, rutas, documentos_negocio(id, nombre_archivo, archivo_url))
 `
 
 interface Props {
@@ -288,19 +288,19 @@ export default function VacantesPortal({ vacantes: vacantesIniciales }: Props) {
       </div>
 
       {/* Footer — mismo contenido que la Home, repetido aquí (José, 2026-08-24) */}
-      <footer className="border-t border-gray-100 px-4 py-6 bg-white">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start w-full">
+      <footer className="border-t border-gray-100 px-4 py-3 bg-white">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-start w-full">
           {/* Trámites útiles — movido aquí desde VacanteDetalle.tsx (José,
               2026-08-24): es información general de la plataforma, no de
               cada vacante — no debía repetirse en cada ficha. */}
           <div className="text-left">
-            <p className="text-xs text-gray-500 mb-2">📋 Trámites útiles con el gobierno</p>
-            <div className="flex flex-wrap items-center gap-2">
+            <p className="text-xs text-gray-500 mb-1">📋 Trámites útiles con el gobierno</p>
+            <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
               <a
                 href="https://www.imss.gob.mx/tramites/imss02020"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs bg-gray-50 border border-gray-200 hover:border-[#1A6B3C] text-gray-600 hover:text-[#1A6B3C] px-3 py-1.5 rounded-lg transition-colors"
+                className="text-[11px] bg-gray-50 border border-gray-200 hover:border-[#1A6B3C] text-gray-600 hover:text-[#1A6B3C] px-2 py-1 rounded-md transition-colors"
               >
                 🏥 Consultar tu NSS (IMSS)
               </a>
@@ -308,7 +308,7 @@ export default function VacantesPortal({ vacantes: vacantesIniciales }: Props) {
                 href="https://satid.sat.gob.mx/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs bg-gray-50 border border-gray-200 hover:border-[#1A6B3C] text-gray-600 hover:text-[#1A6B3C] px-3 py-1.5 rounded-lg transition-colors"
+                className="text-[11px] bg-gray-50 border border-gray-200 hover:border-[#1A6B3C] text-gray-600 hover:text-[#1A6B3C] px-2 py-1 rounded-md transition-colors"
               >
                 🧾 RFC / Identidad (SAT ID)
               </a>
@@ -316,9 +316,17 @@ export default function VacantesPortal({ vacantes: vacantesIniciales }: Props) {
                 href="https://www.gob.mx/curp/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs bg-gray-50 border border-gray-200 hover:border-[#1A6B3C] text-gray-600 hover:text-[#1A6B3C] px-3 py-1.5 rounded-lg transition-colors"
+                className="text-[11px] bg-gray-50 border border-gray-200 hover:border-[#1A6B3C] text-gray-600 hover:text-[#1A6B3C] px-2 py-1 rounded-md transition-colors"
               >
                 🪪 Consultar tu CURP
+              </a>
+              <a
+                href="https://www.miregistrocivil.gob.mx/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[11px] bg-gray-50 border border-gray-200 hover:border-[#1A6B3C] text-gray-600 hover:text-[#1A6B3C] px-2 py-1 rounded-md transition-colors"
+              >
+                📜 Acta de nacimiento
               </a>
             </div>
           </div>

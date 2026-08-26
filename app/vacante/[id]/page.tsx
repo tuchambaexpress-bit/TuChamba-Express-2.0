@@ -53,7 +53,7 @@ export default async function VacantePage({ params }: Props) {
       estacionamiento, comedor, uniforme,
       empresa_visible, destacada, status, created_at,
       requiere_examen_medico, requiere_antidoping,
-      negocios(nombre, documentos_negocio(id, nombre_archivo, archivo_url))
+      negocios(nombre, rutas, documentos_negocio(id, nombre_archivo, archivo_url))
     `)
     .eq('id', params.id)
     .eq('status', 'vigente')
