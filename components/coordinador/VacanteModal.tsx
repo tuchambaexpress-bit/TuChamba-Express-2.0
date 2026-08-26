@@ -41,6 +41,7 @@ const DOCUMENTOS_TRONCO_COMUN = [
   'NSS (Hoja de seguridad social IMSS)',
   'Acta de nacimiento',
   'Hoja de retención Infonavit (de contar con crédito)',
+  'Comprobante de estudios',
 ]
 
 const FORM_INICIAL = {
@@ -782,7 +783,7 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
                       <div>
                         <label className="text-xs font-medium text-gray-700 flex items-center mb-1">
                           Documentos tronco común
-                          <InfoTooltip texto="Los 6 documentos que casi siempre se piden. Márcalos para que aparezcan en la lista de abajo automáticamente." />
+                          <InfoTooltip texto="Los documentos que casi siempre se piden. Márcalos para que aparezcan en la lista de abajo automáticamente." />
                         </label>
                         <div className="grid grid-cols-2 gap-1.5 mb-2">
                           {DOCUMENTOS_TRONCO_COMUN.map(doc => (
