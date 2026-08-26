@@ -55,6 +55,8 @@ export async function POST(req: NextRequest) {
     // CA-08.8: dias_descanso vive en negocios, no en vacantes — se juntan aquí
     // y se aplican en un solo UPDATE por empresa al final (última fila gana)
     const diasDescansoPorNegocio = new Map<string, number[]>()
+    // Mismo patrón para dias_entrevista (5.25), campo hermano de dias_descanso
+    const diasEntrevistaPorNegocio = new Map<string, number[]>()
 
     for (let idx = 0; idx < filas.length; idx++) {
       const fila = filas[idx]
@@ -155,6 +157,12 @@ export async function POST(req: NextRequest) {
           diasDescansoPorNegocio.set(negocioId, parsearDiasDescanso(diasDescansoTexto))
         }
 
+        // 5.25: mismo patrón para días de entrevista
+        const diasEntrevistaTexto = String(fila['DÍAS DE ENTREVISTA EMPRESA'] ?? '').trim()
+        if (negocioId && diasEntrevistaTexto) {
+          diasEntrevistaPorNegocio.set(negocioId, parsearDiasDescanso(diasEntrevistaTexto))
+        }
+
         // CA-08.5: actualizar si ya existe (por ID, o por título+empresa en la misma agencia)
         const idExcel = String(fila['ID'] ?? '').trim()
         let idExistente: string | null = null
@@ -191,6 +199,11 @@ export async function POST(req: NextRequest) {
     // CA-08.8: aplica los días de descanso acumulados, uno por empresa
     for (const [negocioId, dias] of diasDescansoPorNegocio) {
       await supabase.from('negocios').update({ dias_descanso: dias }).eq('id', negocioId)
+    }
+
+    // 5.25: aplica los días de entrevista acumulados, mismo patrón
+    for (const [negocioId, dias] of diasEntrevistaPorNegocio) {
+      await supabase.from('negocios').update({ dias_entrevista: dias }).eq('id', negocioId)
     }
 
     return NextResponse.json({ ok: true, creadas, actualizadas, errores })

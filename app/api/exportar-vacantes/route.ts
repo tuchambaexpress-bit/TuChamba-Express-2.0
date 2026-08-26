@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
         punto_reunion, guion_candidato, comentarios_salario,
         dias_induccion, induccion_dentro_garantia,
         status,
-        negocios(nombre, dias_descanso)
+        negocios(nombre, dias_descanso, dias_entrevista)
       `)
       .eq('agencia_id', agenciaId)
       .order('created_at', { ascending: false })
@@ -121,6 +121,7 @@ export async function GET(req: NextRequest) {
       fila['DÍAS DE INDUCCIÓN'] = v.dias_induccion ?? ''
       fila['INDUCCIÓN DENTRO DE GARANTÍA'] = v.induccion_dentro_garantia === false ? 'NO' : 'SI'
       fila['DÍAS DE DESCANSO EMPRESA'] = formatearDiasDescanso(v.negocios?.dias_descanso)
+      fila['DÍAS DE ENTREVISTA EMPRESA'] = formatearDiasDescanso(v.negocios?.dias_entrevista)
       fila['ESTATUS'] = v.status === 'vigente' ? 'Vigente' : v.status === 'pausada' ? 'Pausada' : 'Cerrada'
 
       return fila
