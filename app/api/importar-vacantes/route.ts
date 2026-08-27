@@ -78,6 +78,8 @@ export async function POST(req: NextRequest) {
     // Mismo patrón para rutas con nombre (2026-08-26) — vive en negocios,
     // reemplaza a vacantes.zonas_ruta (en desuso)
     const rutasPorNegocio = new Map<string, { nombre: string; paradas: string[] }[]>()
+    // Mismo patrón para ubicación de Maps (2026-08-27) — campo de empresa
+    const ubicacionMapsPorNegocio = new Map<string, string>()
 
     for (let idx = 0; idx < filas.length; idx++) {
       const fila = filas[idx]
@@ -195,6 +197,12 @@ export async function POST(req: NextRequest) {
           rutasPorNegocio.set(negocioId, rutasFila)
         }
 
+        // Ubicación de Maps (2026-08-27): mismo patrón
+        const ubicacionMapsTexto = String(fila['UBICACIÓN MAPS EMPRESA'] ?? '').trim()
+        if (negocioId && ubicacionMapsTexto) {
+          ubicacionMapsPorNegocio.set(negocioId, ubicacionMapsTexto)
+        }
+
         // CA-08.5: actualizar si ya existe (por ID, o por título+empresa en la misma agencia)
         const idExcel = String(fila['ID'] ?? '').trim()
         let idExistente: string | null = null
@@ -241,6 +249,11 @@ export async function POST(req: NextRequest) {
     // Rutas con nombre: aplica las acumuladas, mismo patrón
     for (const [negocioId, rutas] of rutasPorNegocio) {
       await supabase.from('negocios').update({ rutas }).eq('id', negocioId)
+    }
+
+    // Ubicación de Maps: aplica las acumuladas, mismo patrón
+    for (const [negocioId, ubicacionMaps] of ubicacionMapsPorNegocio) {
+      await supabase.from('negocios').update({ ubicacion_maps: ubicacionMaps }).eq('id', negocioId)
     }
 
     return NextResponse.json({ ok: true, creadas, actualizadas, errores })

@@ -79,7 +79,7 @@ export const COLUMNAS_FIJAS = [
   'CONTACTO RRHH NOMBRE', 'CONTACTO RRHH TELÉFONO', 'MEJOR HORARIO CONTACTO', 'PUNTO DE REUNIÓN',
   'QUÉ DECIRLE AL CANDIDATO', 'COMENTARIOS SALARIO',
   'DÍAS DE INDUCCIÓN', 'INDUCCIÓN DENTRO DE GARANTÍA', 'DÍAS DE DESCANSO EMPRESA',
-  'CUPO REQUERIDO',
+  'CUPO REQUERIDO', 'UBICACIÓN MAPS EMPRESA',
   'ESTATUS',
 ]
 
@@ -96,7 +96,7 @@ export const INSTRUCCIONES: { columna: string; campoSistema: string; descripcion
   { columna: 'MODALIDAD', campoSistema: 'Sección 2 — Modalidad', descripcion: 'Presencial, Híbrido o Remoto.', ejemplo: 'Presencial' },
   { columna: 'SALARIO MÍNIMO', campoSistema: 'Sección 3 — Salario', descripcion: 'Solo el número, sin signo de pesos ni comas.', ejemplo: '2500' },
   { columna: 'SALARIO MÁXIMO', campoSistema: 'Sección 3 — Salario', descripcion: 'Opcional, si el salario es un rango.', ejemplo: '3000' },
-  { columna: 'COMENTARIOS SALARIO', campoSistema: 'Sección 3 — Comentarios del salario', descripcion: 'Solo para el reclutador, el candidato nunca lo ve. Ej. cómo sube el salario con la experiencia.', ejemplo: 'Empieza en el mínimo, sube con antigüedad' },
+  { columna: 'COMENTARIOS SALARIO', campoSistema: 'Sección 3 — Comentarios del salario', descripcion: 'Solo para el reclutador, el candidato nunca lo ve. Ej. cómo sube el salario con la experiencia.', ejemplo: 'Pago los Jueves. Nómina Santander. Semana desfasada.' },
   { columna: 'TIPO SALARIO', campoSistema: 'Sección 3 — Salario', descripcion: 'Neto, Bruto o A convenir.', ejemplo: 'Bruto' },
   { columna: 'PERIODO SALARIO', campoSistema: 'Sección 3 — Salario', descripcion: 'Semanales, Quincenales, Mensuales o Por hora.', ejemplo: 'Semanales' },
   { columna: 'MOSTRAR SALARIO', campoSistema: 'Sección 3 — Mostrar salario', descripcion: 'SI = visible al candidato. NO = aparece "A convenir".', ejemplo: 'SI' },
@@ -135,6 +135,7 @@ export const INSTRUCCIONES: { columna: string; campoSistema: string; descripcion
   { columna: 'RUTA_1_NOMBRE, RUTA_2_NOMBRE...', campoSistema: '(campo de la EMPRESA, no de la vacante)', descripcion: 'Nombre de cada ruta de transporte de la empresa. Agrega tantos pares RUTA_N_NOMBRE/RUTA_N_PARADAS como rutas tenga — el sistema los detecta automáticamente. Solo aplica si RUTA = SI. Aplica a TODAS las vacantes de esa empresa — si la misma EMPRESA aparece en varias filas con valores distintos, gana el de la última fila.', ejemplo: 'Ruta Norte' },
   { columna: 'RUTA_1_PARADAS, RUTA_2_PARADAS...', campoSistema: '(campo de la EMPRESA, no de la vacante)', descripcion: 'Paradas de esa ruta específica, separadas por coma dentro de la misma celda. Debe venir en pareja con su RUTA_N_NOMBRE correspondiente (mismo número N).', ejemplo: 'Apodaca, Escobedo, Guadalupe' },
   { columna: 'CUPO REQUERIDO', campoSistema: 'Sección 7 — Cupo requerido', descripcion: 'Cuántas personas necesita la empresa para esta vacante. Cuando se cubre, la vacante se pausa sola. Número entero. Si se deja vacío, se asume 1.', ejemplo: '3' },
+  { columna: 'UBICACIÓN MAPS EMPRESA', campoSistema: '(campo de la EMPRESA, no de la vacante)', descripcion: 'Link de Google Maps de la empresa/fábrica. Solo lo ve el reclutador en su ficha de la vacante — el candidato nunca lo ve. Aplica a TODAS las vacantes de esa empresa — si la misma EMPRESA aparece en varias filas con valores distintos, gana el de la última fila.', ejemplo: 'https://maps.app.goo.gl/...' },
   { columna: 'ESTATUS', campoSistema: 'Vigente/No vigente (toggle Sección 8)', descripcion: 'Vigente o No vigente.', ejemplo: 'Vigente' },
 ]
 

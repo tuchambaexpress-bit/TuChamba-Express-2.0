@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
         punto_reunion, guion_candidato, comentarios_salario,
         dias_induccion, induccion_dentro_garantia, cupo_requerido,
         status,
-        negocios(nombre, dias_descanso, dias_entrevista, rutas)
+        negocios(nombre, dias_descanso, dias_entrevista, rutas, ubicacion_maps)
       `)
       .eq('agencia_id', agenciaId)
       .order('created_at', { ascending: false })
@@ -131,6 +131,7 @@ export async function GET(req: NextRequest) {
         fila[`RUTA_${i + 1}_NOMBRE`] = rutasEmpresa[i]?.nombre ?? ''
         fila[`RUTA_${i + 1}_PARADAS`] = Array.isArray(rutasEmpresa[i]?.paradas) ? rutasEmpresa[i].paradas.join(', ') : ''
       }
+      fila['UBICACIÓN MAPS EMPRESA'] = v.negocios?.ubicacion_maps ?? ''
       fila['ESTATUS'] = v.status === 'vigente' ? 'Vigente' : v.status === 'pausada' ? 'Pausada' : 'Cerrada'
 
       return fila
