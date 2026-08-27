@@ -2,6 +2,7 @@ import { createClient as createServerClient } from '@supabase/supabase-js'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import FaqWidget from '@/components/reclutador/FaqWidget'
+import RutasColapsables from '@/components/shared/RutasColapsables'
 
 export const revalidate = 0 // nunca cachear — siempre datos frescos de Supabase
 
@@ -26,7 +27,7 @@ export default async function FichaVacante({ params, searchParams }: Props) {
       letras_chiquitas, salario_min, salario_max, salario_tipo,
       salario_visible, ciudad, estado, colonia_zona,
       modalidad, jornada, horario, tipo_contrato, turno, salario_periodo, turno,
-      tiene_ruta, zonas_ruta, ruta_para_entrevista,
+      tiene_ruta, ruta_para_entrevista,
       estacionamiento, comedor, uniforme,
       empresa_visible, destacada, status, prioridad,
       dias_garantia, dias_induccion, induccion_dentro_garantia,
@@ -34,7 +35,7 @@ export default async function FichaVacante({ params, searchParams }: Props) {
       contacto_rrhh, contacto_rrhh_telefono, contacto_rrhh_horario,
       punto_reunion, documentos_requeridos, guion_candidato, comentarios_salario,
       cupo_requerido, cupo_desde, agencia_id,
-      negocios(nombre, dias_entrevista, documentos_negocio(id, nombre_archivo, archivo_url))
+      negocios(nombre, dias_entrevista, ubicacion_maps, rutas, documentos_negocio(id, nombre_archivo, archivo_url))
     `)
     .eq('id', params.id)
     .single()
@@ -253,18 +254,22 @@ export default async function FichaVacante({ params, searchParams }: Props) {
         )}
 
         {/* Logística */}
-        {(vacante.tiene_ruta || vacante.estacionamiento || vacante.comedor || vacante.uniforme) && (
+        {(vacante.tiene_ruta || vacante.estacionamiento || vacante.comedor || vacante.uniforme || (vacante.negocios as any)?.ubicacion_maps) && (
           <div className="bg-white rounded-2xl p-5 shadow-sm">
             <h3 className="font-bold text-gray-900 mb-3">🚌 Logística</h3>
             <div className="flex flex-wrap gap-2">
               {vacante.tiene_ruta && (
                 <div className="bg-green-50 border border-green-200 rounded-xl px-3 py-2">
                   <p className="text-xs font-semibold text-green-700">🚌 Ruta de transporte</p>
-                  {vacante.zonas_ruta?.length > 0 && (
-                    <p className="text-xs text-green-600 mt-0.5">{vacante.zonas_ruta.join(', ')}</p>
+                  {(vacante.negocios as any)?.rutas?.length > 0 && (
+                    <RutasColapsables rutas={(vacante.negocios as any).rutas} />
+                  )}
+                  {vacante.ruta_para_entrevista && (
+                    <p className="text-xs text-green-600 underline mt-0.5">✅ Disponible para ir a la entrevista</p>
                   )}
                   {(vacante.negocios as any)?.documentos_negocio?.length > 0 && (
-                    <div className="mt-1.5 space-y-0.5">
+                    <div className="mt-2 pt-2 border-t border-green-200 space-y-0.5">
+                      <p className="text-xs font-semibold text-green-700 mb-0.5">📎 Documentos de la ruta</p>
                       {(vacante.negocios as any).documentos_negocio.map((doc: any) => (
                         <a
                           key={doc.id}
@@ -283,6 +288,17 @@ export default async function FichaVacante({ params, searchParams }: Props) {
               {vacante.estacionamiento && <span className="bg-gray-50 border border-gray-200 text-gray-700 text-xs px-3 py-2 rounded-xl">🅿️ Estacionamiento</span>}
               {vacante.comedor && <span className="bg-gray-50 border border-gray-200 text-gray-700 text-xs px-3 py-2 rounded-xl">🍽️ Comedor</span>}
               {vacante.uniforme && <span className="bg-gray-50 border border-gray-200 text-gray-700 text-xs px-3 py-2 rounded-xl">👕 Uniforme</span>}
+              {(vacante.negocios as any)?.ubicacion_maps && (
+                <a
+                  href={(vacante.negocios as any).ubicacion_maps}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-blue-50 border border-blue-200 rounded-xl px-3 py-2 flex flex-col hover:bg-blue-100 transition-colors"
+                >
+                  <p className="text-xs font-semibold text-blue-700">📍 Ubicación de la empresa</p>
+                  <span className="text-xs text-blue-600 underline">Abrir en Google Maps</span>
+                </a>
+              )}
             </div>
           </div>
         )}
@@ -303,7 +319,6 @@ export default async function FichaVacante({ params, searchParams }: Props) {
             vacante={{
               status: vacante.status,
               tiene_ruta: vacante.tiene_ruta,
-              zonas_ruta: vacante.zonas_ruta ?? [],
               ruta_para_entrevista: vacante.ruta_para_entrevista,
               estacionamiento: vacante.estacionamiento,
               comedor: vacante.comedor,

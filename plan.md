@@ -1046,6 +1046,14 @@ Depende de → vacantes:       chats, faq_escalaciones, faqs_vacante, postulacio
 
 **Nota:** borrar `coordinadores` por SQL directo **no borra sus cuentas de Supabase Auth** — quedan huérfanas y hay que borrarlas manualmente desde Authentication → Users, o intentar volver a registrar ese mismo correo fallará por duplicado.
 
+### Patrón de riesgo — campos cargados async que se guardan sin confirmar que ya llegaron (2026-08-27)
+
+En `VacanteModal.tsx`, los campos "de empresa, no de vacante" (`dias_descanso`, `dias_entrevista`, `rutas`, `ubicacion_maps` — todos con el mismo diseño: viven en `negocios`, se cargan en memoria vía `useEffect` cuando llega la lista completa de `negocios` de Supabase) tenían un hueco real: si "Guardar" se disparaba antes de que esa carga terminara, el `update` mandaba el valor inicial vacío de esos campos a la base de datos, **sobreescribiendo en silencio datos reales que la empresa ya tenía** (caso real: las 20 rutas con nombre de TOPBAND se borraron así, sin ningún error visible).
+
+**Fix aplicado:** bandera `datosEmpresaCargados`, activada solo dentro del mismo `useEffect` cuando se confirma que la empresa sí se encontró y cargó — el guardado de esos campos se bloquea con un error explícito si la bandera sigue en `false`, en vez de escribir valores vacíos.
+
+**Este mismo patrón de riesgo aplica a cualquier campo futuro con el mismo diseño** (cargado async en un `useEffect`, editable, y guardado en un `update` separado del payload principal de la vacante) — si se agrega un campo nuevo así, replicar la misma protección desde el inicio, no solo después de perder datos reales.
+
 
 ```bash
 git status

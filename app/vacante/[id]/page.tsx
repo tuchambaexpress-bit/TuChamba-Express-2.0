@@ -51,8 +51,8 @@ export default async function VacantePage({ params }: Props) {
       modalidad, jornada, horario, turno, tipo_contrato,
       tiene_ruta, zonas_ruta, ruta_para_entrevista,
       estacionamiento, comedor, uniforme,
-      empresa_visible, destacada, status, created_at,
-      requiere_examen_medico, requiere_antidoping,
+      empresa_visible, destacada, status, created_at, fecha_publicacion,
+      requiere_examen_medico, requiere_antidoping, comentarios_salario,
       negocios(nombre, rutas, documentos_negocio(id, nombre_archivo, archivo_url))
     `)
     .eq('id', params.id)

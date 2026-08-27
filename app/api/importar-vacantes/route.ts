@@ -32,7 +32,11 @@ function extraerRutas(fila: Record<string, any>): { nombre: string; paradas: str
     const nombre = String(fila[`RUTA_${i}_NOMBRE`] ?? '').trim()
     const paradasTexto = String(fila[`RUTA_${i}_PARADAS`] ?? '').trim()
     const paradas = paradasTexto.split(',').map(p => p.trim()).filter(Boolean)
-    if (nombre && paradas.length > 0) rutas.push({ nombre, paradas })
+    // Antes exigía nombre + al menos 1 parada. José prefiere capturar
+    // solo el nombre de la ruta cuando son muchas paradas por ruta (ej.
+    // 20 rutas x 7 paradas) — el detalle completo vive en el PDF adjunto
+    // a la empresa (documentos_negocio), no en el listado de paradas.
+    if (nombre) rutas.push({ nombre, paradas })
     i++
   }
   return rutas
@@ -162,8 +166,14 @@ export async function POST(req: NextRequest) {
           comentarios_salario: String(fila['COMENTARIOS SALARIO'] ?? '').trim() || null,
           dias_induccion: fila['DÍAS DE INDUCCIÓN'] ? Number(fila['DÍAS DE INDUCCIÓN']) : 0,
           induccion_dentro_garantia: esSiNo(fila['INDUCCIÓN DENTRO DE GARANTÍA'] ?? 'SI'),
+          cupo_requerido: fila['CUPO REQUERIDO'] ? Number(fila['CUPO REQUERIDO']) : 1,
           status: String(fila['ESTATUS'] ?? '').trim().toLowerCase() === 'vigente' ? 'vigente' : 'pausada',
           agencia_id: agenciaId,
+          // Si la columna FECHA viene vacía o no se puede leer, se omite
+          // del payload por completo: en un INSERT toma el DEFAULT now()
+          // de la base; en un UPDATE deja la fecha_publicacion existente
+          // intacta, sin pisarla con nada.
+          ...(parsearFecha(String(fila['FECHA'] ?? '')) ? { fecha_publicacion: parsearFecha(String(fila['FECHA'] ?? '')) } : {}),
         }
 
         // CA-08.8: guarda los días de descanso de esta fila para aplicarlos

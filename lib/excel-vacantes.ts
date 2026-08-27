@@ -71,7 +71,7 @@ export const COLUMNAS_FIJAS = [
   'SALARIO MÍNIMO', 'SALARIO MÁXIMO', 'TIPO SALARIO', 'PERIODO SALARIO', 'MOSTRAR SALARIO',
   'JORNADA', 'TURNO', 'HORARIO',
   'DESCRIPCIÓN', 'ETIQUETAS',
-  'RUTA', 'ZONAS DE RUTA', 'RUTA PARA ENTREVISTA', 'ESTACIONAMIENTO', 'COMEDOR', 'UNIFORME',
+  'RUTA', 'RUTA PARA ENTREVISTA', 'ESTACIONAMIENTO', 'COMEDOR', 'UNIFORME',
   'LETRAS CHIQUITAS',
   'DÍAS DE GARANTÍA', 'COMISIÓN',
   'TIENE PROMOCIÓN', 'DESCRIPCIÓN PROMOCIÓN', 'MONTO PROMOCIÓN', 'VENCE PROMOCIÓN',
@@ -79,12 +79,13 @@ export const COLUMNAS_FIJAS = [
   'CONTACTO RRHH NOMBRE', 'CONTACTO RRHH TELÉFONO', 'MEJOR HORARIO CONTACTO', 'PUNTO DE REUNIÓN',
   'QUÉ DECIRLE AL CANDIDATO', 'COMENTARIOS SALARIO',
   'DÍAS DE INDUCCIÓN', 'INDUCCIÓN DENTRO DE GARANTÍA', 'DÍAS DE DESCANSO EMPRESA',
+  'CUPO REQUERIDO',
   'ESTATUS',
 ]
 
 export const INSTRUCCIONES: { columna: string; campoSistema: string; descripcion: string; ejemplo: string }[] = [
   { columna: 'ID', campoSistema: '(interno)', descripcion: 'Déjalo vacío para vacantes nuevas. Solo se usa para actualizar una vacante que ya existe (viene lleno si exportaste antes).', ejemplo: '(vacío)' },
-  { columna: 'FECHA', campoSistema: '(informativo)', descripcion: 'Fecha de creación. No afecta el sistema, es solo referencia.', ejemplo: '04/09/2026' },
+  { columna: 'FECHA', campoSistema: 'Fecha de publicación mostrada al candidato ("Hoy", "Hace 2 días"...)', descripcion: 'Controla la fecha que ve el candidato y el orden del listado (más reciente primero). Si la dejas vacía: en una vacante NUEVA toma la fecha de hoy; en una vacante YA EXISTENTE no se toca, se queda con la que ya tenía.', ejemplo: '04/09/2026' },
   { columna: 'TÍTULO', campoSistema: 'Sección 1 — Título', descripcion: 'Nombre del puesto. Obligatorio.', ejemplo: 'Ayudante General' },
   { columna: 'EMPRESA', campoSistema: 'Sección 1 — Empresa', descripcion: 'Nombre de la empresa cliente. Si no existe, se crea automáticamente.', ejemplo: 'Pastelería Lety' },
   { columna: 'MOSTRAR EMPRESA', campoSistema: 'Sección 1 — Mostrar empresa', descripcion: 'SI = el candidato ve el nombre real. NO = aparece como "Empresa Confidencial".', ejemplo: 'SI' },
@@ -133,6 +134,7 @@ export const INSTRUCCIONES: { columna: string; campoSistema: string; descripcion
   { columna: 'DÍAS DE ENTREVISTA EMPRESA', campoSistema: '(campo de la EMPRESA, no de la vacante)', descripcion: 'Días en que la empresa RECIBE candidatos a entrevista. Distinto de "Días de descanso" (ese afecta la garantía, este bloquea agendar). Mismo formato: abreviaturas de 3 letras separadas por coma (LUN, MAR, MIE, JUE, VIE, SAB, DOM). Aplica a TODAS las vacantes de esa empresa — si la misma EMPRESA aparece en varias filas con valores distintos, gana el de la última fila. Vacío = sin restricción configurada.', ejemplo: 'LUN, MIE, VIE' },
   { columna: 'RUTA_1_NOMBRE, RUTA_2_NOMBRE...', campoSistema: '(campo de la EMPRESA, no de la vacante)', descripcion: 'Nombre de cada ruta de transporte de la empresa. Agrega tantos pares RUTA_N_NOMBRE/RUTA_N_PARADAS como rutas tenga — el sistema los detecta automáticamente. Solo aplica si RUTA = SI. Aplica a TODAS las vacantes de esa empresa — si la misma EMPRESA aparece en varias filas con valores distintos, gana el de la última fila.', ejemplo: 'Ruta Norte' },
   { columna: 'RUTA_1_PARADAS, RUTA_2_PARADAS...', campoSistema: '(campo de la EMPRESA, no de la vacante)', descripcion: 'Paradas de esa ruta específica, separadas por coma dentro de la misma celda. Debe venir en pareja con su RUTA_N_NOMBRE correspondiente (mismo número N).', ejemplo: 'Apodaca, Escobedo, Guadalupe' },
+  { columna: 'CUPO REQUERIDO', campoSistema: 'Sección 7 — Cupo requerido', descripcion: 'Cuántas personas necesita la empresa para esta vacante. Cuando se cubre, la vacante se pausa sola. Número entero. Si se deja vacío, se asume 1.', ejemplo: '3' },
   { columna: 'ESTATUS', campoSistema: 'Vigente/No vigente (toggle Sección 8)', descripcion: 'Vigente o No vigente.', ejemplo: 'Vigente' },
 ]
 

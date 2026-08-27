@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
     const { data: vacantes, error } = await supabase
       .from('vacantes')
       .select(`
-        id, created_at, titulo, empresa_visible, destacada,
+        id, created_at, fecha_publicacion, titulo, empresa_visible, destacada,
         estado, ciudad, colonia_zona, modalidad,
         salario_min, salario_max, salario_tipo, salario_periodo, salario_visible,
         jornada, turno, horario,
@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
         documentos_requeridos,
         contacto_rrhh_nombre, contacto_rrhh_telefono, mejor_horario_contacto,
         punto_reunion, guion_candidato, comentarios_salario,
-        dias_induccion, induccion_dentro_garantia,
+        dias_induccion, induccion_dentro_garantia, cupo_requerido,
         status,
         negocios(nombre, dias_descanso, dias_entrevista, rutas)
       `)
@@ -61,11 +61,12 @@ export async function GET(req: NextRequest) {
     const maxRequisitos = Math.max(1, ...(vacantes ?? []).map((v: any) => (v.requisitos ?? []).length))
     const maxBeneficios = Math.max(1, ...(vacantes ?? []).map((v: any) => (v.beneficios ?? []).length))
     const maxDocumentos = Math.max(1, ...(vacantes ?? []).map((v: any) => (v.documentos_requeridos ?? []).length))
+    const maxRutas = Math.max(1, ...(vacantes ?? []).map((v: any) => (v.negocios?.rutas ?? []).length))
 
     const filas = (vacantes ?? []).map((v: any) => {
       const fila: Record<string, any> = {
         ID: v.id,
-        FECHA: formatearFecha(v.created_at),
+        FECHA: formatearFecha(v.fecha_publicacion),
         'TÍTULO': v.titulo,
         EMPRESA: v.negocios?.nombre ?? '',
         'MOSTRAR EMPRESA': v.empresa_visible ? 'SI' : 'NO',
@@ -119,15 +120,17 @@ export async function GET(req: NextRequest) {
       fila['COMENTARIOS SALARIO'] = v.comentarios_salario ?? ''
       fila['DÍAS DE INDUCCIÓN'] = v.dias_induccion ?? ''
       fila['INDUCCIÓN DENTRO DE GARANTÍA'] = v.induccion_dentro_garantia === false ? 'NO' : 'SI'
+      fila['CUPO REQUERIDO'] = v.cupo_requerido ?? 1
       fila['DÍAS DE DESCANSO EMPRESA'] = formatearDiasDescanso(v.negocios?.dias_descanso)
       fila['DÍAS DE ENTREVISTA EMPRESA'] = formatearDiasDescanso(v.negocios?.dias_entrevista)
-            // Rutas con nombre: exporta pares RUTA_N_NOMBRE/RUTA_N_PARADAS,
-      // uno por cada ruta que tenga la empresa
+      // Rutas con nombre: exporta pares RUTA_N_NOMBRE/RUTA_N_PARADAS.
+      // Se garantiza al menos 1 par (aunque esté vacío), mismo criterio
+      // que Requisitos/Beneficios/Documentos.
       const rutasEmpresa = v.negocios?.rutas ?? []
-      rutasEmpresa.forEach((r: any, i: number) => {
-        fila[`RUTA_${i + 1}_NOMBRE`] = r.nombre
-        fila[`RUTA_${i + 1}_PARADAS`] = Array.isArray(r.paradas) ? r.paradas.join(', ') : ''
-      })
+      for (let i = 0; i < maxRutas; i++) {
+        fila[`RUTA_${i + 1}_NOMBRE`] = rutasEmpresa[i]?.nombre ?? ''
+        fila[`RUTA_${i + 1}_PARADAS`] = Array.isArray(rutasEmpresa[i]?.paradas) ? rutasEmpresa[i].paradas.join(', ') : ''
+      }
       fila['ESTATUS'] = v.status === 'vigente' ? 'Vigente' : v.status === 'pausada' ? 'Pausada' : 'Cerrada'
 
       return fila

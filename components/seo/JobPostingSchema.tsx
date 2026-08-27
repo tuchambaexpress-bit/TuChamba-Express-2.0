@@ -4,7 +4,7 @@ export function JobPostingSchema({ vacante }: { vacante: any }) {
     "@type": "JobPosting",
     "title": vacante.titulo,
     "description": vacante.descripcion,
-    "datePosted": vacante.created_at?.split('T')[0],
+    "datePosted": vacante.fecha_publicacion?.split('T')[0],
     "employmentType": "FULL_TIME",
     "hiringOrganization": {
       "@type": "Organization",

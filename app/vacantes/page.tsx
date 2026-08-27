@@ -14,13 +14,13 @@ export default async function VacantesPage() {
       modalidad, jornada, horario, turno, tipo_contrato,
       tiene_ruta, zonas_ruta, ruta_para_entrevista,
       estacionamiento, comedor, uniforme,
-      empresa_visible, destacada, prioridad, status, created_at,
-      requiere_examen_medico, requiere_antidoping, 
+      empresa_visible, destacada, prioridad, status, created_at, fecha_publicacion,
+      requiere_examen_medico, requiere_antidoping, comentarios_salario,
       negocios(nombre, rutas, documentos_negocio(id, nombre_archivo, archivo_url))
     `)
     .eq('status', 'vigente')
     .order('destacada', { ascending: false })
-    .order('created_at', { ascending: false })
+    .order('fecha_publicacion', { ascending: false })
 
   const vacantesFormateadas = (vacantes ?? []).map(v => ({
     ...v,

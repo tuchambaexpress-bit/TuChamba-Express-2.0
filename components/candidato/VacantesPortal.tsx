@@ -40,8 +40,10 @@ interface Vacante {
   prioridad: string
   status: string
   created_at: string
+  fecha_publicacion: string
   requiere_examen_medico: boolean
   requiere_antidoping: boolean
+  comentarios_salario: string | null
   negocios: { nombre: string } | null
 }
 
@@ -52,8 +54,8 @@ const SELECT_VACANTES = `
   modalidad, jornada, horario, turno, tipo_contrato,
   tiene_ruta, zonas_ruta, ruta_para_entrevista,
   estacionamiento, comedor, uniforme,
-  empresa_visible, destacada, prioridad, status, created_at,
-  requiere_examen_medico, requiere_antidoping,
+  empresa_visible, destacada, prioridad, status, created_at, fecha_publicacion,
+  requiere_examen_medico, requiere_antidoping, comentarios_salario,
   negocios(nombre, rutas, documentos_negocio(id, nombre_archivo, archivo_url))
 `
 
@@ -74,7 +76,7 @@ function ordenarVacantes(lista: Vacante[]): Vacante[] {
     const pesoA = PESO_PRIORIDAD[a.prioridad] ?? 0
     const pesoB = PESO_PRIORIDAD[b.prioridad] ?? 0
     if (pesoA !== pesoB) return pesoB - pesoA
-    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    return new Date(b.fecha_publicacion).getTime() - new Date(a.fecha_publicacion).getTime()
   })
 }
 
@@ -107,7 +109,7 @@ export default function VacantesPortal({ vacantes: vacantesIniciales }: Props) {
         .select(SELECT_VACANTES)
         .eq('status', 'vigente')
         .order('destacada', { ascending: false })
-        .order('created_at', { ascending: false })
+        .order('fecha_publicacion', { ascending: false })
 
       if (data) {
         const formateadas = data.map((v: any) => ({

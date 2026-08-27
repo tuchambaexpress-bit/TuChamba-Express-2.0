@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import ChatModal from './ChatModal'
 import { getCodigoReferido } from '@/hooks/useReferido'
+import RutasColapsables from '@/components/shared/RutasColapsables'
 
 interface Vacante {
   id: string
@@ -16,6 +17,7 @@ interface Vacante {
   salario_tipo: string | null
   salario_periodo: string | null
   salario_visible: boolean
+  comentarios_salario: string | null
   ciudad: string
   estado: string
   colonia_zona: string | null
@@ -109,6 +111,9 @@ export default function VacanteDetalle({ vacante, esModal, reclutadorId }: Props
         <div className="bg-gray-50 rounded-lg p-3">
           <p className="text-sm text-gray-500">Salario</p>
           <p className="text-base font-semibold text-gray-800">{salario}</p>
+          {vacante.comentarios_salario && (
+            <p className="text-xs text-gray-600 mt-1">💬 {vacante.comentarios_salario}</p>
+          )}
         </div>
         <div className="bg-gray-50 rounded-lg p-3">
           <p className="text-sm text-gray-500">Jornada / Turno</p>
@@ -181,16 +186,10 @@ export default function VacanteDetalle({ vacante, esModal, reclutadorId }: Props
               <div className="bg-green-50 border border-green-200 rounded-lg px-3 py-2">
                 <p className="text-xs font-semibold text-green-700">🚌 Ruta de transporte</p>
                 {vacante.negocios?.rutas && vacante.negocios.rutas.length > 0 && (
-                  <div className="mt-0.5 space-y-1">
-                    {vacante.negocios.rutas.map((ruta, i) => (
-                      <p key={i} className="text-xs text-green-600">
-                        <span className="font-medium">{ruta.nombre}:</span> {ruta.paradas.join(', ')}
-                      </p>
-                    ))}
-                  </div>
+                  <RutasColapsables rutas={vacante.negocios.rutas} />
                 )}
                 {vacante.ruta_para_entrevista && (
-                  <p className="text-xs text-green-600 mt-0.5">Disponible para entrevista</p>
+                  <p className="text-xs text-green-600 underline mt-0.5">Disponible para entrevista</p>
                 )}
                 {vacante.negocios?.documentos_negocio && vacante.negocios.documentos_negocio.length > 0 && (
                   <div className="mt-2 pt-2 border-t border-green-200 space-y-0.5">

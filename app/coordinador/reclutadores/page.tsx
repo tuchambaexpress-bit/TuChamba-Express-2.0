@@ -97,6 +97,7 @@ export default function ReclutadoresCoordinador() {
         .from('postulaciones')
         .select('vacante_id, etapa_actual')
         .eq('reclutador_id', r.id)
+        .eq('agencia_id', agenciaId)
         .not('etapa_actual', 'in', '("Descartado","Contratado")')
 
       nuevosConteos[r.id] = {

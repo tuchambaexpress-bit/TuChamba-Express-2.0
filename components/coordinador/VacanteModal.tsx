@@ -12,6 +12,7 @@ interface Negocio {
   dias_descanso: number[]
   dias_entrevista: number[]
   rutas: { nombre: string; paradas: string[] }[]
+  ubicacion_maps: string | null
 }
 
 interface Props {
@@ -47,6 +48,7 @@ const DOCUMENTOS_TRONCO_COMUN = [
 
 const FORM_INICIAL = {
   titulo: '',
+  fecha_publicacion: '',
   negocio_id: '',
   empresa_visible: true,
   ciudad: '',
@@ -158,16 +160,30 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
   // se maneja como texto separado por comas durante la edición, igual que
   // se captura en el Excel — se convierte a array solo al guardar.
   const [rutas, setRutas] = useState<{ nombre: string; paradas: string }[]>([])
+  const [ubicacionMaps, setUbicacionMaps] = useState('')
+  // Protección contra pérdida de datos (2026-08-27): estos 4 campos de
+  // empresa (dias_descanso/dias_entrevista/rutas/ubicacion_maps) viven en
+  // memoria y se cargan de forma asíncrona. Si "Guardar" se disparara antes
+  // de que esta carga terminara, se mandaría el valor inicial vacío a la
+  // base de datos, BORRANDO lo que la empresa ya tenía. Esta bandera solo
+  // se activa cuando de verdad se confirmó la carga real de esa empresa.
+  const [datosEmpresaCargados, setDatosEmpresaCargados] = useState(false)
 
   // Al elegir una empresa existente, carga sus días de descanso, entrevista
   // y rutas ya guardados
   useEffect(() => {
-    if (creandoNegocio || !form.negocio_id) return
+    if (creandoNegocio || !form.negocio_id) { setDatosEmpresaCargados(false); return }
     const negocio = negocios.find(n => n.id === form.negocio_id)
     if (negocio) {
       setDiasDescanso(negocio.dias_descanso ?? [0])
       setDiasEntrevista(negocio.dias_entrevista ?? [1, 2, 3, 4, 5])
       setRutas((negocio.rutas ?? []).map(r => ({ nombre: r.nombre, paradas: (r.paradas ?? []).join(', ') })))
+      setUbicacionMaps(negocio.ubicacion_maps ?? '')
+      setDatosEmpresaCargados(true)
+    } else {
+      // La empresa seleccionada aún no aparece en la lista cargada —
+      // no hay nada confirmado todavía, no se debe permitir guardar así
+      setDatosEmpresaCargados(false)
     }
   }, [form.negocio_id, negocios, creandoNegocio])
   const [documentosRuta, setDocumentosRuta] = useState<any[]>([])
@@ -203,7 +219,7 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
     const supabase = createClient()
     const { data } = await supabase
       .from('negocios')
-      .select('id, nombre, dias_descanso, dias_entrevista, rutas')
+      .select('id, nombre, dias_descanso, dias_entrevista, rutas, ubicacion_maps')
       .order('nombre')
     if (data) setNegocios(data)
   }
@@ -266,6 +282,11 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
       Object.keys(dataLimpia).forEach(campo => {
         if (dataLimpia[campo] === null) dataLimpia[campo] = ''
       })
+      // El input type="date" solo acepta YYYY-MM-DD — la BD regresa un
+      // timestamptz completo (ej. "2026-08-20T00:00:00+00:00"), se recorta.
+      if (dataLimpia.fecha_publicacion) {
+        dataLimpia.fecha_publicacion = String(dataLimpia.fecha_publicacion).slice(0, 10)
+      }
       setForm(dataLimpia)
     }
   }
@@ -321,14 +342,14 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
       }
 
       // Rutas: convierte de texto (edición) a array (guardado), ignora
-      // filas incompletas (sin nombre o sin ninguna parada)
+      // filas sin nombre (paradas ya no son obligatorias, 2026-08-27)
       const rutasLimpias = rutas
         .map(r => ({ nombre: r.nombre.trim(), paradas: r.paradas.split(',').map(p => p.trim()).filter(Boolean) }))
-        .filter(r => r.nombre && r.paradas.length > 0)
+        .filter(r => r.nombre)
 
       const { data: negocioCreado, error: errorNegocio } = await supabase
         .from('negocios')
-        .insert({ ...nuevoNegocio, nombre: nombreLimpio, dias_descanso: diasDescanso, dias_entrevista: diasEntrevista, rutas: rutasLimpias })
+        .insert({ ...nuevoNegocio, nombre: nombreLimpio, dias_descanso: diasDescanso, dias_entrevista: diasEntrevista, rutas: rutasLimpias, ubicacion_maps: ubicacionMaps.trim() || null })
         .select('id')
         .single()
 
@@ -339,11 +360,19 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
       }
       negocioId = negocioCreado.id
     } else if (negocioId) {
+      // Protección: si los datos reales de esta empresa nunca terminaron
+      // de cargar, NO se manda nada — evita sobreescribir con vacío lo que
+      // la empresa ya tenía guardado (rutas, días, ubicación de Maps).
+      if (!datosEmpresaCargados) {
+        setError('Los datos de la empresa aún no terminaron de cargar. Espera un momento y vuelve a intentar guardar.')
+        setGuardando(false)
+        return
+      }
       // Empresa existente: días de descanso, entrevista y rutas aplican a TODAS sus vacantes
       const rutasLimpias = rutas
         .map(r => ({ nombre: r.nombre.trim(), paradas: r.paradas.split(',').map(p => p.trim()).filter(Boolean) }))
-        .filter(r => r.nombre && r.paradas.length > 0)
-      await supabase.from('negocios').update({ dias_descanso: diasDescanso, dias_entrevista: diasEntrevista, rutas: rutasLimpias }).eq('id', negocioId)
+        .filter(r => r.nombre)
+      await supabase.from('negocios').update({ dias_descanso: diasDescanso, dias_entrevista: diasEntrevista, rutas: rutasLimpias, ubicacion_maps: ubicacionMaps.trim() || null }).eq('id', negocioId)
     }
 
     const payload = {
@@ -403,6 +432,10 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
       induccion_dentro_garantia: form.induccion_dentro_garantia,
       cupo_requerido: form.cupo_requerido ? Number(form.cupo_requerido) : 1,
       prioridad: form.prioridad || 'normal',
+      // Igual que en el Excel: si se deja vacío, no se toca — un INSERT
+      // toma el DEFAULT now() de la base, un UPDATE deja la fecha que
+      // ya tenía la vacante, sin pisarla.
+      ...(form.fecha_publicacion ? { fecha_publicacion: form.fecha_publicacion } : {}),
     }
 
     const { error: errorGuardado } = vacanteId && !vacanteDuplicar
@@ -1051,6 +1084,18 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
                         />
                       </div>
                       <div>
+                        <label className="text-xs font-medium text-gray-700 flex items-center mb-1">
+                          Fecha de publicación (opcional)
+                          <InfoTooltip texto="Controla la fecha que ve el candidato ('Hoy', 'Hace 2 días'...) y el orden del listado. Si la dejas vacía en una vacante nueva, toma la fecha de hoy; si editas una vacante existente, se queda con la que ya tenía." />
+                        </label>
+                        <input
+                          type="date"
+                          value={form.fecha_publicacion}
+                          onChange={e => setForm({ ...form, fecha_publicacion: e.target.value })}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
+                        />
+                      </div>
+                      <div>
                         <label className="text-xs font-medium text-gray-700 block mb-1">Empresa</label>
                         {!creandoNegocio ? (
                           <select
@@ -1095,6 +1140,22 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
                           </div>
                         )}
                       </div>
+
+                      {(form.negocio_id || creandoNegocio) && (
+                        <div>
+                          <label className="text-xs font-medium text-gray-700 flex items-center mb-1">
+                            Ubicación en Google Maps (opcional)
+                            <InfoTooltip texto="Link de Google Maps de la empresa/fábrica. Solo lo ve el reclutador en su ficha de la vacante — el candidato nunca lo ve." />
+                          </label>
+                          <input
+                            type="url"
+                            value={ubicacionMaps}
+                            onChange={e => setUbicacionMaps(e.target.value)}
+                            placeholder="https://maps.app.goo.gl/..."
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
+                          />
+                        </div>
+                      )}
 
                       {(form.negocio_id || creandoNegocio) && (
                         <div>

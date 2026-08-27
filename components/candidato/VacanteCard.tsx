@@ -29,6 +29,7 @@ interface Vacante {
   prioridad: string
   status: string
   created_at: string
+  fecha_publicacion: string
   negocios: { nombre: string } | null
 }
 
@@ -61,7 +62,7 @@ export default function VacanteCard({ vacante, seleccionada, onClick }: Props) {
     : null
 
   const diasPublicada = Math.floor(
-    (Date.now() - new Date(vacante.created_at).getTime()) / (1000 * 60 * 60 * 24)
+    (Date.now() - new Date(vacante.fecha_publicacion).getTime()) / (1000 * 60 * 60 * 24)
   )
   const publicadaTexto = diasPublicada === 0 ? 'Hoy' : diasPublicada === 1 ? 'Ayer' : `Hace ${diasPublicada} días`
 
