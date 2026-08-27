@@ -4,7 +4,7 @@
 export interface VacanteParaFaq {
   status: string
   tiene_ruta: boolean
-  zonas_ruta: string[]
+  rutas?: { nombre: string; paradas: string[] }[]
   ruta_para_entrevista: boolean
   estacionamiento: boolean
   comedor: boolean
@@ -39,9 +39,11 @@ const REGLAS_NIVEL1: ReglaNivel1[] = [
   },
   {
     palabras: ['ruta', 'transporte', 'camion'],
-    responder: v => v.tiene_ruta
-      ? `🚌 Sí, tiene ruta de transporte.${v.zonas_ruta?.length ? ` Zonas: ${v.zonas_ruta.join(', ')}.` : ''}${v.ruta_para_entrevista ? ' La ruta también aplica para ir a la entrevista.' : ''}`
-      : '🚌 Esta vacante no tiene ruta de transporte.',
+    responder: v => {
+      if (!v.tiene_ruta) return '🚌 Esta vacante no tiene ruta de transporte.'
+      const nombresRutas = v.rutas?.map(r => r.nombre).join(', ')
+      return `🚌 Sí, tiene ruta de transporte.${nombresRutas ? ` Rutas: ${nombresRutas}.` : ''}${v.ruta_para_entrevista ? ' La ruta también aplica para ir a la entrevista.' : ''}`
+    },
   },
   {
     palabras: ['dias de entrevista', 'que dias reciben', 'cuando entrevista'],

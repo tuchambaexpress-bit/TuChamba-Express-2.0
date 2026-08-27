@@ -319,6 +319,7 @@ export default async function FichaVacante({ params, searchParams }: Props) {
             vacante={{
               status: vacante.status,
               tiene_ruta: vacante.tiene_ruta,
+              rutas: (vacante.negocios as any)?.rutas ?? [],
               ruta_para_entrevista: vacante.ruta_para_entrevista,
               estacionamiento: vacante.estacionamiento,
               comedor: vacante.comedor,
