@@ -220,7 +220,17 @@ token_referido text UNIQUE NOT NULL DEFAULT substr(replace(gen_random_uuid()::te
 es_maestro bool DEFAULT false -- nueva (7.22, 2026-08-23): recibe automático
                               -- todo el tráfico sin ?ref= (fallback en
                               -- api/postular) y se auto-inscribe en cada
-                              -- agencia nueva que se active
+                              -- agencia nueva que se active. **2026-08-26:**
+                              -- decisión explícita de NO ocultarlo de las
+                              -- listas del coordinador (José consideró y
+                              -- descartó esa opción) — en vez de eso, toda
+                              -- consulta que muestre actividad/comisiones de
+                              -- un reclutador por agencia (ej.
+                              -- app/coordinador/reclutadores/page.tsx) debe
+                              -- filtrar explícitamente por `agencia_id`
+                              -- además de `reclutador_id`, ya que un
+                              -- reclutador maestro participa en varias
+                              -- agencias a la vez.
 email text
 lada text DEFAULT '+52'      -- prefijo internacional: +52 México, +1 USA/CAN, +54 Argentina, etc.
 telefono text
@@ -268,7 +278,7 @@ dias_entrevista jsonb DEFAULT '[]'  -- nueva (5.25, 2026-08-20) — días en que
                                      -- separado. Editable en VacanteModal
                                      -- Sección 8, no Sección 1 (deliberado).
                                      -- Array vacío = sin restricción configurada.
-rutas jsonb DEFAULT '[]'            -- nueva (2026-08-26, ver CA-20.5) — rutas de
+rutas jsonb DEFAULT '[]'            -- nueva (2026-08-26, ver CA-20.6) — rutas de
                                      -- transporte con nombre, por empresa.
                                      -- Formato: [{"nombre": "Ruta Norte",
                                      -- "paradas": ["Apodaca", "Escobedo"]}].
@@ -277,6 +287,18 @@ rutas jsonb DEFAULT '[]'            -- nueva (2026-08-26, ver CA-20.5) — rutas
                                      -- Sección 5, junto al checkbox
                                      -- "¿Tiene ruta?" (ese campo sigue siendo
                                      -- de vacante, per-vacante on/off).
+ubicacion_maps text                 -- nueva (2026-08-26) — link de Google Maps
+                                     -- de la empresa/fábrica. Mismo patrón "de
+                                     -- empresa" que rutas/dias_descanso/
+                                     -- dias_entrevista. Solo se MUESTRA en la
+                                     -- UI al reclutador (ficha operativa),
+                                     -- nunca al candidato — pero a nivel de
+                                     -- base de datos es de lectura pública
+                                     -- desde 7.36 (negocios_lectura_publica),
+                                     -- mismo nivel de exposición real que ya
+                                     -- tienen los PDFs de documentos_negocio.
+                                     -- Editable en VacanteModal Sección 1,
+                                     -- junto al selector de empresa.
 created_at timestamptz DEFAULT now()
 ```
 
@@ -387,6 +409,21 @@ preguntas_precalificacion jsonb DEFAULT '[]'  -- nueva (HU-17/6.8) — hasta 5
                                     -- opcion_multiple) = pregunta informativa,
                                     -- nunca bloquea al candidato.
 tags jsonb DEFAULT '[]'
+fecha_publicacion timestamptz NOT NULL DEFAULT now()
+                                    -- nueva (2026-08-26) — controla lo que ve
+                                    -- el candidato ("Hoy", "Hace 2 días"...) y
+                                    -- el orden del listado. DISTINTA de
+                                    -- created_at (que se queda como el
+                                    -- registro técnico real, usado por
+                                    -- sitemap.ts para lastModified). Editable
+                                    -- desde el Excel (columna FECHA) o desde
+                                    -- VacanteModal Sección 1, ambos opcionales
+                                    -- — si se deja vacío: en una vacante nueva
+                                    -- toma DEFAULT now(), en una existente no
+                                    -- se toca. También usada en
+                                    -- JobPostingSchema.tsx como datePosted del
+                                    -- JSON-LD, por consistencia con lo que
+                                    -- Google muestra en resultados de empleo.
 created_at timestamptz DEFAULT now()
 updated_at timestamptz DEFAULT now()
 ```
@@ -932,7 +969,7 @@ Dado que el coordinador modifica cualquiera de estos campos en una vacante:
 - `comision_base_mxn`
 - `dias_garantia`
 - `tiene_promocion` / `promocion_monto_mxn` / `promocion_fin`
-- `tiene_ruta` (campo de la vacante; las rutas en sí ahora viven en `negocios.rutas` — ver CA-20.5 — este mecanismo de alerta hoy solo vigila campos de `vacantes`, no cubre cambios a las rutas de la empresa)
+- `tiene_ruta` (campo de la vacante; las rutas en sí ahora viven en `negocios.rutas` — ver CA-20.6 — este mecanismo de alerta hoy solo vigila campos de `vacantes`, no cubre cambios a las rutas de la empresa)
 
 Cuando confirma el cambio, entonces el sistema genera automáticamente una alerta para TODOS los reclutadores de la agencia con un mensaje que especifica exactamente qué cambió y el valor nuevo. Ejemplos reales:
 
@@ -1521,16 +1558,6 @@ Los documentos son visibles en 3 lugares, sin restricción de sesión (bucket p�
 - **Reclutador** — en la ficha operativa de la vacante (`/reclutador/detalle/[id]`), dentro del bloque de Logística
 - **Candidato** — en el portal público, dentro de la ficha completa de la vacante (`VacanteDetalle.tsx`)
 
-**CA-20.5 — Rutas con nombre, a nivel empresa (José, 2026-08-26):**
-
-> *Origen: al preparar el Excel real de vacantes de Roxana/HR CONNECT, José detectó que una empresa puede tener varias rutas de transporte, cada una con su propio nombre (ej. "Ruta Norte", "Ruta Sur") y su propio conjunto de paradas — la lista plana de `zonas_ruta` (una sola bolsa de zonas, sin agrupar) no distinguía cuál parada pertenecía a cuál ruta.*
-
-Reemplaza `vacantes.zonas_ruta` (ahora en desuso, ver schema de `vacantes` arriba) por `negocios.rutas` — mismo patrón exacto que `dias_descanso`/`dias_entrevista` (CA-08.8/CA-08.9): campo compartido por **empresa**, no por vacante, editable desde `VacanteModal` Sección 5 (visible solo si `tiene_ruta` está marcado y hay una empresa seleccionada), cargado/guardado junto con los otros 2 campos de empresa en el mismo submit.
-
-Formato: `[{"nombre": "Ruta Norte", "paradas": ["Apodaca", "Escobedo", "Guadalupe"]}]`. En el modal, cada ruta se captura como un par de campos (nombre + paradas separadas por coma en un solo input de texto) con botones "+ Agregar ruta" / 🗑️ por fila.
-
-El candidato ve, dentro del mismo recuadro verde "🚌 Ruta de transporte" (`VacanteDetalle.tsx`), cada ruta con su nombre seguido de sus paradas — ej. *"Ruta Norte: Apodaca, Escobedo, Guadalupe"* — y debajo, con una línea divisoria, los documentos PDF de esa empresa (CA-20.3), bajo la etiqueta "📎 Documentos de la ruta".
-
 **CA-20.4 — Filtro inteligente contra duplicados de empresa (idea de José, 2026-08-09):**
 
 > *Origen: se detectaron 4 registros duplicados de "PASTELERIA LETY" en `negocios`, creados por pruebas repetidas de "+ Nueva empresa" sin ninguna validación previa — confirmando la necesidad real de este filtro, no solo preventiva.*
@@ -1546,6 +1573,20 @@ En la Sección 8 de `VacanteModal`, arriba del campo de texto libre "Documentos 
 **Nuevo campo:** `vacantes.requiere_antidoping` (boolean, mismo patrón que `requiere_examen_medico` ya existente).
 
 **Cambio de visibilidad:** a diferencia de `requiere_estudio_socioeconomico` (que se queda exclusivo del reclutador, ya que normalmente lo hace la empresa directamente, sin involucrar al candidato antes), `requiere_examen_medico` y `requiere_antidoping` ahora **también son visibles al candidato** — se muestran como avisos adicionales dentro del bloque "⚠️ Información importante" del portal público (junto a las letras chiquitas), ej. "Se realizará examen médico" / "Se realizará prueba antidoping".
+
+**CA-20.6 — Rutas con nombre, a nivel empresa (José, 2026-08-26, ampliada 2026-08-27):**
+
+> *Origen: al preparar el Excel real de vacantes de Roxana/HR CONNECT, José detectó que una empresa puede tener varias rutas de transporte, cada una con su propio nombre (ej. "Ruta Norte", "Ruta Sur") y su propio conjunto de paradas — la lista plana de `zonas_ruta` (una sola bolsa de zonas, sin agrupar) no distinguía cuál parada pertenecía a cuál ruta.*
+
+Reemplaza `vacantes.zonas_ruta` (ahora en desuso, ver schema de `vacantes` arriba) por `negocios.rutas` — mismo patrón exacto que `dias_descanso`/`dias_entrevista` (CA-08.8/CA-08.9): campo compartido por **empresa**, no por vacante, editable desde `VacanteModal` Sección 5 (visible solo si `tiene_ruta` está marcado y hay una empresa seleccionada), cargado/guardado junto con los otros 2 campos de empresa en el mismo submit.
+
+Formato: `[{"nombre": "Ruta Norte", "paradas": ["Apodaca", "Escobedo", "Guadalupe"]}]`. En el modal, cada ruta se captura como un par de campos (nombre + paradas separadas por coma en un solo input de texto) con botones "+ Agregar ruta" / 🗑️ por fila.
+
+**Paradas opcionales (agregado 2026-08-27):** originalmente una ruta requería nombre + al menos 1 parada para guardarse — José reveló el caso real de empresas con 15-20 rutas (ej. TOPBAND), donde listar las ~7 paradas de cada una es inmanejable en pantalla; prefiere capturar solo el nombre y subir el detalle completo como PDF (`CA-20.3`). El requisito de "al menos 1 parada" se quitó — una ruta con solo nombre, sin paradas, es válida y se guarda igual.
+
+**Colapsado de rutas largas (agregado 2026-08-27):** con empresas de hasta 20 rutas, mostrarlas todas de corrido inundaba la tarjeta completa. Componente nuevo y compartido `components/shared/RutasColapsables.tsx` (cliente), usado tanto en `VacanteDetalle.tsx` (candidato) como en la ficha operativa del reclutador — antes cada uno tenía su propio `.map()` duplicado. Muestra las primeras 2 rutas + botón "Ver las N rutas" (expande) / "Ver menos" (colapsa).
+
+El candidato ve, dentro del mismo recuadro verde "🚌 Ruta de transporte" (`VacanteDetalle.tsx`), cada ruta con su nombre seguido de sus paradas si las tiene — ej. *"Ruta Norte: Apodaca, Escobedo, Guadalupe"* o solo *"Ruta Norte"* si no las tiene — y debajo, con una línea divisoria, los documentos PDF de esa empresa (CA-20.3), bajo la etiqueta "📎 Documentos de la ruta". El texto "Disponible para entrevista" (ligado a `ruta_para_entrevista`, campo de vacante) va subrayado, para no confundirse visualmente con un nombre de ruta más en la lista.
 
 ---
 
