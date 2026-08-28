@@ -54,7 +54,10 @@ export async function POST(req: NextRequest) {
 
     const supabase = getServiceClient()
     const bytes = await file.arrayBuffer()
-    const libro = XLSX.read(bytes, { type: 'array' })
+    // cellDates: true — para que las celdas de fecha reales de Excel
+    // lleguen como objetos Date, en vez de números de serie sin
+    // formato (causa real de que las fechas se ignoraran en silencio)
+    const libro = XLSX.read(bytes, { type: 'array', cellDates: true })
 
     const nombreHoja = libro.SheetNames.includes('Vacantes') ? 'Vacantes' : libro.SheetNames[0]
     const filas: Record<string, any>[] = XLSX.utils.sheet_to_json(libro.Sheets[nombreHoja], { defval: '' })
@@ -156,7 +159,7 @@ export async function POST(req: NextRequest) {
           tiene_promocion: esSiNo(fila['TIENE PROMOCIÓN']),
           promocion_descripcion: String(fila['DESCRIPCIÓN PROMOCIÓN'] ?? '').trim() || null,
           promocion_monto_mxn: fila['MONTO PROMOCIÓN'] ? Number(fila['MONTO PROMOCIÓN']) : null,
-          promocion_fin: parsearFecha(String(fila['VENCE PROMOCIÓN'] ?? '')),
+          promocion_fin: parsearFecha(fila['VENCE PROMOCIÓN']),
           requiere_examen_medico: esSiNo(fila['EXAMEN MÉDICO']),
           requiere_antidoping: esSiNo(fila['ANTIDOPING']),
           requiere_estudio_socioeconomico: esSiNo(fila['ESTUDIO SOCIOECONÓMICO']),
@@ -175,7 +178,7 @@ export async function POST(req: NextRequest) {
           // del payload por completo: en un INSERT toma el DEFAULT now()
           // de la base; en un UPDATE deja la fecha_publicacion existente
           // intacta, sin pisarla con nada.
-          ...(parsearFecha(String(fila['FECHA'] ?? '')) ? { fecha_publicacion: parsearFecha(String(fila['FECHA'] ?? '')) } : {}),
+          ...(parsearFecha(fila['FECHA']) ? { fecha_publicacion: parsearFecha(fila['FECHA']) } : {}),
         }
 
         // CA-08.8: guarda los días de descanso de esta fila para aplicarlos

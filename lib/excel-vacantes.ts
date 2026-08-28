@@ -27,9 +27,33 @@ export const PERIODO_INVERSO: Record<string, string> = Object.fromEntries(
   Object.entries(NOMBRES_PERIODO).map(([k, v]) => [v.toLowerCase(), k])
 )
 
-export function parsearFecha(fecha: string): string | null {
+// Acepta 3 formas en que Excel puede entregar una fecha: texto exacto
+// "DD/MM/AAAA" (como antes), una fecha real de Excel (Date, cuando la
+// celda se guardó como fecha de verdad — el caso más común al usar el
+// selector de fecha, y el que se estaba descartando en silencio antes
+// de este fix), o un número de serie de Excel (por si cellDates no
+// llegó a convertirla).
+export function parsearFecha(fecha: string | number | Date | null | undefined): string | null {
   if (!fecha) return null
-  const [dia, mes, anio] = fecha.split('/')
+
+  if (fecha instanceof Date && !isNaN(fecha.getTime())) {
+    const anio = fecha.getFullYear()
+    const mes = String(fecha.getMonth() + 1).padStart(2, '0')
+    const dia = String(fecha.getDate()).padStart(2, '0')
+    return `${anio}-${mes}-${dia}`
+  }
+
+  if (typeof fecha === 'number') {
+    const base = new Date(Date.UTC(1899, 11, 30)) // época de Excel
+    const resultado = new Date(base.getTime() + fecha * 86400000)
+    const anio = resultado.getUTCFullYear()
+    const mes = String(resultado.getUTCMonth() + 1).padStart(2, '0')
+    const dia = String(resultado.getUTCDate()).padStart(2, '0')
+    return `${anio}-${mes}-${dia}`
+  }
+
+  const texto = String(fecha).trim()
+  const [dia, mes, anio] = texto.split('/')
   if (!dia || !mes || !anio) return null
   return `${anio}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`
 }
