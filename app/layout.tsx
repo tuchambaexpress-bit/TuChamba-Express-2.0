@@ -20,7 +20,20 @@ export const metadata: Metadata = {
     description: 'Encuentra vacantes en Nuevo León, CDMX, Estado de México y más. Postúlate directo por chat con el reclutador, sin registros complicados.',
     url: SITE_URL,
     type: 'website',
-    images: ['/Logo_Header.png'],
+    images: [
+      {
+        url: '/banner_01.jpeg',
+        width: 1200,
+        height: 630,
+        alt: 'TuChamba Express — Empleos en Nuevo León, CDMX y más',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Empleos en Nuevo León, CDMX y más | TuChamba Express',
+    description: 'Encuentra vacantes en Nuevo León, CDMX, Estado de México y más. Postúlate directo por chat con el reclutador, sin registros complicados.',
+    images: ['/banner_01.jpeg'],
   },
 }
 
