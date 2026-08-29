@@ -70,6 +70,16 @@ export default function VacanteDetalle({ vacante, esModal, reclutadorId }: Props
     ? `$${vacante.salario_min.toLocaleString('es-MX')}${vacante.salario_max ? ` - $${vacante.salario_max.toLocaleString('es-MX')}` : ''} ${NOMBRES_SALARIO_TIPO[vacante.salario_tipo ?? ''] ?? vacante.salario_tipo ?? ''} ${NOMBRES_PERIODO[vacante.salario_periodo ?? ''] ?? ''}`.trim()
     : 'Salario a convenir'
 
+  // Meta Pixel (2026-08-28) — evento "Lead" cuando el candidato hace
+  // clic en "Postularme", además del PageView automático del layout.
+  // Guard por si el script del Pixel no ha terminado de cargar.
+  function abrirChatConTracking() {
+    if (typeof window !== 'undefined' && (window as any).fbq) {
+      (window as any).fbq('track', 'Lead', { content_name: vacante.titulo })
+    }
+    setChatAbierto(true)
+  }
+
   return (
     <div className="p-6">
       {/* Encabezado */}
@@ -91,7 +101,7 @@ export default function VacanteDetalle({ vacante, esModal, reclutadorId }: Props
 
       {/* Botón postular */}
       <button
-        onClick={() => setChatAbierto(true)}
+        onClick={abrirChatConTracking}
         className="w-full bg-[#1A6B3C] hover:bg-[#155c33] text-white font-semibold py-3 px-6 rounded-xl mb-6 transition-colors text-sm"
       >
         💬 Postularme / Iniciar Chat
@@ -252,7 +262,7 @@ export default function VacanteDetalle({ vacante, esModal, reclutadorId }: Props
           estado chatAbierto; el ChatModal ya se renderiza una sola vez,
           justo después del primer botón, arriba. */}
       <button
-        onClick={() => setChatAbierto(true)}
+        onClick={abrirChatConTracking}
         className="w-full bg-[#1A6B3C] hover:bg-[#155c33] text-white font-semibold py-3 px-6 rounded-xl transition-colors text-sm"
       >
         💬 Postularme / Iniciar Chat

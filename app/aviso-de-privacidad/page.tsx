@@ -104,7 +104,20 @@ export default function AvisoDePrivacidad() {
           </section>
 
           <section>
-            <h2 className="font-bold text-gray-900 mb-2">9. Enlaces a sitios externos</h2>
+            <h2 className="font-bold text-gray-900 mb-2">9. Herramientas de medición de terceros</h2>
+            <p>
+              Utilizamos Meta Pixel (Facebook/Instagram) para medir cuántas personas visitan la plataforma
+              y entender qué tan efectivos son nuestros anuncios en esas redes. Esta herramienta puede
+              registrar su visita al sitio y acciones específicas, como iniciar una postulación, sin que
+              esto requiera que usted inicie sesión en ningún servicio de Meta. El tratamiento que Meta
+              haga de esta información se rige por sus propias políticas de privacidad, no por las
+              nuestras — puede consultarlas directamente en los sitios de Meta. Usamos estos datos
+              únicamente para medir el desempeño de nuestras campañas de difusión, no para ningún otro fin.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="font-bold text-gray-900 mb-2">10. Enlaces a sitios externos</h2>
             <p>
               Esta plataforma incluye enlaces directos a sitios de gobierno (IMSS, SAT, CURP) y a redes
               sociales, como ayuda para el candidato. No operamos ni tenemos control sobre esos sitios; el
@@ -113,7 +126,7 @@ export default function AvisoDePrivacidad() {
           </section>
 
           <section>
-            <h2 className="font-bold text-gray-900 mb-2">10. Aviso sobre exámenes médicos</h2>
+            <h2 className="font-bold text-gray-900 mb-2">11. Aviso sobre exámenes médicos</h2>
             <p>
               Al utilizar esta plataforma, usted reconoce que algunas empresas contratantes pueden
               requerir, como parte de su proceso de selección y conforme a la ley, la realización de
@@ -124,7 +137,7 @@ export default function AvisoDePrivacidad() {
           </section>
 
           <section>
-            <h2 className="font-bold text-gray-900 mb-2">11. Límites de nuestra responsabilidad</h2>
+            <h2 className="font-bold text-gray-900 mb-2">12. Límites de nuestra responsabilidad</h2>
             <p>
               Hacemos nuestro mejor esfuerzo para que la plataforma funcione correctamente y que la
               información publicada sea veraz, pero no podemos garantizar que el sitio esté disponible sin
@@ -135,7 +148,7 @@ export default function AvisoDePrivacidad() {
           </section>
 
           <section>
-            <h2 className="font-bold text-gray-900 mb-2">12. Derechos ARCO</h2>
+            <h2 className="font-bold text-gray-900 mb-2">13. Derechos ARCO</h2>
             <p>
               Usted tiene derecho a Acceder, Rectificar, Cancelar u Oponerse (derechos ARCO) al tratamiento
               de sus datos personales. Para ejercer estos derechos, puede contactar directamente al
@@ -144,7 +157,7 @@ export default function AvisoDePrivacidad() {
           </section>
 
           <section>
-            <h2 className="font-bold text-gray-900 mb-2">13. Cambios a este aviso</h2>
+            <h2 className="font-bold text-gray-900 mb-2">14. Cambios a este aviso</h2>
             <p>
               Este aviso puede actualizarse conforme evolucione la plataforma. La fecha de última
               actualización se muestra al inicio de este documento. El uso continuo de la plataforma
@@ -153,7 +166,7 @@ export default function AvisoDePrivacidad() {
           </section>
 
           <section>
-            <h2 className="font-bold text-gray-900 mb-2">14. Legislación aplicable</h2>
+            <h2 className="font-bold text-gray-900 mb-2">15. Legislación aplicable</h2>
             <p>
               Este aviso se rige por las leyes aplicables en los Estados Unidos Mexicanos, particularmente
               las relativas a protección de datos personales y comercio electrónico.
