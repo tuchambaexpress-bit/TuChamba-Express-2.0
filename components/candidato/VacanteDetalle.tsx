@@ -58,7 +58,7 @@ export default function VacanteDetalle({ vacante, esModal, reclutadorId }: Props
     semanal: 'semanal', quincenal: 'quincenal', mensual: 'mensual', por_hora: 'por hora'
   }
   const NOMBRES_SALARIO_TIPO: Record<string, string> = {
-    neto: 'neto', bruto: 'bruto', convenir: 'a convenir'
+    neto: 'neto', bruto: 'bruto', convenir: 'a convenir', segun_experiencia: 'según experiencia'
   }
   const NOMBRES_JORNADA: Record<string, string> = {
     completo: 'Tiempo completo', medio: 'Medio tiempo', proyecto: 'Por proyecto', fines: 'Fines de semana'

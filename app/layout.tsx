@@ -7,10 +7,8 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: 'Empleos en Nuevo León, CDMX y más | TuChamba Express — Contratación Directa',
   description: 'Encuentra vacantes en Nuevo León, CDMX, Estado de México y más. Postúlate directo por chat con el reclutador, sin registros complicados.',
-  manifest: '/manifest.json',
   icons: {
     icon: '/favicon.png',
-    apple: '/icon-192.png',
   },
   alternates: {
     canonical: SITE_URL,

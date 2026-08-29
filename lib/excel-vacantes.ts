@@ -16,7 +16,7 @@ export const MODALIDAD_INVERSO: Record<string, string> = Object.fromEntries(
   Object.entries(NOMBRES_MODALIDAD).map(([k, v]) => [v.toLowerCase(), k])
 )
 
-export const NOMBRES_SALARIO_TIPO: Record<string, string> = { neto: 'Neto', bruto: 'Bruto', convenir: 'A convenir' }
+export const NOMBRES_SALARIO_TIPO: Record<string, string> = { neto: 'Neto', bruto: 'Bruto', convenir: 'A convenir', segun_experiencia: 'Según experiencia' }
 export const SALARIO_TIPO_INVERSO: Record<string, string> = Object.fromEntries(
   Object.entries(NOMBRES_SALARIO_TIPO).map(([k, v]) => [v.toLowerCase(), k])
 )
@@ -121,7 +121,7 @@ export const INSTRUCCIONES: { columna: string; campoSistema: string; descripcion
   { columna: 'SALARIO MÍNIMO', campoSistema: 'Sección 3 — Salario', descripcion: 'Solo el número, sin signo de pesos ni comas.', ejemplo: '2500' },
   { columna: 'SALARIO MÁXIMO', campoSistema: 'Sección 3 — Salario', descripcion: 'Opcional, si el salario es un rango.', ejemplo: '3000' },
   { columna: 'COMENTARIOS SALARIO', campoSistema: 'Sección 3 — Comentarios del salario', descripcion: 'Solo para el reclutador, el candidato nunca lo ve. Ej. cómo sube el salario con la experiencia.', ejemplo: 'Pago los Jueves. Nómina Santander. Semana desfasada.' },
-  { columna: 'TIPO SALARIO', campoSistema: 'Sección 3 — Salario', descripcion: 'Neto, Bruto o A convenir.', ejemplo: 'Bruto' },
+  { columna: 'TIPO SALARIO', campoSistema: 'Sección 3 — Salario', descripcion: 'Neto, Bruto, A convenir, o Según experiencia (cuando el rango sí es real pero varía según la experiencia del candidato).', ejemplo: 'Bruto' },
   { columna: 'PERIODO SALARIO', campoSistema: 'Sección 3 — Salario', descripcion: 'Semanales, Quincenales, Mensuales o Por hora.', ejemplo: 'Semanales' },
   { columna: 'MOSTRAR SALARIO', campoSistema: 'Sección 3 — Mostrar salario', descripcion: 'SI = visible al candidato. NO = aparece "A convenir".', ejemplo: 'SI' },
   { columna: 'JORNADA', campoSistema: 'Sección 3 — Jornada', descripcion: 'Tiempo completo, Medio tiempo, Por proyecto o Fines de semana. Obligatorio.', ejemplo: 'Tiempo completo' },

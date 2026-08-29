@@ -317,7 +317,11 @@ beneficios jsonb DEFAULT '[]'       -- [{texto}]
 letras_chiquitas text               -- lo que el candidato no sabe hasta que llega
 salario_min numeric
 salario_max numeric
-salario_tipo text                   -- neto/bruto/hora/convenir
+salario_tipo text                   -- neto/bruto/convenir/segun_experiencia
+                                     -- (segun_experiencia agregada 2026-08-28,
+                                     -- 7.41 — rango real pero variable según
+                                     -- la experiencia del candidato, distinto
+                                     -- de "convenir" que implica sin definir)
 salario_visible bool DEFAULT true
 ciudad text NOT NULL
 estado text NOT NULL
@@ -1302,6 +1306,7 @@ DE LO CONTRARIO
 - Detección y registro de fuente de tráfico
 
 ### Portal Reclutador (web PWA instalable)
+> **`manifest.json` — corregido 2026-08-28 (`7.40`):** vive declarado solo en `app/reclutador/layout.tsx`, no en el layout raíz — antes se aplicaba a todo el sitio por error, causando que el portal candidato pidiera `icon-192.png`/`icon-512.png` sin necesitarlos (404 real en consola). `start_url` del manifest apunta a `/reclutador/dashboard`, confirmando que esta PWA instalable es exclusiva del reclutador.
 - Login por código de reclutador
 - Dashboard: candidatos activos, colocados este mes, comisión estimada
 - Kanban pipeline por vacante con etapas personalizadas

@@ -1328,6 +1328,7 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
                             <option value="neto">Neto</option>
                             <option value="bruto">Bruto</option>
                             <option value="convenir">A convenir</option>
+                            <option value="segun_experiencia">Según experiencia</option>
                           </select>
                           <select
                             value={form.salario_periodo}
