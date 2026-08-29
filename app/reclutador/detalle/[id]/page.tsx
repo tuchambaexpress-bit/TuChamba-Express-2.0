@@ -11,6 +11,10 @@ interface Props {
   searchParams: { from?: string }
 }
 
+const NOMBRES_SALARIO_TIPO: Record<string, string> = {
+  neto: 'neto', bruto: 'bruto', convenir: 'a convenir', segun_experiencia: 'según experiencia'
+}
+
 export default async function FichaVacante({ params, searchParams }: Props) {
   const origen = searchParams?.from === 'vacantes'
     ? { href: '/reclutador/vacantes', label: '← Vacantes' }
@@ -26,14 +30,15 @@ export default async function FichaVacante({ params, searchParams }: Props) {
       id, titulo, descripcion, requisitos, beneficios,
       letras_chiquitas, salario_min, salario_max, salario_tipo,
       salario_visible, ciudad, estado, colonia_zona,
-      modalidad, jornada, horario, tipo_contrato, turno, salario_periodo, turno,
+      modalidad, jornada, horario, tipo_contrato, turno, salario_periodo,
       tiene_ruta, ruta_para_entrevista,
       estacionamiento, comedor, uniforme,
       empresa_visible, destacada, status, prioridad,
       dias_garantia, dias_induccion, induccion_dentro_garantia,
-      comision_base_mxn, tiene_promocion, promocion_monto_mxn, promocion_fin,
+      comision_base_mxn, tiene_promocion, promocion_descripcion, promocion_monto_mxn, promocion_fin,
       contacto_rrhh, contacto_rrhh_telefono, contacto_rrhh_horario,
       punto_reunion, documentos_requeridos, guion_candidato, comentarios_salario,
+      requiere_examen_medico, requiere_antidoping, requiere_estudio_socioeconomico,
       cupo_requerido, cupo_desde, agencia_id,
       negocios(nombre, dias_entrevista, ubicacion_maps, rutas, documentos_negocio(id, nombre_archivo, archivo_url))
     `)
@@ -58,8 +63,10 @@ export default async function FichaVacante({ params, searchParams }: Props) {
 
   // El reclutador siempre ve el salario real (salario_visible solo aplica
   // al portal público de candidatos, no a la ficha operativa interna).
+  // Fix (2026-08-29): salario_tipo se mostraba crudo (ej. "segun_experiencia"
+  // literal) — ahora pasa por NOMBRES_SALARIO_TIPO como en el resto del sitio.
   const salario = vacante.salario_min
-    ? `$${vacante.salario_min.toLocaleString('es-MX')}${vacante.salario_max ? ` - $${vacante.salario_max.toLocaleString('es-MX')}` : ''} ${vacante.salario_tipo ?? ''} ${vacante.salario_periodo ?? ''}`
+    ? `$${vacante.salario_min.toLocaleString('es-MX')}${vacante.salario_max ? ` - $${vacante.salario_max.toLocaleString('es-MX')}` : ''} ${NOMBRES_SALARIO_TIPO[vacante.salario_tipo ?? ''] ?? vacante.salario_tipo ?? ''} ${vacante.salario_periodo ?? ''}`
     : 'A convenir'
 
   const TURNOS: Record<string, string> = {
@@ -76,7 +83,7 @@ export default async function FichaVacante({ params, searchParams }: Props) {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-[#1A6B3C] px-6 py-4 shadow-md">
-        <div className="max-w-3xl mx-auto flex items-center justify-between">
+        <div className="max-w-[1600px] mx-auto flex items-center justify-between">
           <div>
             <h1 className="text-white font-bold text-xl">Tu Chamba Express</h1>
             <p className="text-green-200 text-sm">Ficha operativa</p>
@@ -87,255 +94,295 @@ export default async function FichaVacante({ params, searchParams }: Props) {
         </div>
       </header>
 
-    <div className="max-w-5xl mx-auto px-4 py-6">
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="max-w-[1600px] mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 
-        {/* Encabezado */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm">
-          <h2 className="text-xl font-bold text-gray-900">{vacante.titulo}</h2>
-          <p className="text-[#1A6B3C] font-semibold mt-1">{empresa}</p>
-          <p className="text-gray-500 text-sm mt-1">📍 {vacante.ciudad}, {vacante.estado}</p>
-          <div className="flex gap-2 mt-3 flex-wrap">
-            <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-lg">{vacante.jornada}</span>
-            <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-lg">{vacante.modalidad}</span>
-            <span className={`text-xs px-2 py-1 rounded-lg font-medium ${vacante.status === 'vigente' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-              {vacante.status}
-            </span>
-            {vacante.prioridad && vacante.prioridad !== 'normal' && (
-              <span className={`text-xs px-2 py-1 rounded-lg font-medium ${vacante.prioridad === 'urgente' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>
-                {vacante.prioridad === 'urgente' ? '🔴 Urgente' : '🟠 Alta'}
+          {/* Encabezado */}
+          <div className="bg-white rounded-2xl p-5 shadow-sm">
+            <h2 className="text-xl font-bold text-gray-900">{vacante.titulo}</h2>
+            <p className="text-[#1A6B3C] font-semibold mt-1">{empresa}</p>
+            <p className="text-gray-500 text-sm mt-1">
+              📍 {vacante.ciudad}, {vacante.estado}{vacante.colonia_zona ? ` · ${vacante.colonia_zona}` : ''}
+            </p>
+            <div className="flex gap-2 mt-3 flex-wrap">
+              <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-lg">{vacante.jornada}</span>
+              <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-lg">{vacante.modalidad}</span>
+              <span className={`text-xs px-2 py-1 rounded-lg font-medium ${vacante.status === 'vigente' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                {vacante.status}
               </span>
-            )}
-          </div>
-        </div>
-
-        {/* Comisión — lo más importante para el reclutador */}
-        <div className={`rounded-2xl p-5 shadow-sm ${tienePromoActiva ? 'bg-amber-50 border border-amber-200' : 'bg-white'}`}>
-          <h3 className="font-bold text-gray-900 mb-3">
-            💰 Tu comisión {tienePromoActiva ? '🔥 ¡Bono activo!' : ''}
-          </h3>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <p className="text-xs text-gray-500">Comisión base</p>
-              <p className="text-lg font-bold text-gray-900">${vacante.comision_base_mxn?.toLocaleString('es-MX')} MXN</p>
+              {vacante.prioridad && vacante.prioridad !== 'normal' && (
+                <span className={`text-xs px-2 py-1 rounded-lg font-medium ${vacante.prioridad === 'urgente' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>
+                  {vacante.prioridad === 'urgente' ? '🔴 Urgente' : '🟠 Alta'}
+                </span>
+              )}
             </div>
-            {tienePromoActiva && (
+          </div>
+
+          {/* Descripción del puesto — se traía del select() pero nunca se
+              mostraba en ningún lado (2026-08-29). Tarjeta propia, separada
+              del Encabezado, tal como José pidió ("cada dato su tarjeta"). */}
+          {vacante.descripcion && (
+            <div className="bg-white rounded-2xl p-5 shadow-sm">
+              <h3 className="font-bold text-gray-900 mb-3">📝 Descripción del puesto</h3>
+              <p className="text-sm text-gray-600 leading-relaxed">{vacante.descripcion}</p>
+            </div>
+          )}
+
+          {/* Comisión — lo más importante para el reclutador */}
+          <div className={`rounded-2xl p-5 shadow-sm ${tienePromoActiva ? 'bg-amber-50 border border-amber-200' : 'bg-white'}`}>
+            <h3 className="font-bold text-gray-900 mb-3">
+              💰 Tu comisión {tienePromoActiva ? '🔥 ¡Bono activo!' : ''}
+            </h3>
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <p className="text-xs text-amber-600">🔥 Bono especial</p>
-                <p className="text-lg font-bold text-amber-700">${vacante.promocion_monto_mxn?.toLocaleString('es-MX')} MXN</p>
-                <p className="text-xs text-amber-600">Válido hasta {new Date(vacante.promocion_fin!).toLocaleDateString('es-MX')}</p>
+                <p className="text-xs text-gray-500">Comisión base</p>
+                <p className="text-lg font-bold text-gray-900">${vacante.comision_base_mxn?.toLocaleString('es-MX')} MXN</p>
+              </div>
+              {tienePromoActiva && (
+                <div>
+                  <p className="text-xs text-amber-600">🔥 Bono especial</p>
+                  <p className="text-lg font-bold text-amber-700">${vacante.promocion_monto_mxn?.toLocaleString('es-MX')} MXN</p>
+                  <p className="text-xs text-amber-600">Válido hasta {new Date(vacante.promocion_fin!).toLocaleDateString('es-MX')}</p>
+                  {vacante.promocion_descripcion && (
+                    <p className="text-xs text-amber-600 mt-0.5">{vacante.promocion_descripcion}</p>
+                  )}
+                </div>
+              )}
+              <div>
+                <p className="text-xs text-gray-500">Días de garantía</p>
+                <p className="text-base font-bold text-gray-900">{vacante.dias_garantia} días</p>
+              </div>
+              {vacante.dias_induccion > 0 && (
+                <div>
+                  <p className="text-xs text-gray-500">Días de inducción</p>
+                  <p className="text-base font-bold text-gray-900">
+                    {vacante.dias_induccion} días
+                    <span className="text-xs font-normal text-gray-400 ml-1">
+                      ({vacante.induccion_dentro_garantia ? 'dentro de garantía' : 'antes de garantía'})
+                    </span>
+                  </p>
+                </div>
+              )}
+            </div>
+            <div className="mt-3 bg-green-50 border border-green-200 rounded-xl p-3">
+              <p className="text-sm text-green-700 font-medium">
+                ✅ Cobras ${comisionFinal?.toLocaleString('es-MX')} MXN cuando el candidato cumple {vacante.induccion_dentro_garantia ? vacante.dias_garantia : (vacante.dias_garantia + (vacante.dias_induccion ?? 0))} días
+              </p>
+            </div>
+          </div>
+
+          {/* Salario del candidato */}
+          <div className="bg-white rounded-2xl p-5 shadow-sm">
+            <h3 className="font-bold text-gray-900 mb-3">💵 Salario del candidato</h3>
+            <p className="text-lg font-bold text-gray-900">{salario}</p>
+            {vacante.comentarios_salario && (
+              <div className="mt-2 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
+                <p className="text-xs text-blue-700">💬 {vacante.comentarios_salario}</p>
               </div>
             )}
-            <div>
-              <p className="text-xs text-gray-500">Días de garantía</p>
-              <p className="text-base font-bold text-gray-900">{vacante.dias_garantia} días</p>
+          </div>
+
+          {/* Horario y turno */}
+          <div className="bg-white rounded-2xl p-5 shadow-sm">
+            <h3 className="font-bold text-gray-900 mb-3">🕐 Horario y turno</h3>
+            {vacante.turno && TURNOS[vacante.turno] && <p className="text-sm text-gray-500 mt-1">🔄 Turno {TURNOS[vacante.turno]}</p>}
+            {vacante.horario && <p className="text-sm text-gray-500 mt-1">🕐 {vacante.horario}</p>}
+            {vacante.tipo_contrato && <p className="text-sm text-gray-500 mt-1">📋 {vacante.tipo_contrato}</p>}
+            {!vacante.turno && !vacante.horario && !vacante.tipo_contrato && (
+              <p className="text-sm text-gray-400">Sin información adicional de horario.</p>
+            )}
+          </div>
+
+          {/* Documentos requeridos */}
+          {vacante.documentos_requeridos?.length > 0 && (
+            <div className="bg-white rounded-2xl p-5 shadow-sm">
+              <h3 className="font-bold text-gray-900 mb-3">📄 Documentos que debe llevar</h3>
+              <ul className="space-y-1">
+                {vacante.documentos_requeridos.map((d: string, i: number) => (
+                  <li key={i} className="text-sm text-gray-700 flex gap-2">
+                    <span className="text-[#1A6B3C]">•</span>{d}
+                  </li>
+                ))}
+              </ul>
             </div>
-            {vacante.dias_induccion > 0 && (
-              <div>
-                <p className="text-xs text-gray-500">Días de inducción</p>
-                <p className="text-base font-bold text-gray-900">
-                  {vacante.dias_induccion} días
-                  <span className="text-xs font-normal text-gray-400 ml-1">
-                    ({vacante.induccion_dentro_garantia ? 'dentro de garantía' : 'antes de garantía'})
-                  </span>
+          )}
+
+          {/* Contacto RRHH */}
+          {vacante.contacto_rrhh && (
+            <div className="bg-white rounded-2xl p-5 shadow-sm">
+              <h3 className="font-bold text-gray-900 mb-3">📞 Contacto RRHH</h3>
+              <p className="text-sm font-medium text-gray-800">{vacante.contacto_rrhh}</p>
+              {vacante.contacto_rrhh_telefono && (
+                <p className="text-sm text-gray-500 mt-1">📱 {vacante.contacto_rrhh_telefono}</p>
+              )}
+              {vacante.contacto_rrhh_horario && (
+                <p className="text-sm text-gray-500 mt-1">🕐 {vacante.contacto_rrhh_horario}</p>
+              )}
+            </div>
+          )}
+
+          {/* Requisitos */}
+          {vacante.requisitos?.length > 0 && (
+            <div className="bg-white rounded-2xl p-5 shadow-sm">
+              <h3 className="font-bold text-gray-900 mb-3">✅ Requisitos</h3>
+              <ul className="space-y-1">
+                {vacante.requisitos.map((r: string, i: number) => (
+                  <li key={i} className="text-sm text-gray-700 flex gap-2">
+                    <span className="text-[#1A6B3C]">•</span>{r}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Beneficios */}
+          {vacante.beneficios?.length > 0 && (
+            <div className="bg-white rounded-2xl p-5 shadow-sm">
+              <h3 className="font-bold text-gray-900 mb-3">🎁 Beneficios</h3>
+              <ul className="space-y-1">
+                {vacante.beneficios.map((b: string, i: number) => (
+                  <li key={i} className="text-sm text-gray-700 flex gap-2">
+                    <span className="text-green-500">✓</span>{b}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Logística */}
+          {(vacante.tiene_ruta || vacante.estacionamiento || vacante.comedor || vacante.uniforme || (vacante.negocios as any)?.ubicacion_maps) && (
+            <div className="bg-white rounded-2xl p-5 shadow-sm">
+              <h3 className="font-bold text-gray-900 mb-3">🚌 Logística</h3>
+              <div className="flex flex-wrap gap-2">
+                {vacante.tiene_ruta && (
+                  <div className="bg-green-50 border border-green-200 rounded-xl px-3 py-2">
+                    <p className="text-xs font-semibold text-green-700">🚌 Ruta de transporte</p>
+                    {(vacante.negocios as any)?.rutas?.length > 0 && (
+                      <RutasColapsables rutas={(vacante.negocios as any).rutas} />
+                    )}
+                    {vacante.ruta_para_entrevista && (
+                      <p className="text-xs text-green-600 underline mt-0.5">✅ Disponible para ir a la entrevista</p>
+                    )}
+                    {(vacante.negocios as any)?.documentos_negocio?.length > 0 && (
+                      <div className="mt-2 pt-2 border-t border-green-200 space-y-0.5">
+                        <p className="text-xs font-semibold text-green-700 mb-0.5">📎 Documentos de la ruta</p>
+                        {(vacante.negocios as any).documentos_negocio.map((doc: any) => (
+                          <a
+                            key={doc.id}
+                            href={doc.archivo_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-green-700 underline block"
+                          >
+                            📄 {doc.nombre_archivo}
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+                {vacante.estacionamiento && <span className="bg-gray-50 border border-gray-200 text-gray-700 text-xs px-3 py-2 rounded-xl">🅿️ Estacionamiento</span>}
+                {vacante.comedor && <span className="bg-gray-50 border border-gray-200 text-gray-700 text-xs px-3 py-2 rounded-xl">🍽️ Comedor</span>}
+                {vacante.uniforme && <span className="bg-gray-50 border border-gray-200 text-gray-700 text-xs px-3 py-2 rounded-xl">👕 Uniforme</span>}
+                {(vacante.negocios as any)?.ubicacion_maps && (
+                  <a
+                    href={(vacante.negocios as any).ubicacion_maps}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-blue-50 border border-blue-200 rounded-xl px-3 py-2 flex flex-col hover:bg-blue-100 transition-colors"
+                  >
+                    <p className="text-xs font-semibold text-blue-700">📍 Ubicación de la empresa</p>
+                    <span className="text-xs text-blue-600 underline">Abrir en Google Maps</span>
+                  </a>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Letras chiquitas — solo esto, como estaba antes (sin avisos médicos mezclados) */}
+          {vacante.letras_chiquitas && (
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 shadow-sm">
+              <h3 className="font-bold text-amber-800 mb-2">⚠️ Información importante</h3>
+              <p className="text-sm text-amber-700">{vacante.letras_chiquitas}</p>
+            </div>
+          )}
+
+          {/* Avisos médicos — nunca se traían ni se mostraban antes de hoy
+              (2026-08-29). Tarjeta propia, separada de Información
+              importante, tal como José pidió. */}
+          {(vacante.requiere_examen_medico || vacante.requiere_antidoping || vacante.requiere_estudio_socioeconomico) && (
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 shadow-sm">
+              <h3 className="font-bold text-amber-800 mb-2">🩺 Avisos médicos</h3>
+              <ul className="space-y-1">
+                {vacante.requiere_examen_medico && (
+                  <li className="text-sm text-amber-700">🩺 Se realizará examen médico.</li>
+                )}
+                {vacante.requiere_antidoping && (
+                  <li className="text-sm text-amber-700">🧪 Se realizará prueba antidoping.</li>
+                )}
+                {vacante.requiere_estudio_socioeconomico && (
+                  <li className="text-sm text-amber-700">🏠 Se realizará estudio socioeconómico.</li>
+                )}
+              </ul>
+            </div>
+          )}
+
+          {/* Qué decirle al candidato (CA-09.2) — a propósito cerca del
+              final, no arriba (José, 2026-08-29: "va a ser lo más largo
+              que vamos a modificar después", ver 7.38 pausada). Contenido
+              vuelve a su forma original: guion + requerimiento + punto de
+              reunión + días de entrevista anidados adentro — SIN
+              Documentos fusionado (eso ya es su propia tarjeta arriba). */}
+          <div className="lg:col-span-3 bg-blue-50 border border-blue-200 rounded-2xl p-5 shadow-sm">
+            <h3 className="font-bold text-blue-900 mb-2">💬 Qué decirle al candidato</h3>
+            <p className="text-sm text-blue-800 whitespace-pre-line">
+              {vacante.guion_candidato ?? 'El coordinador aún no ha agregado instrucciones específicas para esta vacante.'}
+            </p>
+            <div className="inline-flex items-center gap-1.5 bg-white rounded-lg px-3 py-1.5 mt-3">
+              <p className="text-xs text-gray-500">Requerimiento:</p>
+              <p className="text-sm font-bold text-gray-900">{cupoOcupado ?? 0}/{vacante.cupo_requerido ?? 1}</p>
+            </div>
+            {vacante.punto_reunion && (
+              <div className="mt-3 bg-white rounded-xl p-3">
+                <p className="text-xs text-gray-500">Punto de reunión / entrevista</p>
+                <p className="text-sm font-medium text-gray-800">{vacante.punto_reunion}</p>
+              </div>
+            )}
+            {(vacante.negocios as any)?.dias_entrevista?.length > 0 && (
+              <div className="mt-3 bg-white rounded-xl p-3">
+                <p className="text-xs text-gray-500">📅 Días de entrevista de la empresa</p>
+                <p className="text-sm font-medium text-gray-800">
+                  {(vacante.negocios as any).dias_entrevista.sort().map((d: number) => NOMBRES_DIA_CORTO[d]).join(', ')}
                 </p>
               </div>
             )}
           </div>
-          <div className="mt-3 bg-green-50 border border-green-200 rounded-xl p-3">
-            <p className="text-sm text-green-700 font-medium">
-              ✅ Cobras ${comisionFinal?.toLocaleString('es-MX')} MXN cuando el candidato cumple {vacante.induccion_dentro_garantia ? vacante.dias_garantia : (vacante.dias_garantia + (vacante.dias_induccion ?? 0))} días
-            </p>
+
+          {/* 4.14/4.15 — Agente FAQ (3 niveles: campo estructurado, FAQ guardado, escalación) */}
+          <div className="lg:col-span-3">
+            <FaqWidget
+              vacanteId={vacante.id}
+              agenciaId={vacante.agencia_id}
+              vacante={{
+                status: vacante.status,
+                tiene_ruta: vacante.tiene_ruta,
+                rutas: (vacante.negocios as any)?.rutas ?? [],
+                ruta_para_entrevista: vacante.ruta_para_entrevista,
+                estacionamiento: vacante.estacionamiento,
+                comedor: vacante.comedor,
+                uniforme: vacante.uniforme,
+                horario: vacante.horario,
+                turno: vacante.turno,
+                dias_garantia: vacante.dias_garantia,
+                comision_base_mxn: vacante.comision_base_mxn,
+                punto_reunion: vacante.punto_reunion,
+                dias_entrevista: (vacante.negocios as any)?.dias_entrevista ?? [],
+              }}
+            />
           </div>
+
         </div>
-
-        {/* Salario del candidato */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm">
-          <h3 className="font-bold text-gray-900 mb-3">💵 Salario del candidato</h3>
-          <p className="text-lg font-bold text-gray-900">{salario}</p>
-          {vacante.comentarios_salario && (
-            <div className="mt-2 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
-              <p className="text-xs text-blue-700">💬 {vacante.comentarios_salario}</p>
-            </div>
-          )}
-        </div>
-
-        {/* Horario y turno */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm">
-          <h3 className="font-bold text-gray-900 mb-3">🕐 Horario y turno</h3>
-          {vacante.turno && TURNOS[vacante.turno] && <p className="text-sm text-gray-500 mt-1">🔄 Turno {TURNOS[vacante.turno]}</p>}
-          {vacante.horario && <p className="text-sm text-gray-500 mt-1">🕐 {vacante.horario}</p>}
-          {vacante.tipo_contrato && <p className="text-sm text-gray-500 mt-1">📋 {vacante.tipo_contrato}</p>}
-          {!vacante.turno && !vacante.horario && !vacante.tipo_contrato && (
-            <p className="text-sm text-gray-400">Sin información adicional de horario.</p>
-          )}
-        </div>
-
-        {/* Qué decirle al candidato (CA-09.2) */}
-        <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 shadow-sm">
-          <h3 className="font-bold text-blue-900 mb-2">💬 Qué decirle al candidato</h3>
-          <p className="text-sm text-blue-800 whitespace-pre-line">
-            {vacante.guion_candidato ?? 'El coordinador aún no ha agregado instrucciones específicas para esta vacante.'}
-          </p>
-          <div className="inline-flex items-center gap-1.5 bg-white rounded-lg px-3 py-1.5 mt-3">
-            <p className="text-xs text-gray-500">Requerimiento:</p>
-            <p className="text-sm font-bold text-gray-900">{cupoOcupado ?? 0}/{vacante.cupo_requerido ?? 1}</p>
-          </div>
-          {vacante.punto_reunion && (
-            <div className="mt-3 bg-white rounded-xl p-3">
-              <p className="text-xs text-gray-500">Punto de reunión / entrevista</p>
-              <p className="text-sm font-medium text-gray-800">{vacante.punto_reunion}</p>
-            </div>
-          )}
-          {(vacante.negocios as any)?.dias_entrevista?.length > 0 && (
-            <div className="mt-3 bg-white rounded-xl p-3">
-              <p className="text-xs text-gray-500">📅 Días de entrevista de la empresa</p>
-              <p className="text-sm font-medium text-gray-800">
-                {(vacante.negocios as any).dias_entrevista.sort().map((d: number) => NOMBRES_DIA_CORTO[d]).join(', ')}
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Documentos requeridos */}
-        {vacante.documentos_requeridos?.length > 0 && (
-          <div className="bg-white rounded-2xl p-5 shadow-sm">
-            <h3 className="font-bold text-gray-900 mb-3">📄 Documentos que debe llevar</h3>
-            <ul className="space-y-1">
-              {vacante.documentos_requeridos.map((d: string, i: number) => (
-                <li key={i} className="text-sm text-gray-700 flex gap-2">
-                  <span className="text-[#1A6B3C]">•</span>{d}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* Contacto RRHH */}
-        {vacante.contacto_rrhh && (
-          <div className="bg-white rounded-2xl p-5 shadow-sm">
-            <h3 className="font-bold text-gray-900 mb-3">📞 Contacto RRHH</h3>
-            <p className="text-sm font-medium text-gray-800">{vacante.contacto_rrhh}</p>
-            {vacante.contacto_rrhh_telefono && (
-              <p className="text-sm text-gray-500 mt-1">📱 {vacante.contacto_rrhh_telefono}</p>
-            )}
-            {vacante.contacto_rrhh_horario && (
-              <p className="text-sm text-gray-500 mt-1">🕐 {vacante.contacto_rrhh_horario}</p>
-            )}
-          </div>
-        )}
-
-        {/* Requisitos */}
-        {vacante.requisitos?.length > 0 && (
-          <div className="bg-white rounded-2xl p-5 shadow-sm">
-            <h3 className="font-bold text-gray-900 mb-3">✅ Requisitos</h3>
-            <ul className="space-y-1">
-              {vacante.requisitos.map((r: string, i: number) => (
-                <li key={i} className="text-sm text-gray-700 flex gap-2">
-                  <span className="text-[#1A6B3C]">•</span>{r}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* Beneficios */}
-        {vacante.beneficios?.length > 0 && (
-          <div className="bg-white rounded-2xl p-5 shadow-sm">
-            <h3 className="font-bold text-gray-900 mb-3">🎁 Beneficios</h3>
-            <ul className="space-y-1">
-              {vacante.beneficios.map((b: string, i: number) => (
-                <li key={i} className="text-sm text-gray-700 flex gap-2">
-                  <span className="text-green-500">✓</span>{b}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* Logística */}
-        {(vacante.tiene_ruta || vacante.estacionamiento || vacante.comedor || vacante.uniforme || (vacante.negocios as any)?.ubicacion_maps) && (
-          <div className="bg-white rounded-2xl p-5 shadow-sm">
-            <h3 className="font-bold text-gray-900 mb-3">🚌 Logística</h3>
-            <div className="flex flex-wrap gap-2">
-              {vacante.tiene_ruta && (
-                <div className="bg-green-50 border border-green-200 rounded-xl px-3 py-2">
-                  <p className="text-xs font-semibold text-green-700">🚌 Ruta de transporte</p>
-                  {(vacante.negocios as any)?.rutas?.length > 0 && (
-                    <RutasColapsables rutas={(vacante.negocios as any).rutas} />
-                  )}
-                  {vacante.ruta_para_entrevista && (
-                    <p className="text-xs text-green-600 underline mt-0.5">✅ Disponible para ir a la entrevista</p>
-                  )}
-                  {(vacante.negocios as any)?.documentos_negocio?.length > 0 && (
-                    <div className="mt-2 pt-2 border-t border-green-200 space-y-0.5">
-                      <p className="text-xs font-semibold text-green-700 mb-0.5">📎 Documentos de la ruta</p>
-                      {(vacante.negocios as any).documentos_negocio.map((doc: any) => (
-                        <a
-                          key={doc.id}
-                          href={doc.archivo_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-green-700 underline block"
-                        >
-                          📄 {doc.nombre_archivo}
-                        </a>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-              {vacante.estacionamiento && <span className="bg-gray-50 border border-gray-200 text-gray-700 text-xs px-3 py-2 rounded-xl">🅿️ Estacionamiento</span>}
-              {vacante.comedor && <span className="bg-gray-50 border border-gray-200 text-gray-700 text-xs px-3 py-2 rounded-xl">🍽️ Comedor</span>}
-              {vacante.uniforme && <span className="bg-gray-50 border border-gray-200 text-gray-700 text-xs px-3 py-2 rounded-xl">👕 Uniforme</span>}
-              {(vacante.negocios as any)?.ubicacion_maps && (
-                <a
-                  href={(vacante.negocios as any).ubicacion_maps}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-blue-50 border border-blue-200 rounded-xl px-3 py-2 flex flex-col hover:bg-blue-100 transition-colors"
-                >
-                  <p className="text-xs font-semibold text-blue-700">📍 Ubicación de la empresa</p>
-                  <span className="text-xs text-blue-600 underline">Abrir en Google Maps</span>
-                </a>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Letras chiquitas */}
-        {vacante.letras_chiquitas && (
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 shadow-sm">
-            <h3 className="font-bold text-amber-800 mb-2">⚠️ Información importante</h3>
-            <p className="text-sm text-amber-700">{vacante.letras_chiquitas}</p>
-          </div>
-        )}
-
-        {/* 4.14/4.15 — Agente FAQ (3 niveles: campo estructurado, FAQ guardado, escalación) */}
-        <div className="md:col-span-2">
-          <FaqWidget
-            vacanteId={vacante.id}
-            agenciaId={vacante.agencia_id}
-            vacante={{
-              status: vacante.status,
-              tiene_ruta: vacante.tiene_ruta,
-              rutas: (vacante.negocios as any)?.rutas ?? [],
-              ruta_para_entrevista: vacante.ruta_para_entrevista,
-              estacionamiento: vacante.estacionamiento,
-              comedor: vacante.comedor,
-              uniforme: vacante.uniforme,
-              horario: vacante.horario,
-              turno: vacante.turno,
-              dias_garantia: vacante.dias_garantia,
-              comision_base_mxn: vacante.comision_base_mxn,
-              punto_reunion: vacante.punto_reunion,
-              dias_entrevista: (vacante.negocios as any)?.dias_entrevista ?? [],
-            }}
-          />
-        </div>
-
       </div>
     </div>
-  </div>
   )
 }
