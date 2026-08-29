@@ -51,6 +51,8 @@ export default function DashboardReclutador() {
 
   const [datosFunnel, setDatosFunnel] = useState<{ etapa: string; candidatos: number }[]>([])
   const [datosTrafico, setDatosTrafico] = useState<{ name: string; value: number }[]>([])
+  const [totalVistasVacante, setTotalVistasVacante] = useState(0)
+  const [totalClicsPostularme, setTotalClicsPostularme] = useState(0)
   const [datosTiempo, setDatosTiempo] = useState<{ vacante: string; dias: number }[]>([])
   const [tasaInasistencia, setTasaInasistencia] = useState<{ inasistencias: number; entrevistas: number }>({ inasistencias: 0, entrevistas: 0 })
   const [resumenCorte, setResumenCorte] = useState<{ candidatos: CandidatoCorte[]; total: number } | null>(null)
@@ -206,7 +208,7 @@ export default function DashboardReclutador() {
 
       const { data: traficoData } = await supabase
         .from('trafico_referidos')
-        .select('fuente, created_at')
+        .select('fuente, tipo_evento, created_at')
         .eq('reclutador_id', reclutadorId)
         .eq('agencia_id', agId)
         .gte('created_at', rango.desde)
@@ -236,12 +238,23 @@ export default function DashboardReclutador() {
     const inasistencias = postulacionesTotal.filter((p: any) => entrevistasAlgunavez.has(p.id) && p.motivo_descarte === 'no_se_presento').length
     setTasaInasistencia({ inasistencias, entrevistas: entrevistasAlgunavez.size })
 
+    // Fuentes de tráfico — filtra tipo_evento='visita' (7.43). Sin esto,
+    // mezclaría los clics nuevos de "ver_vacante"/"postularme" con las
+    // cargas de página reales, inflando la dona de proporciones.
     const conteoFuente: Record<string, number> = {}
-    traficoTotal.forEach((t: any) => {
-      const f = t.fuente ?? 'otro'
-      conteoFuente[f] = (conteoFuente[f] ?? 0) + 1
-    })
+    traficoTotal
+      .filter((t: any) => (t.tipo_evento ?? 'visita') === 'visita')
+      .forEach((t: any) => {
+        const f = t.fuente ?? 'otro'
+        conteoFuente[f] = (conteoFuente[f] ?? 0) + 1
+      })
     setDatosTrafico(Object.entries(conteoFuente).map(([name, value]) => ({ name, value })))
+
+    // Contador propio (7.43) — "ver detalle de vacante" y clic en
+    // "Postularme", del mismo traficoTotal ya descargado (sin consultas
+    // extra por agencia). Números totales agregados del periodo.
+    setTotalVistasVacante(traficoTotal.filter((t: any) => t.tipo_evento === 'ver_vacante').length)
+    setTotalClicsPostularme(traficoTotal.filter((t: any) => t.tipo_evento === 'postularme').length)
 
     const idsContratadosPropios = postulacionesTotal.filter((p: any) => p.etapa_actual === 'Contratado').map((p: any) => p.id)
     let historialContratadosPropio: any[] = []
@@ -520,6 +533,18 @@ export default function DashboardReclutador() {
                   </PieChart>
                 </ResponsiveContainer>
               )}
+            </div>
+
+            {/* Contadores propios (7.43) — vistas de vacante y clics en
+                Postularme, del tráfico que llegó por tu link. Celdas
+                directas de esta misma rejilla, sin grid anidado. */}
+            <div className="bg-white rounded-2xl p-5 shadow-sm">
+              <p className="text-sm text-gray-500">👁️ Vistas de vacante</p>
+              <p className="text-3xl font-bold text-gray-900 mt-1">{totalVistasVacante}</p>
+            </div>
+            <div className="bg-white rounded-2xl p-5 shadow-sm">
+              <p className="text-sm text-gray-500">💬 Postulaciones iniciadas</p>
+              <p className="text-3xl font-bold text-gray-900 mt-1">{totalClicsPostularme}</p>
             </div>
 
             <div className="bg-white rounded-2xl p-5 shadow-sm">

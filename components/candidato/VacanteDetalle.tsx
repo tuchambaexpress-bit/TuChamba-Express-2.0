@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import ChatModal from './ChatModal'
 import { getCodigoReferido } from '@/hooks/useReferido'
+import { registrarEventoTrafico } from '@/hooks/useTrafico'
 import RutasColapsables from '@/components/shared/RutasColapsables'
 
 interface Vacante {
@@ -77,6 +78,7 @@ export default function VacanteDetalle({ vacante, esModal, reclutadorId }: Props
     if (typeof window !== 'undefined' && (window as any).fbq) {
       (window as any).fbq('track', 'Lead', { content_name: vacante.titulo })
     }
+    registrarEventoTrafico('postularme', vacante.id)
     setChatAbierto(true)
   }
 

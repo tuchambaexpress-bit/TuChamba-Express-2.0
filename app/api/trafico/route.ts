@@ -7,7 +7,7 @@ export async function POST(request: Request) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
-  const { fuente, vacanteId, codigoRef } = await request.json()
+  const { fuente, vacanteId, codigoRef, tipoEvento } = await request.json()
 
   // Buscar reclutador_id y su agencia por código si viene referido
   let reclutadorId = null
@@ -38,7 +38,8 @@ export async function POST(request: Request) {
     fuente: fuente ?? 'directo',
     vacante_id: vacanteId ?? null,
     reclutador_id: reclutadorId ?? null,
-    agencia_id: agenciaId
+    agencia_id: agenciaId,
+    tipo_evento: tipoEvento ?? 'visita',
   })
 
   return NextResponse.json({ ok: true })

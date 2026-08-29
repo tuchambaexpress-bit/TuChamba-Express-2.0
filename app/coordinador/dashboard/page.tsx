@@ -27,6 +27,8 @@ export default function DashboardCoordinador() {
   const [datosEfectividad, setDatosEfectividad] = useState<{ reclutador: string; colocados: number; noEfectivos: number }[]>([])
   const [datosComisiones, setDatosComisiones] = useState<{ reclutador: string; pagadas: number; pendientes: number; perdidas: number }[]>([])
   const [datosTrafico, setDatosTrafico] = useState<{ name: string; value: number }[]>([])
+  const [totalVistasVacante, setTotalVistasVacante] = useState(0)
+  const [totalClicsPostularme, setTotalClicsPostularme] = useState(0)
   const [datosTiempo, setDatosTiempo] = useState<{ vacante: string; dias: number }[]>([])
   const [mostrarResumen, setMostrarResumen] = useState(false)
 
@@ -124,8 +126,10 @@ export default function DashboardCoordinador() {
     }).filter(r => r.pagadas > 0 || r.pendientes > 0 || r.perdidas > 0)
     setDatosComisiones(comisiones)
 
-    // Gráfica 5 — Fuentes de tráfico
-    let queryTrafico = supabase.from('trafico_referidos').select('fuente, created_at').eq('agencia_id', agenciaId)
+    // Gráfica 5 — Fuentes de tráfico. Filtra tipo_evento='visita' (7.43) —
+    // sin este filtro, mezclaría los clics nuevos de "ver_vacante"/
+    // "postularme" con las cargas de página reales, inflando el conteo.
+    let queryTrafico = supabase.from('trafico_referidos').select('fuente, created_at').eq('agencia_id', agenciaId).eq('tipo_evento', 'visita')
     if (fechaDesde) queryTrafico = queryTrafico.gte('created_at', fechaDesde)
     if (fechaHasta) queryTrafico = queryTrafico.lte('created_at', `${fechaHasta}T23:59:59`)
     const { data: traficoData } = await queryTrafico
@@ -136,6 +140,21 @@ export default function DashboardCoordinador() {
       conteoFuente[f] = (conteoFuente[f] ?? 0) + 1
     })
     setDatosTrafico(Object.entries(conteoFuente).map(([name, value]) => ({ name, value })))
+
+    // Contador propio (7.43) — "ver detalle de vacante" y clic en
+    // "Postularme", números totales agregados (no dona de proporciones
+    // como la Gráfica 5, José pidió conteos simples).
+    let queryVistas = supabase.from('trafico_referidos').select('id', { count: 'exact', head: true }).eq('agencia_id', agenciaId).eq('tipo_evento', 'ver_vacante')
+    if (fechaDesde) queryVistas = queryVistas.gte('created_at', fechaDesde)
+    if (fechaHasta) queryVistas = queryVistas.lte('created_at', `${fechaHasta}T23:59:59`)
+    const { count: totalVistas } = await queryVistas
+    setTotalVistasVacante(totalVistas ?? 0)
+
+    let queryPostularme = supabase.from('trafico_referidos').select('id', { count: 'exact', head: true }).eq('agencia_id', agenciaId).eq('tipo_evento', 'postularme')
+    if (fechaDesde) queryPostularme = queryPostularme.gte('created_at', fechaDesde)
+    if (fechaHasta) queryPostularme = queryPostularme.lte('created_at', `${fechaHasta}T23:59:59`)
+    const { count: totalPostularme } = await queryPostularme
+    setTotalClicsPostularme(totalPostularme ?? 0)
 
     // Gráfica 6 — Tiempo promedio de colocación por vacante (desde historial_etapas:
     // días entre que la postulación se creó y el momento en que llegó a "Contratado")
@@ -358,6 +377,19 @@ export default function DashboardCoordinador() {
                 </ResponsiveContainer>
               )}
             </div>
+          {/* Contadores propios (7.43) — vistas de vacante y clics en
+              Postularme, números totales del periodo filtrado. Sin
+              envoltura de grid propia — son 2 celdas más de la misma
+              rejilla de 2 columnas que ya envuelve las 6 gráficas. */}
+          <div className="bg-white rounded-2xl p-5 shadow-sm">
+            <p className="text-sm text-gray-500">👁️ Vistas de vacante</p>
+            <p className="text-3xl font-bold text-gray-900 mt-1">{totalVistasVacante}</p>
+          </div>
+          <div className="bg-white rounded-2xl p-5 shadow-sm">
+            <p className="text-sm text-gray-500">💬 Postulaciones iniciadas</p>
+            <p className="text-3xl font-bold text-gray-900 mt-1">{totalClicsPostularme}</p>
+          </div>
+
           {/* Gráfica 5 — Fuentes de tráfico */}
             <div className="bg-white rounded-2xl p-5 shadow-sm">
               <h3 className="font-bold text-gray-900 mb-3">Fuentes de tráfico</h3>

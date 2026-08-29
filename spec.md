@@ -1304,6 +1304,7 @@ DE LO CONTRARIO
 - Estado visible de su postulación en la misma pantalla del chat
 - Sistema de referidos `?ref=CODIGO`
 - Detección y registro de fuente de tráfico
+- **Meta Pixel (2026-08-28, `7.42`):** `PageView` automático en todo el sitio + evento `Lead` al hacer clic en "Postularme / Iniciar Chat", instalado vía `next/script` en el layout raíz. Distinto del sistema propio de `trafico_referidos`/`fuente` (documentado en `7.39`) — el Pixel mide para Meta Ads, el sistema propio mide para los dashboards internos de la plataforma. Disclosure correspondiente agregado al Aviso de Privacidad (sección 9).
 
 ### Portal Reclutador (web PWA instalable)
 > **`manifest.json` — corregido 2026-08-28 (`7.40`):** vive declarado solo en `app/reclutador/layout.tsx`, no en el layout raíz — antes se aplicaba a todo el sitio por error, causando que el portal candidato pidiera `icon-192.png`/`icon-512.png` sin necesitarlos (404 real en consola). `start_url` del manifest apunta a `/reclutador/dashboard`, confirmando que esta PWA instalable es exclusiva del reclutador.

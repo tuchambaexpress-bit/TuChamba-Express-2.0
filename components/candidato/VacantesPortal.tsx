@@ -6,6 +6,7 @@ import VacanteCard from './VacanteCard'
 import VacanteDetalle from './VacanteDetalle'
 import { useReferido } from '@/hooks/useReferido'
 import { useTrafico } from '@/hooks/useTrafico'
+import { registrarEventoTrafico } from '@/hooks/useTrafico'
 import { createClient } from '@/lib/supabase/client'
 import DebugRefIndicator from './DebugRefIndicator'
 
@@ -162,6 +163,7 @@ export default function VacantesPortal({ vacantes: vacantesIniciales }: Props) {
   function abrirVacante(vacante: Vacante) {
     setSeleccionada(vacante)
     setModalAbierto(true)
+    registrarEventoTrafico('ver_vacante', vacante.id)
   }
 
   function cerrarModal() {
