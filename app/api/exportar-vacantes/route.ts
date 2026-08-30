@@ -4,6 +4,7 @@ import * as XLSX from 'xlsx'
 import {
   NOMBRES_JORNADA, NOMBRES_MODALIDAD, NOMBRES_SALARIO_TIPO, NOMBRES_PERIODO,
   generarHojaInstrucciones, formatearDiasDescanso,
+  DOCUMENTOS_TRONCO_COMUN, COLUMNAS_TRONCO_COMUN,
 } from '@/lib/excel-vacantes'
 
 function getServiceClient() {
@@ -60,7 +61,11 @@ export async function GET(req: NextRequest) {
 
     const maxRequisitos = Math.max(1, ...(vacantes ?? []).map((v: any) => (v.requisitos ?? []).length))
     const maxBeneficios = Math.max(1, ...(vacantes ?? []).map((v: any) => (v.beneficios ?? []).length))
-    const maxDocumentos = Math.max(1, ...(vacantes ?? []).map((v: any) => (v.documentos_requeridos ?? []).length))
+    // Documentos (2026-08-30): DOCUMENTO_N solo exporta los EXTRA, no los
+    // de tronco común (esos ya tienen su propia columna SI/NO más abajo)
+    const maxDocumentos = Math.max(1, ...(vacantes ?? []).map((v: any) =>
+      (v.documentos_requeridos ?? []).filter((d: string) => !DOCUMENTOS_TRONCO_COMUN.includes(d)).length
+    ))
     const maxRutas = Math.max(1, ...(vacantes ?? []).map((v: any) => (v.negocios?.rutas ?? []).length))
 
     const filas = (vacantes ?? []).map((v: any) => {
@@ -93,8 +98,10 @@ export async function GET(req: NextRequest) {
       for (let i = 0; i < maxBeneficios; i++) {
         fila[`BENEFICIO_${i + 1}`] = v.beneficios?.[i] ?? ''
       }
+      // Documentos extra (no tronco común) en las columnas dinámicas
+      const documentosExtra = (v.documentos_requeridos ?? []).filter((d: string) => !DOCUMENTOS_TRONCO_COMUN.includes(d))
       for (let i = 0; i < maxDocumentos; i++) {
-        fila[`DOCUMENTO_${i + 1}`] = v.documentos_requeridos?.[i] ?? ''
+        fila[`DOCUMENTO_${i + 1}`] = documentosExtra[i] ?? ''
       }
 
       fila['RUTA'] = v.tiene_ruta ? 'SI' : 'NO'
@@ -115,6 +122,11 @@ export async function GET(req: NextRequest) {
       fila['CONTACTO RRHH NOMBRE'] = v.contacto_rrhh_nombre ?? ''
       fila['CONTACTO RRHH TELÉFONO'] = v.contacto_rrhh_telefono ?? ''
       fila['MEJOR HORARIO CONTACTO'] = v.mejor_horario_contacto ?? ''
+      // Documentos de tronco común (2026-08-30): 8 columnas fijas SI/NO,
+      // una por cada documento — reemplaza el texto libre de antes
+      DOCUMENTOS_TRONCO_COMUN.forEach((nombreCompleto, i) => {
+        fila[COLUMNAS_TRONCO_COMUN[i]] = (v.documentos_requeridos ?? []).includes(nombreCompleto) ? 'SI' : 'NO'
+      })
       fila['PUNTO DE REUNIÓN'] = v.punto_reunion ?? ''
       fila['QUÉ DECIRLE AL CANDIDATO'] = v.guion_candidato ?? ''
       fila['COMENTARIOS SALARIO'] = v.comentarios_salario ?? ''

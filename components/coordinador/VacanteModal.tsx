@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { ChevronDown, X } from 'lucide-react'
 import InfoTooltip from '@/components/ui/InfoTooltip'
 import { EditableList } from '@/components/forms/EditableList'
+import { DOCUMENTOS_TRONCO_COMUN } from '@/lib/excel-vacantes'
 
 interface Negocio {
   id: string
@@ -35,16 +36,10 @@ const SECCIONES = [
   { id: 'proceso', titulo: '8. Proceso de selección' },
 ]
 
-const DOCUMENTOS_TRONCO_COMUN = [
-  'RFC (Constancia de situación fiscal)',
-  'INE vigente',
-  'Comprobante de domicilio (no mayor a 3 meses)',
-  'CURP',
-  'NSS (Hoja de seguridad social IMSS)',
-  'Acta de nacimiento',
-  'Hoja de retención Infonavit (de contar con crédito)',
-  'Comprobante de estudios',
-]
+// DOCUMENTOS_TRONCO_COMUN ahora vive en lib/excel-vacantes.ts (2026-08-30)
+// — fuente única compartida con Importar/Exportar, para que el texto
+// exacto de estos 8 checkboxes nunca se desincronice de las columnas
+// SI/NO del Excel.
 
 const FORM_INICIAL = {
   titulo: '',

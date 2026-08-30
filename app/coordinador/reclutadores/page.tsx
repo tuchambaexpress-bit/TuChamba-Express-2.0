@@ -265,6 +265,17 @@ export default function ReclutadoresCoordinador() {
             </table>
           </div>
         )}
+
+        <div className="mt-6 text-center">
+          <a
+            href="https://tu-chamba-express.vercel.app/reclutador/login"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-gray-400 hover:text-[#1A6B3C] underline"
+          >
+            Portal del reclutador
+          </a>
+        </div>
       </div>
 
       {modalAbierto && (

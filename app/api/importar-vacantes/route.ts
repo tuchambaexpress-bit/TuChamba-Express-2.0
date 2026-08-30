@@ -4,6 +4,7 @@ import * as XLSX from 'xlsx'
 import {
   JORNADA_INVERSO, MODALIDAD_INVERSO, SALARIO_TIPO_INVERSO, PERIODO_INVERSO,
   esSiNo, parsearFecha, normalizarNombre, parsearDiasDescanso,
+  DOCUMENTOS_TRONCO_COMUN, COLUMNAS_TRONCO_COMUN,
 } from '@/lib/excel-vacantes'
 
 function getServiceClient() {
@@ -22,6 +23,15 @@ function extraerListaDinamica(fila: Record<string, any>, prefijo: string): strin
     i++
   }
   return items
+}
+
+// Documentos de tronco común (2026-08-30) — ahora son 8 columnas fijas
+// SI/NO (una por documento), no texto libre. Se recupera el nombre
+// completo exacto desde DOCUMENTOS_TRONCO_COMUN por índice, evitando
+// el bug real reportado por José: una diferencia mínima de texto entre
+// el Excel y el checkbox hacía que no se marcara al importar.
+function extraerDocumentosTroncoComun(fila: Record<string, any>): string[] {
+  return DOCUMENTOS_TRONCO_COMUN.filter((_, i) => esSiNo(fila[COLUMNAS_TRONCO_COMUN[i]]))
 }
 
 // Extrae pares RUTA_N_NOMBRE / RUTA_N_PARADAS de una fila, uno por ruta
@@ -147,7 +157,7 @@ export async function POST(req: NextRequest) {
           tags: String(fila['ETIQUETAS'] ?? '').split(',').map(t => t.trim()).filter(Boolean),
           requisitos: extraerListaDinamica(fila, 'REQUISITO'),
           beneficios: extraerListaDinamica(fila, 'BENEFICIO'),
-          documentos_requeridos: extraerListaDinamica(fila, 'DOCUMENTO'),
+          documentos_requeridos: [...extraerDocumentosTroncoComun(fila), ...extraerListaDinamica(fila, 'DOCUMENTO')],
           tiene_ruta: esSiNo(fila['RUTA']),
           ruta_para_entrevista: esSiNo(fila['RUTA PARA ENTREVISTA']),
           estacionamiento: esSiNo(fila['ESTACIONAMIENTO']),

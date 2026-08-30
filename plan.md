@@ -1054,6 +1054,18 @@ En `VacanteModal.tsx`, los campos "de empresa, no de vacante" (`dias_descanso`, 
 
 **Este mismo patrón de riesgo aplica a cualquier campo futuro con el mismo diseño** (cargado async en un `useEffect`, editable, y guardado en un `update` separado del payload principal de la vacante) — si se agrega un campo nuevo así, replicar la misma protección desde el inicio, no solo después de perder datos reales.
 
+### `position: sticky` NO funciona en el entorno de José — usar siempre el patrón de JS + `position: fixed` (2026-08-29/30)
+
+**Hallazgo confirmado con un experimento controlado, no una sospecha:** en el navegador/entorno real de José, `position: sticky` produce renderizado roto — no es que "no se pegue", el contenido se coloca en la posición equivocada (encabezados de tabla apareciendo debajo de la primera fila de datos, en vez de arriba). Se probaron y descartaron 3 técnicas distintas de `sticky` (en `<thead>`, en cada `<th>`, y en una rejilla CSS completa), las 3 con el mismo resultado roto — se descartó código propio, `globals.css`, y layouts intermedios (los 3 confirmados limpios con `diff`). Solo se confirmó la causa real quitando `sticky` por completo: sin él, todo se veía correcto.
+
+**Patrón obligatorio a partir de ahora para cualquier "esto debe quedarse fijo al hacer scroll":**
+1. `useRef` en el elemento que debe quedarse fijo (o uno de referencia)
+2. Un solo `useEffect` que mida `ref.current.getBoundingClientRect().top + window.scrollY` — **cuidado con el timing:** si el elemento está detrás de un condicional (`loading`, etc.), la dependencia del `useEffect` debe incluir esa condición (ej. `[loading]`), no solo `[]` — si se mide antes de que el elemento exista, la medición se queda en `0`, y `0` "parece" que ya se hizo scroll desde el principio. Agregar también un guard (`if (offset === 0) return`) como protección extra.
+3. Un listener de `window.addEventListener('scroll', ...)` que compara `window.scrollY` contra esa medición, y activa un estado (`fijo`)
+4. Cuando `fijo` es `true`, renderizar una **barra duplicada** con `position: fixed`, con el mismo contenido visual (mismas columnas exactas si es una tabla — usar una constante de ancho de columnas compartida entre la versión real y la duplicada, para que queden alineadas)
+
+**Nunca usar `sticky` primero "para probar"** — ya se confirmó que falla en este entorno específico, ir directo al patrón de arriba ahorra tiempo. Aplicado hoy en `Vacantes` del reclutador y `Vacantes` del coordinador (`7.44`).
+
 
 ```bash
 git status

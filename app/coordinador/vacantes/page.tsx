@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import CoordinadorNav from '@/components/coordinador/CoordinadorNav'
@@ -47,6 +47,20 @@ const COLORES_PRIORIDAD: Record<string, string> = {
   urgente: 'bg-red-100 text-red-700',
 }
 
+// Mismas columnas para el encabezado real (dentro de la rejilla) y para
+// la barra fija duplicada — así quedan perfectamente alineadas
+const COLUMNAS_GRID = 'minmax(220px,2fr) minmax(140px,1fr) minmax(140px,1fr) minmax(90px,auto) minmax(90px,auto) minmax(70px,auto) minmax(110px,auto) minmax(110px,auto)'
+const COLUMNAS_ENCABEZADO = [
+  { campo: 'titulo', label: 'Vacante' },
+  { campo: 'empresa', label: 'Empresa' },
+  { campo: 'ciudad', label: 'Ciudad' },
+  { campo: 'status', label: 'Status' },
+  { campo: 'prioridad', label: 'Prioridad' },
+  { campo: 'cupo', label: 'Cupo' },
+  { campo: 'creada', label: 'Creada' },
+  { campo: '', label: '' },
+]
+
 export default function VacantesCoordinador() {
   const router = useRouter()
   const [sesion, setSesion] = useState<any>(null)
@@ -60,6 +74,40 @@ export default function VacantesCoordinador() {
   const [importando, setImportando] = useState(false)
   const [reporteImportacion, setReporteImportacion] = useState<any | null>(null)
   const [cupoReal, setCupoReal] = useState<Map<string, number>>(new Map())
+  // Fix (2026-08-29): mismo problema que en Vacantes del reclutador —
+  // position:sticky se renderiza mal en el entorno de José. Se calcula
+  // "a mano" con scroll + position:fixed, sin depender de sticky.
+  const [fijo, setFijo] = useState(false)
+  const [ordenPor, setOrdenPor] = useState<string | null>(null)
+  const [ordenAsc, setOrdenAsc] = useState(true)
+
+  function alternarOrden(campo: string) {
+    if (ordenPor === campo) {
+      setOrdenAsc(!ordenAsc)
+    } else {
+      setOrdenPor(campo)
+      setOrdenAsc(true)
+    }
+  }
+  const refTabla = useRef<HTMLDivElement>(null)
+  const offsetOriginal = useRef(0)
+
+  useEffect(() => {
+    if (refTabla.current) {
+      offsetOriginal.current = refTabla.current.getBoundingClientRect().top + window.scrollY
+    }
+    function onScroll() {
+      // Si la tabla aún no existe (offsetOriginal sigue en 0 porque
+      // loading todavía no terminaba cuando se midió), no actives fijo
+      // — evita el bug real de hoy: la barra aparecía desde antes de
+      // hacer scroll porque 0 siempre "parecía" ya haber scrolleado.
+      if (offsetOriginal.current === 0) return
+      setFijo(window.scrollY >= offsetOriginal.current)
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    onScroll()
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [loading])
 
   useEffect(() => {
     const data = localStorage.getItem('coordinador_sesion')
@@ -155,6 +203,25 @@ export default function VacantesCoordinador() {
     return true
   })
 
+  const vacantesOrdenadas = [...vacantesFiltradas].sort((a, b) => {
+    if (!ordenPor) return 0
+    let valA: any, valB: any
+    switch (ordenPor) {
+      case 'titulo': valA = a.titulo; valB = b.titulo; break
+      case 'empresa': valA = a.negocios?.nombre ?? ''; valB = b.negocios?.nombre ?? ''; break
+      case 'ciudad': valA = a.ciudad; valB = b.ciudad; break
+      case 'status': valA = a.status; valB = b.status; break
+      case 'prioridad': valA = a.prioridad; valB = b.prioridad; break
+      case 'cupo': valA = a.cupo_requerido ?? 1; valB = b.cupo_requerido ?? 1; break
+      case 'creada': valA = a.created_at; valB = b.created_at; break
+      default: return 0
+    }
+    if (typeof valA === 'string') {
+      return ordenAsc ? valA.localeCompare(valB) : valB.localeCompare(valA)
+    }
+    return ordenAsc ? valA - valB : valB - valA
+  })
+
   if (!sesion) return null
 
   return (
@@ -214,6 +281,25 @@ export default function VacantesCoordinador() {
           </select>
         </div>
 
+        {/* Barra fija (2026-08-29) — reemplaza a position:sticky, que
+            fallaba en el entorno de José. Duplica el encabezado, mismas
+            columnas exactas que la rejilla de abajo (COLUMNAS_GRID). */}
+        {fijo && (
+          <div className="fixed top-0 left-0 right-0 z-30 bg-gray-50 shadow-md">
+            <div className="max-w-7xl mx-auto px-4 pt-3 pb-3">
+              <div className="bg-white rounded-t-2xl shadow-sm overflow-x-auto">
+                <div className="grid text-xs min-w-[900px]" style={{ gridTemplateColumns: COLUMNAS_GRID }}>
+                  {COLUMNAS_ENCABEZADO.map((col, i) => (
+                    <div key={i} className="bg-white border-b border-gray-100 px-4 py-3 font-medium text-gray-500">
+                      {col.label}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Tabla */}
         {loading ? (
           <div className="text-center py-10 text-gray-400">Cargando...</div>
@@ -225,63 +311,71 @@ export default function VacantesCoordinador() {
             </p>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-100 text-left text-gray-500 text-xs">
-                  <th className="px-4 py-3 font-medium">Vacante</th>
-                  <th className="px-4 py-3 font-medium">Empresa</th>
-                  <th className="px-4 py-3 font-medium">Ciudad</th>
-                  <th className="px-4 py-3 font-medium">Status</th>
-                  <th className="px-4 py-3 font-medium">Prioridad</th>
-                  <th className="px-4 py-3 font-medium">Cupo</th>
-                  <th className="px-4 py-3 font-medium">Creada</th>
-                  <th className="px-4 py-3 font-medium"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {vacantesFiltradas.map(v => (
-                  <tr key={v.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3">
-                      <button
-                        onClick={() => { setVacanteEditar(v.id); setVacanteDuplicar(null); setModalAbierto(true) }}
-                        className="font-medium text-gray-900 hover:text-[#1A6B3C] hover:underline text-left flex items-center gap-1.5"
-                      >
-                        {v.titulo}
-                        <span
-                          className={`w-2 h-2 rounded-full flex-shrink-0 ${esVacanteCompleta(v) ? 'bg-green-500' : 'bg-amber-400'}`}
-                          title={esVacanteCompleta(v) ? 'Ficha completa' : 'Faltan campos recomendados (contacto RRHH, punto de reunión o documentos)'}
-                        />
-                      </button>
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">{v.negocios?.nombre ?? '—'}</td>
-                    <td className="px-4 py-3 text-gray-600">{v.ciudad}, {v.estado}</td>
-                    <td className="px-4 py-3">
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${COLORES_STATUS[v.status] ?? 'bg-gray-100 text-gray-600'}`}>
-                        {v.status}
+          <div ref={refTabla} className="bg-white rounded-2xl shadow-sm overflow-x-auto">
+            <div className="grid text-sm min-w-[900px]" style={{ gridTemplateColumns: COLUMNAS_GRID }}>
+              {COLUMNAS_ENCABEZADO.map((col, i) => (
+                <div key={i} className="bg-white border-b border-gray-100 px-4 py-3 text-xs font-medium text-gray-500">
+                  {col.campo ? (
+                    <button
+                      onClick={() => alternarOrden(col.campo)}
+                      className="flex items-center gap-1 hover:text-gray-700"
+                    >
+                      {col.label}
+                      <span className="text-gray-300">
+                        {ordenPor === col.campo ? (ordenAsc ? '▲' : '▼') : '⇅'}
                       </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${COLORES_PRIORIDAD[v.prioridad] ?? 'bg-gray-100 text-gray-600'}`}>
-                        {v.prioridad}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">{cupoReal.get(v.id) ?? 0}/{v.cupo_requerido ?? 1}</td>
-                    <td className="px-4 py-3 text-gray-400 text-xs">
-                      {new Date(v.created_at).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </td>
-                    <td className="px-4 py-3">
-                      <button
-                        onClick={() => { setVacanteEditar(null); setVacanteDuplicar(v); setModalAbierto(true) }}
-                        className="text-xs text-gray-500 hover:text-[#1A6B3C] border border-gray-200 rounded-lg px-2 py-1"
-                      >
-                        📋 Duplicar
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </button>
+                  ) : null}
+                </div>
+              ))}
+
+              {vacantesOrdenadas.map(v => (
+                <div key={v.id} className="contents group">
+                  <div className="px-4 py-3 border-b border-gray-50 group-hover:bg-gray-50 transition-colors">
+                    <button
+                      onClick={() => { setVacanteEditar(v.id); setVacanteDuplicar(null); setModalAbierto(true) }}
+                      className="font-medium text-gray-900 hover:text-[#1A6B3C] hover:underline text-left flex items-center gap-1.5"
+                    >
+                      {v.titulo}
+                      <span
+                        className={`w-2 h-2 rounded-full flex-shrink-0 ${esVacanteCompleta(v) ? 'bg-green-500' : 'bg-amber-400'}`}
+                        title={esVacanteCompleta(v) ? 'Ficha completa' : 'Faltan campos recomendados (contacto RRHH, punto de reunión o documentos)'}
+                      />
+                    </button>
+                  </div>
+                  <div className="px-4 py-3 border-b border-gray-50 text-gray-600 group-hover:bg-gray-50 transition-colors">
+                    {v.negocios?.nombre ?? '—'}
+                  </div>
+                  <div className="px-4 py-3 border-b border-gray-50 text-gray-600 group-hover:bg-gray-50 transition-colors">
+                    {v.ciudad}, {v.estado}
+                  </div>
+                  <div className="px-4 py-3 border-b border-gray-50 group-hover:bg-gray-50 transition-colors">
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${COLORES_STATUS[v.status] ?? 'bg-gray-100 text-gray-600'}`}>
+                      {v.status}
+                    </span>
+                  </div>
+                  <div className="px-4 py-3 border-b border-gray-50 group-hover:bg-gray-50 transition-colors">
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${COLORES_PRIORIDAD[v.prioridad] ?? 'bg-gray-100 text-gray-600'}`}>
+                      {v.prioridad}
+                    </span>
+                  </div>
+                  <div className="px-4 py-3 border-b border-gray-50 text-gray-600 group-hover:bg-gray-50 transition-colors">
+                    {cupoReal.get(v.id) ?? 0}/{v.cupo_requerido ?? 1}
+                  </div>
+                  <div className="px-4 py-3 border-b border-gray-50 text-gray-400 text-xs group-hover:bg-gray-50 transition-colors">
+                    {new Date(v.created_at).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </div>
+                  <div className="px-4 py-3 border-b border-gray-50 group-hover:bg-gray-50 transition-colors">
+                    <button
+                      onClick={() => { setVacanteEditar(null); setVacanteDuplicar(v); setModalAbierto(true) }}
+                      className="text-xs text-gray-500 hover:text-[#1A6B3C] border border-gray-200 rounded-lg px-2 py-1"
+                    >
+                      📋 Duplicar
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

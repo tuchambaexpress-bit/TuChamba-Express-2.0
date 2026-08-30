@@ -7,7 +7,8 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
   manifest: '/manifest.json',
   icons: {
-    apple: '/icon-192.png',
+    icon: '/favicon.png',
+    apple: '/favicon.png',
   },
 }
 

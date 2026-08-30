@@ -2,6 +2,30 @@
 // Homologado 2026-08-10 (ver spec.md HU-08 actualizada) — mismo set de columnas
 // en los 3 lugares, cubriendo las 8 secciones de VacanteModal.
 
+// Documentos de "tronco común" (2026-08-30) — fuente única de verdad,
+// compartida entre VacanteModal.tsx (los 8 checkboxes) e
+// Importar/Exportar. Antes cada lado tenía su propia copia del texto
+// exacto, y una diferencia de una sola letra hacía que el checkbox no
+// se marcara al importar — causa raíz real reportada por José. Ahora
+// solo existe en un lugar; VacanteModal.tsx importa este array en vez
+// de declarar el suyo propio.
+export const DOCUMENTOS_TRONCO_COMUN = [
+  'RFC (Constancia de situación fiscal)',
+  'INE vigente',
+  'Comprobante de domicilio (no mayor a 3 meses)',
+  'CURP',
+  'NSS (Hoja de seguridad social IMSS)',
+  'Acta de nacimiento',
+  'Hoja de retención Infonavit (de contar con crédito)',
+  'Comprobante de estudios',
+]
+// Nombre corto para la columna del Excel — mismo orden/índice que el
+// array de arriba, para poder emparejarlos por posición.
+export const COLUMNAS_TRONCO_COMUN = [
+  'RFC', 'INE', 'COMPROBANTE DE DOMICILIO', 'CURP', 'NSS',
+  'ACTA DE NACIMIENTO', 'RETENCIÓN INFONAVIT', 'COMPROBANTE DE ESTUDIOS',
+]
+
 export const NOMBRES_JORNADA: Record<string, string> = {
   completo: 'Tiempo completo', medio: 'Medio tiempo', proyecto: 'Por proyecto', fines: 'Fines de semana'
 }
@@ -102,6 +126,7 @@ export const COLUMNAS_FIJAS = [
   'EXAMEN MÉDICO', 'ANTIDOPING', 'ESTUDIO SOCIOECONÓMICO',
   'CONTACTO RRHH NOMBRE', 'CONTACTO RRHH TELÉFONO', 'MEJOR HORARIO CONTACTO', 'PUNTO DE REUNIÓN',
   'QUÉ DECIRLE AL CANDIDATO', 'COMENTARIOS SALARIO',
+  ...COLUMNAS_TRONCO_COMUN,
   'DÍAS DE INDUCCIÓN', 'INDUCCIÓN DENTRO DE GARANTÍA', 'DÍAS DE DESCANSO EMPRESA',
   'CUPO REQUERIDO', 'UBICACIÓN MAPS EMPRESA',
   'ESTATUS',
@@ -150,7 +175,13 @@ export const INSTRUCCIONES: { columna: string; campoSistema: string; descripcion
   { columna: 'ESTUDIO SOCIOECONÓMICO', campoSistema: 'Sección 8 — Estudio socioeconómico', descripcion: 'SI o NO. Solo para el reclutador.', ejemplo: 'NO' },
   { columna: 'CONTACTO RRHH NOMBRE', campoSistema: 'Sección 8 — Contacto RRHH (opcional)', descripcion: 'Solo si el reclutador tendrá contacto directo con la empresa.', ejemplo: '(vacío)' },
   { columna: 'CONTACTO RRHH TELÉFONO', campoSistema: 'Sección 8 — Contacto RRHH (opcional)', descripcion: '10 dígitos, sin espacios ni guiones.', ejemplo: '(vacío)' },
-  { columna: 'DOCUMENTO_1, DOCUMENTO_2...', campoSistema: 'Sección 8 — Documentos requeridos', descripcion: 'Un documento por columna (incluye los de "tronco común" si aplican: RFC, INE, Comprobante de domicilio, CURP, NSS, Acta de nacimiento, Hoja de retención Infonavit, Comprobante de estudios, más cualquier extra). Mismo patrón que Requisitos/Beneficios.', ejemplo: 'RFC (Constancia de situación fiscal)' },
+  { columna: 'DOCUMENTO_1, DOCUMENTO_2...', campoSistema: 'Sección 8 — Documentos requeridos (extra)', descripcion: 'Solo documentos EXTRA que la empresa pida además de los de "tronco común" (esos 8 ya tienen su propia columna SI/NO, ver más abajo — no los repitas aquí). Un documento por columna. Mismo patrón que Requisitos/Beneficios.', ejemplo: 'Certificado de manejo de montacargas' },
+  ...DOCUMENTOS_TRONCO_COMUN.map((nombreCompleto, i) => ({
+    columna: COLUMNAS_TRONCO_COMUN[i],
+    campoSistema: 'Sección 8 — Documentos de tronco común',
+    descripcion: `SI o NO — si la empresa pide "${nombreCompleto}". Antes había que escribir el nombre completo en DOCUMENTO_N, y una sola letra distinta a como lo espera el sistema hacía que el checkbox no se marcara al importar — con SI/NO ese problema ya no puede pasar.`,
+    ejemplo: 'SI',
+  })),
   { columna: 'MEJOR HORARIO CONTACTO', campoSistema: 'Sección 8 — Contacto RRHH (opcional)', descripcion: 'Texto libre.', ejemplo: '(vacío)' },
   { columna: 'PUNTO DE REUNIÓN', campoSistema: 'Sección 8 — Punto de reunión (opcional)', descripcion: 'Dónde debe presentarse el candidato.', ejemplo: 'Recepción de planta, entrada principal' },
   { columna: 'QUÉ DECIRLE AL CANDIDATO', campoSistema: 'Sección 8 — Qué decirle al candidato', descripcion: 'Instrucciones para el reclutador: salario, horario, qué llevar, con quién preguntar.', ejemplo: 'Preséntate con INE y CURP, pregunta por Lic. Torres' },
