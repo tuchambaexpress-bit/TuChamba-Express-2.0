@@ -34,6 +34,7 @@ const SECCIONES = [
   { id: 'letras', titulo: '6. Letras chiquitas' },
   { id: 'reclutamiento', titulo: '7. Parámetros de reclutamiento' },
   { id: 'proceso', titulo: '8. Proceso de selección' },
+  { id: 'reclutamiento_llegada', titulo: '9. Proceso de reclutamiento' },
 ]
 
 // DOCUMENTOS_TRONCO_COMUN ahora vive en lib/excel-vacantes.ts (2026-08-30)
@@ -45,6 +46,7 @@ const FORM_INICIAL = {
   titulo: '',
   fecha_publicacion: '',
   negocio_id: '',
+  permite_directo_planta: true,
   empresa_visible: true,
   ciudad: '',
   estado: '',
@@ -155,7 +157,16 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
   // se maneja como texto separado por comas durante la edición, igual que
   // se captura en el Excel — se convierte a array solo al guardar.
   const [rutas, setRutas] = useState<{ nombre: string; paradas: string }[]>([])
+  const [rutasReplegadas, setRutasReplegadas] = useState(true)
   const [ubicacionMaps, setUbicacionMaps] = useState('')
+  // 7.38 — Catálogo de reclutamiento (puntos fijos + rutas con chofer),
+  // compartido por empresa igual que `rutas`/`dias_entrevista` de arriba,
+  // pero en tablas propias (no columna de negocios) porque postulaciones
+  // necesita una FK real a un punto/ruta específico, no un jsonb suelto.
+  const [puntosReclutamiento, setPuntosReclutamiento] = useState<any[]>([])
+  const [rutasReclutamiento, setRutasReclutamiento] = useState<any[]>([])
+  const [puntosSeleccionados, setPuntosSeleccionados] = useState<Set<string>>(new Set())
+  const [rutasReclSeleccionadas, setRutasReclSeleccionadas] = useState<Set<string>>(new Set())
   // Protección contra pérdida de datos (2026-08-27): estos 4 campos de
   // empresa (dias_descanso/dias_entrevista/rutas/ubicacion_maps) viven en
   // memoria y se cargan de forma asíncrona. Si "Guardar" se disparara antes
@@ -175,12 +186,37 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
       setRutas((negocio.rutas ?? []).map(r => ({ nombre: r.nombre, paradas: (r.paradas ?? []).join(', ') })))
       setUbicacionMaps(negocio.ubicacion_maps ?? '')
       setDatosEmpresaCargados(true)
+      cargarCatalogoReclutamiento(form.negocio_id)
     } else {
       // La empresa seleccionada aún no aparece en la lista cargada —
       // no hay nada confirmado todavía, no se debe permitir guardar así
       setDatosEmpresaCargados(false)
     }
   }, [form.negocio_id, negocios, creandoNegocio])
+
+  // 7.38 — catálogo de la empresa (puntos + rutas de reclutamiento) y
+  // cuáles de esos ya están seleccionados para ESTA vacante (solo aplica
+  // si ya existe, es decir, se está editando — una vacante nueva no
+  // tiene selección previa que cargar)
+  async function cargarCatalogoReclutamiento(negocioId: string) {
+    const supabase = createClient()
+    const { data: puntosData } = await supabase
+      .from('puntos_reclutamiento').select('*').eq('negocio_id', negocioId).order('created_at')
+    setPuntosReclutamiento(puntosData ?? [])
+    const { data: rutasData } = await supabase
+      .from('rutas_reclutamiento').select('*').eq('negocio_id', negocioId).order('created_at')
+    setRutasReclutamiento((rutasData ?? []).map((r: any) => ({ ...r, paradasTexto: (r.paradas ?? []).join('\n') })))
+
+    if (vacanteId) {
+      const { data: vp } = await supabase.from('vacante_punto_reclutamiento').select('punto_id').eq('vacante_id', vacanteId)
+      setPuntosSeleccionados(new Set((vp ?? []).map((v: any) => v.punto_id)))
+      const { data: vr } = await supabase.from('vacante_ruta_reclutamiento').select('ruta_id').eq('vacante_id', vacanteId)
+      setRutasReclSeleccionadas(new Set((vr ?? []).map((v: any) => v.ruta_id)))
+    } else {
+      setPuntosSeleccionados(new Set())
+      setRutasReclSeleccionadas(new Set())
+    }
+  }
   const [documentosRuta, setDocumentosRuta] = useState<any[]>([])
   const [cargandoDocsRuta, setCargandoDocsRuta] = useState(false)
   const [subiendoDocRuta, setSubiendoDocRuta] = useState(false)
@@ -427,21 +463,117 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
       induccion_dentro_garantia: form.induccion_dentro_garantia,
       cupo_requerido: form.cupo_requerido ? Number(form.cupo_requerido) : 1,
       prioridad: form.prioridad || 'normal',
+      permite_directo_planta: form.permite_directo_planta,
       // Igual que en el Excel: si se deja vacío, no se toca — un INSERT
       // toma el DEFAULT now() de la base, un UPDATE deja la fecha que
       // ya tenía la vacante, sin pisarla.
       ...(form.fecha_publicacion ? { fecha_publicacion: form.fecha_publicacion } : {}),
     }
 
-    const { error: errorGuardado } = vacanteId && !vacanteDuplicar
-      ? await supabase.from('vacantes').update(payload).eq('id', vacanteId)
-      : await supabase.from('vacantes').insert(payload)
+    const { data: vacanteGuardada, error: errorGuardado } = vacanteId && !vacanteDuplicar
+      ? await supabase.from('vacantes').update(payload).eq('id', vacanteId).select('id').single()
+      : await supabase.from('vacantes').insert(payload).select('id').single()
 
     setGuardando(false)
 
-    if (errorGuardado) {
-      setError('Error al guardar: ' + errorGuardado.message)
+    if (errorGuardado || !vacanteGuardada) {
+      setError('Error al guardar: ' + (errorGuardado?.message ?? ''))
       return
+    }
+    const idVacanteGuardada = vacanteGuardada.id
+
+    // 7.38 — sincroniza el catálogo de la empresa (puntos + rutas de
+    // reclutamiento): igual que rutas/dias_entrevista, es compartido por
+    // TODAS las vacantes de esa empresa, así que se guarda solo si los
+    // datos de empresa sí terminaron de cargar (misma protección de
+    // siempre contra sobrescribir con vacío).
+    if (negocioId && datosEmpresaCargados) {
+      // Puntos: los que ya tienen id se actualizan, los nuevos (sin id)
+      // se insertan y se recupera su id real para poder seleccionarlos
+      const idsPuntosFinales: string[] = []
+      for (const p of puntosReclutamiento) {
+        if (!p.nombre?.trim()) continue
+        const registro = {
+          negocio_id: negocioId,
+          nombre: p.nombre.trim(),
+          operado_por: p.operado_por || 'hr_connect',
+          direccion: p.direccion?.trim() || null,
+          ubicacion_maps: p.ubicacion_maps?.trim() || null,
+          horario: p.horario?.trim() || null,
+          contacto_nombre: p.contacto_nombre?.trim() || null,
+          contacto_telefono: p.contacto_telefono?.trim() || null,
+          dias_aplica: p.dias_aplica ?? [],
+        }
+        if (p.id) {
+          await supabase.from('puntos_reclutamiento').update(registro).eq('id', p.id)
+          idsPuntosFinales.push(p.id)
+        } else {
+          const { data: nuevo } = await supabase.from('puntos_reclutamiento').insert(registro).select('id').single()
+          if (nuevo) {
+            idsPuntosFinales.push(nuevo.id)
+            // Nuevo (2026-08-31): un punto recién creado se selecciona
+            // automático para esta vacante — José prefirió que la
+            // selección sea "todo aplica salvo que desmarques", no al
+            // revés. Se muta el Set directo (no setState) porque el
+            // modal se cierra justo después de guardar, no hace falta
+            // re-render — solo que puntosParaInsertar lo lea abajo.
+            puntosSeleccionados.add(nuevo.id)
+          }
+        }
+      }
+      // Borra del catálogo los puntos que el coordinador quitó de la lista
+      const idsPuntosOriginales = puntosReclutamiento.filter(p => p.id).map(p => p.id)
+      const idsPuntosBorrados = idsPuntosOriginales.filter(id => !puntosReclutamiento.some(p => p.id === id && p.nombre?.trim()))
+      if (idsPuntosBorrados.length > 0) {
+        await supabase.from('puntos_reclutamiento').delete().in('id', idsPuntosBorrados)
+      }
+
+      const idsRutasFinales: string[] = []
+      for (const r of rutasReclutamiento) {
+        if (!r.nombre?.trim()) continue
+        const registro = {
+          negocio_id: negocioId,
+          nombre: r.nombre.trim(),
+          operado_por: r.operado_por || 'hr_connect',
+          chofer_vehiculo: r.chofer_vehiculo?.trim() || null,
+          contacto_nombre: r.contacto_nombre?.trim() || null,
+          ubicacion_maps: r.ubicacion_maps?.trim() || null,
+          paradas: (r.paradasTexto ?? '').split('\n').map((p: string) => p.trim()).filter(Boolean),
+          dias_aplica: r.dias_aplica ?? [],
+        }
+        if (r.id) {
+          await supabase.from('rutas_reclutamiento').update(registro).eq('id', r.id)
+          idsRutasFinales.push(r.id)
+        } else {
+          const { data: nueva } = await supabase.from('rutas_reclutamiento').insert(registro).select('id').single()
+          if (nueva) {
+            idsRutasFinales.push(nueva.id)
+            rutasReclSeleccionadas.add(nueva.id)
+          }
+        }
+      }
+      const idsRutasOriginales = rutasReclutamiento.filter(r => r.id).map(r => r.id)
+      const idsRutasBorradas = idsRutasOriginales.filter(id => !rutasReclutamiento.some(r => r.id === id && r.nombre?.trim()))
+      if (idsRutasBorradas.length > 0) {
+        await supabase.from('rutas_reclutamiento').delete().in('id', idsRutasBorradas)
+      }
+
+      // Selección de la vacante: borra y reinserta, mismo patrón que ya
+      // se usaba en el diseño original de puntos_reclutamiento (7.38)
+      await supabase.from('vacante_punto_reclutamiento').delete().eq('vacante_id', idVacanteGuardada)
+      const puntosParaInsertar = [...puntosSeleccionados].filter(id => idsPuntosFinales.includes(id))
+      if (puntosParaInsertar.length > 0) {
+        await supabase.from('vacante_punto_reclutamiento').insert(
+          puntosParaInsertar.map(punto_id => ({ vacante_id: idVacanteGuardada, punto_id }))
+        )
+      }
+      await supabase.from('vacante_ruta_reclutamiento').delete().eq('vacante_id', idVacanteGuardada)
+      const rutasParaInsertar = [...rutasReclSeleccionadas].filter(id => idsRutasFinales.includes(id))
+      if (rutasParaInsertar.length > 0) {
+        await supabase.from('vacante_ruta_reclutamiento').insert(
+          rutasParaInsertar.map(ruta_id => ({ vacante_id: idVacanteGuardada, ruta_id }))
+        )
+      }
     }
 
     // 5.12: si la vacante ya no queda vigente, las preguntas pendientes sin
@@ -766,10 +898,24 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
                       {form.tiene_ruta && (form.negocio_id || creandoNegocio) && (
                         <div className="border border-gray-200 rounded-lg p-3 space-y-3 bg-gray-50">
                           <div>
-                            <label className="text-xs font-medium text-gray-700 flex items-center mb-1">
-                              Rutas de {negocios.find(n => n.id === form.negocio_id)?.nombre ?? 'la empresa'}
-                              <InfoTooltip texto="Compartidas entre todas las vacantes de esta empresa — si las editas aquí, se reflejan en todas. Cada ruta lleva su propio nombre y sus paradas." />
+                            <label className="text-xs font-medium text-gray-700 flex items-center justify-between mb-1">
+                              <span className="flex items-center">
+                                Rutas de {negocios.find(n => n.id === form.negocio_id)?.nombre ?? 'la empresa'}
+                                <InfoTooltip texto="Compartidas entre todas las vacantes de esta empresa — si las editas aquí, se reflejan en todas. Cada ruta lleva su propio nombre y sus paradas." />
+                              </span>
+                              {rutas.length > 3 && (
+                                <button
+                                  type="button"
+                                  onClick={() => setRutasReplegadas(!rutasReplegadas)}
+                                  className="text-[#1A6B3C] hover:underline text-[11px] font-normal flex-shrink-0"
+                                >
+                                  {rutasReplegadas ? `Mostrar las ${rutas.length} rutas ▼` : 'Ocultar rutas ▲'}
+                                </button>
+                              )}
                             </label>
+                            {rutas.length > 3 && rutasReplegadas ? (
+                              <p className="text-xs text-gray-400 italic py-1">{rutas.length} rutas ocultas — dale clic a "Mostrar" para verlas o editarlas.</p>
+                            ) : (
                             <div className="space-y-2">
                               {rutas.map((ruta, i) => (
                                 <div key={i} className="flex gap-2 items-start bg-white border border-gray-200 rounded-lg p-2">
@@ -807,6 +953,7 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
                                 </div>
                               ))}
                             </div>
+                            )}
                             <button
                               type="button"
                               onClick={() => setRutas([...rutas, { nombre: '', paradas: '' }])}
@@ -815,18 +962,6 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
                               + Agregar ruta
                             </button>
                           </div>
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={form.ruta_para_entrevista}
-                              onChange={e => setForm({ ...form, ruta_para_entrevista: e.target.checked })}
-                              className="accent-[#1A6B3C]"
-                            />
-                            <span className="text-xs text-gray-600 flex items-center">
-                              La ruta también está disponible para ir a la entrevista
-                              <InfoTooltip texto="Si no está marcado, el candidato entiende que la ruta solo aplica una vez contratado, no antes." />
-                            </span>
-                          </label>
                         </div>
                       )}
 
@@ -1498,6 +1633,186 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
                       </div>
 
                       <p className="text-xs text-gray-400 pt-2">Posiciones, reclutadores asignados y deadline se agregan en la siguiente pasada.</p>
+                    </>
+                  ) : s.id === 'reclutamiento_llegada' ? (
+                    <>
+                      <div className="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 mb-1">
+                        <p className="text-[11px] text-blue-700">
+                          🔒 Nada de esta sección es visible al candidato — es solo para que el reclutador sepa cómo indicarle llegar a su entrevista.
+                        </p>
+                      </div>
+
+                      {!form.negocio_id ? (
+                        <p className="text-xs text-gray-400">Selecciona o crea la empresa primero (Sección 1) y guarda la vacante — después podrás configurar aquí las opciones de llegada.</p>
+                      ) : (
+                        <>
+                          <div className="border border-gray-200 rounded-lg p-3">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={form.permite_directo_planta}
+                                onChange={e => setForm({ ...form, permite_directo_planta: e.target.checked })}
+                                className="accent-[#1A6B3C]"
+                              />
+                              <span className="text-xs text-gray-600"><strong>Opción 1 — Directo a planta:</strong> el candidato puede presentarse por su cuenta</span>
+                            </label>
+                          </div>
+
+                          <div className="border border-gray-200 rounded-lg p-3 space-y-2 bg-gray-50 mt-3">
+                            <label className="text-xs font-medium text-gray-700">
+                              <strong>Opción 2 — Ruta especializada:</strong> 🚐 recorrido con chofer de HR Connect/Empresa — catálogo de {negocios.find(n => n.id === form.negocio_id)?.nombre ?? 'la empresa'}
+                            </label>
+                            <div className="space-y-2">
+                              {rutasReclutamiento.map((r, i) => (
+                                <div key={i} className="bg-white border border-gray-200 rounded-lg p-2">
+                                  <div className="flex gap-2 items-start">
+                                    <div className="flex-1 space-y-1">
+                                      <input
+                                        type="text" value={r.nombre}
+                                        onChange={e => { const n = [...rutasReclutamiento]; n[i] = { ...n[i], nombre: e.target.value }; setRutasReclutamiento(n) }}
+                                        placeholder="Nombre de la ruta, ej. Recorrido Lunes a Jueves"
+                                        className="w-full text-xs font-medium border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#1A6B3C]"
+                                      />
+                                      <select
+                                        value={r.operado_por ?? 'hr_connect'}
+                                        onChange={e => { const n = [...rutasReclutamiento]; n[i] = { ...n[i], operado_por: e.target.value }; setRutasReclutamiento(n) }}
+                                        className="w-full text-xs border border-gray-200 rounded px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-[#1A6B3C]"
+                                      >
+                                        <option value="hr_connect">Operada por HR Connect</option>
+                                        <option value="empresa">Operada por la empresa</option>
+                                      </select>
+                                      <input
+                                        type="text" value={r.chofer_vehiculo ?? ''}
+                                        onChange={e => { const n = [...rutasReclutamiento]; n[i] = { ...n[i], chofer_vehiculo: e.target.value }; setRutasReclutamiento(n) }}
+                                        placeholder="Chofer y vehículo, ej. Rodrigo / Aveo rojo"
+                                        className="w-full text-xs border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#1A6B3C]"
+                                      />
+                                      <input
+                                        type="text" value={r.contacto_nombre ?? ''}
+                                        onChange={e => { const n = [...rutasReclutamiento]; n[i] = { ...n[i], contacto_nombre: e.target.value }; setRutasReclutamiento(n) }}
+                                        placeholder="Con quién presentarse, ej. Lic. Lizbeth"
+                                        className="w-full text-xs border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#1A6B3C]"
+                                      />
+                                      <input
+                                        type="text" value={r.ubicacion_maps ?? ''}
+                                        onChange={e => { const n = [...rutasReclutamiento]; n[i] = { ...n[i], ubicacion_maps: e.target.value }; setRutasReclutamiento(n) }}
+                                        placeholder="Link de Google Maps (opcional)"
+                                        className="w-full text-xs border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#1A6B3C]"
+                                      />
+                                      <textarea
+                                        value={r.paradasTexto ?? ''}
+                                        onChange={e => { const n = [...rutasReclutamiento]; n[i] = { ...n[i], paradasTexto: e.target.value }; setRutasReclutamiento(n) }}
+                                        placeholder={'Una parada por línea, ej.:\nOxxo San Blas / 5:30am\nPlaza San Blas / 6:00am'}
+                                        rows={3}
+                                        className="w-full text-xs border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#1A6B3C]"
+                                      />
+                                    </div>
+                                    <button type="button" onClick={() => setRutasReclutamiento(rutasReclutamiento.filter((_, idx) => idx !== i))} className="text-red-400 hover:text-red-600 text-xs mt-1">🗑️</button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            <button type="button" onClick={() => setRutasReclutamiento([...rutasReclutamiento, { nombre: '', operado_por: 'hr_connect', chofer_vehiculo: '', contacto_nombre: '', ubicacion_maps: '', paradasTexto: '', dias_aplica: [] }])} className="text-xs text-[#1A6B3C] hover:underline">
+                              + Agregar ruta con chofer
+                            </button>
+                          </div>
+
+                          <div className="border border-gray-200 rounded-lg p-3 space-y-2 bg-gray-50 mt-3">
+                            <label className="text-xs font-medium text-gray-700">
+                              <strong>Opción 3 — Oficina/punto fijo:</strong> 📍 HR Connect (Apodaca/carpa) o punto propio de la empresa — catálogo de {negocios.find(n => n.id === form.negocio_id)?.nombre ?? 'la empresa'}
+                            </label>
+                            <div className="space-y-2">
+                              {puntosReclutamiento.map((p, i) => (
+                                <div key={i} className="bg-white border border-gray-200 rounded-lg p-2">
+                                  <div className="flex gap-2 items-start">
+                                    <div className="flex-1 space-y-1">
+                                      <input type="text" value={p.nombre} onChange={e => { const n = [...puntosReclutamiento]; n[i] = { ...n[i], nombre: e.target.value }; setPuntosReclutamiento(n) }} placeholder="Nombre del punto, ej. Teatro de la Ciudad" className="w-full text-xs font-medium border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#1A6B3C]" />
+                                      <select value={p.operado_por ?? 'hr_connect'} onChange={e => { const n = [...puntosReclutamiento]; n[i] = { ...n[i], operado_por: e.target.value }; setPuntosReclutamiento(n) }} className="w-full text-xs border border-gray-200 rounded px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-[#1A6B3C]">
+                                        <option value="hr_connect">Operado por HR Connect</option>
+                                        <option value="empresa">Operado por la empresa</option>
+                                      </select>
+                                      <input type="text" value={p.direccion ?? ''} onChange={e => { const n = [...puntosReclutamiento]; n[i] = { ...n[i], direccion: e.target.value }; setPuntosReclutamiento(n) }} placeholder="Dirección" className="w-full text-xs border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#1A6B3C]" />
+                                      <input type="text" value={p.ubicacion_maps ?? ''} onChange={e => { const n = [...puntosReclutamiento]; n[i] = { ...n[i], ubicacion_maps: e.target.value }; setPuntosReclutamiento(n) }} placeholder="Link de Google Maps" className="w-full text-xs border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#1A6B3C]" />
+                                      <input type="text" value={p.horario ?? ''} onChange={e => { const n = [...puntosReclutamiento]; n[i] = { ...n[i], horario: e.target.value }; setPuntosReclutamiento(n) }} placeholder="Horario, ej. Lunes a viernes 7:30am" className="w-full text-xs border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#1A6B3C]" />
+                                      <div className="flex gap-1">
+                                        <input type="text" value={p.contacto_nombre ?? ''} onChange={e => { const n = [...puntosReclutamiento]; n[i] = { ...n[i], contacto_nombre: e.target.value }; setPuntosReclutamiento(n) }} placeholder="Con quién presentarse" className="flex-1 text-xs border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#1A6B3C]" />
+                                        <input type="text" value={p.contacto_telefono ?? ''} onChange={e => { const n = [...puntosReclutamiento]; n[i] = { ...n[i], contacto_telefono: e.target.value }; setPuntosReclutamiento(n) }} placeholder="Teléfono (opcional)" className="flex-1 text-xs border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#1A6B3C]" />
+                                      </div>
+                                    </div>
+                                    <button type="button" onClick={() => setPuntosReclutamiento(puntosReclutamiento.filter((_, idx) => idx !== i))} className="text-red-400 hover:text-red-600 text-xs mt-1">🗑️</button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            <button type="button" onClick={() => setPuntosReclutamiento([...puntosReclutamiento, { nombre: '', operado_por: 'hr_connect', direccion: '', ubicacion_maps: '', horario: '', contacto_nombre: '', contacto_telefono: '', dias_aplica: [] }])} className="text-xs text-[#1A6B3C] hover:underline">
+                              + Agregar punto fijo
+                            </button>
+                          </div>
+
+                          {(puntosReclutamiento.length > 0 || rutasReclutamiento.length > 0) && (
+                            <div className="border border-blue-200 rounded-lg p-3 bg-blue-50 mt-3">
+                              <p className="text-xs font-medium text-blue-800 mb-2 flex items-center">
+                                ¿Cuáles de estas opciones aplican a ESTA vacante?
+                                <InfoTooltip texto="Esto aplica solo a Opción 2 y Opción 3 (las que tienen catálogo) — Opción 1 y Opción 4 no lo necesitan, son un simple sí/no por vacante. El catálogo de arriba es de toda la empresa, compartido entre todas sus vacantes. Aquí decides cuáles de esas opciones son válidas específicamente para ESTA vacante — por default, todo lo nuevo que agregues ya viene marcado; solo desmarca si un punto o ruta NO aplica a este puesto en particular (ej. una ruta que solo es para un puesto distinto de la misma empresa). Esto es lo que después va a ver el reclutador en la ficha de esta vacante, y las opciones que va a poder elegir al agendar la entrevista de un candidato." />
+                              </p>
+                              {rutasReclutamiento.filter(r => r.nombre?.trim()).map((r, i) => (
+                                <label key={`ruta-${i}`} className="flex items-center gap-2 cursor-pointer mb-1">
+                                  <input
+                                    type="checkbox"
+                                    checked={r.id ? rutasReclSeleccionadas.has(r.id) : true}
+                                    disabled={!r.id}
+                                    onChange={e => {
+                                      const nuevo = new Set(rutasReclSeleccionadas)
+                                      if (e.target.checked) nuevo.add(r.id); else nuevo.delete(r.id)
+                                      setRutasReclSeleccionadas(nuevo)
+                                    }}
+                                    className="accent-[#1A6B3C]"
+                                  />
+                                  <span className="text-xs text-gray-700">🚐 {r.nombre}{!r.id ? ' (se seleccionará automático al guardar)' : ''}</span>
+                                </label>
+                              ))}
+                              {puntosReclutamiento.filter(p => p.nombre?.trim()).map((p, i) => (
+                                <label key={`punto-${i}`} className="flex items-center gap-2 cursor-pointer mb-1">
+                                  <input
+                                    type="checkbox"
+                                    checked={p.id ? puntosSeleccionados.has(p.id) : true}
+                                    disabled={!p.id}
+                                    onChange={e => {
+                                      const nuevo = new Set(puntosSeleccionados)
+                                      if (e.target.checked) nuevo.add(p.id); else nuevo.delete(p.id)
+                                      setPuntosSeleccionados(nuevo)
+                                    }}
+                                    className="accent-[#1A6B3C]"
+                                  />
+                                  <span className="text-xs text-gray-700">📍 {p.nombre}{!p.id ? ' (se seleccionará automático al guardar)' : ''}</span>
+                                </label>
+                              ))}
+                            </div>
+                          )}
+
+                          <div className="border border-gray-200 rounded-lg p-3 mt-3">
+                            <p className="text-xs font-medium text-gray-700 mb-1"><strong>Opción 4</strong></p>
+                            {form.tiene_ruta ? (
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={form.ruta_para_entrevista}
+                                  onChange={e => setForm({ ...form, ruta_para_entrevista: e.target.checked })}
+                                  className="accent-[#1A6B3C]"
+                                />
+                                <span className="text-xs text-gray-600 flex items-center">
+                                  Las rutas también están disponibles para ir a la entrevista
+                                  <InfoTooltip texto="Si no está marcado, el candidato entiende que las rutas solo aplican una vez contratado, no antes." />
+                                </span>
+                              </label>
+                            ) : (
+                              <p className="text-[11px] text-gray-400">
+                                Esta vacante no tiene ruta de transporte configurada — actívala en la Sección 5 ("¿Tiene ruta de transporte?") si esta empresa ofrece esa opción.
+                              </p>
+                            )}
+                          </div>
+                        </>
+                      )}
                     </>
                   ) : null}
                 </div>

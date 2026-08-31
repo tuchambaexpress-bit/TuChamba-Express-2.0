@@ -1556,8 +1556,25 @@ El coordinador ajusta lo que necesite cambiar (horario, salario, etc.) antes de 
 > *Origen: José compartió ejemplos reales de HR CONNECT — una sola empresa (ej. TOPBAND) puede tener más de 15 rutas de transporte distintas, normalmente consolidadas en 1-2 PDFs. El documento pertenece a la empresa, no a una vacante específica — si vive en `vacantes`, se repetiría (o desincronizaría) en cada vacante nueva de la misma empresa.*
 
 En la Sección 5 (Logística especial) de `VacanteModal`, el checkbox **"¿La empresa ofrece ruta de transporte?"** cumple una doble función:
-- **A nivel vacante** (sin cambios respecto al diseño original): controla si `tiene_ruta`/`ruta_para_entrevista` aplican a *esta* vacante específica — puede que una empresa tenga ruta en general pero una vacante puntual (ej. turno nocturno) no la use.
+- **A nivel vacante:** controla si `tiene_ruta` aplica a *esta* vacante específica — puede que una empresa tenga ruta en general pero una vacante puntual (ej. turno nocturno) no la use. `ruta_para_entrevista` (el checkbox "¿también sirve para ir a la entrevista?") vive físicamente en la **Sección 9** desde `7.38` (2026-08-31), como "Opción 4" — mismo campo de siempre, solo cambió de sección visualmente, para que las 4 formas de llegar a entrevista queden juntas en un solo lugar.
 - **A nivel empresa** (nuevo): al activarse, muestra el bloque de gestión de PDFs de `documentos_negocio` para la empresa seleccionada en la Sección 1 — subir, ver, eliminar. Estos documentos son **compartidos entre todas las vacantes de esa empresa**: si se sube o borra desde la vacante A, se refleja automáticamente en la vacante B de la misma empresa, sin duplicar el archivo.
+
+**CA-20.7 — Sección 9 "Proceso de reclutamiento": las 4 opciones de llegada a entrevista (`7.38`, cerrada 2026-08-31):**
+
+> *Origen: información de logística real compartida por Roxana (coordinadora operativa) — hay exactamente 4 formas en que un candidato puede llegar a su entrevista, según lo que cada empresa ofrezca, y pueden combinarse (una empresa puede ofrecer varias a la vez).*
+
+Cada opción vive en su propio recuadro dentro de la Sección 9, etiquetada explícitamente "Opción N" (mismo lenguaje que usa Roxana, para que el coordinador no tenga que traducir mentalmente):
+
+- **Opción 1 — Directo a planta:** `vacantes.permite_directo_planta` (boolean, default `true`). Simple sí/no, sin catálogo — algunas empresas lo prohíben.
+- **Opción 2 — Ruta especializada:** recorrido con chofer, de HR Connect o de la empresa. Catálogo `rutas_reclutamiento` (por `negocio_id`, no por vacante): nombre, `operado_por` (`hr_connect`/`empresa`), chofer_vehiculo, contacto_nombre, ubicacion_maps, `paradas` (`text[]`, una por línea, formato libre "lugar / hora"), dias_aplica.
+- **Opción 3 — Oficina/punto fijo:** HR Connect (oficina Apodaca o "carpa") o un punto propio de la empresa (ej. FAMSA en el caso real de CRIOTEC) — mismo tipo de dato en ambos casos, distinguido por el campo `operado_por`. Catálogo `puntos_reclutamiento` (por `negocio_id`): nombre, `operado_por`, dirección, ubicacion_maps, horario, contacto_nombre, contacto_telefono, dias_aplica.
+- **Opción 4 — Transporte de la empresa:** ya documentado arriba (`ruta_para_entrevista` + `negocios.rutas`), sin tabla nueva.
+
+**Selección por vacante (solo Opción 2 y 3, las que tienen catálogo):** tablas `vacante_ruta_reclutamiento`/`vacante_punto_reclutamiento` (relación N a N) — necesario porque el catálogo de una empresa puede tener excepciones por puesto (caso real: Hyundai Glovis, una ruta solo válida para "Ayudante General Almacén TW", otra distinta solo para "...Almacén CC"). **Regla de UX decidida tras varias rondas con José:** todo lo que se agrega al catálogo se autoselecciona para la vacante actual al guardar — el checklist de selección sirve para **desmarcar** la excepción rara, nunca para marcar manualmente el caso normal.
+
+Visible **solo al reclutador/coordinador** — la Sección 9 completa lleva un aviso "🔒 Nada de esta sección es visible al candidato", nunca aparece en el portal público, mismo criterio que `punto_reunion`/`ubicacion_maps` de siempre.
+
+**Pendiente, no construido en `7.38`:** que el reclutador pueda seleccionar, por candidato específico, cuál de las opciones disponibles para la vacante le tocó (`postulaciones`/tabla `entrevistas` futura, ver `8.23`) — hoy el catálogo y la selección por vacante existen, pero todavía no hay ningún lugar donde asignarle una opción específica a un candidato individual.
 
 Los documentos son visibles en 3 lugares, sin restricción de sesión (bucket público):
 - **Coordinador** — dentro de `VacanteModal`, Sección 5

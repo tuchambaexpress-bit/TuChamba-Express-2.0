@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import KanbanBoard from '@/components/reclutador/KanbanBoard'
 import ReclutadorNav from '@/components/reclutador/ReclutadorNav'
+import HistorialEntrevistas from '@/components/shared/HistorialEntrevistas'
 
 const FUENTES_MANUALES = [
   { value: 'facebook', label: 'Facebook' },
@@ -16,6 +17,7 @@ const FUENTES_MANUALES = [
 
 export default function PipelinePage() {
   const [sesion, setSesion] = useState<any>(null)
+  const [vistaActiva, setVistaActiva] = useState<'kanban' | 'entrevistas'>('kanban')
   const [mostrarAltaManual, setMostrarAltaManual] = useState(false)
   const [vacantesDisponibles, setVacantesDisponibles] = useState<{ id: string; titulo: string; negocio: string }[]>([])
   const [nuevoNombre, setNuevoNombre] = useState('')
@@ -173,19 +175,42 @@ export default function PipelinePage() {
       <ReclutadorNav />
       <div className="px-4 py-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-gray-900">Pipeline de candidatos</h2>
-          <button
-            onClick={() => setMostrarAltaManual(true)}
-            className="bg-[#1A6B3C] hover:bg-[#155c33] text-white text-sm px-4 py-2 rounded-lg font-medium"
-          >
-            + Candidato
-          </button>
-        </div>
-        <div className="overflow-x-auto h-[calc(100vh-140px)] relative">
-          <div className="h-full">
-            <KanbanBoard />
+          <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setVistaActiva('kanban')}
+              className={`text-sm px-3 py-1.5 rounded-md font-medium transition-colors ${
+                vistaActiva === 'kanban' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
+              }`}
+            >
+              Pipeline
+            </button>
+            <button
+              onClick={() => setVistaActiva('entrevistas')}
+              className={`text-sm px-3 py-1.5 rounded-md font-medium transition-colors ${
+                vistaActiva === 'entrevistas' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
+              }`}
+            >
+              📅 Entrevistas
+            </button>
           </div>
+          {vistaActiva === 'kanban' && (
+            <button
+              onClick={() => setMostrarAltaManual(true)}
+              className="bg-[#1A6B3C] hover:bg-[#155c33] text-white text-sm px-4 py-2 rounded-lg font-medium"
+            >
+              + Candidato
+            </button>
+          )}
         </div>
+        {vistaActiva === 'kanban' ? (
+          <div className="overflow-x-auto h-[calc(100vh-140px)] relative">
+            <div className="h-full">
+              <KanbanBoard />
+            </div>
+          </div>
+        ) : (
+          sesion && <HistorialEntrevistas scope={{ tipo: 'reclutador', reclutadorId: sesion.id }} />
+        )}
       </div>
 
       {mostrarAltaManual && (

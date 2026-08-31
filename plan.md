@@ -1066,6 +1066,12 @@ En `VacanteModal.tsx`, los campos "de empresa, no de vacante" (`dias_descanso`, 
 
 **Nunca usar `sticky` primero "para probar"** — ya se confirmó que falla en este entorno específico, ir directo al patrón de arriba ahorra tiempo. Aplicado hoy en `Vacantes` del reclutador y `Vacantes` del coordinador (`7.44`).
 
+### Patrón de diseño: catálogo compartido por empresa + selección con excepción por vacante (`7.38`, 2026-08-31)
+
+Cuando un dato "pertenece" a la empresa pero una vacante puntual necesita poder excluirlo (caso real: una ruta de Hyundai Glovis que solo aplica a un puesto, no a toda la empresa), la solución que funcionó fue: **tabla de catálogo por `negocio_id`** (no por `vacante_id`) + **tabla de relación N a N** entre esa vacante y el catálogo, **con todo autoseleccionado por default**. La selección manual solo sirve para desmarcar la excepción rara — nunca para marcar el caso normal, que sería fricción sin valor real en el 95% de los casos. Este patrón (catálogo de empresa + default-todo-seleccionado + relación para excepciones) es replicable para cualquier dato futuro con la misma forma ("la empresa lo tiene, casi todas sus vacantes lo usan igual, mismo caso raro de excepción").
+
+**Lección de proceso, no solo de datos:** este mismo feature (`7.38`) se había intentado diseñar 3 veces en sesiones anteriores y se pausó las 3 sin construirse — lo que finalmente lo destrabó no fue iterar más rápido, sino **una conversación de una sola pregunta directa a la persona que de verdad opera el proceso en la vida real (Roxana)**, que reveló que la variedad aparente en los documentos crudos en realidad eran solo 4 categorías fijas, no un caos sin patrón. Cuando un feature se resiste a diseñarse bien después de varios intentos, vale la pena parar de iterar sobre el diseño y buscar la fuente humana correcta primero.
+
 
 ```bash
 git status

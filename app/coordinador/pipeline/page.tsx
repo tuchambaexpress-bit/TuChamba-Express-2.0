@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import CoordinadorNav from '@/components/coordinador/CoordinadorNav'
 import KanbanCardSoloLectura from '@/components/coordinador/KanbanCardSoloLectura'
+import HistorialEntrevistas from '@/components/shared/HistorialEntrevistas'
 
 interface Reclutador {
   id: string
@@ -26,6 +27,7 @@ const COLORES_ETAPA: Record<string, string> = {
 export default function PipelineCoordinador() {
   const router = useRouter()
   const [sesion, setSesion] = useState<any>(null)
+  const [vistaActiva, setVistaActiva] = useState<'pipeline' | 'entrevistas'>('pipeline')
   const [reclutadores, setReclutadores] = useState<Reclutador[]>([])
   const [reclutadorSeleccionado, setReclutadorSeleccionado] = useState<Reclutador | null>(null)
   const [postulaciones, setPostulaciones] = useState<any[]>([])
@@ -115,7 +117,33 @@ export default function PipelineCoordinador() {
     <div className="min-h-screen bg-gray-50">
       <CoordinadorNav subtitulo="Pipeline global" />
 
-      <div className={reclutadorSeleccionado ? 'px-4 py-8' : 'max-w-7xl mx-auto px-4 py-8'}>
+      <div className="max-w-7xl mx-auto px-4 pt-8">
+        <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 w-fit mb-6">
+          <button
+            onClick={() => setVistaActiva('pipeline')}
+            className={`text-sm px-3 py-1.5 rounded-md font-medium transition-colors ${
+              vistaActiva === 'pipeline' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
+            }`}
+          >
+            Pipeline
+          </button>
+          <button
+            onClick={() => setVistaActiva('entrevistas')}
+            className={`text-sm px-3 py-1.5 rounded-md font-medium transition-colors ${
+              vistaActiva === 'entrevistas' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
+            }`}
+          >
+            📅 Entrevistas
+          </button>
+        </div>
+      </div>
+
+      {vistaActiva === 'entrevistas' ? (
+        <div className="max-w-7xl mx-auto px-4 pb-8">
+          <HistorialEntrevistas scope={{ tipo: 'coordinador', agenciaId: sesion.agencia_id, reclutadores }} />
+        </div>
+      ) : (
+      <div className={reclutadorSeleccionado ? 'px-4 pb-8' : 'max-w-7xl mx-auto px-4 pb-8'}>
         {!reclutadorSeleccionado ? (
           <>
             <h2 className="text-2xl font-bold text-gray-900 mb-1">Pipeline por reclutador</h2>
@@ -163,7 +191,7 @@ export default function PipelineCoordinador() {
                     const postulacionesEtapa = postulaciones.filter(p => p.etapa_actual === etapa)
                     return (
                       <div key={etapa} className="w-72 flex-shrink-0">
-                        <div className="flex items-center gap-2 mb-3 sticky top-0 bg-gray-50 py-2 z-10">
+                        <div className="flex items-center gap-2 mb-3 bg-gray-50 py-2">
                           <span className={`text-xs font-semibold px-2 py-1 rounded-full ${COLORES_ETAPA[etapa]}`}>
                             {etapa === 'Descartado' ? 'Descartados' : etapa}
                           </span>
@@ -192,6 +220,7 @@ export default function PipelineCoordinador() {
           </>
         )}
       </div>
+      )}
     </div>
   )
 }
