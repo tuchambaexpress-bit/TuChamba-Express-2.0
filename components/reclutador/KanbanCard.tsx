@@ -121,7 +121,6 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
       setFechaEntrevista(d.toISOString().split('T')[0])
       setHoraEntrevista(d.toTimeString().slice(0, 5))
     }
-    setLugarEntrevista(postulacion.lugar_entrevista ?? '')
     setEdadCandidato(postulacion.candidatos?.edad ? String(postulacion.candidatos.edad) : '')
     setEscolaridadCandidato(postulacion.candidatos?.escolaridad ?? '')
     setResidenciaCandidato(postulacion.candidatos?.residencia ?? '')
