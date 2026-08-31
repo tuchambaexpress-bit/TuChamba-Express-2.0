@@ -96,7 +96,19 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
   const [motivoNoAsistio, setMotivoNoAsistio] = useState('')
   const [fechaEntrevista, setFechaEntrevista] = useState('')
   const [horaEntrevista, setHoraEntrevista] = useState('')
-  const [lugarEntrevista, setLugarEntrevista] = useState('')
+  // 8.23 — modo de llegada (las 4 opciones de 7.38), catálogo disponible
+  // para ESTA vacante (se carga al abrir el modal), y el flujo de
+  // reagendar cuando el candidato no se presentó.
+  const [modoLlegada, setModoLlegada] = useState('')
+  const [rutaSeleccionadaId, setRutaSeleccionadaId] = useState('')
+  const [puntoSeleccionadoId, setPuntoSeleccionadoId] = useState('')
+  const [opcionesLlegada, setOpcionesLlegada] = useState<{
+    permiteDirecto: boolean
+    ofreceTransporteEmpresa: boolean
+    rutas: { id: string; nombre: string }[]
+    puntos: { id: string; nombre: string }[]
+  } | null>(null)
+  const [mostrarPreguntaReagendar, setMostrarPreguntaReagendar] = useState(false)
   const [edadCandidato, setEdadCandidato] = useState('')
   const [escolaridadCandidato, setEscolaridadCandidato] = useState('')
   const [residenciaCandidato, setResidenciaCandidato] = useState('')
@@ -361,33 +373,79 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
     setMoviendo(false)
   }
 
-  async function guardarEntrevista() {
-    if (!fechaEntrevista || !horaEntrevista) return
+  // 8.23 — carga qué opciones de llegada (de las 4 de 7.38) están
+  // disponibles para ESTA vacante en particular, no el catálogo
+  // completo de la empresa — solo lo que el coordinador marcó como
+  // aplicable en la Sección 9 del VacanteModal.
+  async function cargarOpcionesLlegada() {
     const supabase = createClient()
-    const fechaCompleta = new Date(`${fechaEntrevista}T${horaEntrevista}`)
+    const vacanteId = postulacion.vacante_id
+
+    const { data: vacanteData } = await supabase
+      .from('vacantes')
+      .select('permite_directo_planta, tiene_ruta, ruta_para_entrevista')
+      .eq('id', vacanteId)
+      .single()
+
+    const { data: vRutas } = await supabase
+      .from('vacante_ruta_reclutamiento')
+      .select('ruta_id, rutas_reclutamiento(id, nombre)')
+      .eq('vacante_id', vacanteId)
+    const { data: vPuntos } = await supabase
+      .from('vacante_punto_reclutamiento')
+      .select('punto_id, puntos_reclutamiento(id, nombre)')
+      .eq('vacante_id', vacanteId)
+
+    setOpcionesLlegada({
+      permiteDirecto: vacanteData?.permite_directo_planta ?? true,
+      ofreceTransporteEmpresa: !!(vacanteData?.tiene_ruta && vacanteData?.ruta_para_entrevista),
+      rutas: (vRutas ?? []).map((r: any) => ({ id: r.ruta_id, nombre: r.rutas_reclutamiento?.nombre ?? '' })),
+      puntos: (vPuntos ?? []).map((p: any) => ({ id: p.punto_id, nombre: p.puntos_reclutamiento?.nombre ?? '' })),
+    })
+  }
+
+  async function guardarEntrevista() {
+    const supabase = createClient()
+    // Fecha/hora ya no son obligatorias (José, 2026-08-31) — un
+    // reclutador puede querer guardar el modo de llegada o avanzar el
+    // checklist de documentos antes de tener fecha agendada.
+    const fechaCompleta = fechaEntrevista && horaEntrevista ? new Date(`${fechaEntrevista}T${horaEntrevista}`) : null
 
     // 5.25 — candado: no se puede agendar fuera de los días de entrevista
     // configurados para esa empresa (si la empresa tiene el dato configurado)
-    const diasEntrevista = postulacion.vacantes?.negocios?.dias_entrevista
-    if (diasEntrevista && diasEntrevista.length > 0 && !diasEntrevista.includes(fechaCompleta.getDay())) {
-      alert('Fecha fuera de días de entrevista de la empresa.')
-      return
+    if (fechaCompleta) {
+      const diasEntrevista = postulacion.vacantes?.negocios?.dias_entrevista
+      if (diasEntrevista && diasEntrevista.length > 0 && !diasEntrevista.includes(fechaCompleta.getDay())) {
+        alert('Fecha fuera de días de entrevista de la empresa.')
+        return
+      }
     }
+
+    // 8.23 — cada intento de entrevista es su propia fila en `entrevistas`,
+    // no se sobrescribe como antes — así un reagendado no borra el
+    // historial del intento fallido anterior.
+    const { data: nuevaEntrevista } = await supabase.from('entrevistas').insert({
+      postulacion_id: postulacion.id,
+      fecha_entrevista: fechaCompleta ? fechaCompleta.toISOString() : null,
+      modo_llegada: modoLlegada || null,
+      ruta_reclutamiento_id: modoLlegada === 'ruta_reclutamiento' ? (rutaSeleccionadaId || null) : null,
+      punto_reclutamiento_id: modoLlegada === 'punto_reclutamiento' ? (puntoSeleccionadoId || null) : null,
+    }).select('id').single()
 
     await supabase
       .from('postulaciones')
       .update({
-        fecha_entrevista: fechaCompleta.toISOString(),
-        lugar_entrevista: lugarEntrevista || null,
+        fecha_entrevista: fechaCompleta ? fechaCompleta.toISOString() : null,
         asistio_entrevista: null,
-        motivo_no_asistencia: null
+        motivo_no_asistencia: null,
+        entrevista_activa_id: nuevaEntrevista?.id ?? null,
       })
       .eq('id', postulacion.id)
 
-    postulacion.fecha_entrevista = fechaCompleta.toISOString()
-    postulacion.lugar_entrevista = lugarEntrevista || null
+    postulacion.fecha_entrevista = fechaCompleta ? fechaCompleta.toISOString() : null
     postulacion.asistio_entrevista = null
     postulacion.motivo_no_asistencia = null
+    postulacion.entrevista_activa_id = nuevaEntrevista?.id ?? null
 
     // HU-23: ficha del candidato — solo actualiza si el reclutador capturó algo
     if (edadCandidato || escolaridadCandidato || residenciaCandidato) {
@@ -409,8 +467,14 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
       }
     }
 
-    await enviarResumenAlCoordinador(fechaCompleta)
+    // El resumen al coordinador solo tiene sentido si de verdad hay una
+    // fecha agendada — con fecha/hora opcionales ahora, puede que este
+    // guardado sea solo para capturar el modo de llegada sin fecha todavía.
+    if (fechaCompleta) await enviarResumenAlCoordinador(fechaCompleta)
     setMostrarModalEntrevista(false)
+    setModoLlegada('')
+    setRutaSeleccionadaId('')
+    setPuntoSeleccionadoId('')
     onActualizarEtapa(postulacion.id, postulacion.etapa_actual)
   }
 
@@ -775,10 +839,23 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
                     asistio_entrevista: false,
                     motivo_no_asistencia: motivoNoAsistio.trim() || null
                   }).eq('id', postulacion.id)
+                  // 8.23 — refleja el resultado en el intento de entrevista
+                  // activo también (la fila en `entrevistas`), no solo en
+                  // postulaciones — para conservar el historial real.
+                  if (postulacion.entrevista_activa_id) {
+                    await supabase.from('entrevistas').update({
+                      asistio_entrevista: false,
+                      motivo_no_asistencia: motivoNoAsistio.trim() || null,
+                      updated_at: new Date().toISOString(),
+                    }).eq('id', postulacion.entrevista_activa_id)
+                  }
                   postulacion.asistio_entrevista = false
                   postulacion.motivo_no_asistencia = motivoNoAsistio.trim() || null
                   setMostrarModalNoAsistio(false)
-                  setMotivoNoAsistio('')
+                  // En vez de cerrar y ya, se pregunta si se reagenda —
+                  // José, 2026-08-31: "que el sistema me pregunte después
+                  // ¿Se reagenda entrevista? ¿Motivo de falta?"
+                  setMostrarPreguntaReagendar(true)
                   onActualizarEtapa(postulacion.id, postulacion.etapa_actual)
                 }}
                 className="flex-1 text-[11px] bg-red-600 hover:bg-red-700 text-white py-1 rounded-lg font-medium"
@@ -790,6 +867,39 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
                 className="flex-1 text-[11px] bg-gray-100 hover:bg-gray-200 text-gray-600 py-1 rounded-lg font-medium"
               >
                 Cancelar
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* 8.23 — pregunta de reagendar, tras marcar que no se presentó.
+            Sin límite de reintentos (José: el reclutador decide cuándo
+            pasarlo a Descartar/Rechazado manualmente, no hay tope). */}
+        {mostrarPreguntaReagendar && (
+          <div className="mt-2 bg-amber-50 border border-amber-100 rounded-lg p-2" onClick={e => e.stopPropagation()}>
+            <p className="text-[11px] text-amber-700 mb-1.5">¿Se reagenda la entrevista?</p>
+            <div className="flex gap-1.5">
+              <button
+                onClick={() => {
+                  setMostrarPreguntaReagendar(false)
+                  setMotivoNoAsistio('')
+                  setFechaEntrevista('')
+                  setHoraEntrevista('')
+                  setModoLlegada('')
+                  setRutaSeleccionadaId('')
+                  setPuntoSeleccionadoId('')
+                  setMostrarModalEntrevista(true)
+                  cargarOpcionesLlegada()
+                }}
+                className="flex-1 text-[11px] bg-amber-600 hover:bg-amber-700 text-white py-1 rounded-lg font-medium"
+              >
+                Sí, reagendar
+              </button>
+              <button
+                onClick={() => { setMostrarPreguntaReagendar(false); setMotivoNoAsistio('') }}
+                className="flex-1 text-[11px] bg-gray-100 hover:bg-gray-200 text-gray-600 py-1 rounded-lg font-medium"
+              >
+                No por ahora
               </button>
             </div>
           </div>
@@ -869,7 +979,7 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
                       etapa === 'Descartado' ? 'text-red-500 font-medium' : 'text-gray-700'
                     }`}
                   >
-                    {etapa === 'Descartado' ? '❌ Descartar' : etapa === anteriorEtapa ? `← ${etapa}` : `→ ${etapa}`}
+                    {etapa === 'Descartado' ? '❌ Descartar/Rechazado' : etapa === anteriorEtapa ? `← ${etapa}` : `→ ${etapa}`}
                   </button>
                 ))}
                 {opcionesMenu.length === 0 && (
@@ -891,7 +1001,7 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
           <div className="flex gap-2 mt-2">
             {enEntrevista && (
               <button
-                onClick={() => setMostrarModalEntrevista(true)}
+                onClick={() => { setMostrarModalEntrevista(true); cargarOpcionesLlegada() }}
                 className="flex-1 text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 py-1.5 rounded-lg border border-blue-200 transition-colors"
               >
                 📅 {tieneEntrevista ? 'Ver entrevista' : 'Agendar'}
@@ -1286,26 +1396,59 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
 
             <div className="space-y-3">
               <div>
-                <label className="text-xs font-medium text-gray-700 block mb-1">Fecha *</label>
+                <label className="text-xs font-medium text-gray-700 block mb-1">Fecha</label>
                 <input type="date" value={fechaEntrevista}
                   onChange={e => setFechaEntrevista(e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-700 block mb-1">Hora *</label>
+                <label className="text-xs font-medium text-gray-700 block mb-1">Hora</label>
                 <input type="time" value={horaEntrevista}
                   onChange={e => setHoraEntrevista(e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-700 block mb-1">Lugar o dirección</label>
-                <input type="text" value={lugarEntrevista}
-                  onChange={e => setLugarEntrevista(e.target.value)}
-                  placeholder="Ej. Av. Constitución 100, Col. Centro"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
-                />
+                <label className="text-xs font-medium text-gray-700 block mb-1">¿Cómo llega a la entrevista?</label>
+                <select
+                  value={modoLlegada}
+                  onChange={e => { setModoLlegada(e.target.value); setRutaSeleccionadaId(''); setPuntoSeleccionadoId('') }}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
+                >
+                  <option value="">Selecciona...</option>
+                  {opcionesLlegada?.permiteDirecto && <option value="directo_planta">Directo a planta</option>}
+                  {(opcionesLlegada?.rutas?.length ?? 0) > 0 && <option value="ruta_reclutamiento">Ruta especializada (con chofer)</option>}
+                  {(opcionesLlegada?.puntos?.length ?? 0) > 0 && <option value="punto_reclutamiento">Oficina / punto fijo</option>}
+                  {opcionesLlegada?.ofreceTransporteEmpresa && <option value="transporte_empresa">Transporte de la empresa</option>}
+                </select>
+                {!opcionesLlegada && (
+                  <p className="text-[11px] text-gray-400 mt-1">Cargando opciones disponibles...</p>
+                )}
+                {opcionesLlegada && !opcionesLlegada.permiteDirecto && opcionesLlegada.rutas.length === 0 && opcionesLlegada.puntos.length === 0 && !opcionesLlegada.ofreceTransporteEmpresa && (
+                  <p className="text-[11px] text-amber-600 mt-1">Esta vacante no tiene ninguna opción de llegada configurada — revísalo con el coordinador (Sección 9 de la vacante).</p>
+                )}
+
+                {modoLlegada === 'ruta_reclutamiento' && (
+                  <select
+                    value={rutaSeleccionadaId}
+                    onChange={e => setRutaSeleccionadaId(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white mt-2 focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
+                  >
+                    <option value="">¿Cuál ruta?</option>
+                    {opcionesLlegada?.rutas.map(r => <option key={r.id} value={r.id}>{r.nombre}</option>)}
+                  </select>
+                )}
+                {modoLlegada === 'punto_reclutamiento' && (
+                  <select
+                    value={puntoSeleccionadoId}
+                    onChange={e => setPuntoSeleccionadoId(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white mt-2 focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
+                  >
+                    <option value="">¿Cuál punto?</option>
+                    {opcionesLlegada?.puntos.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+                  </select>
+                )}
               </div>
 
               <div className="border-t border-gray-100 pt-3">
@@ -1345,8 +1488,7 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
               </button>
               <button
                 onClick={guardarEntrevista}
-                disabled={!fechaEntrevista || !horaEntrevista}
-                className="flex-1 bg-[#1A6B3C] hover:bg-[#155c33] disabled:opacity-40 text-white py-2.5 rounded-xl text-sm font-medium"
+                className="flex-1 bg-[#1A6B3C] hover:bg-[#155c33] text-white py-2.5 rounded-xl text-sm font-medium"
               >
                 Guardar
               </button>
