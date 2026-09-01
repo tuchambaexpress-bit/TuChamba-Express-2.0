@@ -1072,6 +1072,15 @@ Cuando un dato "pertenece" a la empresa pero una vacante puntual necesita poder 
 
 **Lección de proceso, no solo de datos:** este mismo feature (`7.38`) se había intentado diseñar 3 veces en sesiones anteriores y se pausó las 3 sin construirse — lo que finalmente lo destrabó no fue iterar más rápido, sino **una conversación de una sola pregunta directa a la persona que de verdad opera el proceso en la vida real (Roxana)**, que reveló que la variedad aparente en los documentos crudos en realidad eran solo 4 categorías fijas, no un caos sin patrón. Cuando un feature se resiste a diseñarse bien después de varios intentos, vale la pena parar de iterar sobre el diseño y buscar la fuente humana correcta primero.
 
+### Nunca confiar en un `prop` de un componente padre que no se tiene a la vista — consultar la BD directo (`8.23`, 2026-09-01)
+
+**El bug más caro del día, repetido 3 veces sin que se notara hasta la verificación final.** `KanbanCard.tsx` recibe `postulacion` como prop desde `KanbanBoard.tsx` — un archivo que nunca se ha pedido ni modificado en ninguna sesión, así que no hay visibilidad real de qué columnas selecciona su `.select()`. Código nuevo que asumía "seguro que `postulacion.campo_nuevo` ya viene ahí" falló en silencio 3 veces distintas hoy:
+1. Al reabrir "Ver entrevista", destino/medio/ruta/punto no se precargaban (el prop no traía `entrevista_activa`)
+2. Al reabrir el modal 📎, el checklist de documentos no se precargaba (el prop no traía `documentos_entrevista_checklist`)
+3. **El más serio, no descubierto hasta que José probó el flujo completo con SQL en mano:** los botones "Sí"/"No" de asistencia a entrevista nunca escribían el resultado en la tabla `entrevistas` — dependían de `postulacion.entrevista_activa_id`, que casi seguro nunca llegaba en el prop, así que la condición `if (postulacion.entrevista_activa_id)` se saltaba en silencio, sin ningún error visible. El historial de asistencia real **nunca se estaba guardando**, aunque la tarjeta del momento se veía perfecta — el bug era invisible sin ir a la base de datos a confirmar.
+
+**Regla concreta para cualquier componente que reciba datos por prop de un padre no visible en la sesión actual:** si el código va a **leer** un campo que se agregó recién (no estaba en el diseño original del padre), o va a **depender de un campo para decidir si ejecuta una escritura** (como el `if` del punto 3), hacer una consulta propia a Supabase en ese momento en vez de confiar en el prop. Cuesta una consulta extra; el precio de no hacerlo es un fallo silencioso que puede pasar desapercibido durante toda una sesión de pruebas, porque el estado *visible* en pantalla se ve correcto aunque lo que se guarda no lo sea.
+
 
 ```bash
 git status

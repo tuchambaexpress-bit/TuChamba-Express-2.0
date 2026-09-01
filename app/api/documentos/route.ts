@@ -18,6 +18,7 @@ export async function POST(req: NextRequest) {
     const candidatoId = formData.get('candidatoId') as string | null
     const postulacionId = formData.get('postulacionId') as string | null
     const tipo = formData.get('tipo') as string | null
+    const descripcion = formData.get('descripcion') as string | null
 
     if (!file || !candidatoId || !postulacionId || !tipo) {
       return NextResponse.json({ error: 'Faltan datos requeridos' }, { status: 400 })
@@ -49,9 +50,10 @@ export async function POST(req: NextRequest) {
         candidato_id: candidatoId,
         postulacion_id: postulacionId,
         tipo,
+        descripcion: descripcion || null,
         archivo_url: nombreArchivo
       })
-      .select('id, tipo, archivo_url, created_at')
+      .select('id, tipo, descripcion, archivo_url, created_at')
       .single()
 
     if (errorDB) {
@@ -77,7 +79,7 @@ export async function GET(req: NextRequest) {
 
     const { data: documentos, error } = await supabase
       .from('documentos_candidato')
-      .select('id, tipo, archivo_url, created_at')
+      .select('id, tipo, descripcion, archivo_url, created_at')
       .eq('candidato_id', candidatoId)
       .order('created_at', { ascending: false })
 

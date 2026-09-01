@@ -43,6 +43,12 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
   const [mostrarModalDetalleDescarte, setMostrarModalDetalleDescarte] = useState(false)
   const [mostrarModalDocumentos, setMostrarModalDocumentos] = useState(false)
   const [documentos, setDocumentos] = useState<any[]>([])
+  // 8.21 — checklist de documentos que pide la vacante (distinto de la
+  // lista libre de arriba, que es "cualquier archivo que se suba" sin
+  // relación con lo que exige la empresa específicamente)
+  const [documentosRequeridos, setDocumentosRequeridos] = useState<string[]>([])
+  const [checklistDocs, setChecklistDocs] = useState<{ documento: string; estado: 'pendiente' | 'entregado' | 'rechazado' }[]>([])
+  const [subiendoChecklistPara, setSubiendoChecklistPara] = useState<string | null>(null)
   const [cargandoDocs, setCargandoDocs] = useState(false)
   const [tipoDocumento, setTipoDocumento] = useState('cv')
   const [archivoSeleccionado, setArchivoSeleccionado] = useState<File | null>(null)
@@ -99,7 +105,12 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
   // 8.23 — modo de llegada (las 4 opciones de 7.38), catálogo disponible
   // para ESTA vacante (se carga al abrir el modal), y el flujo de
   // reagendar cuando el candidato no se presentó.
-  const [modoLlegada, setModoLlegada] = useState('')
+  // 8.23 — "cómo llega" son 2 preguntas independientes (José, 2026-08-31):
+  // A DÓNDE llega (destino) y CON QUÉ MEDIO llega (medio_transporte) —
+  // una ruta especializada puede llevar tanto a planta como a un punto
+  // fijo, no es un destino en sí misma.
+  const [destino, setDestino] = useState('')
+  const [medioTransporte, setMedioTransporte] = useState('')
   const [rutaSeleccionadaId, setRutaSeleccionadaId] = useState('')
   const [puntoSeleccionadoId, setPuntoSeleccionadoId] = useState('')
   const [opcionesLlegada, setOpcionesLlegada] = useState<{
@@ -109,6 +120,13 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
     puntos: { id: string; nombre: string }[]
   } | null>(null)
   const [mostrarPreguntaReagendar, setMostrarPreguntaReagendar] = useState(false)
+  // Fix (2026-08-31): antes CADA guardado creaba una fila nueva en
+  // `entrevistas`, incluso al solo reabrir "Ver entrevista" y volver a
+  // guardar sin cambiar nada — generaba intentos duplicados idénticos.
+  // Ahora solo se crea una fila NUEVA cuando de verdad se está
+  // reagendando (tras "No se presentó" → "Sí, reagendar"); un guardado
+  // normal actualiza la entrevista activa existente.
+  const [esReagendando, setEsReagendando] = useState(false)
   const [edadCandidato, setEdadCandidato] = useState('')
   const [escolaridadCandidato, setEscolaridadCandidato] = useState('')
   const [residenciaCandidato, setResidenciaCandidato] = useState('')
@@ -116,14 +134,38 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
   // Precarga el formulario con lo que ya esté guardado, cada vez que se abre
   // esta tarjeta — antes siempre arrancaba en blanco, aunque ya hubiera datos.
   useEffect(() => {
-    if (postulacion.fecha_entrevista) {
-      const d = new Date(postulacion.fecha_entrevista)
-      setFechaEntrevista(d.toISOString().split('T')[0])
-      setHoraEntrevista(d.toTimeString().slice(0, 5))
+    async function precargar() {
+      if (postulacion.fecha_entrevista) {
+        const d = new Date(postulacion.fecha_entrevista)
+        setFechaEntrevista(d.toISOString().split('T')[0])
+        setHoraEntrevista(d.toTimeString().slice(0, 5))
+      }
+      setEdadCandidato(postulacion.candidatos?.edad ? String(postulacion.candidatos.edad) : '')
+      setEscolaridadCandidato(postulacion.candidatos?.escolaridad ?? '')
+      setResidenciaCandidato(postulacion.candidatos?.residencia ?? '')
+
+      // 8.23 — bug real: destino/medio/ruta/punto se guardaban bien,
+      // pero nunca se precargaban al reabrir "Ver entrevista", así que
+      // el selector siempre se veía en blanco aunque sí hubiera datos.
+      // Consulta directa (no depende de lo que traiga el componente
+      // padre embebido) al intento de entrevista más reciente.
+      const supabase = createClient()
+      const { data: ultimaEntrevista } = await supabase
+        .from('entrevistas')
+        .select('destino, medio_transporte, ruta_reclutamiento_id, punto_reclutamiento_id')
+        .eq('postulacion_id', postulacion.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (ultimaEntrevista) {
+        setDestino(ultimaEntrevista.destino ?? '')
+        setMedioTransporte(ultimaEntrevista.medio_transporte ?? '')
+        setRutaSeleccionadaId(ultimaEntrevista.ruta_reclutamiento_id ?? '')
+        setPuntoSeleccionadoId(ultimaEntrevista.punto_reclutamiento_id ?? '')
+      }
     }
-    setEdadCandidato(postulacion.candidatos?.edad ? String(postulacion.candidatos.edad) : '')
-    setEscolaridadCandidato(postulacion.candidatos?.escolaridad ?? '')
-    setResidenciaCandidato(postulacion.candidatos?.residencia ?? '')
+    precargar()
   }, [postulacion.id])
 
   const diasEnEtapa = Math.floor(
@@ -421,15 +463,28 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
     }
 
     // 8.23 — cada intento de entrevista es su propia fila en `entrevistas`,
-    // no se sobrescribe como antes — así un reagendado no borra el
-    // historial del intento fallido anterior.
-    const { data: nuevaEntrevista } = await supabase.from('entrevistas').insert({
+    // pero SOLO cuando de verdad es un reagendado nuevo — un guardado
+    // normal (abrir "Ver entrevista", ajustar algo, Guardar) actualiza
+    // la entrevista activa existente, no crea otra.
+    const debeCrearNueva = esReagendando || !postulacion.entrevista_activa_id
+    const payloadEntrevista = {
       postulacion_id: postulacion.id,
       fecha_entrevista: fechaCompleta ? fechaCompleta.toISOString() : null,
-      modo_llegada: modoLlegada || null,
-      ruta_reclutamiento_id: modoLlegada === 'ruta_reclutamiento' ? (rutaSeleccionadaId || null) : null,
-      punto_reclutamiento_id: modoLlegada === 'punto_reclutamiento' ? (puntoSeleccionadoId || null) : null,
-    }).select('id').single()
+      destino: destino || null,
+      medio_transporte: medioTransporte || null,
+      ruta_reclutamiento_id: medioTransporte === 'transporte_especializado' ? (rutaSeleccionadaId || null) : null,
+      punto_reclutamiento_id: destino === 'punto_fijo' ? (puntoSeleccionadoId || null) : null,
+    }
+
+    const { data: nuevaEntrevista, error: errorEntrevista } = debeCrearNueva
+      ? await supabase.from('entrevistas').insert(payloadEntrevista).select('id').single()
+      : await supabase.from('entrevistas').update(payloadEntrevista).eq('id', postulacion.entrevista_activa_id).select('id').single()
+
+    if (errorEntrevista) {
+      alert('No se pudo guardar el intento de entrevista: ' + errorEntrevista.message)
+      return
+    }
+    setEsReagendando(false)
 
     await supabase
       .from('postulaciones')
@@ -471,7 +526,8 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
     // guardado sea solo para capturar el modo de llegada sin fecha todavía.
     if (fechaCompleta) await enviarResumenAlCoordinador(fechaCompleta)
     setMostrarModalEntrevista(false)
-    setModoLlegada('')
+    setDestino('')
+    setMedioTransporte('')
     setRutaSeleccionadaId('')
     setPuntoSeleccionadoId('')
     onActualizarEtapa(postulacion.id, postulacion.etapa_actual)
@@ -673,7 +729,194 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
     const res = await fetch(`/api/documentos?candidatoId=${postulacion.candidato_id}`)
     const data = await res.json()
     setDocumentos(data.documentos ?? [])
+
+    // 8.21 — checklist: se compara documentos_requeridos de la vacante
+    // contra lo ya guardado en postulaciones.documentos_entrevista_checklist.
+    // Fix (2026-08-31): antes se leía de postulacion.documentos_entrevista_checklist
+    // (el objeto que pasa KanbanBoard.tsx), que no incluye este campo nuevo en
+    // su select() — así que aunque el guardado sí funcionaba, al reabrir el
+    // modal se veía vacío. Ahora se consulta directo y fresco, mismo patrón
+    // que ya se usó para precargar la entrevista.
+    const supabase = createClient()
+    const { data: vacanteData } = await supabase
+      .from('vacantes')
+      .select('documentos_requeridos')
+      .eq('id', postulacion.vacante_id)
+      .single()
+    const requeridos: string[] = vacanteData?.documentos_requeridos ?? []
+    setDocumentosRequeridos(requeridos)
+
+    const { data: postulacionData } = await supabase
+      .from('postulaciones')
+      .select('documentos_entrevista_checklist')
+      .eq('id', postulacion.id)
+      .single()
+    const checklistGuardado: any[] = postulacionData?.documentos_entrevista_checklist ?? []
+    setChecklistDocs(requeridos.map(doc => {
+      const existente = checklistGuardado.find((c: any) => c.documento === doc)
+      // 8.21b — retrocompatibilidad: los checklists guardados antes de hoy
+      // usan `entregado: boolean`, no `estado`. Se traduce al leerlos.
+      if (existente?.estado) return existente
+      if (existente && 'entregado' in existente) {
+        return { documento: doc, estado: existente.entregado ? 'entregado' : 'pendiente' }
+      }
+      return { documento: doc, estado: 'pendiente' as const }
+    }))
+
     setCargandoDocs(false)
+  }
+
+  // 8.21 — marca/desmarca un documento del checklist como entregado, y
+  // lo guarda de inmediato (no espera a que se cierre el modal)
+  // Ya no guarda solo al marcar — solo actualiza en pantalla. El guardado
+  // real ocurre en guardarChecklistDocs(), con el botón "Guardar
+  // documentos" (José, 2026-08-31: prefiere un guardado explícito, más
+  // fácil de confiar que 8 guardados silenciosos por separado).
+  function actualizarChecklistDoc(documento: string, marcado: boolean) {
+    setChecklistDocs(prev => prev.map(c => c.documento === documento ? { ...c, estado: marcado ? 'entregado' : 'pendiente' } : c))
+  }
+
+  const [guardandoChecklist, setGuardandoChecklist] = useState(false)
+  const [documentosRechazados, setDocumentosRechazados] = useState(0)
+
+  // 8.21b — badge de documentos rechazados en la tarjeta, visible sin
+  // necesidad de abrir el modal 📎. Consulta propia (no depende de lo
+  // que traiga el componente padre embebido, mismo motivo que ya causó
+  // 2 bugs hoy con datos desactualizados).
+  async function contarRechazados() {
+    const supabase = createClient()
+    const { data } = await supabase
+      .from('postulaciones')
+      .select('documentos_entrevista_checklist')
+      .eq('id', postulacion.id)
+      .single()
+    const checklist: any[] = data?.documentos_entrevista_checklist ?? []
+    setDocumentosRechazados(checklist.filter(c => c.estado === 'rechazado').length)
+  }
+
+  useEffect(() => {
+    contarRechazados()
+  }, [postulacion.id])
+
+  // José, 2026-08-31: "no se actualiza en tiempo real ni el rechazo ni
+  // la notificación" — el conteo solo se calculaba una vez al montar la
+  // tarjeta. Se agrega un canal de Realtime igual al que ya usa el resto
+  // del proyecto (KanbanBoard.tsx), para que si el coordinador rechaza un
+  // documento mientras el reclutador ya tiene el Pipeline abierto, el
+  // badge aparezca solo, sin recargar la página.
+  useEffect(() => {
+    const supabase = createClient()
+    const canal = supabase
+      .channel(`documentos-checklist-${postulacion.id}-${Math.random()}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'postulaciones',
+        filter: `id=eq.${postulacion.id}`
+      }, () => contarRechazados())
+      .subscribe()
+
+    return () => { supabase.removeChannel(canal) }
+  }, [postulacion.id])
+
+  // Mismo canal, pero mientras el modal 📎 está abierto también refresca
+  // el checklist completo en pantalla (no solo el badge de la tarjeta) —
+  // así si el coordinador solicita un documento de nuevo mientras el
+  // reclutador ya tiene el modal abierto, lo ve sin cerrar y reabrir.
+  useEffect(() => {
+    if (!mostrarModalDocumentos) return
+    const supabase = createClient()
+    const canal = supabase
+      .channel(`checklist-modal-${postulacion.id}-${Math.random()}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'postulaciones',
+        filter: `id=eq.${postulacion.id}`
+      }, async () => {
+        const { data } = await supabase
+          .from('postulaciones')
+          .select('documentos_entrevista_checklist')
+          .eq('id', postulacion.id)
+          .single()
+        const checklist: any[] = data?.documentos_entrevista_checklist ?? []
+        setChecklistDocs(prev => prev.map(c => {
+          const actualizado = checklist.find((x: any) => x.documento === c.documento)
+          return actualizado ? { documento: c.documento, estado: actualizado.estado } : c
+        }))
+      })
+      .subscribe()
+
+    return () => { supabase.removeChannel(canal) }
+  }, [mostrarModalDocumentos, postulacion.id])
+
+  async function guardarChecklistDocs() {
+    setGuardandoChecklist(true)
+    const supabase = createClient()
+    const { error } = await supabase
+      .from('postulaciones')
+      .update({ documentos_entrevista_checklist: checklistDocs })
+      .eq('id', postulacion.id)
+    setGuardandoChecklist(false)
+    if (error) {
+      alert('No se pudo guardar: ' + error.message)
+      console.error('Error guardando checklist de documentos:', error)
+      return
+    }
+    postulacion.documentos_entrevista_checklist = checklistDocs
+    setMostrarModalDocumentos(false)
+  }
+
+  // Adjuntar el archivo real para un documento del checklist — reutiliza
+  // el mismo endpoint que ya usa la subida libre de abajo (tipo='otro'),
+  // y al terminar marca ese documento como entregado automáticamente
+  // A diferencia del checkbox (que ahora espera al botón "Guardar
+  // documentos"), adjuntar un archivo real SÍ se guarda al instante —
+  // ya es una acción real y confirmada, no solo una casilla marcada.
+  async function subirDocumentoChecklist(documento: string, archivo: File) {
+    setSubiendoChecklistPara(documento)
+    const formData = new FormData()
+    formData.append('file', archivo)
+    formData.append('candidatoId', postulacion.candidato_id)
+    formData.append('postulacionId', postulacion.id)
+    formData.append('tipo', 'otro')
+
+    const res = await fetch('/api/documentos', { method: 'POST', body: formData })
+    if (res.ok) {
+      const supabase = createClient()
+      // Fix (2026-08-31): antes se guardaba TODO `checklistDocs` (estado
+      // local), que puede tener checkboxes marcados en pantalla pero
+      // nunca guardados con el botón — eso contaminaba otros documentos
+      // sin querer. Ahora se consulta la BD fresca y se toca ÚNICAMENTE
+      // el documento que se está subiendo, sin tocar nada más.
+      const { data: actualData } = await supabase
+        .from('postulaciones')
+        .select('documentos_entrevista_checklist')
+        .eq('id', postulacion.id)
+        .single()
+      const actual: any[] = actualData?.documentos_entrevista_checklist ?? []
+      // 8.21b — al subir un archivo sobre uno que el coordinador rechazó,
+      // pasa a "pendiente" (esperando que lo revise de nuevo), NO directo
+      // a "entregado" — el reclutador no se autoaprueba, el coordinador
+      // sigue siendo quien confirma que el documento ya sirve.
+      const yaExiste = actual.some((c: any) => c.documento === documento)
+      const nuevo = yaExiste
+        ? actual.map((c: any) => c.documento === documento ? { ...c, estado: 'pendiente' } : c)
+        : [...actual, { documento, estado: 'pendiente' }]
+
+      const { error } = await supabase.from('postulaciones').update({ documentos_entrevista_checklist: nuevo }).eq('id', postulacion.id)
+      if (error) {
+        alert('El archivo se subió, pero no se pudo actualizar el checklist: ' + error.message)
+      } else {
+        postulacion.documentos_entrevista_checklist = nuevo
+        setChecklistDocs(nuevo.map((c: any) => ({ documento: c.documento, estado: c.estado })))
+        setDocumentosRechazados(nuevo.filter((c: any) => c.estado === 'rechazado').length)
+      }
+      const resDocs = await fetch(`/api/documentos?candidatoId=${postulacion.candidato_id}`)
+      const dataDocs = await resDocs.json()
+      setDocumentos(dataDocs.documentos ?? [])
+    }
+    setSubiendoChecklistPara(null)
   }
 
   function cerrarModalDocumentos() {
@@ -803,6 +1046,19 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
                 onClick={async () => {
                   const supabase = createClient()
                   await supabase.from('postulaciones').update({ asistio_entrevista: true }).eq('id', postulacion.id)
+                  // Mismo fix que el botón "No" — se guarda también en el
+                  // intento de entrevista real, consultado fresco.
+                  const { data: postActual } = await supabase
+                    .from('postulaciones')
+                    .select('entrevista_activa_id')
+                    .eq('id', postulacion.id)
+                    .single()
+                  if (postActual?.entrevista_activa_id) {
+                    await supabase.from('entrevistas').update({
+                      asistio_entrevista: true,
+                      updated_at: new Date().toISOString(),
+                    }).eq('id', postActual.entrevista_activa_id)
+                  }
                   postulacion.asistio_entrevista = true
                   onActualizarEtapa(postulacion.id, postulacion.etapa_actual)
                 }}
@@ -841,12 +1097,21 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
                   // 8.23 — refleja el resultado en el intento de entrevista
                   // activo también (la fila en `entrevistas`), no solo en
                   // postulaciones — para conservar el historial real.
-                  if (postulacion.entrevista_activa_id) {
+                  // Fix (2026-09-01): antes dependía de postulacion.entrevista_activa_id
+                  // del componente padre (KanbanBoard.tsx) — si esa consulta no incluye
+                  // el campo, esto se saltaba en silencio y el historial nunca se
+                  // guardaba de verdad. Ahora se consulta fresco, directo.
+                  const { data: postActual } = await supabase
+                    .from('postulaciones')
+                    .select('entrevista_activa_id')
+                    .eq('id', postulacion.id)
+                    .single()
+                  if (postActual?.entrevista_activa_id) {
                     await supabase.from('entrevistas').update({
                       asistio_entrevista: false,
                       motivo_no_asistencia: motivoNoAsistio.trim() || null,
                       updated_at: new Date().toISOString(),
-                    }).eq('id', postulacion.entrevista_activa_id)
+                    }).eq('id', postActual.entrevista_activa_id)
                   }
                   postulacion.asistio_entrevista = false
                   postulacion.motivo_no_asistencia = motivoNoAsistio.trim() || null
@@ -884,9 +1149,11 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
                   setMotivoNoAsistio('')
                   setFechaEntrevista('')
                   setHoraEntrevista('')
-                  setModoLlegada('')
+                  setDestino('')
+                  setMedioTransporte('')
                   setRutaSeleccionadaId('')
                   setPuntoSeleccionadoId('')
+                  setEsReagendando(true)
                   setMostrarModalEntrevista(true)
                   cargarOpcionesLlegada()
                 }}
@@ -936,6 +1203,18 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
             </button>
           ))}
         </div>
+
+        {/* 8.21b — badge de documentos rechazados por el coordinador,
+            desaparece solo cuando el reclutador vuelve a subir ese
+            documento específico (pasa a "pendiente", ya no "rechazado") */}
+        {documentosRechazados > 0 && (
+          <button
+            onClick={abrirModalDocumentos}
+            className="inline-block mt-1.5 text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium hover:bg-red-200 transition-colors"
+          >
+            ⚠️ {documentosRechazados} documento{documentosRechazados !== 1 ? 's' : ''} solicitado{documentosRechazados !== 1 ? 's' : ''} de nuevo
+          </button>
+        )}
 
         {/* Botones principales */}
         <div className="flex gap-2 mt-3">
@@ -1310,6 +1589,54 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
             </div>
             <p className="text-sm text-gray-500 mb-4">{nombre}</p>
 
+            {/* 8.21 — checklist de documentos que pide la empresa */}
+            {documentosRequeridos.length > 0 && (
+              <div className="mb-4">
+                <p className="text-xs font-medium text-gray-700 mb-2">Documentos que pide la empresa</p>
+                <div className="space-y-1.5">
+                  {checklistDocs.map((c) => (
+                    <div key={c.documento} className={`flex items-center gap-2 border rounded-lg px-2.5 py-1.5 ${c.estado === 'rechazado' ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'}`}>
+                      {c.estado !== 'rechazado' && (
+                        <input
+                          type="checkbox"
+                          checked={c.estado === 'entregado'}
+                          onChange={e => actualizarChecklistDoc(c.documento, e.target.checked)}
+                          className="accent-[#1A6B3C] flex-shrink-0"
+                        />
+                      )}
+                      <span className="text-xs text-gray-700 flex-1">{c.documento}</span>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium flex-shrink-0 ${
+                        c.estado === 'entregado' ? 'bg-green-100 text-green-700' : c.estado === 'rechazado' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
+                      }`}>
+                        {c.estado === 'entregado' ? 'OK' : c.estado === 'rechazado' ? 'Solicitado de nuevo' : 'Pendiente'}
+                      </span>
+                      {c.estado !== 'entregado' && (
+                        <label className={`text-[10px] hover:underline cursor-pointer flex-shrink-0 ${c.estado === 'rechazado' ? 'text-red-700 font-medium' : 'text-[#1A6B3C]'}`}>
+                          {subiendoChecklistPara === c.documento ? '...' : c.estado === 'rechazado' ? '📎 Volver a subir' : '📎'}
+                          <input
+                            type="file"
+                            className="hidden"
+                            disabled={subiendoChecklistPara === c.documento}
+                            onChange={e => {
+                              const archivo = e.target.files?.[0]
+                              if (archivo) subirDocumentoChecklist(c.documento, archivo)
+                            }}
+                          />
+                        </label>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <button
+                  onClick={guardarChecklistDocs}
+                  disabled={guardandoChecklist}
+                  className="w-full mt-2 bg-[#1A6B3C] hover:bg-[#155c33] disabled:opacity-40 text-white py-1.5 rounded-lg text-xs font-medium"
+                >
+                  {guardandoChecklist ? 'Guardando...' : 'Guardar documentos'}
+                </button>
+              </div>
+            )}
+
             {/* Lista de documentos existentes */}
             {cargandoDocs ? (
               <p className="text-xs text-gray-400 text-center py-4">Cargando...</p>
@@ -1349,39 +1676,6 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
                 ))}
               </div>
             )}
-
-            {/* Subir nuevo */}
-            <div className="border-t border-gray-100 pt-3">
-              <p className="text-xs font-medium text-gray-700 mb-2">Tipo de documento</p>
-              <select
-                value={tipoDocumento}
-                onChange={e => setTipoDocumento(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
-              >
-                <option value="cv">CV</option>
-                <option value="identificacion">Identificación</option>
-                <option value="comprobante_domicilio">Comprobante de domicilio</option>
-                <option value="comprobante_estudios">Comprobante de estudios</option>
-                <option value="rfc">RFC</option>
-                <option value="nss">NSS</option>
-                <option value="curp">CURP</option>
-                <option value="otro">Otro</option>
-              </select>
-              <input
-                key={fileInputKey}
-                type="file"
-                onChange={e => setArchivoSeleccionado(e.target.files?.[0] ?? null)}
-                className="w-full text-xs text-gray-600 mb-2"
-              />
-              {errorDoc && <p className="text-red-500 text-xs mb-2">{errorDoc}</p>}
-              <button
-                onClick={subirDocumento}
-                disabled={!archivoSeleccionado || subiendoDoc}
-                className="w-full bg-[#1A6B3C] hover:bg-[#155c33] disabled:opacity-40 text-white py-2 rounded-lg text-sm font-medium"
-              >
-                {subiendoDoc ? 'Subiendo...' : 'Subir documento'}
-              </button>
-            </div>
           </div>
         </div>
       )}
@@ -1411,24 +1705,58 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
               <div>
                 <label className="text-xs font-medium text-gray-700 block mb-1">¿Cómo llega a la entrevista?</label>
                 <select
-                  value={modoLlegada}
-                  onChange={e => { setModoLlegada(e.target.value); setRutaSeleccionadaId(''); setPuntoSeleccionadoId('') }}
+                  value={destino}
+                  onChange={e => {
+                    setDestino(e.target.value)
+                    setMedioTransporte('')
+                    setRutaSeleccionadaId('')
+                    setPuntoSeleccionadoId('')
+                  }}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
                 >
                   <option value="">Selecciona...</option>
-                  {opcionesLlegada?.permiteDirecto && <option value="directo_planta">Directo a planta</option>}
-                  {(opcionesLlegada?.rutas?.length ?? 0) > 0 && <option value="ruta_reclutamiento">Ruta especializada (con chofer)</option>}
-                  {(opcionesLlegada?.puntos?.length ?? 0) > 0 && <option value="punto_reclutamiento">Oficina / punto fijo</option>}
-                  {opcionesLlegada?.ofreceTransporteEmpresa && <option value="transporte_empresa">Transporte de la empresa</option>}
+                  <option value="planta">A planta</option>
+                  {(opcionesLlegada?.puntos?.length ?? 0) > 0 && <option value="punto_fijo">A punto fijo</option>}
                 </select>
                 {!opcionesLlegada && (
                   <p className="text-[11px] text-gray-400 mt-1">Cargando opciones disponibles...</p>
                 )}
+
+                {destino && (
+                  <div className="mt-2">
+                    <label className="text-xs font-medium text-gray-700 block mb-1">¿Qué medio utiliza?</label>
+                    <select
+                      value={medioTransporte}
+                      onChange={e => { setMedioTransporte(e.target.value); setRutaSeleccionadaId('') }}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
+                    >
+                      <option value="">Selecciona...</option>
+                      {opcionesLlegada?.permiteDirecto && <option value="por_su_cuenta">Por su cuenta</option>}
+                      {(opcionesLlegada?.rutas?.length ?? 0) > 0 && <option value="transporte_especializado">Transporte especializado (con chofer)</option>}
+                      {/* Transporte laboral solo aplica si el destino es planta —
+                          nunca deja a alguien en un punto fijo (José, 2026-08-31) */}
+                      {destino === 'planta' && opcionesLlegada?.ofreceTransporteEmpresa && (
+                        <option value="transporte_laboral">Transporte laboral</option>
+                      )}
+                    </select>
+                  </div>
+                )}
+
                 {opcionesLlegada && !opcionesLlegada.permiteDirecto && opcionesLlegada.rutas.length === 0 && opcionesLlegada.puntos.length === 0 && !opcionesLlegada.ofreceTransporteEmpresa && (
                   <p className="text-[11px] text-amber-600 mt-1">Esta vacante no tiene ninguna opción de llegada configurada — revísalo con el coordinador (Sección 9 de la vacante).</p>
                 )}
 
-                {modoLlegada === 'ruta_reclutamiento' && (
+                {destino === 'punto_fijo' && (
+                  <select
+                    value={puntoSeleccionadoId}
+                    onChange={e => setPuntoSeleccionadoId(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white mt-2 focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
+                  >
+                    <option value="">¿Cuál punto fijo?</option>
+                    {opcionesLlegada?.puntos.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+                  </select>
+                )}
+                {medioTransporte === 'transporte_especializado' && (
                   <select
                     value={rutaSeleccionadaId}
                     onChange={e => setRutaSeleccionadaId(e.target.value)}
@@ -1436,16 +1764,6 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
                   >
                     <option value="">¿Cuál ruta?</option>
                     {opcionesLlegada?.rutas.map(r => <option key={r.id} value={r.id}>{r.nombre}</option>)}
-                  </select>
-                )}
-                {modoLlegada === 'punto_reclutamiento' && (
-                  <select
-                    value={puntoSeleccionadoId}
-                    onChange={e => setPuntoSeleccionadoId(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white mt-2 focus:outline-none focus:ring-2 focus:ring-[#1A6B3C]"
-                  >
-                    <option value="">¿Cuál punto?</option>
-                    {opcionesLlegada?.puntos.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
                   </select>
                 )}
               </div>

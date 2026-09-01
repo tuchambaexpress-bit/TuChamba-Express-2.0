@@ -31,7 +31,6 @@ export default function PipelineCoordinador() {
   const [reclutadores, setReclutadores] = useState<Reclutador[]>([])
   const [reclutadorSeleccionado, setReclutadorSeleccionado] = useState<Reclutador | null>(null)
   const [postulaciones, setPostulaciones] = useState<any[]>([])
-  const [candidatosConHistorial, setCandidatosConHistorial] = useState<Set<string>>(new Set())
   const [loadingReclutadores, setLoadingReclutadores] = useState(true)
   const [loadingPipeline, setLoadingPipeline] = useState(false)
 
@@ -65,6 +64,7 @@ export default function PipelineCoordinador() {
       .select(`
         id, etapa_actual, candidato_id, updated_at, score, motivo_descarte, precalificado,
         fecha_entrevista, lugar_entrevista, asistio_entrevista,
+        fecha_contratacion, fecha_firma_contrato,
         candidatos(nombre, telefono, edad, escolaridad, residencia),
         vacantes(titulo, ruta_para_entrevista, punto_reunion, negocios(nombre)),
         chats(id)
@@ -73,18 +73,6 @@ export default function PipelineCoordinador() {
       .order('created_at', { ascending: false })
 
     setPostulaciones(data ?? [])
-
-    if (data && data.length > 0) {
-      const candidatoIds = [...new Set(data.map((p: any) => p.candidato_id))]
-      const { data: historial } = await supabase
-        .from('postulaciones')
-        .select('candidato_id')
-        .eq('reclutador_id', reclutador.id)
-        .eq('etapa_actual', 'Descartado')
-        .in('candidato_id', candidatoIds)
-      setCandidatosConHistorial(new Set((historial ?? []).map((h: any) => h.candidato_id)))
-    }
-
     setLoadingPipeline(false)
   }
 
@@ -130,17 +118,17 @@ export default function PipelineCoordinador() {
           <button
             onClick={() => setVistaActiva('entrevistas')}
             className={`text-sm px-3 py-1.5 rounded-md font-medium transition-colors ${
-              vistaActiva === 'entrevistas' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
+              vistaActiva === 'entrevistas' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-700'
             }`}
           >
-            📅 Entrevistas
+            📋 Detalles candidato
           </button>
         </div>
       </div>
 
       {vistaActiva === 'entrevistas' ? (
         <div className="max-w-7xl mx-auto px-4 pb-8">
-          <HistorialEntrevistas scope={{ tipo: 'coordinador', agenciaId: sesion.agencia_id, reclutadores }} />
+          <HistorialEntrevistas scope={{ tipo: 'coordinador', agenciaId: sesion.agencia_id, reclutadores }} nombreCoordinador={sesion.nombre} />
         </div>
       ) : (
       <div className={reclutadorSeleccionado ? 'px-4 pb-8' : 'max-w-7xl mx-auto px-4 pb-8'}>
@@ -202,7 +190,6 @@ export default function PipelineCoordinador() {
                             <KanbanCardSoloLectura
                               key={p.id}
                               postulacion={p}
-                              tieneHistorialPrevio={candidatosConHistorial.has(p.candidato_id)}
                             />
                           ))}
                           {postulacionesEtapa.length === 0 && (
