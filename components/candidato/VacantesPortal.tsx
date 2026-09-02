@@ -332,6 +332,14 @@ export default function VacantesPortal({ vacantes: vacantesIniciales }: Props) {
               >
                 📜 Acta de nacimiento
               </a>
+              <a
+                href="https://micuenta.infonavit.org.mx/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[11px] bg-gray-50 border border-gray-200 hover:border-[#1A6B3C] text-gray-600 hover:text-[#1A6B3C] px-2 py-1 rounded-md transition-colors"
+              >
+                🏠 Mi Infonavit
+              </a>
             </div>
           </div>
 

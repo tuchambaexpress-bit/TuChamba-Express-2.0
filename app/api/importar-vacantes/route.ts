@@ -4,7 +4,7 @@ import * as XLSX from 'xlsx'
 import {
   JORNADA_INVERSO, MODALIDAD_INVERSO, SALARIO_TIPO_INVERSO, PERIODO_INVERSO,
   esSiNo, parsearFecha, normalizarNombre, parsearDiasDescanso,
-  DOCUMENTOS_TRONCO_COMUN, COLUMNAS_TRONCO_COMUN,
+  DOCUMENTOS_TRONCO_COMUN, COLUMNAS_TRONCO_COMUN, OPERADO_POR_INVERSO,
 } from '@/lib/excel-vacantes'
 
 function getServiceClient() {
@@ -52,6 +52,57 @@ function extraerRutas(fila: Record<string, any>): { nombre: string; paradas: str
   return rutas
 }
 
+// 7.38 en Excel (2026-09-01) — rutas especializadas de reclutamiento
+// (catálogo de empresa, Opción 2 de la Sección 9). Distinto de
+// extraerRutas() de arriba, que es transporte de trabajadores ya
+// contratados. Paradas y días quedan solo capturables en el sistema.
+function extraerRutasReclutamiento(fila: Record<string, any>): {
+  nombre: string; operado_por: string; chofer_vehiculo: string | null; contacto_nombre: string | null; ubicacion_maps: string | null
+}[] {
+  const rutas: ReturnType<typeof extraerRutasReclutamiento> = []
+  let i = 1
+  while (fila[`RUTA_RECLUTAMIENTO_${i}_NOMBRE`] !== undefined) {
+    const nombre = String(fila[`RUTA_RECLUTAMIENTO_${i}_NOMBRE`] ?? '').trim()
+    if (nombre) {
+      const operadoTexto = String(fila[`RUTA_RECLUTAMIENTO_${i}_OPERADO_POR`] ?? '').trim().toLowerCase()
+      rutas.push({
+        nombre,
+        operado_por: OPERADO_POR_INVERSO[operadoTexto] ?? 'hr_connect',
+        chofer_vehiculo: String(fila[`RUTA_RECLUTAMIENTO_${i}_CHOFER_VEHICULO`] ?? '').trim() || null,
+        contacto_nombre: String(fila[`RUTA_RECLUTAMIENTO_${i}_CONTACTO`] ?? '').trim() || null,
+        ubicacion_maps: String(fila[`RUTA_RECLUTAMIENTO_${i}_MAPS`] ?? '').trim() || null,
+      })
+    }
+    i++
+  }
+  return rutas
+}
+
+// Mismo patrón, para puntos fijos (Opción 3 de la Sección 9). Teléfono
+// de contacto y días quedan solo capturables en el sistema.
+function extraerPuntosReclutamiento(fila: Record<string, any>): {
+  nombre: string; operado_por: string; direccion: string | null; ubicacion_maps: string | null; horario: string | null; contacto_nombre: string | null
+}[] {
+  const puntos: ReturnType<typeof extraerPuntosReclutamiento> = []
+  let i = 1
+  while (fila[`PUNTO_RECLUTAMIENTO_${i}_NOMBRE`] !== undefined) {
+    const nombre = String(fila[`PUNTO_RECLUTAMIENTO_${i}_NOMBRE`] ?? '').trim()
+    if (nombre) {
+      const operadoTexto = String(fila[`PUNTO_RECLUTAMIENTO_${i}_OPERADO_POR`] ?? '').trim().toLowerCase()
+      puntos.push({
+        nombre,
+        operado_por: OPERADO_POR_INVERSO[operadoTexto] ?? 'hr_connect',
+        direccion: String(fila[`PUNTO_RECLUTAMIENTO_${i}_DIRECCION`] ?? '').trim() || null,
+        ubicacion_maps: String(fila[`PUNTO_RECLUTAMIENTO_${i}_MAPS`] ?? '').trim() || null,
+        horario: String(fila[`PUNTO_RECLUTAMIENTO_${i}_HORARIO`] ?? '').trim() || null,
+        contacto_nombre: String(fila[`PUNTO_RECLUTAMIENTO_${i}_CONTACTO_NOMBRE`] ?? '').trim() || null,
+      })
+    }
+    i++
+  }
+  return puntos
+}
+
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData()
@@ -93,6 +144,16 @@ export async function POST(req: NextRequest) {
     const rutasPorNegocio = new Map<string, { nombre: string; paradas: string[] }[]>()
     // Mismo patrón para ubicación de Maps (2026-08-27) — campo de empresa
     const ubicacionMapsPorNegocio = new Map<string, string>()
+    // 7.38 en Excel — rutas/puntos de reclutamiento acumulados por
+    // empresa (última fila gana, mismo criterio que los de arriba).
+    // Distinto de los de arriba: estos son tablas reales, no una
+    // columna que se reemplaza completa — se hace match por nombre
+    // más abajo, no un simple UPDATE.
+    const rutasReclutamientoPorNegocio = new Map<string, ReturnType<typeof extraerRutasReclutamiento>>()
+    const puntosReclutamientoPorNegocio = new Map<string, ReturnType<typeof extraerPuntosReclutamiento>>()
+    // Para poder auto-seleccionar, al final, lo nuevo del catálogo en
+    // cada vacante que se tocó en este import
+    const vacantesTocadas: { id: string; negocioId: string }[] = []
 
     for (let idx = 0; idx < filas.length; idx++) {
       const fila = filas[idx]
@@ -163,6 +224,9 @@ export async function POST(req: NextRequest) {
           estacionamiento: esSiNo(fila['ESTACIONAMIENTO']),
           comedor: esSiNo(fila['COMEDOR']),
           uniforme: esSiNo(fila['UNIFORME']),
+          // 7.38 en Excel — Opción 1 de Sección 9. Vacío = SI (mismo
+          // default que la columna en Supabase).
+          permite_directo_planta: esSiNo(fila['DIRECTO A PLANTA'] ?? 'SI'),
           letras_chiquitas: String(fila['LETRAS CHIQUITAS'] ?? '').trim() || null,
           dias_garantia: diasGarantia,
           comision_base_mxn: comision,
@@ -216,6 +280,16 @@ export async function POST(req: NextRequest) {
           ubicacionMapsPorNegocio.set(negocioId, ubicacionMapsTexto)
         }
 
+        // 7.38 en Excel — rutas/puntos de reclutamiento, mismo patrón
+        const rutasReclutamientoFila = extraerRutasReclutamiento(fila)
+        if (negocioId && rutasReclutamientoFila.length > 0) {
+          rutasReclutamientoPorNegocio.set(negocioId, rutasReclutamientoFila)
+        }
+        const puntosReclutamientoFila = extraerPuntosReclutamiento(fila)
+        if (negocioId && puntosReclutamientoFila.length > 0) {
+          puntosReclutamientoPorNegocio.set(negocioId, puntosReclutamientoFila)
+        }
+
         // CA-08.5: actualizar si ya existe (por ID, o por título+empresa en la misma agencia)
         const idExcel = String(fila['ID'] ?? '').trim()
         let idExistente: string | null = null
@@ -235,14 +309,21 @@ export async function POST(req: NextRequest) {
           if (porTituloEmpresa) idExistente = porTituloEmpresa.id
         }
 
+        let idVacanteFinal: string | null = null
         if (idExistente) {
           const { error: errorUpdate } = await supabase.from('vacantes').update(payload).eq('id', idExistente)
           if (errorUpdate) { errores.push({ fila: numFila, motivo: errorUpdate.message }); continue }
           actualizadas++
+          idVacanteFinal = idExistente
         } else {
-          const { error: errorInsert } = await supabase.from('vacantes').insert(payload)
-          if (errorInsert) { errores.push({ fila: numFila, motivo: errorInsert.message }); continue }
+          const { data: vacanteCreada, error: errorInsert } = await supabase.from('vacantes').insert(payload).select('id').single()
+          if (errorInsert || !vacanteCreada) { errores.push({ fila: numFila, motivo: errorInsert?.message ?? 'No se pudo crear' }); continue }
           creadas++
+          idVacanteFinal = vacanteCreada.id
+        }
+
+        if (idVacanteFinal && negocioId) {
+          vacantesTocadas.push({ id: idVacanteFinal, negocioId })
         }
       } catch (errFila: any) {
         errores.push({ fila: numFila, motivo: errFila?.message ?? 'Error inesperado en esta fila' })
@@ -267,6 +348,89 @@ export async function POST(req: NextRequest) {
     // Ubicación de Maps: aplica las acumuladas, mismo patrón
     for (const [negocioId, ubicacionMaps] of ubicacionMapsPorNegocio) {
       await supabase.from('negocios').update({ ubicacion_maps: ubicacionMaps }).eq('id', negocioId)
+    }
+
+    // 7.38 en Excel — upsert de rutas/puntos de reclutamiento por
+    // empresa, con match por nombre (a diferencia de los de arriba,
+    // estas son tablas reales con relaciones — no se puede solo
+    // reemplazar el array completo). Se recuerda cuáles quedaron
+    // NUEVAS (creadas en este import), para auto-seleccionarlas abajo.
+    const idsNuevasRutasReclPorNegocio = new Map<string, Set<string>>()
+    const idsNuevosPuntosReclPorNegocio = new Map<string, Set<string>>()
+
+    for (const [negocioId, rutas] of rutasReclutamientoPorNegocio) {
+      const { data: existentes } = await supabase
+        .from('rutas_reclutamiento')
+        .select('id, nombre')
+        .eq('negocio_id', negocioId)
+      const mapaExistentes = new Map((existentes ?? []).map(r => [r.nombre.trim(), r.id]))
+      const idsNuevos = new Set<string>()
+
+      for (const r of rutas) {
+        const registro = {
+          negocio_id: negocioId,
+          nombre: r.nombre,
+          operado_por: r.operado_por,
+          chofer_vehiculo: r.chofer_vehiculo,
+          contacto_nombre: r.contacto_nombre,
+          ubicacion_maps: r.ubicacion_maps,
+        }
+        if (mapaExistentes.has(r.nombre)) {
+          await supabase.from('rutas_reclutamiento').update(registro).eq('id', mapaExistentes.get(r.nombre)!)
+        } else {
+          const { data: nueva } = await supabase.from('rutas_reclutamiento').insert(registro).select('id').single()
+          if (nueva) idsNuevos.add(nueva.id)
+        }
+      }
+      idsNuevasRutasReclPorNegocio.set(negocioId, idsNuevos)
+    }
+
+    for (const [negocioId, puntos] of puntosReclutamientoPorNegocio) {
+      const { data: existentes } = await supabase
+        .from('puntos_reclutamiento')
+        .select('id, nombre')
+        .eq('negocio_id', negocioId)
+      const mapaExistentes = new Map((existentes ?? []).map(p => [p.nombre.trim(), p.id]))
+      const idsNuevos = new Set<string>()
+
+      for (const p of puntos) {
+        const registro = {
+          negocio_id: negocioId,
+          nombre: p.nombre,
+          operado_por: p.operado_por,
+          direccion: p.direccion,
+          ubicacion_maps: p.ubicacion_maps,
+          horario: p.horario,
+          contacto_nombre: p.contacto_nombre,
+        }
+        if (mapaExistentes.has(p.nombre)) {
+          await supabase.from('puntos_reclutamiento').update(registro).eq('id', mapaExistentes.get(p.nombre)!)
+        } else {
+          const { data: nuevo } = await supabase.from('puntos_reclutamiento').insert(registro).select('id').single()
+          if (nuevo) idsNuevos.add(nuevo.id)
+        }
+      }
+      idsNuevosPuntosReclPorNegocio.set(negocioId, idsNuevos)
+    }
+
+    // Auto-selecciona lo NUEVO del catálogo (creado en este import) para
+    // cada vacante tocada de la misma empresa — mismo criterio que ya
+    // usa la Sección 9 en el sistema ("lo nuevo se autoselecciona").
+    // No toca selección ya existente (respeta si alguien desmarcó algo
+    // manualmente en el sistema para una vacante específica).
+    for (const { id: vacanteId, negocioId } of vacantesTocadas) {
+      const idsNuevasRutas = idsNuevasRutasReclPorNegocio.get(negocioId)
+      if (idsNuevasRutas && idsNuevasRutas.size > 0) {
+        await supabase.from('vacante_ruta_reclutamiento').insert(
+          [...idsNuevasRutas].map(ruta_id => ({ vacante_id: vacanteId, ruta_id }))
+        )
+      }
+      const idsNuevosPuntos = idsNuevosPuntosReclPorNegocio.get(negocioId)
+      if (idsNuevosPuntos && idsNuevosPuntos.size > 0) {
+        await supabase.from('vacante_punto_reclutamiento').insert(
+          [...idsNuevosPuntos].map(punto_id => ({ vacante_id: vacanteId, punto_id }))
+        )
+      }
     }
 
     return NextResponse.json({ ok: true, creadas, actualizadas, errores })

@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 interface Vacante {
   id: string
   titulo: string
@@ -67,9 +69,17 @@ export default function VacanteCard({ vacante, seleccionada, onClick }: Props) {
   const publicadaTexto = diasPublicada === 0 ? 'Hoy' : diasPublicada === 1 ? 'Ayer' : `Hace ${diasPublicada} días`
 
   return (
-    <div
-      onClick={onClick}
-      className={`p-4 rounded-2xl border cursor-pointer transition-all ${
+    // 7.26 — antes era un <div onClick>, invisible para Google (nunca
+    // hay un link real a /vacante/[id] en ningún lado del sitio). Ahora
+    // es un <Link> real: los rastreadores lo siguen normal, pero al
+    // humano el clic izquierdo normal le sigue abriendo el modal de
+    // siempre (preventDefault bloquea la navegación de Next.js). Ctrl+clic,
+    // clic central, o "abrir en pestaña nueva" siguen funcionando, porque
+    // los navegadores no dejan que preventDefault() los bloquee.
+    <Link
+      href={`/vacante/${vacante.id}`}
+      onClick={e => { e.preventDefault(); onClick() }}
+      className={`block p-4 rounded-2xl border cursor-pointer transition-all ${
         seleccionada
           ? 'bg-blue-50/60 border-[#0F52BA] ring-1 ring-[#0F52BA]/15'
           : 'bg-white border-gray-100 hover:border-gray-200 hover:shadow-[0_2px_12px_rgba(0,0,0,0.06)]'
@@ -124,6 +134,6 @@ export default function VacanteCard({ vacante, seleccionada, onClick }: Props) {
           🏢 {NOMBRES_MODALIDAD[vacante.modalidad] ?? vacante.modalidad}
         </span>
       </div>
-    </div>
+    </Link>
   )
 }

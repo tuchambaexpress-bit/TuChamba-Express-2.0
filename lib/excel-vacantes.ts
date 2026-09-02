@@ -26,6 +26,15 @@ export const COLUMNAS_TRONCO_COMUN = [
   'ACTA DE NACIMIENTO', 'RETENCIÓN INFONAVIT', 'COMPROBANTE DE ESTUDIOS',
 ]
 
+// 7.38 en Excel (2026-09-01) — "Operado por" de rutas/puntos de
+// reclutamiento: en la base de datos son 'hr_connect'/'empresa', en el
+// Excel se leen/escriben como "Agencia"/"Empresa" (más claro para
+// Roxana que "hr_connect").
+export const NOMBRES_OPERADO_POR: Record<string, string> = { hr_connect: 'Agencia', empresa: 'Empresa' }
+export const OPERADO_POR_INVERSO: Record<string, string> = Object.fromEntries(
+  Object.entries(NOMBRES_OPERADO_POR).map(([k, v]) => [v.toLowerCase(), k])
+)
+
 export const NOMBRES_JORNADA: Record<string, string> = {
   completo: 'Tiempo completo', medio: 'Medio tiempo', proyecto: 'Por proyecto', fines: 'Fines de semana'
 }
@@ -120,6 +129,7 @@ export const COLUMNAS_FIJAS = [
   'JORNADA', 'TURNO', 'HORARIO',
   'DESCRIPCIÓN', 'ETIQUETAS',
   'RUTA', 'RUTA PARA ENTREVISTA', 'ESTACIONAMIENTO', 'COMEDOR', 'UNIFORME',
+  'DIRECTO A PLANTA',
   'LETRAS CHIQUITAS',
   'DÍAS DE GARANTÍA', 'COMISIÓN',
   'TIENE PROMOCIÓN', 'DESCRIPCIÓN PROMOCIÓN', 'MONTO PROMOCIÓN', 'VENCE PROMOCIÓN',
@@ -158,6 +168,7 @@ export const INSTRUCCIONES: { columna: string; campoSistema: string; descripcion
   { columna: 'BENEFICIO_1, BENEFICIO_2...', campoSistema: 'Sección 4 — Beneficios', descripcion: 'Un beneficio por columna, mismo patrón que Requisitos.', ejemplo: 'Vales de despensa' },
   { columna: 'RUTA', campoSistema: 'Sección 5 — ¿Tiene ruta?', descripcion: 'SI o NO.', ejemplo: 'SI' },
   { columna: 'RUTA PARA ENTREVISTA', campoSistema: 'Sección 5 — Ruta para entrevista', descripcion: 'SI o NO.', ejemplo: 'NO' },
+  { columna: 'DIRECTO A PLANTA', campoSistema: 'Sección 9 — Opción 1: Directo a planta', descripcion: 'SI = el candidato puede presentarse por su cuenta, sin ruta ni punto de reclutamiento. NO = esta empresa lo prohíbe. Si lo dejas vacío, se asume SI.', ejemplo: 'SI' },
   { columna: 'ESTACIONAMIENTO', campoSistema: 'Sección 5 — Estacionamiento', descripcion: 'SI o NO.', ejemplo: 'SI' },
   { columna: 'COMEDOR', campoSistema: 'Sección 5 — Comedor', descripcion: 'SI o NO.', ejemplo: 'SI' },
   { columna: 'UNIFORME', campoSistema: 'Sección 5 — Uniforme', descripcion: 'SI o NO.', ejemplo: 'NO' },
@@ -189,6 +200,17 @@ export const INSTRUCCIONES: { columna: string; campoSistema: string; descripcion
   { columna: 'DÍAS DE ENTREVISTA EMPRESA', campoSistema: '(campo de la EMPRESA, no de la vacante)', descripcion: 'Días en que la empresa RECIBE candidatos a entrevista. Distinto de "Días de descanso" (ese afecta la garantía, este bloquea agendar). Mismo formato: abreviaturas de 3 letras separadas por coma (LUN, MAR, MIE, JUE, VIE, SAB, DOM). Aplica a TODAS las vacantes de esa empresa — si la misma EMPRESA aparece en varias filas con valores distintos, gana el de la última fila. Vacío = sin restricción configurada.', ejemplo: 'LUN, MIE, VIE' },
   { columna: 'RUTA_1_NOMBRE, RUTA_2_NOMBRE...', campoSistema: '(campo de la EMPRESA, no de la vacante)', descripcion: 'Nombre de cada ruta de transporte de la empresa. Agrega tantos pares RUTA_N_NOMBRE/RUTA_N_PARADAS como rutas tenga — el sistema los detecta automáticamente. Solo aplica si RUTA = SI. Aplica a TODAS las vacantes de esa empresa — si la misma EMPRESA aparece en varias filas con valores distintos, gana el de la última fila.', ejemplo: 'Ruta Norte' },
   { columna: 'RUTA_1_PARADAS, RUTA_2_PARADAS...', campoSistema: '(campo de la EMPRESA, no de la vacante)', descripcion: 'Paradas de esa ruta específica, separadas por coma dentro de la misma celda. Debe venir en pareja con su RUTA_N_NOMBRE correspondiente (mismo número N).', ejemplo: 'Apodaca, Escobedo, Guadalupe' },
+  { columna: 'RUTA_RECLUTAMIENTO_1_NOMBRE, _2_NOMBRE...', campoSistema: 'Sección 9 — Opción 2: Ruta especializada (catálogo de la EMPRESA)', descripcion: 'Nombre de cada ruta especializada con chofer, para llevar candidatos a entrevista (distinta de RUTA_N, que es transporte de trabajadores ya contratados). Agrega tantos pares RUTA_RECLUTAMIENTO_N_* como rutas tenga la empresa. Se auto-selecciona para todas las vacantes de esa empresa al importar — desmárcala manualmente en el sistema si alguna vacante es la excepción. Paradas y días de la semana se capturan solo en el sistema (Sección 9), no por Excel.', ejemplo: 'Nuevo Recorrido Lunes a Jueves' },
+  { columna: 'RUTA_RECLUTAMIENTO_1_OPERADO_POR, _2_OPERADO_POR...', campoSistema: 'Sección 9 — Opción 2', descripcion: 'Agencia o Empresa — quién opera esa ruta.', ejemplo: 'Agencia' },
+  { columna: 'RUTA_RECLUTAMIENTO_1_CHOFER_VEHICULO, _2_...', campoSistema: 'Sección 9 — Opción 2', descripcion: 'Nombre del chofer y descripción del vehículo. Opcional.', ejemplo: 'Rodrigo, Aveo rojo' },
+  { columna: 'RUTA_RECLUTAMIENTO_1_CONTACTO, _2_...', campoSistema: 'Sección 9 — Opción 2', descripcion: 'Con quién presentarse. Opcional.', ejemplo: 'Lic. Lizbeth' },
+  { columna: 'RUTA_RECLUTAMIENTO_1_MAPS, _2_...', campoSistema: 'Sección 9 — Opción 2', descripcion: 'Link de Google Maps. Opcional.', ejemplo: 'https://maps.app.goo.gl/...' },
+  { columna: 'PUNTO_RECLUTAMIENTO_1_NOMBRE, _2_NOMBRE...', campoSistema: 'Sección 9 — Opción 3: Oficina/punto fijo (catálogo de la EMPRESA)', descripcion: 'Nombre de cada punto fijo donde se recibe candidatos (oficina de la agencia, carpa, o punto propio de la empresa). Agrega tantos pares PUNTO_RECLUTAMIENTO_N_* como puntos tenga la empresa. Se auto-selecciona para todas las vacantes de esa empresa al importar. Teléfono de contacto y días de la semana se capturan solo en el sistema (Sección 9), no por Excel.', ejemplo: 'Teatro de la Ciudad' },
+  { columna: 'PUNTO_RECLUTAMIENTO_1_OPERADO_POR, _2_...', campoSistema: 'Sección 9 — Opción 3', descripcion: 'Agencia o Empresa — quién opera ese punto.', ejemplo: 'Empresa' },
+  { columna: 'PUNTO_RECLUTAMIENTO_1_DIRECCION, _2_...', campoSistema: 'Sección 9 — Opción 3', descripcion: 'Dirección del punto. Opcional.', ejemplo: 'Av. Manuel L. Barragán 4530, García' },
+  { columna: 'PUNTO_RECLUTAMIENTO_1_MAPS, _2_...', campoSistema: 'Sección 9 — Opción 3', descripcion: 'Link de Google Maps. Opcional.', ejemplo: 'https://maps.app.goo.gl/...' },
+  { columna: 'PUNTO_RECLUTAMIENTO_1_HORARIO, _2_...', campoSistema: 'Sección 9 — Opción 3', descripcion: 'Horario en que se recibe candidatos ahí. Opcional.', ejemplo: 'Lunes a viernes 7:30am' },
+  { columna: 'PUNTO_RECLUTAMIENTO_1_CONTACTO_NOMBRE, _2_...', campoSistema: 'Sección 9 — Opción 3', descripcion: 'Con quién presentarse. Opcional.', ejemplo: 'Karina' },
   { columna: 'CUPO REQUERIDO', campoSistema: 'Sección 7 — Cupo requerido', descripcion: 'Cuántas personas necesita la empresa para esta vacante. Cuando se cubre, la vacante se pausa sola. Número entero. Si se deja vacío, se asume 1.', ejemplo: '3' },
   { columna: 'UBICACIÓN MAPS EMPRESA', campoSistema: '(campo de la EMPRESA, no de la vacante)', descripcion: 'Link de Google Maps de la empresa/fábrica. Solo lo ve el reclutador en su ficha de la vacante — el candidato nunca lo ve. Aplica a TODAS las vacantes de esa empresa — si la misma EMPRESA aparece en varias filas con valores distintos, gana el de la última fila.', ejemplo: 'https://maps.app.goo.gl/...' },
   { columna: 'ESTATUS', campoSistema: 'Vigente/No vigente (toggle Sección 8)', descripcion: 'Vigente o No vigente.', ejemplo: 'Vigente' },

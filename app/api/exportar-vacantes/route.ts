@@ -4,7 +4,7 @@ import * as XLSX from 'xlsx'
 import {
   NOMBRES_JORNADA, NOMBRES_MODALIDAD, NOMBRES_SALARIO_TIPO, NOMBRES_PERIODO,
   generarHojaInstrucciones, formatearDiasDescanso,
-  DOCUMENTOS_TRONCO_COMUN, COLUMNAS_TRONCO_COMUN,
+  DOCUMENTOS_TRONCO_COMUN, COLUMNAS_TRONCO_COMUN, NOMBRES_OPERADO_POR,
 } from '@/lib/excel-vacantes'
 
 function getServiceClient() {
@@ -41,6 +41,7 @@ export async function GET(req: NextRequest) {
         jornada, turno, horario,
         descripcion, tags, requisitos, beneficios,
         tiene_ruta, zonas_ruta, ruta_para_entrevista, estacionamiento, comedor, uniforme,
+        permite_directo_planta,
         letras_chiquitas,
         dias_garantia, comision_base_mxn,
         tiene_promocion, promocion_descripcion, promocion_monto_mxn, promocion_fin,
@@ -59,6 +60,33 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
+    // 7.38 en Excel — catálogo de rutas/puntos de reclutamiento, por
+    // negocio. Se trae aparte (no viene embebido en el select de arriba
+    // porque son tablas propias sin FK directa desde vacantes) y se
+    // arma un mapa por negocio_id para usarlo abajo.
+    const { data: vacantesConNegocioId } = await supabase.from('vacantes').select('id, negocio_id').eq('agencia_id', agenciaId)
+    const mapaVacanteNegocio = new Map((vacantesConNegocioId ?? []).map((v: any) => [v.id, v.negocio_id]))
+
+    const idsNegociosReales = [...new Set([...mapaVacanteNegocio.values()].filter(Boolean))]
+
+    const { data: rutasReclData } = idsNegociosReales.length > 0
+      ? await supabase.from('rutas_reclutamiento').select('*').in('negocio_id', idsNegociosReales).order('created_at')
+      : { data: [] }
+    const { data: puntosReclData } = idsNegociosReales.length > 0
+      ? await supabase.from('puntos_reclutamiento').select('*').in('negocio_id', idsNegociosReales).order('created_at')
+      : { data: [] }
+
+    const rutasReclPorNegocio = new Map<string, any[]>()
+    for (const r of rutasReclData ?? []) {
+      if (!rutasReclPorNegocio.has(r.negocio_id)) rutasReclPorNegocio.set(r.negocio_id, [])
+      rutasReclPorNegocio.get(r.negocio_id)!.push(r)
+    }
+    const puntosReclPorNegocio = new Map<string, any[]>()
+    for (const p of puntosReclData ?? []) {
+      if (!puntosReclPorNegocio.has(p.negocio_id)) puntosReclPorNegocio.set(p.negocio_id, [])
+      puntosReclPorNegocio.get(p.negocio_id)!.push(p)
+    }
+
     const maxRequisitos = Math.max(1, ...(vacantes ?? []).map((v: any) => (v.requisitos ?? []).length))
     const maxBeneficios = Math.max(1, ...(vacantes ?? []).map((v: any) => (v.beneficios ?? []).length))
     // Documentos (2026-08-30): DOCUMENTO_N solo exporta los EXTRA, no los
@@ -67,8 +95,15 @@ export async function GET(req: NextRequest) {
       (v.documentos_requeridos ?? []).filter((d: string) => !DOCUMENTOS_TRONCO_COMUN.includes(d)).length
     ))
     const maxRutas = Math.max(1, ...(vacantes ?? []).map((v: any) => (v.negocios?.rutas ?? []).length))
+    // 7.38 en Excel — máximos por empresa, para columnas RUTA_RECLUTAMIENTO_N/PUNTO_RECLUTAMIENTO_N
+    const maxRutasRecl = Math.max(1, ...(vacantes ?? []).map((v: any) => (rutasReclPorNegocio.get(mapaVacanteNegocio.get(v.id)) ?? []).length))
+    const maxPuntosRecl = Math.max(1, ...(vacantes ?? []).map((v: any) => (puntosReclPorNegocio.get(mapaVacanteNegocio.get(v.id)) ?? []).length))
 
     const filas = (vacantes ?? []).map((v: any) => {
+      const negocioIdDeEsta = mapaVacanteNegocio.get(v.id)
+      const rutasReclEmpresa = negocioIdDeEsta ? (rutasReclPorNegocio.get(negocioIdDeEsta) ?? []) : []
+      const puntosReclEmpresa = negocioIdDeEsta ? (puntosReclPorNegocio.get(negocioIdDeEsta) ?? []) : []
+
       const fila: Record<string, any> = {
         ID: v.id,
         FECHA: formatearFecha(v.fecha_publicacion),
@@ -92,20 +127,22 @@ export async function GET(req: NextRequest) {
         ETIQUETAS: Array.isArray(v.tags) ? v.tags.join(', ') : '',
       }
 
+      // Layout reordenado a pedido de José (2026-09-01) para no
+      // confundir RUTA PARA ENTREVISTA (Opción 4) con DIRECTO A PLANTA
+      // (Opción 1) — quedan separadas, cada una junto a lo que sí se
+      // relaciona con ella.
       for (let i = 0; i < maxRequisitos; i++) {
         fila[`REQUISITO_${i + 1}`] = v.requisitos?.[i] ?? ''
       }
       for (let i = 0; i < maxBeneficios; i++) {
         fila[`BENEFICIO_${i + 1}`] = v.beneficios?.[i] ?? ''
       }
-      // Documentos extra (no tronco común) en las columnas dinámicas
       const documentosExtra = (v.documentos_requeridos ?? []).filter((d: string) => !DOCUMENTOS_TRONCO_COMUN.includes(d))
       for (let i = 0; i < maxDocumentos; i++) {
         fila[`DOCUMENTO_${i + 1}`] = documentosExtra[i] ?? ''
       }
 
       fila['RUTA'] = v.tiene_ruta ? 'SI' : 'NO'
-      fila['RUTA PARA ENTREVISTA'] = v.ruta_para_entrevista ? 'SI' : 'NO'
       fila['ESTACIONAMIENTO'] = v.estacionamiento ? 'SI' : 'NO'
       fila['COMEDOR'] = v.comedor ? 'SI' : 'NO'
       fila['UNIFORME'] = v.uniforme ? 'SI' : 'NO'
@@ -122,11 +159,12 @@ export async function GET(req: NextRequest) {
       fila['CONTACTO RRHH NOMBRE'] = v.contacto_rrhh_nombre ?? ''
       fila['CONTACTO RRHH TELÉFONO'] = v.contacto_rrhh_telefono ?? ''
       fila['MEJOR HORARIO CONTACTO'] = v.mejor_horario_contacto ?? ''
-      // Documentos de tronco común (2026-08-30): 8 columnas fijas SI/NO,
-      // una por cada documento — reemplaza el texto libre de antes
+
+      // Documentos de tronco común: 8 columnas fijas SI/NO
       DOCUMENTOS_TRONCO_COMUN.forEach((nombreCompleto, i) => {
         fila[COLUMNAS_TRONCO_COMUN[i]] = (v.documentos_requeridos ?? []).includes(nombreCompleto) ? 'SI' : 'NO'
       })
+
       fila['PUNTO DE REUNIÓN'] = v.punto_reunion ?? ''
       fila['QUÉ DECIRLE AL CANDIDATO'] = v.guion_candidato ?? ''
       fila['COMENTARIOS SALARIO'] = v.comentarios_salario ?? ''
@@ -135,15 +173,41 @@ export async function GET(req: NextRequest) {
       fila['CUPO REQUERIDO'] = v.cupo_requerido ?? 1
       fila['DÍAS DE DESCANSO EMPRESA'] = formatearDiasDescanso(v.negocios?.dias_descanso)
       fila['DÍAS DE ENTREVISTA EMPRESA'] = formatearDiasDescanso(v.negocios?.dias_entrevista)
-      // Rutas con nombre: exporta pares RUTA_N_NOMBRE/RUTA_N_PARADAS.
-      // Se garantiza al menos 1 par (aunque esté vacío), mismo criterio
-      // que Requisitos/Beneficios/Documentos.
+
+      // Rutas con nombre (transporte de trabajadores): pares NOMBRE/PARADAS
       const rutasEmpresa = v.negocios?.rutas ?? []
       for (let i = 0; i < maxRutas; i++) {
         fila[`RUTA_${i + 1}_NOMBRE`] = rutasEmpresa[i]?.nombre ?? ''
         fila[`RUTA_${i + 1}_PARADAS`] = Array.isArray(rutasEmpresa[i]?.paradas) ? rutasEmpresa[i].paradas.join(', ') : ''
       }
+
       fila['UBICACIÓN MAPS EMPRESA'] = v.negocios?.ubicacion_maps ?? ''
+
+      // 7.38 en Excel — Opción 1 (directo a planta) y catálogo de
+      // Opciones 2/3 (rutas y puntos de reclutamiento), todo junto
+      fila['DIRECTO A PLANTA'] = v.permite_directo_planta === false ? 'NO' : 'SI'
+
+      for (let i = 0; i < maxRutasRecl; i++) {
+        const r = rutasReclEmpresa[i]
+        fila[`RUTA_RECLUTAMIENTO_${i + 1}_NOMBRE`] = r?.nombre ?? ''
+        fila[`RUTA_RECLUTAMIENTO_${i + 1}_OPERADO_POR`] = r ? (NOMBRES_OPERADO_POR[r.operado_por] ?? '') : ''
+        fila[`RUTA_RECLUTAMIENTO_${i + 1}_CHOFER_VEHICULO`] = r?.chofer_vehiculo ?? ''
+        fila[`RUTA_RECLUTAMIENTO_${i + 1}_CONTACTO`] = r?.contacto_nombre ?? ''
+        fila[`RUTA_RECLUTAMIENTO_${i + 1}_MAPS`] = r?.ubicacion_maps ?? ''
+      }
+      for (let i = 0; i < maxPuntosRecl; i++) {
+        const p = puntosReclEmpresa[i]
+        fila[`PUNTO_RECLUTAMIENTO_${i + 1}_NOMBRE`] = p?.nombre ?? ''
+        fila[`PUNTO_RECLUTAMIENTO_${i + 1}_OPERADO_POR`] = p ? (NOMBRES_OPERADO_POR[p.operado_por] ?? '') : ''
+        fila[`PUNTO_RECLUTAMIENTO_${i + 1}_DIRECCION`] = p?.direccion ?? ''
+        fila[`PUNTO_RECLUTAMIENTO_${i + 1}_MAPS`] = p?.ubicacion_maps ?? ''
+        fila[`PUNTO_RECLUTAMIENTO_${i + 1}_HORARIO`] = p?.horario ?? ''
+        fila[`PUNTO_RECLUTAMIENTO_${i + 1}_CONTACTO_NOMBRE`] = p?.contacto_nombre ?? ''
+      }
+
+      // Opción 4 (transporte de la empresa) — al final, para no
+      // confundirla con "Directo a planta" (José, 2026-09-01)
+      fila['RUTA PARA ENTREVISTA'] = v.ruta_para_entrevista ? 'SI' : 'NO'
       fila['ESTATUS'] = v.status === 'vigente' ? 'Vigente' : v.status === 'pausada' ? 'Pausada' : 'Cerrada'
 
       return fila
