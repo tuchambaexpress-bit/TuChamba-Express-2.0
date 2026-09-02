@@ -8,9 +8,6 @@ import SaludMarketplace from '@/components/admin/SaludMarketplace'
 export const revalidate = 0 // siempre datos frescos, nunca cacheado
 
 export default async function AdminHome() {
-  // Identificamos al admin vía su sesión real de Supabase Auth (misma
-  // cookie que ya valida middleware.ts) — no vía service_role_key, esa
-  // llave no tiene sesión de usuario, solo permisos elevados de servidor.
   const cookieStore = cookies()
   const supabaseAuth = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -19,8 +16,6 @@ export default async function AdminHome() {
   )
   const { data: { user } } = await supabaseAuth.auth.getUser()
 
-  // Para las consultas de datos sí usamos service_role_key, mismo patrón
-  // ya usado en app/admin/solicitudes/page.tsx.
   const supabase = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -46,10 +41,6 @@ export default async function AdminHome() {
     supabase.from('agencias').select('*', { count: 'exact', head: true }).eq('status', 'pendiente_aprobacion'),
   ])
 
-  // 7.2 redefinida (2026-08-23) — Salud del Marketplace: métricas de negocio
-  // de la plataforma en sí, no de reclutamiento (eso vive en 4.12d, por
-  // coordinador/reclutador). Confirmado con José: se agrega como sección al
-  // Panel de Control, no como pantalla aparte.
   const { data: todasAgencias } = await supabase
     .from('agencias')
     .select('id, status, created_at, aprobado_at')
@@ -65,9 +56,17 @@ export default async function AdminHome() {
 
   const comisionesTotales = (comisionesPagadas ?? []).reduce((s, p) => s + (p.comision_aplicada_mxn ?? 0), 0)
 
-  // Tasa de activación: de las agencias que llegaron a existir de verdad
-  // (activa o inactiva — no pendientes ni rechazadas), ¿cuántas publicaron
-  // al menos una vacante alguna vez?
+  // 7.39 — visitas reales al portal, mes en curso, toda la plataforma.
+  // tipo_evento puede venir null en registros viejos de antes de 7.43
+  // (cuando esa columna no existía) — se trata como 'visita' igual que
+  // ya hace el dashboard del reclutador, para no perder ese historial.
+  const inicioMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
+  const { data: traficoMes } = await supabase
+    .from('trafico_referidos')
+    .select('tipo_evento')
+    .gte('created_at', inicioMes)
+  const visitasEsteMes = (traficoMes ?? []).filter(t => (t.tipo_evento ?? 'visita') === 'visita').length
+
   const agenciasConsideradas = (todasAgencias ?? []).filter(a => a.status === 'activa' || a.status === 'inactiva')
   const idsConVacante = new Set((todasVacantes ?? []).map(v => v.agencia_id))
   const agenciasActivadas = agenciasConsideradas.filter(a => idsConVacante.has(a.id))
@@ -75,8 +74,6 @@ export default async function AdminHome() {
     ? Math.round((agenciasActivadas.length / agenciasConsideradas.length) * 100)
     : 0
 
-  // Agencias "dormidas": activas hoy, pero sin ninguna vacante publicada en
-  // los últimos 30 días (o nunca publicaron nada)
   const hace30 = new Date()
   hace30.setDate(hace30.getDate() - 30)
   const ultimaVacantePorAgencia = new Map<string, string>()
@@ -91,7 +88,6 @@ export default async function AdminHome() {
     return new Date(ultima) < hace30
   }).length
 
-  // Últimos 6 meses, para las 2 gráficas de crecimiento
   function ultimosMeses(n: number) {
     const meses = []
     const hoy = new Date()
@@ -147,7 +143,6 @@ export default async function AdminHome() {
         }}
       />
 
-      {/* Barra superior */}
       <header className="relative flex-shrink-0 border-b border-[#1E2330] bg-[#0F1116]/80 backdrop-blur px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -183,7 +178,6 @@ export default async function AdminHome() {
 
       <div className="relative flex-1 min-h-0 max-w-[1600px] w-full mx-auto px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 h-full">
-          {/* Menú lateral de módulos — scroll propio */}
           <div className="min-h-0 overflow-y-auto pr-2">
             <p className="text-[11px] text-[#5B6478] uppercase tracking-[0.2em] mb-3" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
               Módulos disponibles
@@ -215,7 +209,6 @@ export default async function AdminHome() {
                 </Link>
               ))}
 
-              {/* Placeholders de los módulos que siguen en el desglose de Sprint 7 */}
               {['Bitácora'].map(nombre => (
                 <div
                   key={nombre}
@@ -235,9 +228,7 @@ export default async function AdminHome() {
             </div>
           </div>
 
-          {/* Contenido principal — scroll propio, independiente del menú */}
           <div className="min-h-0 overflow-y-auto pr-2">
-            {/* Grid de telemetría */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-12">
               {stats.map(s => (
                 <div
@@ -259,6 +250,7 @@ export default async function AdminHome() {
               tasaActivacion={tasaActivacion}
               comisionesTotales={comisionesTotales}
               agenciasDurmientes={agenciasDurmientes}
+              visitasEsteMes={visitasEsteMes}
               agenciasPorMes={agenciasPorMes}
               vacantesPorMes={vacantesPorMes}
             />

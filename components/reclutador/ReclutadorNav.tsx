@@ -19,6 +19,7 @@ const LINKS: NavLink[] = [
   { href: '/reclutador/dashboard', label: 'Dashboard' },
   { href: '/reclutador/pipeline', label: 'Pipeline' },
   { href: '/reclutador/vacantes', label: 'Vacantes' },
+  { href: '/reclutador/trafico', label: '📈 Tráfico' },
   { href: '/reclutador/chats', label: 'Chats', badgeKey: 'chats' },
   { href: '/reclutador/comisiones', label: 'Comisiones' },
   { href: '/reclutador/chat-coordinador', label: 'Coordinador' },

@@ -9,6 +9,7 @@ interface Props {
   tasaActivacion: number
   comisionesTotales: number
   agenciasDurmientes: number
+  visitasEsteMes: number
   agenciasPorMes: { mes: string; agencias: number }[]
   vacantesPorMes: { mes: string; vacantes: number }[]
 }
@@ -17,6 +18,7 @@ export default function SaludMarketplace({
   tasaActivacion,
   comisionesTotales,
   agenciasDurmientes,
+  visitasEsteMes,
   agenciasPorMes,
   vacantesPorMes,
 }: Props) {
@@ -26,8 +28,8 @@ export default function SaludMarketplace({
         🏥 Salud del Marketplace
       </p>
 
-      {/* 3 tarjetas de estadística */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
+      {/* 4 tarjetas de estadística */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-5">
         <div
           className="bg-[#12151C] border border-[#1E2330] p-7"
           style={{ clipPath: 'polygon(0 10px, 10px 0, 100% 0, 100% 100%, 0 100%)' }}
@@ -70,6 +72,24 @@ export default function SaludMarketplace({
           </p>
           <p className="text-xs text-[#5B6478] mt-2" style={mono}>
             activas, pero sin publicar ninguna vacante nueva
+          </p>
+        </div>
+
+        {/* 7.39 — visitas reales al portal, toda la plataforma, mes en
+            curso (no % de distribución como la dona de 6.5, un número
+            real como José pidió) */}
+        <div
+          className="bg-[#12151C] border border-[#1E2330] p-7"
+          style={{ clipPath: 'polygon(0 10px, 10px 0, 100% 0, 100% 100%, 0 100%)' }}
+        >
+          <p className="text-[11px] text-[#5B6478] uppercase tracking-[0.15em] mb-3" style={mono}>
+            Visitas al portal, este mes
+          </p>
+          <p className="text-4xl text-[#00D9FF]" style={{ ...mono, fontWeight: 500 }}>
+            {visitasEsteMes.toLocaleString('es-MX')}
+          </p>
+          <p className="text-xs text-[#5B6478] mt-2" style={mono}>
+            toda la plataforma, todas las agencias
           </p>
         </div>
       </div>
