@@ -191,9 +191,6 @@ export default function PipelineCoordinador() {
                             <KanbanCardSoloLectura
                               key={p.id}
                               postulacion={p}
-                              coordinadorId={sesion.id}
-                              reclutadorId={reclutadorSeleccionado.id}
-                              onMovidoAInduccion={() => verPipeline(reclutadorSeleccionado)}
                             />
                           ))}
                           {postulacionesEtapa.length === 0 && (
