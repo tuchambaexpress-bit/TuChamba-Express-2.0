@@ -9,6 +9,7 @@ import { useTrafico } from '@/hooks/useTrafico'
 import { registrarEventoTrafico } from '@/hooks/useTrafico'
 import { createClient } from '@/lib/supabase/client'
 import DebugRefIndicator from './DebugRefIndicator'
+import RedesSocialesFooter from '@/components/shared/RedesSocialesFooter'
 
 interface Vacante {
   id: string
@@ -173,8 +174,12 @@ export default function VacantesPortal({ vacantes: vacantesIniciales }: Props) {
   return (
     <div className="min-h-screen bg-gray-50">
 
-      {/* Header verde Nuevo León */}
-      <header className="bg-[#1A6B3C] px-4 py-4 sticky top-0 z-10 shadow-md">
+      {/* Header verde Nuevo León — sin sticky a propósito: el layout de
+          abajo usa h-[calc(100vh-110px)] con scroll interno propio en
+          cada columna, así que la página en sí nunca hace scroll real
+          — sticky no tenía nada que hacer aquí (mismo hallazgo que
+          KanbanColumn.tsx, "ya vive fuera de cualquier scroll"). */}
+      <header className="bg-[#1A6B3C] px-4 py-4 shadow-md">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between gap-3 mb-3">
             <div className="flex items-center gap-3">
@@ -349,15 +354,7 @@ export default function VacantesPortal({ vacantes: vacantesIniciales }: Props) {
               2026-08-24) */}
           <div className="text-center md:col-start-2">
             <div className="flex items-center justify-center gap-4 mb-2">
-              <a
-                href="https://www.facebook.com/tuchambaexpressoficial"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-500 hover:text-[#1A6B3C] text-sm flex items-center gap-1.5"
-              >
-                <img src="/fb_icon.png" alt="" className="h-7 w-8 object-contain" />
-                Facebook
-              </a>
+              <RedesSocialesFooter />
               <span className="text-gray-300">·</span>
               <a href="/aviso-de-privacidad" className="text-gray-500 hover:text-[#1A6B3C] text-sm underline">
                 Aviso de Privacidad
@@ -371,12 +368,16 @@ export default function VacantesPortal({ vacantes: vacantesIniciales }: Props) {
         </div>
       </footer>
 
-      {/* Modal — solo móvil */}
+      {/* Modal — solo móvil. Reestructurado con flexbox (José, 2026-09-02):
+          antes el encabezado vivía DENTRO del contenedor con scroll
+          (sticky como hijo, no hermano) — ahora es hermano del área que
+          sí hace scroll, mismo patrón que ya se usa en el resto del
+          proyecto, sin depender de sticky en absoluto. */}
       {modalAbierto && seleccionada && (
         <div className="fixed inset-0 z-50 md:hidden">
           <div className="absolute inset-0 bg-black/50" onClick={cerrarModal} />
-          <div className="absolute inset-x-0 bottom-0 top-16 bg-white rounded-t-2xl overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between">
+          <div className="absolute inset-x-0 bottom-0 top-16 bg-white rounded-t-2xl flex flex-col overflow-hidden">
+            <div className="bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between flex-shrink-0">
               <h2 className="font-semibold text-gray-800 text-sm truncate pr-4">
                 {seleccionada.titulo}
               </h2>
@@ -387,7 +388,9 @@ export default function VacantesPortal({ vacantes: vacantesIniciales }: Props) {
                 ✕
               </button>
             </div>
-            <VacanteDetalle vacante={seleccionada} onClose={cerrarModal} esModal={true} />
+            <div className="flex-1 overflow-y-auto">
+              <VacanteDetalle vacante={seleccionada} onClose={cerrarModal} esModal={true} />
+            </div>
           </div>
         </div>
       )}

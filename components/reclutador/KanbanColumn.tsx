@@ -25,8 +25,11 @@ const COLORES_ETAPA: Record<string, string> = {
 export default function KanbanColumn({ etapa, postulaciones, todasPostulaciones, onActualizarEtapa, reclutadorId, candidatosConHistorial }: Props) {
   return (
     <div className="w-72 flex-shrink-0 h-full flex flex-col">
-      {/* Header de columna — sticky */}
-      <div className="flex items-center gap-2 mb-3 sticky top-0 bg-gray-50 py-2 z-10 flex-shrink-0">
+      {/* Header de columna — ya vive fuera del área con scroll por
+          estructura (hermano de la lista, no dentro de ella), así que
+          no necesita sticky — mismo hallazgo que ya se hizo en
+          PipelineCoordinador (7.44/limpieza posterior) */}
+      <div className="flex items-center gap-2 mb-3 bg-gray-50 py-2 flex-shrink-0">
         <span className={`text-xs font-semibold px-2 py-1 rounded-full ${COLORES_ETAPA[etapa] ?? 'bg-gray-100 text-gray-700'}`}>
           {etapa === 'Descartado' ? 'Descartados' : etapa}
         </span>

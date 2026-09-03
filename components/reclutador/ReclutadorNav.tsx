@@ -133,6 +133,9 @@ export default function ReclutadorNav({ titulo = 'Tu Chamba Express', subtitulo 
               )}
             </a>
           ))}
+          <a href="/reclutador/perfil" className="text-green-200 hover:text-white text-sm">
+            👤 Perfil
+          </a>
           <button onClick={cerrarSesion} className="text-green-200 hover:text-white text-sm">
             Cerrar sesión
           </button>
@@ -174,6 +177,13 @@ export default function ReclutadorNav({ titulo = 'Tu Chamba Express', subtitulo 
                 )}
               </a>
             ))}
+            <a
+              href="/reclutador/perfil"
+              onClick={() => setMenuAbierto(false)}
+              className="text-left text-green-100 hover:text-white text-sm py-3 border-b border-white/10"
+            >
+              👤 Perfil
+            </a>
             <button
               onClick={cerrarSesion}
               className="text-left text-green-100 hover:text-white text-sm py-3"

@@ -616,8 +616,8 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-xl">
-        <div className="sticky top-0 bg-white flex items-center justify-between p-4 border-b border-gray-100 z-10">
+      <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden shadow-xl">
+        <div className="bg-white flex items-center justify-between p-4 border-b border-gray-100 flex-shrink-0">
           <div>
             <h2 className="font-bold text-gray-900">
               {vacanteDuplicar ? 'Duplicar vacante' : vacanteId ? 'Editar vacante' : 'Nueva vacante'}
@@ -641,6 +641,7 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
           </button>
         </div>
 
+        <div className="overflow-y-auto flex-1">
         <div className="p-4 space-y-2">
           {SECCIONES.map(s => (
             <div key={s.id} className="border border-gray-200 rounded-xl overflow-hidden">
@@ -1822,8 +1823,9 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
         </div>
 
         {error && <p className="px-4 text-red-500 text-xs">{error}</p>}
+        </div>
 
-        <div className="sticky bottom-0 bg-white border-t border-gray-100 p-4 flex gap-2">
+        <div className="bg-white border-t border-gray-100 p-4 flex gap-2 flex-shrink-0">
           <button
             onClick={onCerrar}
             className="flex-1 border border-gray-300 text-gray-700 py-2.5 rounded-xl text-sm font-medium"

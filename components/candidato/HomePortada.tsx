@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useReferido } from '@/hooks/useReferido'
 import { useTrafico } from '@/hooks/useTrafico'
 import DebugRefIndicator from './DebugRefIndicator'
+import RedesSocialesFooter from '@/components/shared/RedesSocialesFooter'
 
 interface Props {
   totalVacantes: number
@@ -109,15 +110,7 @@ export default function HomePortada({ totalVacantes }: Props) {
       {/* Footer */}
       <footer className="border-t border-gray-100 px-4 py-6 text-center">
         <div className="flex items-center justify-center gap-4 mb-2">
-          <a
-            href="https://www.facebook.com/tuchambaexpressoficial"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-gray-500 hover:text-[#1A6B3C] text-sm flex items-center gap-1.5"
-          >
-            <img src="/fb_icon.png" alt="" className="h-7 w-8 object-contain" />
-            Facebook
-          </a>
+          <RedesSocialesFooter />
           <span className="text-gray-300">·</span>
           <a href="/aviso-de-privacidad" className="text-gray-500 hover:text-[#1A6B3C] text-sm underline">
             Aviso de Privacidad

@@ -50,7 +50,28 @@ interface Props {
 
 export default function VacanteDetalle({ vacante, esModal, reclutadorId }: Props) {
   const [chatAbierto, setChatAbierto] = useState(false)
+  const [copiado, setCopiado] = useState(false)
   const codigoRef = getCodigoReferido()
+
+  // Botón "Compartir" (HU-26/2026-09-04) — arma el link directo a esta
+  // vacante con el ref activo de quien comparte, para que la postulación
+  // de quien lo reciba se siga atribuyendo al mismo reclutador (requiere
+  // CapturaReferido.tsx montado en app/vacante/[id]/page.tsx).
+  async function compartirVacante() {
+    const url = `${window.location.origin}/vacante/${vacante.id}${codigoRef ? `?ref=${codigoRef}` : ''}`
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: vacante.titulo, url })
+      } catch {
+        // usuario canceló el share nativo — no hacer nada
+      }
+    } else {
+      await navigator.clipboard.writeText(url)
+      setCopiado(true)
+      setTimeout(() => setCopiado(false), 2000)
+    }
+  }
   const empresa = vacante.empresa_visible
     ? vacante.negocios?.nombre ?? 'Empresa'
     : 'Empresa Confidencial'
@@ -101,13 +122,22 @@ export default function VacanteDetalle({ vacante, esModal, reclutadorId }: Props
         </p>
       </div>
 
-      {/* Botón postular */}
-      <button
-        onClick={abrirChatConTracking}
-        className="w-full bg-[#1A6B3C] hover:bg-[#155c33] text-white font-semibold py-3 px-6 rounded-xl mb-6 transition-colors text-sm"
-      >
-        💬 Postularme / Iniciar Chat
-      </button>
+      {/* Botón postular + Compartir (movido junto al botón a petición
+          de José, 2026-09-04 — antes vivía debajo de ciudad/estado) */}
+      <div className="flex gap-2 mb-6">
+        <button
+          onClick={abrirChatConTracking}
+          className="flex-1 bg-[#1A6B3C] hover:bg-[#155c33] text-white font-semibold py-3 px-6 rounded-xl transition-colors text-sm"
+        >
+          💬 Postularme / Iniciar Chat
+        </button>
+        <button
+          onClick={compartirVacante}
+          className="flex-shrink-0 bg-blue-50 hover:bg-blue-100 text-blue-600 font-medium py-3 px-5 rounded-xl transition-colors text-xs flex items-center justify-center gap-1.5 whitespace-nowrap min-w-[148px]"
+        >
+          🔗 {copiado ? '✅ Enlace copiado' : 'Compartir'}
+        </button>
+      </div>
 
       {chatAbierto && (
         <ChatModal

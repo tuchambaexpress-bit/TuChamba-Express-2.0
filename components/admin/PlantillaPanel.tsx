@@ -89,6 +89,16 @@ interface Props {
 const mono = { fontFamily: "'JetBrains Mono', monospace" }
 const display = { fontFamily: "'Chakra Petch', sans-serif", fontWeight: 600 }
 
+// Encabezado fijo (fuera del área con scroll) + rejilla CSS en vez de
+// <table>/sticky — position: sticky se rompe en el entorno de José
+// (ver plan.md), y las tablas <table> tienen fallas adicionales de
+// sticky entre navegadores. Mismas anchuras compartidas entre el
+// encabezado fijo y las filas con scroll, para que las columnas
+// queden alineadas.
+const GRID_COORDINADORES = 'minmax(140px,1.5fr) minmax(180px,2fr) minmax(120px,1fr) minmax(140px,1fr) minmax(100px,auto)'
+const GRID_RECLUTADORES = 'minmax(160px,1.5fr) minmax(100px,auto) minmax(120px,1fr) minmax(90px,auto) minmax(220px,2fr)'
+const GRID_POSTULACIONES = 'minmax(140px,1.5fr) minmax(110px,1fr) minmax(160px,1.5fr) minmax(130px,1fr) minmax(130px,1fr) minmax(100px,auto) minmax(110px,auto)'
+
 type OrdenCoord = 'nombre' | 'agencia' | 'status'
 type OrdenReclu = 'nombre' | 'codigo' | 'pais'
 type OrdenPost = 'candidato' | 'vacante' | 'agencia' | 'etapa' | 'fecha'
@@ -238,7 +248,7 @@ export default function PlantillaPanel({ coordinadoresIniciales, reclutadoresIni
 
   function Encabezado({ label, col, activa, asc, onClick }: { label: string; col: string; activa: boolean; asc: boolean; onClick: () => void }) {
     return (
-      <th
+      <div
         onClick={onClick}
         className="px-3 py-2 text-left cursor-pointer select-none text-[#E8EDF4] hover:text-[#00D9FF] transition-colors"
         style={mono}
@@ -246,7 +256,7 @@ export default function PlantillaPanel({ coordinadoresIniciales, reclutadoresIni
         <span className="text-[10px] uppercase tracking-wide font-semibold">
           {label} {activa && (asc ? '▲' : '▼')}
         </span>
-      </th>
+      </div>
     )
   }
 
@@ -301,39 +311,38 @@ export default function PlantillaPanel({ coordinadoresIniciales, reclutadoresIni
 
       {/* Tabla Coordinadores */}
       {tab === 'coordinadores' && (
-        <div className="bg-[#12151C] border border-[#1E2330] overflow-auto max-h-[600px]" style={{ clipPath: 'polygon(0 10px, 10px 0, 100% 0, 100% 100%, 0 100%)' }}>
-          <table className="w-full text-sm">
-            <thead className="border-b border-[#1E2330] sticky top-0 bg-[#12151C] z-10">
-              <tr>
-                <Encabezado label="Nombre" col="nombre" activa={ordenCoord === 'nombre'} asc={ordenCoordAsc} onClick={() => ordenarCoord('nombre')} />
-                <th className="px-3 py-2 text-left text-[10px] text-[#E8EDF4] uppercase tracking-wide font-semibold" style={mono}>Email</th>
-                <th className="px-3 py-2 text-left text-[10px] text-[#E8EDF4] uppercase tracking-wide font-semibold" style={mono}>Teléfono</th>
-                <Encabezado label="Agencia" col="agencia" activa={ordenCoord === 'agencia'} asc={ordenCoordAsc} onClick={() => ordenarCoord('agencia')} />
-                <Encabezado label="Status" col="status" activa={ordenCoord === 'status'} asc={ordenCoordAsc} onClick={() => ordenarCoord('status')} />
-              </tr>
-            </thead>
-            <tbody>
+        <div className="bg-[#12151C] border border-[#1E2330]" style={{ clipPath: 'polygon(0 10px, 10px 0, 100% 0, 100% 100%, 0 100%)' }}>
+          {/* Encabezado fijo — hermano del área con scroll, no hijo de ella */}
+          <div className="grid border-b border-[#1E2330]" style={{ gridTemplateColumns: GRID_COORDINADORES }}>
+            <Encabezado label="Nombre" col="nombre" activa={ordenCoord === 'nombre'} asc={ordenCoordAsc} onClick={() => ordenarCoord('nombre')} />
+            <div className="px-3 py-2 text-left text-[10px] text-[#E8EDF4] uppercase tracking-wide font-semibold" style={mono}>Email</div>
+            <div className="px-3 py-2 text-left text-[10px] text-[#E8EDF4] uppercase tracking-wide font-semibold" style={mono}>Teléfono</div>
+            <Encabezado label="Agencia" col="agencia" activa={ordenCoord === 'agencia'} asc={ordenCoordAsc} onClick={() => ordenarCoord('agencia')} />
+            <Encabezado label="Status" col="status" activa={ordenCoord === 'status'} asc={ordenCoordAsc} onClick={() => ordenarCoord('status')} />
+          </div>
+          <div className="overflow-auto max-h-[600px]">
+            <div className="grid" style={{ gridTemplateColumns: GRID_COORDINADORES }}>
               {coordinadoresFiltrados.map(c => (
-                <tr key={c.id} className="border-b border-[#1E2330] last:border-0">
-                  <td className="px-3 py-2 text-[#E8EDF4]">{c.nombre}</td>
-                  <td className="px-3 py-2 text-[#8B94A8]" style={mono}>{c.email}</td>
-                  <td className="px-3 py-2 text-[#8B94A8]" style={mono}>{c.telefono ?? '—'}</td>
-                  <td className="px-3 py-2 text-[#8B94A8]" style={mono}>{nombreAgencia(c.agencias) || '—'}</td>
-                  <td className="px-3 py-2">
+                <div key={c.id} className="contents group">
+                  <div className="px-3 py-2 text-[#E8EDF4] border-b border-[#1E2330] group-last:border-0">{c.nombre}</div>
+                  <div className="px-3 py-2 text-[#8B94A8] border-b border-[#1E2330] group-last:border-0" style={mono}>{c.email}</div>
+                  <div className="px-3 py-2 text-[#8B94A8] border-b border-[#1E2330] group-last:border-0" style={mono}>{c.telefono ?? '—'}</div>
+                  <div className="px-3 py-2 text-[#8B94A8] border-b border-[#1E2330] group-last:border-0" style={mono}>{nombreAgencia(c.agencias) || '—'}</div>
+                  <div className="px-3 py-2 border-b border-[#1E2330] group-last:border-0">
                     <span
                       className={`text-[10px] px-2 py-0.5 uppercase ${c.status === 'activo' ? 'text-[#39FF88] border border-[#39FF88]/30' : 'text-[#5B6478] border border-[#1E2330]'}`}
                       style={mono}
                     >
                       {c.status}
                     </span>
-                  </td>
-                </tr>
+                  </div>
+                </div>
               ))}
               {coordinadoresFiltrados.length === 0 && (
-                <tr><td colSpan={5} className="px-3 py-8 text-center text-[#5B6478] text-sm" style={mono}>Sin resultados</td></tr>
+                <div className="px-3 py-8 text-center text-[#5B6478] text-sm" style={{ ...mono, gridColumn: '1 / -1' }}>Sin resultados</div>
               )}
-            </tbody>
-          </table>
+            </div>
+          </div>
         </div>
       )}
 
@@ -402,32 +411,30 @@ export default function PlantillaPanel({ coordinadoresIniciales, reclutadoresIni
 
       {/* Tabla Reclutadores */}
       {tab === 'reclutadores' && (
-        <div className="bg-[#12151C] border border-[#1E2330] overflow-auto max-h-[600px]" style={{ clipPath: 'polygon(0 10px, 10px 0, 100% 0, 100% 100%, 0 100%)' }}>
-          <table className="w-full text-sm">
-            <thead className="border-b border-[#1E2330] sticky top-0 bg-[#12151C] z-10">
-              <tr>
-                <Encabezado label="Nombre" col="nombre" activa={ordenReclu === 'nombre'} asc={ordenRecluAsc} onClick={() => ordenarReclu('nombre')} />
-                <Encabezado label="Código" col="codigo" activa={ordenReclu === 'codigo'} asc={ordenRecluAsc} onClick={() => ordenarReclu('codigo')} />
-                <th className="px-3 py-2 text-left text-[10px] text-[#E8EDF4] uppercase tracking-wide font-semibold" style={mono}>Teléfono</th>
-                <Encabezado label="País" col="pais" activa={ordenReclu === 'pais'} asc={ordenRecluAsc} onClick={() => ordenarReclu('pais')} />
-                <th className="px-3 py-2 text-left text-[10px] text-[#E8EDF4] uppercase tracking-wide font-semibold" style={mono}>Agencias (clic para activar/desactivar)</th>
-              </tr>
-            </thead>
-            <tbody>
+        <div className="bg-[#12151C] border border-[#1E2330]" style={{ clipPath: 'polygon(0 10px, 10px 0, 100% 0, 100% 100%, 0 100%)' }}>
+          <div className="grid border-b border-[#1E2330]" style={{ gridTemplateColumns: GRID_RECLUTADORES }}>
+            <Encabezado label="Nombre" col="nombre" activa={ordenReclu === 'nombre'} asc={ordenRecluAsc} onClick={() => ordenarReclu('nombre')} />
+            <Encabezado label="Código" col="codigo" activa={ordenReclu === 'codigo'} asc={ordenRecluAsc} onClick={() => ordenarReclu('codigo')} />
+            <div className="px-3 py-2 text-left text-[10px] text-[#E8EDF4] uppercase tracking-wide font-semibold" style={mono}>Teléfono</div>
+            <Encabezado label="País" col="pais" activa={ordenReclu === 'pais'} asc={ordenRecluAsc} onClick={() => ordenarReclu('pais')} />
+            <div className="px-3 py-2 text-left text-[10px] text-[#E8EDF4] uppercase tracking-wide font-semibold" style={mono}>Agencias (clic para activar/desactivar)</div>
+          </div>
+          <div className="overflow-auto max-h-[600px]">
+            <div className="grid" style={{ gridTemplateColumns: GRID_RECLUTADORES }}>
               {reclutadoresFiltrados.map(r => (
-                <tr key={r.id} className="border-b border-[#1E2330] last:border-0">
-                  <td className="px-3 py-2 text-[#E8EDF4]">
+                <div key={r.id} className="contents group">
+                  <div className="px-3 py-2 text-[#E8EDF4] border-b border-[#1E2330] group-last:border-0">
                     {r.nombre}
                     {r.es_maestro && (
                       <span className="ml-2 text-[9px] bg-[#00D9FF]/10 text-[#00D9FF] border border-[#00D9FF]/30 px-1.5 py-0.5 uppercase" style={mono}>
                         Maestro
                       </span>
                     )}
-                  </td>
-                  <td className="px-3 py-2 text-[#8B94A8]" style={mono}>{r.codigo}</td>
-                  <td className="px-3 py-2 text-[#8B94A8]" style={mono}>{r.telefono ? `${r.lada} ${r.telefono}` : '—'}</td>
-                  <td className="px-3 py-2 text-[#8B94A8]" style={mono}>{r.pais}</td>
-                  <td className="px-3 py-2">
+                  </div>
+                  <div className="px-3 py-2 text-[#8B94A8] border-b border-[#1E2330] group-last:border-0" style={mono}>{r.codigo}</div>
+                  <div className="px-3 py-2 text-[#8B94A8] border-b border-[#1E2330] group-last:border-0" style={mono}>{r.telefono ? `${r.lada} ${r.telefono}` : '—'}</div>
+                  <div className="px-3 py-2 text-[#8B94A8] border-b border-[#1E2330] group-last:border-0" style={mono}>{r.pais}</div>
+                  <div className="px-3 py-2 border-b border-[#1E2330] group-last:border-0">
                     <div className="flex flex-wrap gap-1.5">
                       {r.reclutador_agencia.map(ra => (
                         <button
@@ -447,55 +454,53 @@ export default function PlantillaPanel({ coordinadoresIniciales, reclutadoresIni
                       ))}
                       {r.reclutador_agencia.length === 0 && <span className="text-[10px] text-[#5B6478]" style={mono}>Sin agencias</span>}
                     </div>
-                  </td>
-                </tr>
+                  </div>
+                </div>
               ))}
               {reclutadoresFiltrados.length === 0 && (
-                <tr><td colSpan={5} className="px-3 py-8 text-center text-[#5B6478] text-sm" style={mono}>Sin resultados</td></tr>
+                <div className="px-3 py-8 text-center text-[#5B6478] text-sm" style={{ ...mono, gridColumn: '1 / -1' }}>Sin resultados</div>
               )}
-            </tbody>
-          </table>
+            </div>
+          </div>
         </div>
       )}
 
       {/* Tabla Postulaciones — histórico de consulta, sin acciones */}
       {tab === 'postulaciones' && (
-        <div className="bg-[#12151C] border border-[#1E2330] overflow-auto max-h-[600px]" style={{ clipPath: 'polygon(0 10px, 10px 0, 100% 0, 100% 100%, 0 100%)' }}>
-          <table className="w-full text-sm">
-            <thead className="border-b border-[#1E2330] sticky top-0 bg-[#12151C] z-10">
-              <tr>
-                <Encabezado label="Candidato" col="candidato" activa={ordenPost === 'candidato'} asc={ordenPostAsc} onClick={() => ordenarPost('candidato')} />
-                <th className="px-3 py-2 text-left text-[10px] text-[#E8EDF4] uppercase tracking-wide font-semibold" style={mono}>Teléfono</th>
-                <Encabezado label="Vacante" col="vacante" activa={ordenPost === 'vacante'} asc={ordenPostAsc} onClick={() => ordenarPost('vacante')} />
-                <Encabezado label="Agencia" col="agencia" activa={ordenPost === 'agencia'} asc={ordenPostAsc} onClick={() => ordenarPost('agencia')} />
-                <th className="px-3 py-2 text-left text-[10px] text-[#E8EDF4] uppercase tracking-wide font-semibold" style={mono}>Reclutador</th>
-                <Encabezado label="Etapa" col="etapa" activa={ordenPost === 'etapa'} asc={ordenPostAsc} onClick={() => ordenarPost('etapa')} />
-                <Encabezado label="Fecha" col="fecha" activa={ordenPost === 'fecha'} asc={ordenPostAsc} onClick={() => ordenarPost('fecha')} />
-              </tr>
-            </thead>
-            <tbody>
+        <div className="bg-[#12151C] border border-[#1E2330]" style={{ clipPath: 'polygon(0 10px, 10px 0, 100% 0, 100% 100%, 0 100%)' }}>
+          <div className="grid border-b border-[#1E2330]" style={{ gridTemplateColumns: GRID_POSTULACIONES }}>
+            <Encabezado label="Candidato" col="candidato" activa={ordenPost === 'candidato'} asc={ordenPostAsc} onClick={() => ordenarPost('candidato')} />
+            <div className="px-3 py-2 text-left text-[10px] text-[#E8EDF4] uppercase tracking-wide font-semibold" style={mono}>Teléfono</div>
+            <Encabezado label="Vacante" col="vacante" activa={ordenPost === 'vacante'} asc={ordenPostAsc} onClick={() => ordenarPost('vacante')} />
+            <Encabezado label="Agencia" col="agencia" activa={ordenPost === 'agencia'} asc={ordenPostAsc} onClick={() => ordenarPost('agencia')} />
+            <div className="px-3 py-2 text-left text-[10px] text-[#E8EDF4] uppercase tracking-wide font-semibold" style={mono}>Reclutador</div>
+            <Encabezado label="Etapa" col="etapa" activa={ordenPost === 'etapa'} asc={ordenPostAsc} onClick={() => ordenarPost('etapa')} />
+            <Encabezado label="Fecha" col="fecha" activa={ordenPost === 'fecha'} asc={ordenPostAsc} onClick={() => ordenarPost('fecha')} />
+          </div>
+          <div className="overflow-auto max-h-[600px]">
+            <div className="grid" style={{ gridTemplateColumns: GRID_POSTULACIONES }}>
               {postulacionesFiltradas.map(p => (
-                <tr key={p.id} className="border-b border-[#1E2330] last:border-0">
-                  <td className="px-3 py-2 text-[#E8EDF4]">{nombreCandidato(p)}</td>
-                  <td className="px-3 py-2 text-[#8B94A8]" style={mono}>{telefonoCandidato(p)}</td>
-                  <td className="px-3 py-2 text-[#8B94A8]" style={mono}>{tituloVacante(p)}</td>
-                  <td className="px-3 py-2 text-[#8B94A8]" style={mono}>{agenciaPostulacion(p)}</td>
-                  <td className="px-3 py-2 text-[#8B94A8]" style={mono}>{reclutadorPostulacion(p)}</td>
-                  <td className="px-3 py-2">
+                <div key={p.id} className="contents group">
+                  <div className="px-3 py-2 text-[#E8EDF4] border-b border-[#1E2330] group-last:border-0">{nombreCandidato(p)}</div>
+                  <div className="px-3 py-2 text-[#8B94A8] border-b border-[#1E2330] group-last:border-0" style={mono}>{telefonoCandidato(p)}</div>
+                  <div className="px-3 py-2 text-[#8B94A8] border-b border-[#1E2330] group-last:border-0" style={mono}>{tituloVacante(p)}</div>
+                  <div className="px-3 py-2 text-[#8B94A8] border-b border-[#1E2330] group-last:border-0" style={mono}>{agenciaPostulacion(p)}</div>
+                  <div className="px-3 py-2 text-[#8B94A8] border-b border-[#1E2330] group-last:border-0" style={mono}>{reclutadorPostulacion(p)}</div>
+                  <div className="px-3 py-2 border-b border-[#1E2330] group-last:border-0">
                     <span className={`text-[10px] px-2 py-0.5 uppercase border ${COLOR_ETAPA[p.etapa_actual] ?? 'text-[#5B6478] border-[#1E2330]'}`} style={mono}>
                       {p.etapa_actual}
                     </span>
-                  </td>
-                  <td className="px-3 py-2 text-[#5B6478] text-xs" style={mono}>
+                  </div>
+                  <div className="px-3 py-2 text-[#5B6478] text-xs border-b border-[#1E2330] group-last:border-0" style={mono}>
                     {new Date(p.created_at).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })}
-                  </td>
-                </tr>
+                  </div>
+                </div>
               ))}
               {postulacionesFiltradas.length === 0 && (
-                <tr><td colSpan={7} className="px-3 py-8 text-center text-[#5B6478] text-sm" style={mono}>Sin resultados</td></tr>
+                <div className="px-3 py-8 text-center text-[#5B6478] text-sm" style={{ ...mono, gridColumn: '1 / -1' }}>Sin resultados</div>
               )}
-            </tbody>
-          </table>
+            </div>
+          </div>
         </div>
       )}
     </div>

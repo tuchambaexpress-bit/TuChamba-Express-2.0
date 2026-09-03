@@ -50,11 +50,6 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
   const [checklistDocs, setChecklistDocs] = useState<{ documento: string; estado: 'pendiente' | 'entregado' | 'rechazado' }[]>([])
   const [subiendoChecklistPara, setSubiendoChecklistPara] = useState<string | null>(null)
   const [cargandoDocs, setCargandoDocs] = useState(false)
-  const [tipoDocumento, setTipoDocumento] = useState('cv')
-  const [archivoSeleccionado, setArchivoSeleccionado] = useState<File | null>(null)
-  const [subiendoDoc, setSubiendoDoc] = useState(false)
-  const [errorDoc, setErrorDoc] = useState('')
-  const [fileInputKey, setFileInputKey] = useState(0)
   const [eliminandoDoc, setEliminandoDoc] = useState<string | null>(null)
 
   useEffect(() => {
@@ -921,9 +916,6 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
 
   function cerrarModalDocumentos() {
     setMostrarModalDocumentos(false)
-    setArchivoSeleccionado(null)
-    setErrorDoc('')
-    setFileInputKey(k => k + 1) // fuerza recrear el <input type="file"> limpio
   }
 
   async function eliminarDocumento(id: string) {
@@ -932,30 +924,6 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
     await fetch(`/api/documentos?id=${id}`, { method: 'DELETE' })
     setDocumentos(prev => prev.filter(d => d.id !== id))
     setEliminandoDoc(null)
-  }
-
-  async function subirDocumento() {
-    if (!archivoSeleccionado) return
-    setSubiendoDoc(true)
-    setErrorDoc('')
-
-    const formData = new FormData()
-    formData.append('file', archivoSeleccionado)
-    formData.append('candidatoId', postulacion.candidato_id)
-    formData.append('postulacionId', postulacion.id)
-    formData.append('tipo', tipoDocumento)
-
-    const res = await fetch('/api/documentos', { method: 'POST', body: formData })
-    const data = await res.json()
-
-    if (!res.ok) {
-      setErrorDoc(data.error ?? 'Error al subir el archivo')
-    } else {
-      setArchivoSeleccionado(null)
-      setFileInputKey(k => k + 1)
-      await abrirModalDocumentos()
-    }
-    setSubiendoDoc(false)
   }
 
   const NOMBRES_TIPO: Record<string, string> = {

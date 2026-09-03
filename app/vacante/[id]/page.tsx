@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation'
 import VacanteDetalle from '@/components/candidato/VacanteDetalle'
 import { JobPostingSchema } from '@/components/seo/JobPostingSchema'
 import TraficoTracker from '@/components/candidato/TraficoTracker'
+import CapturaReferido from '@/components/candidato/CapturaReferido'
+import RedesSocialesFooter from '@/components/shared/RedesSocialesFooter'
 
 interface Props {
   params: { id: string }
@@ -79,12 +81,32 @@ export default async function VacantePage({ params }: Props) {
       </header>
       <JobPostingSchema vacante={vacanteFormateada} />
       <TraficoTracker vacanteId={params.id} />
+      <CapturaReferido />
       <div className="max-w-3xl mx-auto bg-white min-h-screen">
         <VacanteDetalle
           vacante={vacanteFormateada}
           esModal={false}
         />
       </div>
+
+      {/* Footer — agregado por primera vez (HU-26, 7.52, 2026-09-03). Esta
+          página nunca tuvo footer (nota pendiente de 7.26). Solo redes +
+          aviso de privacidad, sin "Trámites útiles" — es info de toda la
+          plataforma, no de una vacante específica. */}
+      <footer className="border-t border-gray-100 px-4 py-3 bg-white">
+        <div className="max-w-3xl mx-auto text-center">
+          <div className="flex items-center justify-center gap-4 mb-2">
+            <RedesSocialesFooter />
+            <span className="text-gray-300">·</span>
+            <a href="/aviso-de-privacidad" className="text-gray-500 hover:text-[#1A6B3C] text-sm underline">
+              Aviso de Privacidad
+            </a>
+          </div>
+          <p className="text-xs text-gray-400 max-w-xl mx-auto">
+            Tu Chamba Express © 2026. Plataforma de vinculación laboral. No somos responsables de las contrataciones ni condiciones laborales (NOM-035) ofrecidas por terceros.
+          </p>
+        </div>
+      </footer>
     </div>
   )
 }

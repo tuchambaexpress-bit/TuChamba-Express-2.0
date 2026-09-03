@@ -210,9 +210,13 @@ export default function HistorialEntrevistas({ scope, nombreCoordinador }: Props
       return { documento: c.documento, estado: c.entregado ? 'entregado' : 'pendiente' }
     }))
 
-    const res = await fetch(`/api/documentos?candidatoId=${fila.candidato_id}`)
-    const data = await res.json()
-    setDocumentosSubidos(data.documentos ?? [])
+    // Solo se consulta para el coordinador — es el único que ve esta
+    // sección ahora; el reclutador ya la tiene en su propia tarjeta.
+    if (scope.tipo === 'coordinador') {
+      const res = await fetch(`/api/documentos?candidatoId=${fila.candidato_id}`)
+      const data = await res.json()
+      setDocumentosSubidos(data.documentos ?? [])
+    }
     setCargandoDocumentos(false)
 
     // 8.23c — historial completo de intentos, no solo el vigente
@@ -374,13 +378,16 @@ export default function HistorialEntrevistas({ scope, nombreCoordinador }: Props
           documentos (lo llena el reclutador) y archivos con descarga */}
       {filaSeleccionada && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setFilaSeleccionada(null)}>
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-xl max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="p-5">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-bold text-gray-900">Ficha del candidato</h3>
-                <button onClick={() => setFilaSeleccionada(null)} className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">✕</button>
-              </div>
-
+          {/* Reestructurado (2026-09-02): el "✕" vivía dentro del mismo
+              contenedor con scroll que todo el contenido — ahora es
+              hermano de él, en flexbox, para que se quede fijo arriba
+              sin depender de sticky. */}
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-xl max-h-[85vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 pt-5 pb-3 flex-shrink-0">
+              <h3 className="font-bold text-gray-900">Ficha del candidato</h3>
+              <button onClick={() => setFilaSeleccionada(null)} className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">✕</button>
+            </div>
+            <div className="overflow-y-auto px-5 pb-5">
               <div className="space-y-1.5 text-sm text-gray-700">
                 {filaSeleccionada.vacantes?.negocios?.nombre && <p>🏭 <strong>Empresa:</strong> {filaSeleccionada.vacantes.negocios.nombre}</p>}
                 {filaSeleccionada.vacantes?.titulo && <p>✅ <strong>Vacante:</strong> {filaSeleccionada.vacantes.titulo}</p>}
@@ -434,52 +441,61 @@ export default function HistorialEntrevistas({ scope, nombreCoordinador }: Props
                 </div>
               )}
 
-              {checklistEditable.length > 0 && (
-                <div className="mt-4 pt-3 border-t border-gray-100">
-                  <p className="text-xs font-semibold text-gray-700 mb-1.5">Documentos</p>
-                  <div className="space-y-1">
-                    {checklistEditable.map((c, i) => (
-                      <div key={i} className="flex items-center justify-between gap-2 text-xs bg-gray-50 rounded-lg px-2 py-1.5">
-                        <span className="text-gray-700 flex-1">{c.documento}</span>
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium flex-shrink-0 ${
-                          c.estado === 'entregado' ? 'bg-green-100 text-green-700' : c.estado === 'rechazado' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
-                        }`}>
-                          {c.estado === 'entregado' ? 'OK' : c.estado === 'rechazado' ? 'Solicitado de nuevo' : 'Pendiente'}
-                        </span>
-                        {actualizandoDoc === c.documento ? (
-                          <span className="text-[10px] text-gray-400 flex-shrink-0">...</span>
-                        ) : c.estado === 'entregado' && (
-                          <button onClick={() => actualizarEstadoDoc(c.documento, 'rechazado')} className="text-[10px] text-red-700 hover:underline flex-shrink-0">🔄 Solicitar de nuevo</button>
-                        )}
+              {/* José, 2026-09-02: el reclutador ya ve sus documentos
+                  completos en el botón 📎 de su propia tarjeta del
+                  Kanban — repetirlo aquí es redundante. El coordinador
+                  sí lo necesita, es el único lugar donde puede
+                  aprobar/solicitar de nuevo un documento. */}
+              {scope.tipo === 'coordinador' && (
+                <>
+                  {checklistEditable.length > 0 && (
+                    <div className="mt-4 pt-3 border-t border-gray-100">
+                      <p className="text-xs font-semibold text-gray-700 mb-1.5">Documentos</p>
+                      <div className="space-y-1">
+                        {checklistEditable.map((c, i) => (
+                          <div key={i} className="flex items-center justify-between gap-2 text-xs bg-gray-50 rounded-lg px-2 py-1.5">
+                            <span className="text-gray-700 flex-1">{c.documento}</span>
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium flex-shrink-0 ${
+                              c.estado === 'entregado' ? 'bg-green-100 text-green-700' : c.estado === 'rechazado' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
+                            }`}>
+                              {c.estado === 'entregado' ? 'OK' : c.estado === 'rechazado' ? 'Solicitado de nuevo' : 'Pendiente'}
+                            </span>
+                            {actualizandoDoc === c.documento ? (
+                              <span className="text-[10px] text-gray-400 flex-shrink-0">...</span>
+                            ) : c.estado === 'entregado' && (
+                              <button onClick={() => actualizarEstadoDoc(c.documento, 'rechazado')} className="text-[10px] text-red-700 hover:underline flex-shrink-0">🔄 Solicitar de nuevo</button>
+                            )}
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+                    </div>
+                  )}
 
-              <div className="mt-4 pt-3 border-t border-gray-100">
-                <p className="text-xs font-semibold text-gray-700 mb-1.5">Archivos subidos</p>
-                {cargandoDocumentos ? (
-                  <p className="text-xs text-gray-400">Cargando...</p>
-                ) : documentosSubidos.length === 0 ? (
-                  <p className="text-xs text-gray-400">Sin archivos subidos todavía</p>
-                ) : (
-                  <div className="space-y-1">
-                    {documentosSubidos.map((doc: any) => (
-                      <a
-                        key={doc.id}
-                        href={doc.url_firmada ?? '#'}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-between text-xs bg-gray-50 hover:bg-gray-100 rounded-lg px-2 py-1.5 transition-colors"
-                      >
-                        <span className="text-[#1A6B3C]">📄 {NOMBRES_TIPO_DOC[doc.tipo] ?? doc.tipo}</span>
-                        <span className="text-gray-400">{new Date(doc.created_at).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}</span>
-                      </a>
-                    ))}
+                  <div className="mt-4 pt-3 border-t border-gray-100">
+                    <p className="text-xs font-semibold text-gray-700 mb-1.5">Archivos subidos</p>
+                    {cargandoDocumentos ? (
+                      <p className="text-xs text-gray-400">Cargando...</p>
+                    ) : documentosSubidos.length === 0 ? (
+                      <p className="text-xs text-gray-400">Sin archivos subidos todavía</p>
+                    ) : (
+                      <div className="space-y-1">
+                        {documentosSubidos.map((doc: any) => (
+                          <a
+                            key={doc.id}
+                            href={doc.url_firmada ?? '#'}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-between text-xs bg-gray-50 hover:bg-gray-100 rounded-lg px-2 py-1.5 transition-colors"
+                          >
+                            <span className="text-[#1A6B3C]">📄 {NOMBRES_TIPO_DOC[doc.tipo] ?? doc.tipo}</span>
+                            <span className="text-gray-400">{new Date(doc.created_at).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}</span>
+                          </a>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </>
+              )}
             </div>
           </div>
         </div>

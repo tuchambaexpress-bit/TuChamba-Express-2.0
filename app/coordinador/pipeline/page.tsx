@@ -59,10 +59,13 @@ export default function PipelineCoordinador() {
     setLoadingPipeline(true)
     const supabase = createClient()
 
+    // 8.23b — vacante_id agregado (2026-09-02): necesario para que el
+    // coordinador pueda mover a Induccion desde aqui (verificarYPausarCupo
+    // necesita saber de que vacante es cada postulacion).
     const { data } = await supabase
       .from('postulaciones')
       .select(`
-        id, etapa_actual, candidato_id, updated_at, score, motivo_descarte, precalificado,
+        id, etapa_actual, candidato_id, vacante_id, updated_at, score, motivo_descarte, precalificado,
         fecha_entrevista, lugar_entrevista, asistio_entrevista,
         fecha_contratacion, fecha_firma_contrato,
         candidatos(nombre, telefono, edad, escolaridad, residencia),
@@ -81,8 +84,6 @@ export default function PipelineCoordinador() {
     setPostulaciones([])
   }
 
-  // Realtime — refresca el Kanban solo cuando el reclutador mueve algo,
-  // sin que el coordinador tenga que recargar la página (7.3a, 2026-08-24)
   useEffect(() => {
     if (!reclutadorSeleccionado) return
     const supabase = createClient()
@@ -190,6 +191,9 @@ export default function PipelineCoordinador() {
                             <KanbanCardSoloLectura
                               key={p.id}
                               postulacion={p}
+                              coordinadorId={sesion.id}
+                              reclutadorId={reclutadorSeleccionado.id}
+                              onMovidoAInduccion={() => verPipeline(reclutadorSeleccionado)}
                             />
                           ))}
                           {postulacionesEtapa.length === 0 && (

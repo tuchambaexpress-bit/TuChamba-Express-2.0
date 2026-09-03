@@ -96,7 +96,11 @@ FORMATO DE SPEC: compatible con OpenSpec — legible por Claude Code,
 
 ## 2. ESTRUCTURA DE REPOSITORIO (Next.js App Router)
 
-> **Estado:** Actualizado al Sprint 6 (19/08/2026 — sesión larga, ver tasks.md para detalle de cada tarea). Las rutas marcadas con ✅ ya existen en producción.
+> **Estado:** Auditado y resincronizado contra el código real 2026-09-03 (José detectó el hueco: 2 sprints sin actualizar desde el 19/08/2026). Se verificaron contra el archivo real todos los componentes marcados ✅ que tenía disponibles Claude en ese momento — no es exhaustivo de TODO el repo, solo de lo verificable en esa pasada (ver nota ⚠️ más abajo sobre lo que quedó fuera). Las rutas marcadas con ✅ ya existen en producción; 🔲 son las nuevas de HU-26/`7.52`, aún sin construir.
+>
+> **✅ Hallazgo de la auditoría de 2026-09-03, corregido en `spec.md` el mismo día:** `spec.md` CA-21.2 y CA-21.4 (HU-21) describían `KanbanCardSoloLectura.tsx` con botón "Ver chat" y badges "Historial previo"/"No efectivo" — el archivo real (verificado línea por línea) es la versión simplificada sin ninguno de los dos. Se confirmó con `tasks.md` `8.23` (2026-09-01, ya cerrada) que fue una corrección de diseño explícita de José, no un bug — `spec.md` ya quedó actualizado: CA-21.2 corregida al diseño real, CA-21.4 marcada como superada (se conserva el número por trazabilidad), y el CA-21.4 duplicado (candidatos vetados) renumerado a CA-21.5. **Decisión cerrada 2026-09-03:** José confirmó que el botón de chat se queda retirado — la conversación reclutador↔candidato es privada, el coordinador no debe poder consultarla desde el Kanban global. No se reconstruye. Ver CA-21.4 de `spec.md`.
+>
+> **Fuera de esta pasada, sin verificar (no fueron parte de lo pedido ni de los archivos disponibles):** `KanbanColumn.tsx`, `VacanteModal.tsx`, `CoordinadorNav.tsx`, `ChatModal.tsx`, `ChatWindow.tsx`, `VacanteCard.tsx`, `VacanteDetalle.tsx`, `TraficoTracker.tsx`, `FormularioInvitacion.tsx`, `FaqWidget.tsx`, `EditableList.tsx`, `JobPostingSchema.tsx`, y toda la carpeta `app/coordinador/` y `app/api/` — sus descripciones se dejaron tal cual estaban. Si quieres una pasada completa de verdad, la forma correcta es que subas esos archivos reales (como hiciste con los que sí se corrigieron aquí) y los reviso contra su descripción, uno por uno.
 
 ```
 tuchamba-v2/
@@ -148,6 +152,17 @@ tuchamba-v2/
 │   │                                 (~10 reglas por palabra clave, sin IA),
 │   │                                 buscarRespuestaNivel2() (overlap de palabras
 │   │                                 clave contra faqs_vacante, sin IA)
+│   ├── redes-sociales.ts         ✅ NUEVO (HU-26, 7.52, verificado en vivo 2026-09-04)
+│   │                                 — catálogo único de plataformas (facebook,
+│   │                                 instagram, tiktok, whatsapp, youtube, x, otro),
+│   │                                 MAX_REDES_SOCIALES=6, iconoPlataforma() (rutas a
+│   │                                 /public/*_icon.png, subidos por José 2026-09-04),
+│   │                                 validarRedesSociales() (server-side, usada por
+│   │                                 api/reclutador/perfil/route.ts). Fuente única
+│   │                                 compartida por el selector, el footer público y
+│   │                                 la validación del endpoint — mismo criterio que
+│   │                                 DOCUMENTOS_TRONCO_COMUN (7.47), para no repetir
+│   │                                 esa clase de bug de duplicación
 │   └── supabase/
 │       ├── client.ts             ✅ Cliente browser
 │       └── server.ts             ✅ Cliente servidor
@@ -160,17 +175,52 @@ tuchamba-v2/
 │   │   │                            + Realtime (vacantes y documentos_negocio)
 │   │   ├── VacanteCard.tsx       ✅ Card de vacante en lista
 │   │   ├── VacanteDetalle.tsx    ✅ Panel detalle + botón postular + PDFs de ruta
-│   │   │                            + examen médico/antidoping visibles
+│   │   │                            + examen médico/antidoping visibles. **7.53
+│   │   │                            (2026-09-04):** botón "🔗 Compartir" junto al
+│   │   │                            de postularse — arma el link a /vacante/[id]
+│   │   │                            con el ref activo de quien comparte
+│   │   │                            (navigator.share() o copiar al portapapeles)
 │   │   ├── ChatModal.tsx         ✅ Modal postulación + chat candidato + quiz de
 │   │   │                            pre-calificación (HU-17/6.8, antes del formulario
 │   │   │                            si la vacante tiene preguntas configuradas)
 │   │   ├── ChatWindow.tsx        ✅ Chat Realtime (candidato y reclutador), + prop
 │   │   │                            `soloLectura` (consulta del coordinador, HU-21)
-│   │   └── TraficoTracker.tsx    ✅ Tracker de fuente en página vacante individual
+│   │   ├── TraficoTracker.tsx    ✅ Tracker de fuente en página vacante individual
+│   │   ├── CapturaReferido.tsx   ✅ NUEVO (7.53, 2026-09-04) — componente invisible,
+│   │   │                            mismo patrón que TraficoTracker.tsx: solo monta
+│   │   │                            useReferido(). Montado junto a TraficoTracker en
+│   │   │                            app/vacante/[id]/page.tsx — cierra un hueco real
+│   │   │                            (ver nota de arquitectura más abajo, §5)
+│   │   └── DebugRefIndicator.tsx ✅ (7.24) Etiqueta fija abajo-derecha con el
+│   │                                 ref_codigo activo — SOLO en development
+│   │                                 (`process.env.NODE_ENV !== 'development'`
+│   │                                 la oculta por completo), montado en
+│   │                                 VacantesPortal.tsx / HomePortada.tsx
 │   ├── invitacion/
 │   │   └── FormularioInvitacion.tsx ✅ Formulario 2 pasos registro agencia
 │   ├── admin/
-│   │   └── SolicitudesPanel.tsx  ✅ Panel aprobar/rechazar agencias
+│   │   ├── SolicitudesPanel.tsx  ✅ Panel aprobar/rechazar agencias
+│   │   ├── InvitacionesPanel.tsx ✅ Genera links de invitación (token + teléfono
+│   │   │                            esperado opcional), copiar al portapapeles
+│   │   ├── AgenciasPanel.tsx     ✅ (7.1, Camino B) CRUD completo de agencias —
+│   │   │                            única entidad admin con permiso real de
+│   │   │                            editar/eliminar; alta manual de agencia +
+│   │   │                            coordinador con contraseña temporal (7.14)
+│   │   ├── PlantillaPanel.tsx    ✅ (7.15/7.16/7.3, "Plantilla") 3 pestañas:
+│   │   │                            Coordinadores / Reclutadores / Postulaciones —
+│   │   │                            buscador, filtro por agencia, orden por columna,
+│   │   │                            encabezados sticky con scroll propio;
+│   │   │                            reclutadores con toggle de agencia individual
+│   │   │                            (etiquetas clicables, no botón global)
+│   │   ├── SaludMarketplace.tsx  ✅ (7.2) 4 tarjetas + 2 gráficas (Recharts):
+│   │   │                            tasa de activación, comisiones totales,
+│   │   │                            agencias durmientes, visitas al portal este mes
+│   │   │                            (7.39/7.43) + agencias/vacantes por mes
+│   │   ├── InactivityGuard.tsx   ✅ Cierra sesión de Admin tras 20 min de
+│   │   │                            inactividad, aviso de 4s sin opción de
+│   │   │                            cancelar (decisión de José), excluido en
+│   │   │                            /admin/login
+│   │   └── LogoutButton.tsx      ✅ Botón "Salir" del panel admin
 │   ├── reclutador/
 │   │   ├── KanbanBoard.tsx       ✅ Tablero principal (desktop + móvil), incluye
 │   │   │                            columna "Descartados", Realtime (canal sobre
@@ -189,12 +239,34 @@ tuchamba-v2/
 │   │   │                            candidato al hacer clic en su nombre (Esc cierra);
 │   │   │                            control de cupo por vacante al entrar a Inducción
 │   │   │                            y al confirmar Contratado (6.8b); botón de chat
-│   │   │                            interno oculto si `es_manual = true` (HU-25)
+│   │   │                            interno oculto si `es_manual = true` (HU-25).
+│   │   │                            **Agregado 8.23 (2026-09-01):** modal de
+│   │   │                            entrevista con 2 preguntas independientes —
+│   │   │                            destino (planta/punto fijo) y medio_transporte
+│   │   │                            (por su cuenta/ruta especializada/transporte
+│   │   │                            laboral, este último solo si destino=planta),
+│   │   │                            catálogo de rutas/puntos de la Sección 9
+│   │   │                            (`7.38`) cargado por vacante; flujo de
+│   │   │                            reagendar tras "No se presentó" (crea fila
+│   │   │                            nueva en `entrevistas` SOLO al reagendar de
+│   │   │                            verdad, no en cada guardado normal); checklist
+│   │   │                            de documentos de 3 estados
+│   │   │                            (pendiente/entregado/rechazado, sobre
+│   │   │                            `documentos_entrevista_checklist jsonb`);
+│   │   │                            precarga completa de todo lo anterior al
+│   │   │                            reabrir "Ver entrevista" (antes solo
+│   │   │                            precargaba fecha/hora)
 │   │   ├── FaqWidget.tsx         ✅ NUEVO (4.14/4.15) — widget de preguntas del
 │   │   │                            reclutador, montado en la ficha operativa.
 │   │   │                            Cascada 3 niveles, modal "Ejemplos de preguntas",
 │   │   │                            borrado manual, Realtime
-│   │   └── ReclutadorNav.tsx     ✅ Nav compartido, contadores Realtime de chats/alertas
+│   │   └── ReclutadorNav.tsx     ✅ Nav compartido, contadores Realtime de chats/alertas.
+│   │                                 9 links: Dashboard, Pipeline, Vacantes,
+│   │                                 📈 Tráfico (7.39), Chats, Comisiones,
+│   │                                 Coordinador, 📚 Recursos (7.18), Alertas.
+│   │                                 **7.19:** colapsa a menú ☰ en móvil/tablet
+│   │                                 (badges consolidados sobre el ícono), resalta
+│   │                                 el link activo vía `usePathname()`
 │   ├── coordinador/
 │   │   ├── CoordinadorNav.tsx    ✅ Nav compartido, contador de chats sin leer
 │   │   ├── VacanteModal.tsx      ✅ Modal de 8 secciones — crear/editar/duplicar
@@ -209,12 +281,49 @@ tuchamba-v2/
 │   │   │                            máx 5, 3 tipos), campo cupo_requerido + indicador
 │   │   │                            en tiempo real "por rondas" (HU-16)
 │   │   └── KanbanCardSoloLectura.tsx ✅ Card sin botones de acción para el Kanban
-│   │                                     global (5.11) — sí incluye botón "Ver chat"
-│   │                                     (solo lectura, CA-21.4) y badges de ficha del
-│   │                                     candidato/asistencia/pre-calificado
+│   │                                     global (5.11). **Corregido 2026-09-03,
+│   │                                     verificado contra el archivo real:** la
+│   │                                     versión en producción es la
+│   │                                     **simplificada** — Nombre, Vacante+Empresa,
+│   │                                     Celular, badge "🚨 Sin actividad" (>72h en
+│   │                                     etapas activas), fecha/hora + resultado de
+│   │                                     entrevista, fecha de inicio de inducción,
+│   │                                     fecha de contratación. **No** tiene botón
+│   │                                     "Ver chat" ni badges de "Historial previo"/
+│   │                                     "No efectivo"/"Pre-calificado" — esos
+│   │                                     existían en una versión anterior. Ver
+│   │                                     lección "Nunca asumir que un archivo ya
+│   │                                     aplicado sigue aplicado" (§13) y
+│   │                                     ⚠️ nota abajo sobre spec.md CA-21.2/CA-21.4,
+│   │                                     que todavía describen la versión vieja
 │   ├── shared/
-│   │   └── ChatCoordinadorReclutador.tsx ✅ Chat general único por par
-│   │                                          reclutador-coordinador
+│   │   ├── ChatCoordinadorReclutador.tsx ✅ Chat general único por par
+│   │   │                                      reclutador-coordinador
+│   │   ├── AvisoPrivacidadChat.tsx ✅ (7.3c) Franja fija (no cerrable) con link a
+│   │   │                                 /aviso-de-privacidad, montada en
+│   │   │                                 ChatWindow.tsx y ChatCoordinadorReclutador.tsx
+│   │   ├── RutasColapsables.tsx  ✅ (7.34) Primeras 2 rutas + "Ver las N rutas" /
+│   │   │                                "Ver menos" — compartido entre
+│   │   │                                VacanteDetalle.tsx (candidato) y la ficha
+│   │   │                                operativa del reclutador
+│   │   ├── HistorialEntrevistas.tsx ✅ (8.18/8.23, rediseñada como "📋 Detalles
+│   │   │                                 candidato") Tabla real (no tarjetas):
+│   │   │                                 Nombre/Vacante/Empresa/Celular/Reclutador/
+│   │   │                                 Estatus; modal al hacer clic en el nombre
+│   │   │                                 con historial de entrevistas, checklist de
+│   │   │                                 3 estados, aprobar/rechazar, descarga de
+│   │   │                                 archivos. Compartido entre reclutador (ve
+│   │   │                                 solo lo suyo, `reclutador_id` fijo) y
+│   │   │                                 coordinador (ve la agencia, con filtro
+│   │   │                                 opcional por reclutador) vía prop `scope`
+│   │   └── RedesSocialesFooter.tsx ✅ (HU-26, 7.52, verificado en vivo 2026-09-04) — lee el token_referido
+│   │                                     activo (vía getCodigoReferido(), 7.23),
+│   │                                     consulta api/reclutador/perfil y renderiza
+│   │                                     los links del reclutador o cae al Facebook
+│   │                                     oficial. Usado en HomePortada.tsx,
+│   │                                     VacantesPortal.tsx (reemplaza el link fijo
+│   │                                     duplicado en ambos) y app/vacante/[id]/page.tsx
+│   │                                     (primera vez que esa página tiene footer)
 │   ├── forms/
 │   │   └── EditableList.tsx      ✅ Lista editable con drag-and-drop (@dnd-kit) —
 │   │                                 requisitos, beneficios, documentos, zonas_ruta,
@@ -260,7 +369,19 @@ tuchamba-v2/
     │   │                            "cumplida" en vivo desde `fecha_garantia_fin`,
     │   │                            no desde `garantia_cumplida` (campo roto, nunca
     │   │                            se actualiza, mismo hueco de 5.1c/5.17/Dashboard)
-    │   └── alertas/page.tsx      ✅ Panel alertas automáticas
+    │   ├── trafico/page.tsx      ✅ (7.39) 2 tarjetas de total (vistas/postulaciones)
+    │   │                            + lista de vacantes ordenada de más a menos
+    │   │                            vistas, mismo patrón de filtro de agencia que
+    │   │                            el dashboard. Mensaje explícito si
+    │   │                            `agenciasReclutador` llega vacío (a diferencia
+    │   │                            del dashboard viejo, que se queda en "Cargando..."
+    │   │                            para siempre en ese caso — ver `7.50` punto 3)
+    │   ├── recursos/page.tsx     ✅ (7.18) 2 pestañas — Soft Skills y Marketing para
+    │   │                            tu link. Contenido estático, en tarjetas cortas
+    │   ├── alertas/page.tsx      ✅ Panel alertas automáticas
+    │   └── perfil/page.tsx       ✅ (HU-26, 7.52, verificado en vivo 2026-09-04) — sub-sección de redes
+    │                                 sociales (hasta 6 links), ícono "👤 Perfil"
+    │                                 separado de la nav normal en `ReclutadorNav.tsx`.
     ├── coordinador/
     │   ├── layout.tsx            ✅
     │   ├── login/page.tsx        ✅ Login email+password Supabase Auth
@@ -278,7 +399,10 @@ tuchamba-v2/
     │   │                            vivo (HU-16, no depende de `cupo_cubierto`)
     │   ├── reclutadores/page.tsx ✅ CRUD reclutadores, LADA internacional
     │   ├── pipeline/page.tsx     ✅ Panel de reclutadores → Kanban solo-lectura (5.11),
-    │   │                            botón "Ver chat" por tarjeta, badge de asistencia
+    │   │                            badge de asistencia. **Corregido 2026-09-03:**
+    │   │                            ya NO tiene botón "Ver chat" — retirado en `8.23`,
+    │   │                            decisión de privacidad confirmada por José
+    │   │                            (ver spec.md CA-21.4)
     │   ├── chat-reclutadores/    ✅ Chat con cada reclutador (5.13)
     │   │   └── page.tsx
     │   ├── corte-semanal/        ✅ Corte 100% manual (5.26, reescrito 2026-08-20 —
@@ -311,7 +435,16 @@ tuchamba-v2/
         │                                    reporte por fila, aplica días de descanso
         │                                    por empresa ("última fila gana")
         ├── reclutador/
-        │   └── login/route.ts    ✅ Verifica código de reclutador
+        │   ├── login/route.ts    ✅ Verifica código de reclutador
+        │   └── perfil/route.ts   ✅ (HU-26, 7.52, verificado en vivo 2026-09-04), service_role — GET por
+        │                             token_referido (público, solo regresa nombre +
+        │                             redes_sociales, nunca el resto de la fila) y
+        │                             POST/PUT para guardar (solo columna
+        │                             redes_sociales, valida reclutador_id, máx. 6
+        │                             links). Ver §5 RLS abajo — deliberadamente sin
+        │                             política RLS abierta sobre `reclutadores` para
+        │                             esto, ver nota "Patrón: endpoint con
+        │                             service_role en vez de RLS abierta"
         └── admin/
             ├── aprobar-agencia/route.ts  ✅ Activa agencia + crea cuenta Auth
             ├── rechazar-agencia/route.ts ✅ Rechaza solicitud
@@ -437,6 +570,28 @@ CREATE POLICY "faq_escalaciones_update_coordinador" ON faq_escalaciones
     agencia_id IN (SELECT agencia_id FROM coordinadores WHERE email = auth.email())
   );
 ```
+
+### Patrón: endpoint con `service_role` en vez de RLS abierta — cuando la tabla mezcla datos públicos y sensibles en la misma fila (HU-26, `7.52`, 2026-09-03)
+
+El patrón normal del reclutador (operar como `anon` con políticas `USING (true)`) funciona bien en tablas como `postulaciones`, donde toda la fila es información operativa que el reclutador ya maneja de todos modos. `reclutadores` es distinto: la misma fila mezcla un campo pensado para ser público (`redes_sociales`, nuevo en HU-26) con columnas que nunca deberían quedar expuestas a un cliente sin autenticar (`email`, `telefono`, `codigo` de login). Postgres RLS filtra **filas**, no columnas — no hay forma de que una política permita leer `redes_sociales` de una fila pero bloquee `email` de esa misma fila.
+
+**Regla adoptada:** cuando una tabla necesita exponer públicamente solo *algunas* columnas de una fila que también tiene columnas sensibles, no se abre una política RLS nueva sobre esa tabla — se construye un endpoint dedicado (`service_role`, salta RLS por diseño) que hace el `select()`/`update()` explícito de solo las columnas necesarias, mismo criterio que ya usan `app/api/postular/route.ts` y `app/api/trafico/route.ts` para resolver `token_referido`. Esto es intencional y más seguro que depender de que cada componente cliente recuerde nunca hacer `select('*')` — la restricción vive en el servidor, no en la disciplina de cada pantalla.
+
+Aplica en ambos sentidos:
+- **Lectura pública** (candidato ve las redes del reclutador que lo refirió): el endpoint regresa únicamente `nombre` + `redes_sociales`.
+- **Escritura del reclutador** (Perfil guarda sus propios links): el endpoint actualiza únicamente la columna `redes_sociales` del `reclutador_id` recibido — nunca una política `anon UPDATE ... WITH CHECK (true)` de fila completa, que permitiría sobrescribir `email`/`telefono`/`codigo` de cualquier reclutador desde una llamada directa a Supabase en el navegador.
+
+Se documenta aquí como patrón reutilizable para el futuro: cualquier tabla que en algún momento necesite exponer un subconjunto público de columnas junto a columnas sensibles debe resolverse igual, no con una política RLS más permisiva.
+
+### Patrón: toda página pública nueva necesita `<CapturaReferido />` explícito — no es automático (`7.53`, 2026-09-04)
+
+**El hallazgo:** al construir el botón "Compartir" de `7.53`, se descubrió que `app/vacante/[id]/page.tsx` nunca capturaba su propio `?ref=` a `localStorage` — solo `HomePortada.tsx` y `VacantesPortal.tsx` montaban `useReferido()` (desde `HU-06`). Cualquiera que entrara **directo** a `/vacante/[id]?ref=TOKEN` sin pasar antes por `/` o `/vacantes` perdía la atribución al reclutador, sin ningún error visible — exactamente el mismo tipo de falla silenciosa que las políticas RLS con `TO anon` faltando `authenticated` (`7.50`): funciona en el camino que alguien probó, se rompe en un camino que nadie probó.
+
+**Por qué pasó:** `useReferido()` es un hook (`'use client'`, usa `useSearchParams`) — no se puede llamar directo desde un Server Component como `app/vacante/[id]/page.tsx`. Cada página nueva que necesite capturar el referido tiene que montar explícitamente un wrapper cliente, no hay ninguna capa que lo haga sola.
+
+**La solución, ya construida — `components/candidato/CapturaReferido.tsx`:** componente invisible, mismo patrón que `TraficoTracker.tsx` (que ya resolvía el mismo problema para el tracking de visitas, pero nadie conectó que el mismo problema aplicaba también a la captura del `ref`). Se monta junto a `TraficoTracker` en cualquier página server-side nueva que reciba tráfico externo.
+
+**Regla adoptada para el futuro:** cualquier página nueva bajo `app/` que pueda recibir un visitante que llega **directo** (compartido, anuncio, QR, etc.) — no solo navegando desde dentro del sitio — debe montar `<CapturaReferido />` explícitamente. No asumir que "ya está resuelto en otro lado" solo porque `/` y `/vacantes` lo tienen. Revisar esto en cualquier página nueva de cara al candidato, mismo criterio que ya se aplica para RLS en tablas nuevas.
 
 ### Administradores — dos roles, RLS a nivel de base de datos (2026-08-21)
 
@@ -1064,7 +1219,15 @@ En `VacanteModal.tsx`, los campos "de empresa, no de vacante" (`dias_descanso`, 
 3. Un listener de `window.addEventListener('scroll', ...)` que compara `window.scrollY` contra esa medición, y activa un estado (`fijo`)
 4. Cuando `fijo` es `true`, renderizar una **barra duplicada** con `position: fixed`, con el mismo contenido visual (mismas columnas exactas si es una tabla — usar una constante de ancho de columnas compartida entre la versión real y la duplicada, para que queden alineadas)
 
-**Nunca usar `sticky` primero "para probar"** — ya se confirmó que falla en este entorno específico, ir directo al patrón de arriba ahorra tiempo. Aplicado hoy en `Vacantes` del reclutador y `Vacantes` del coordinador (`7.44`).
+**Nunca usar `sticky` primero "para probar"** — ya se confirmó que falla en este entorno específico, ir directo al patrón de arriba ahorra tiempo. Aplicado el `2026-08-29/30` en `Vacantes` del reclutador y `Vacantes` del coordinador (`7.44`).
+
+**Actualización 2026-09-02 — auditoría completa, 6 casos más encontrados, y NO todos necesitan el patrón completo de arriba.** Al buscar `sticky` en todo el proyecto aparecieron 6 instancias más, repartidas en 3 categorías distintas según el tipo de scroll involucrado — importa distinguirlas, porque usar el patrón completo (JS + `fixed`) donde no hace falta es trabajo de más:
+
+1. **El elemento ya vive fuera de cualquier área con scroll real (el caso más común, y el más barato de arreglar) — solo quitar `sticky`, sin reemplazarlo por nada.** Pasa cuando el encabezado es *hermano* del contenedor con `overflow-y-auto`/`overflow-auto`, no *hijo* de él — o cuando la página entera nunca hace scroll porque el layout ya reserva la altura completa con `h-[calc(100vh-Npx)]` y cada columna maneja su propio scroll interno. `sticky` en ese caso no tenía nada que "pegar" — nunca se estaba moviendo. Casos de hoy: `KanbanColumn.tsx` (header de columna, hermano de la lista), header verde principal de `VacantesPortal.tsx` (la página nunca scrollea, las columnas sí por su cuenta).
+2. **El elemento SÍ es hijo del área con scroll, pero el scroll es de un modal/tarjeta pequeña (no de toda la página) — reestructurar con flexbox, header/footer como hermanos.** `<div className="... max-h-[90vh] flex flex-col overflow-hidden">` por fuera, header y footer con `flex-shrink-0` como hermanos directos, y un nuevo `<div className="overflow-y-auto flex-1">` envolviendo solo el contenido de en medio. No necesita `window.scrollY` ni medir nada con JS — el navegador ya resuelve la altura. Casos de hoy: modal de "Ficha del candidato" en `HistorialEntrevistas.tsx` (el "✕"), modal grande de `VacanteModal.tsx` (header Y footer, los 2 al mismo tiempo), modal de móvil en `VacantesPortal.tsx`.
+3. **El elemento es hijo de un contenedor con scroll propio (`overflow-auto max-h-[Npx]`), y encima vive dentro de un `<table>` nativo — aquí sí hace falta el patrón completo, con una variante.** Las tablas `<table>`/`<thead>` tienen fallas de `sticky` adicionales a las del entorno de José (documentado desde el hallazgo original). La solución no fue "JS + fixed" tal cual el patrón de arriba (ese es para scroll de *página*, con `window.scrollY`) — fue convertir `<table>` a rejilla CSS y aplicar la misma idea del punto 2 (header como hermano fijo, cuerpo como hermano con scroll), pero con `gridTemplateColumns` compartido entre ambos para que las columnas sigan alineadas. Caso de hoy: las 3 tablas de `PlantillaPanel.tsx` (Coordinadores/Reclutadores/Postulaciones).
+
+**Regla práctica para decidir cuál de los 3 aplica, antes de escribir código:** primero preguntar "¿el elemento con `sticky` es hermano o hijo del contenedor que hace scroll?" — si es hermano (o la página no scrollea de verdad), es el caso 1, no tocar nada más que quitar la clase. Si es hijo, preguntar "¿el scroll es de toda la página, o de un contenedor/modal acotado?" — página completa con `window.scrollY` real es el patrón original de arriba; contenedor acotado es el caso 2 o 3 (según si hay `<table>` nativa de por medio).
 
 ### Patrón de diseño: catálogo compartido por empresa + selección con excepción por vacante (`7.38`, 2026-08-31)
 
@@ -1096,6 +1259,12 @@ git reset --hard HEAD        # descarta TODO lo no commiteado
 git log --oneline -10
 git reset --hard <hash>       # vuelve a un commit específico
 ```
+
+### Nunca asumir que un archivo "ya aplicado" sigue aplicado — verificar con el archivo real, no con la memoria de la conversación (2026-09-02)
+
+**Sorpresa real de hoy:** al retomar `KanbanCardSoloLectura.tsx` para agregarle una función nueva, se construyó sobre la versión **simplificada** que se había dejado el día anterior (Nombre/Vacante/Celular/alerta) — con toda confianza, porque esa fue la última versión confirmada en la conversación. Al pedirle a José el archivo real para verificar antes de tocarlo, resultó ser la versión **vieja** completa (estrellas, chat, "Pre-calificado", "Historial previo") — el patch del día anterior nunca se había aplicado de verdad en su proyecto.
+
+**La lección no es "José se equivocó al aplicar"** — eso puede pasarle a cualquiera entre decenas de archivos en una sesión larga. La lección es de proceso: **la memoria de la conversación de "qué se le dio a la persona" no es lo mismo que "qué existe realmente en su proyecto"** — son 2 cosas que pueden divergir en silencio, sin ningún aviso, durante días. Antes de construir cualquier cosa NUEVA sobre un archivo que se tocó en una sesión anterior (no en el turno inmediato anterior), pedir el archivo fresco y compararlo contra lo que se recuerda haber dejado — no asumir que coincide solo porque "eso fue lo último que se envió". El costo de pedirlo es una subida de archivo; el costo de no pedirlo es construir una función nueva sobre una base que ya no existe, y no enterarse hasta que algo se ve raro en producción.
 
 ### Template de reprompting limpio
 ```
