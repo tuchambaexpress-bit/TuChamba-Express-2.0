@@ -182,9 +182,18 @@ tuchamba-v2/
 │   │   │                            (navigator.share() o copiar al portapapeles)
 │   │   ├── ChatModal.tsx         ✅ Modal postulación + chat candidato + quiz de
 │   │   │                            pre-calificación (HU-17/6.8, antes del formulario
-│   │   │                            si la vacante tiene preguntas configuradas)
+│   │   │                            si la vacante tiene preguntas configuradas).
+│   │   │                            **7.55 (2026-09-05):** AvisoPrivacidadChat también
+│   │   │                            al fondo del formulario (antes solo en ChatWindow,
+│   │   │                            después de mandar los datos); estado
+│   │   │                            `avisoYaMostrado` evita que se repita al pasar al
+│   │   │                            chat en la misma sesión
 │   │   ├── ChatWindow.tsx        ✅ Chat Realtime (candidato y reclutador), + prop
-│   │   │                            `soloLectura` (consulta del coordinador, HU-21)
+│   │   │                            `soloLectura` (consulta del coordinador, HU-21).
+│   │   │                            **7.55:** + prop `ocultarAvisoPrivacidad` (default
+│   │   │                            false) — sigue mostrando el aviso para quien entra
+│   │   │                            directo sin pasar por el formulario (sesión
+│   │   │                            guardada, botón "Sí, continuar")
 │   │   ├── TraficoTracker.tsx    ✅ Tracker de fuente en página vacante individual
 │   │   ├── CapturaReferido.tsx   ✅ NUEVO (7.53, 2026-09-04) — componente invisible,
 │   │   │                            mismo patrón que TraficoTracker.tsx: solo monta

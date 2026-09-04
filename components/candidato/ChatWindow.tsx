@@ -19,9 +19,10 @@ interface Props {
   senderTipo?: 'candidato' | 'reclutador'
   soloLectura?: boolean
   onClose: () => void
+  ocultarAvisoPrivacidad?: boolean
 }
 
-export default function ChatWindow({ chatId, nombreCandidato, etapaActual, senderTipo = 'candidato', soloLectura = false, onClose }: Props) {
+export default function ChatWindow({ chatId, nombreCandidato, etapaActual, senderTipo = 'candidato', soloLectura = false, onClose, ocultarAvisoPrivacidad = false }: Props) {
   const [mensajes, setMensajes] = useState<Mensaje[]>([])
   const [texto, setTexto] = useState('')
   const [enviando, setEnviando] = useState(false)
@@ -174,7 +175,7 @@ export default function ChatWindow({ chatId, nombreCandidato, etapaActual, sende
 
   return (
     <div className="flex flex-col h-full">
-      <AvisoPrivacidadChat />
+      {!ocultarAvisoPrivacidad && <AvisoPrivacidadChat />}
 
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">

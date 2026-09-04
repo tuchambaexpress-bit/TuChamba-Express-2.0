@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import ChatWindow from './ChatWindow'
+import AvisoPrivacidadChat from '@/components/shared/AvisoPrivacidadChat'
 import { createClient } from '@/lib/supabase/client'
 import { getCodigoReferido } from '@/hooks/useReferido'
 
@@ -46,6 +47,12 @@ export default function ChatModal({ vacanteId, vacanteTitulo, reclutadorId, onCl
   const [etapaActual, setEtapaActual] = useState('Aplicado')
   const [chatIdActivo, setChatIdActivo] = useState<string | null>(null)
   const [nombreActivo, setNombreActivo] = useState<string>('')
+  // Evita mostrar el aviso de privacidad 2 veces seguidas en la misma
+  // sesión — true solo cuando el candidato acaba de verlo en el
+  // formulario de arriba (handleSubmit). Si entra directo por "Sí,
+  // continuar" (confirmarEsMismoCandidato), nunca pasó por el
+  // formulario, así que se queda en false y sí lo ve en el chat.
+  const [avisoYaMostrado, setAvisoYaMostrado] = useState(false)
 
   useEffect(() => {
     function handleEsc(e: KeyboardEvent) {
@@ -210,6 +217,7 @@ export default function ChatModal({ vacanteId, vacanteTitulo, reclutadorId, onCl
 
           setChatIdActivo(data.chatId)
           setNombreActivo(nombre.trim())
+          setAvisoYaMostrado(true)
         }
         if (data.etapaActual) setEtapaActual(data.etapaActual)
         setMensajeExito(data.yaExistia
@@ -373,6 +381,7 @@ export default function ChatModal({ vacanteId, vacanteTitulo, reclutadorId, onCl
                 nombreCandidato={nombreActivo}
                 etapaActual={etapaActual}
                 onClose={onClose}
+                ocultarAvisoPrivacidad={avisoYaMostrado}
               />
             </div>
           )}
@@ -393,7 +402,7 @@ export default function ChatModal({ vacanteId, vacanteTitulo, reclutadorId, onCl
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
+      <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl overflow-hidden">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-bold text-gray-900">Postularme</h3>
           <button
@@ -445,6 +454,9 @@ export default function ChatModal({ vacanteId, vacanteTitulo, reclutadorId, onCl
           >
             {loading ? 'Enviando...' : '💬 Enviar postulación'}
           </button>
+        </div>
+        <div className="-mx-6 -mb-6 mt-4">
+          <AvisoPrivacidadChat />
         </div>
       </div>
     </div>
