@@ -4,36 +4,27 @@ import { useEffect, useState } from 'react'
 import { getCodigoReferido } from '@/hooks/useReferido'
 import { iconoPlataforma, nombrePlataforma, RedSocial } from '@/lib/redes-sociales'
 
-type Estado = 'sin-token' | 'cargando' | 'listo'
-
 // Reemplaza el link fijo de Facebook que vivía duplicado en HomePortada.tsx
-// y VacantesPortal.tsx (HU-26, 7.52). Corregido 2026-09-04: si no hay
-// token guardado, muestra Facebook de inmediato sin esperar ningún fetch
-// — evita el parpadeo Facebook→red-del-reclutador que José reportó.
+// y VacantesPortal.tsx (HU-26, 7.52). Corregido 2026-09-05: vuelve a mostrar
+// Facebook de inmediato por default (sin esperar nada) — la versión de ayer
+// ("no mostrar nada mientras se resuelve") eliminaba el parpadeo para
+// visitantes con ref, pero a cambio dejaba a TODOS los visitantes (con o sin
+// ref) viendo un hueco vacío una fracción de segundo en cada carga. Trade-off
+// aceptado con José: mejor un parpadeo chico solo para quien llega por un
+// link de referido, que un hueco vacío para el 100% de las visitas.
 export default function RedesSocialesFooter() {
-  const [estado, setEstado] = useState<Estado>('cargando')
   const [redes, setRedes] = useState<RedSocial[]>([])
 
   useEffect(() => {
     const token = getCodigoReferido()
-    if (!token) {
-      setEstado('sin-token')
-      return
-    }
+    if (!token) return // sin token, Facebook se queda como está — nada que resolver
     fetch(`/api/reclutador/perfil?token=${encodeURIComponent(token)}`)
       .then(r => r.json())
-      .then(data => {
-        setRedes(data?.redes_sociales?.length ? data.redes_sociales : [])
-        setEstado('listo')
-      })
-      .catch(() => setEstado('listo'))
+      .then(data => setRedes(data?.redes_sociales?.length ? data.redes_sociales : []))
+      .catch(() => {})
   }, [])
 
-  // Solo hay espera real cuando SÍ hay token que resolver — brevísima,
-  // no se muestra nada todavía para no comprometerse con el dato erróneo.
-  if (estado === 'cargando') return null
-
-  if (estado === 'sin-token' || redes.length === 0) {
+  if (redes.length === 0) {
     return (
       <a
         href="https://www.facebook.com/tuchambaexpressoficial"
