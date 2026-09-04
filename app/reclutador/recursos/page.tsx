@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import ReclutadorNav from '@/components/reclutador/ReclutadorNav'
 
 interface Tarjeta {
@@ -87,6 +88,12 @@ export default function RecursosReclutador() {
           >
             📣 Marketing para tu link
           </button>
+          <Link
+            href="/reclutador/recursos/guia"
+            className="px-4 py-2 rounded-full text-sm font-medium bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 transition-colors"
+          >
+            📖 Guía de uso
+          </Link>
         </div>
 
         {/* Tarjetas */}

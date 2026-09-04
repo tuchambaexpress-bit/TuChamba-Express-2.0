@@ -386,8 +386,19 @@ tuchamba-v2/
     │   │                            `agenciasReclutador` llega vacío (a diferencia
     │   │                            del dashboard viejo, que se queda en "Cargando..."
     │   │                            para siempre en ese caso — ver `7.50` punto 3)
-    │   ├── recursos/page.tsx     ✅ (7.18) 2 pestañas — Soft Skills y Marketing para
-    │   │                            tu link. Contenido estático, en tarjetas cortas
+    │   ├── recursos/
+    │   │   ├── page.tsx           ✅ (7.18) 2 pestañas — Soft Skills y Marketing para
+    │   │   │                          tu link. Contenido estático, en tarjetas cortas.
+    │   │   │                          Botón "📖 Guía de uso" agregado (7.51, 2026-09-04)
+    │   │   └── guia/page.tsx      🟡 (7.51, v1 en producción 2026-09-04, SIN CERRAR) —
+    │   │                              pestañas por sección del portal, imagen + pasos
+    │   │                              numerados. Placeholder si la imagen no existe
+    │   │                              todavía en /public/guia-reclutador/. Contenido de
+    │   │                              Pipeline/Chats/Comisiones/Alertas/Dashboard NO
+    │   │                              verificado contra código real (solo tasks.md) —
+    │   │                              José pidió más profundidad, se retoma sección por
+    │   │                              sección con el archivo real de cada una (ver
+    │   │                              tasks.md 7.51 para el plan completo)
     │   ├── alertas/page.tsx      ✅ Panel alertas automáticas
     │   └── perfil/page.tsx       ✅ (HU-26, 7.52, verificado en vivo 2026-09-04) — sub-sección de redes
     │                                 sociales (hasta 6 links), ícono "👤 Perfil"
