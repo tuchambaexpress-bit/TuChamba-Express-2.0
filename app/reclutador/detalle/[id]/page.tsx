@@ -47,7 +47,7 @@ export default async function FichaVacante({ params, searchParams }: Props) {
       letras_chiquitas, salario_min, salario_max, salario_tipo,
       salario_visible, ciudad, estado, colonia_zona,
       modalidad, jornada, horario, tipo_contrato, turno, salario_periodo,
-      tiene_ruta, ruta_para_entrevista,
+      tiene_ruta, ruta_para_entrevista, permite_directo_planta,
       estacionamiento, comedor, uniforme,
       empresa_visible, destacada, status, prioridad,
       dias_garantia, dias_induccion, induccion_dentro_garantia,
@@ -73,9 +73,35 @@ export default async function FichaVacante({ params, searchParams }: Props) {
     .eq('comision_aplicable', true)
     .gte('fecha_contratacion', cupoDesde)
 
-  const empresa = vacante.empresa_visible
-    ? (vacante.negocios as any)?.nombre ?? 'Empresa'
-    : 'Empresa Confidencial'
+  // Sección 9 — Proceso de reclutamiento (7.38, completada 2026-09-04).
+  // El catálogo (rutas_reclutamiento/puntos_reclutamiento) vive por
+  // empresa; estas 2 consultas traen solo lo que quedó SELECCIONADO
+  // para ESTA vacante específica, vía las tablas intermedias.
+  const { data: rutasVacante } = await supabase
+    .from('vacante_ruta_reclutamiento')
+    .select('rutas_reclutamiento(id, nombre, operado_por, chofer_vehiculo, contacto_nombre, ubicacion_maps, paradas)')
+    .eq('vacante_id', params.id)
+  const { data: puntosVacante } = await supabase
+    .from('vacante_punto_reclutamiento')
+    .select('puntos_reclutamiento(id, nombre, operado_por, direccion, ubicacion_maps, horario, contacto_nombre, contacto_telefono)')
+    .eq('vacante_id', params.id)
+
+  const rutasReclutamiento = (rutasVacante ?? []).map((r: any) => r.rutas_reclutamiento).filter(Boolean)
+  const puntosReclutamiento = (puntosVacante ?? []).map((p: any) => p.puntos_reclutamiento).filter(Boolean)
+
+  // Nombre real de la agencia (multi-agencia, corregido 2026-09-04 junto
+  // con VacanteModal — antes "HR Connect" estaba fijo en el texto)
+  const { data: agenciaVacante } = await supabase
+    .from('agencias')
+    .select('nombre')
+    .eq('id', vacante.agencia_id)
+    .maybeSingle()
+  const nombreAgencia = agenciaVacante?.nombre ?? 'la agencia'
+
+  // El reclutador SIEMPRE ve el nombre real de la empresa — empresa_visible
+  // es una configuración para el candidato (portal público), nunca debería
+  // ocultarle la empresa al reclutador que va a trabajar la vacante.
+  const empresa = (vacante.negocios as any)?.nombre ?? 'Empresa'
 
   const salario = vacante.salario_min
     ? `$${vacante.salario_min.toLocaleString('es-MX')}${vacante.salario_max ? ` - $${vacante.salario_max.toLocaleString('es-MX')}` : ''} ${NOMBRES_SALARIO_TIPO[vacante.salario_tipo ?? ''] ?? vacante.salario_tipo ?? ''} ${vacante.salario_periodo ?? ''}`
@@ -125,7 +151,7 @@ export default async function FichaVacante({ params, searchParams }: Props) {
                 <span className="text-xs px-2 py-1 rounded-lg font-medium bg-amber-100 text-amber-700">⭐ Destacada</span>
               )}
               <span className="text-xs px-2 py-1 rounded-lg font-medium bg-gray-100 text-gray-600">
-                {vacante.empresa_visible ? '👁️ Empresa visible al candidato' : '🙈 Empresa oculta (Confidencial)'}
+                {vacante.empresa_visible ? '👁️ Empresa visible al candidato' : 'Empresa oculta al usuario (Confidencial)'}
               </span>
             </div>
           </div>
@@ -137,6 +163,17 @@ export default async function FichaVacante({ params, searchParams }: Props) {
               📍 {vacante.ciudad}, {vacante.estado}{vacante.colonia_zona ? ` · ${vacante.colonia_zona}` : ''}
             </p>
             <p className="text-sm text-gray-700 mt-1">🏢 {NOMBRES_MODALIDAD[vacante.modalidad] ?? vacante.modalidad}</p>
+            {(vacante.negocios as any)?.ubicacion_maps && (
+              <a
+                href={(vacante.negocios as any).ubicacion_maps}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 bg-blue-50 border border-blue-200 rounded-xl px-3 py-2 flex flex-col hover:bg-blue-100 transition-colors"
+              >
+                <p className="text-xs font-semibold text-blue-700">📍 Ubicación de la empresa</p>
+                <span className="text-xs text-blue-600 underline">Abrir en Google Maps</span>
+              </a>
+            )}
           </div>
 
           {/* Sección 3 — Condiciones laborales */}
@@ -218,7 +255,7 @@ export default async function FichaVacante({ params, searchParams }: Props) {
           )}
 
           {/* Sección 5 — Logística especial */}
-          {(vacante.tiene_ruta || vacante.estacionamiento || vacante.comedor || vacante.uniforme || (vacante.negocios as any)?.ubicacion_maps) && (
+          {(vacante.tiene_ruta || vacante.estacionamiento || vacante.comedor || vacante.uniforme) && (
             <div className="bg-white rounded-2xl p-5 shadow-sm">
               <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Sección 5 — Logística especial</p>
               <div className="flex flex-wrap gap-2">
@@ -252,17 +289,6 @@ export default async function FichaVacante({ params, searchParams }: Props) {
                 {vacante.estacionamiento && <span className="bg-gray-50 border border-gray-200 text-gray-700 text-xs px-3 py-2 rounded-xl">🅿️ Estacionamiento</span>}
                 {vacante.comedor && <span className="bg-gray-50 border border-gray-200 text-gray-700 text-xs px-3 py-2 rounded-xl">🍽️ Comedor</span>}
                 {vacante.uniforme && <span className="bg-gray-50 border border-gray-200 text-gray-700 text-xs px-3 py-2 rounded-xl">👕 Uniforme</span>}
-                {(vacante.negocios as any)?.ubicacion_maps && (
-                  <a
-                    href={(vacante.negocios as any).ubicacion_maps}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-blue-50 border border-blue-200 rounded-xl px-3 py-2 flex flex-col hover:bg-blue-100 transition-colors"
-                  >
-                    <p className="text-xs font-semibold text-blue-700">📍 Ubicación de la empresa</p>
-                    <span className="text-xs text-blue-600 underline">Abrir en Google Maps</span>
-                  </a>
-                )}
               </div>
             </div>
           )}
@@ -365,11 +391,82 @@ export default async function FichaVacante({ params, searchParams }: Props) {
             )}
           </div>
 
-          {/* Sección 9 — Proceso de reclutamiento: pausada (7.38), sin
-              construir todavía. Se deja el espacio anotado a propósito. */}
-          <div className="bg-gray-100 border border-dashed border-gray-300 rounded-2xl p-5">
+          {/* Sección 9 — Proceso de reclutamiento (7.38, completada
+              2026-09-04). Muestra SOLO lo que el coordinador seleccionó
+              para esta vacante en VacanteModal — no el catálogo completo
+              de la empresa. Nombres de agencia dinámicos (no hardcoded
+              "HR Connect"), corregido el mismo día. */}
+          <div className="bg-white rounded-2xl p-5 shadow-sm">
             <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Sección 9 — Proceso de reclutamiento</p>
-            <p className="text-xs text-gray-400 mt-1">Pendiente de construir (7.38) — catálogo de puntos de reclutamiento.</p>
+            <div className="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 mb-3">
+              <p className="text-[11px] text-blue-700">🔒 Información no visible al candidato — sirve como guía de indicaciones para llegar a entrevista.</p>
+            </div>
+
+            {vacante.permite_directo_planta && (
+              <div className="bg-green-50 border border-green-200 rounded-xl px-3 py-2 mb-2">
+                <p className="text-xs font-semibold text-green-700">✅ Directo a planta</p>
+                <p className="text-xs text-green-600 mt-0.5">El candidato puede presentarse por su cuenta.</p>
+              </div>
+            )}
+
+            {rutasReclutamiento.length > 0 && (
+              <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1 mt-2">🚐 Ruta dedicada</p>
+            )}
+            {rutasReclutamiento.map((r: any) => (
+              <div key={r.id} className="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 mb-2">
+                <p className="text-xs font-semibold text-gray-700">{r.nombre}</p>
+                <p className="text-[11px] text-gray-500">{r.operado_por === 'empresa' ? 'Operada por la empresa' : `Operada por ${nombreAgencia}`}</p>
+                {r.chofer_vehiculo && <p className="text-xs text-gray-600 mt-1">Chofer/vehículo: {r.chofer_vehiculo}</p>}
+                {r.contacto_nombre && <p className="text-xs text-gray-600">Con quién presentarse: {r.contacto_nombre}</p>}
+                {r.paradas?.length > 0 && (
+                  <div className="mt-1">
+                    <p className="text-[11px] text-gray-500">Paradas:</p>
+                    <ul className="ml-3">
+                      {r.paradas.map((p: string, i: number) => (
+                        <li key={i} className="text-xs text-gray-700">• {p}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {r.ubicacion_maps && (
+                  <a href={r.ubicacion_maps} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 underline mt-1 inline-block">
+                    Abrir en Google Maps
+                  </a>
+                )}
+              </div>
+            ))}
+
+            {puntosReclutamiento.length > 0 && (
+              <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1 mt-2">📍 Punto fijo de reclutamiento</p>
+            )}
+            {puntosReclutamiento.map((p: any) => (
+              <div key={p.id} className="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 mb-2">
+                <p className="text-xs font-semibold text-gray-700">{p.nombre}</p>
+                <p className="text-[11px] text-gray-500">{p.operado_por === 'empresa' ? 'Operado por la empresa' : `Operado por ${nombreAgencia}`}</p>
+                {p.direccion && <p className="text-xs text-gray-600 mt-1">{p.direccion}</p>}
+                {p.horario && <p className="text-xs text-gray-600">🕐 {p.horario}</p>}
+                {p.contacto_nombre && (
+                  <p className="text-xs text-gray-600">
+                    Con quién presentarse: {p.contacto_nombre}{p.contacto_telefono ? ` · ${p.contacto_telefono}` : ''}
+                  </p>
+                )}
+                {p.ubicacion_maps && (
+                  <a href={p.ubicacion_maps} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 underline mt-1 inline-block">
+                    Abrir en Google Maps
+                  </a>
+                )}
+              </div>
+            ))}
+
+            {vacante.tiene_ruta && vacante.ruta_para_entrevista && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+                <p className="text-xs text-amber-700">🚌 Las rutas de transporte también están disponibles para ir a entrevista, en esta vacante.</p>
+              </div>
+            )}
+
+            {!vacante.permite_directo_planta && rutasReclutamiento.length === 0 && puntosReclutamiento.length === 0 && (
+              <p className="text-xs text-gray-400">El coordinador aún no configuró el proceso de llegada para esta vacante.</p>
+            )}
           </div>
 
           <FaqWidget

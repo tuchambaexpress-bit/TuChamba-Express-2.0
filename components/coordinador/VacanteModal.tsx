@@ -174,6 +174,17 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
   // base de datos, BORRANDO lo que la empresa ya tenía. Esta bandera solo
   // se activa cuando de verdad se confirmó la carga real de esa empresa.
   const [datosEmpresaCargados, setDatosEmpresaCargados] = useState(false)
+  // Nombre real de la agencia dueña de esta vacante (multi-agencia, 7.38
+  // corregido 2026-09-04) — antes el texto "HR Connect" estaba fijo en el
+  // código, incorrecto para cualquier agencia que no fuera HR CONNECT.
+  const [nombreAgencia, setNombreAgencia] = useState('')
+
+  useEffect(() => {
+    if (!agenciaId) return
+    const supabase = createClient()
+    supabase.from('agencias').select('nombre').eq('id', agenciaId).single()
+      .then(({ data }) => setNombreAgencia(data?.nombre ?? 'la agencia'))
+  }, [agenciaId])
 
   // Al elegir una empresa existente, carga sus días de descanso, entrevista
   // y rutas ya guardados
@@ -1661,7 +1672,7 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
 
                           <div className="border border-gray-200 rounded-lg p-3 space-y-2 bg-gray-50 mt-3">
                             <label className="text-xs font-medium text-gray-700">
-                              <strong>Opción 2 — Ruta especializada:</strong> 🚐 recorrido con chofer de HR Connect/Empresa — catálogo de {negocios.find(n => n.id === form.negocio_id)?.nombre ?? 'la empresa'}
+                                <strong>Opción 2 — Ruta especializada:</strong> 🚐 recorrido con chofer de {nombreAgencia || 'la agencia'}/Empresa — catálogo de {negocios.find(n => n.id === form.negocio_id)?.nombre ?? 'la empresa'}
                             </label>
                             <div className="space-y-2">
                               {rutasReclutamiento.map((r, i) => (
@@ -1679,7 +1690,7 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
                                         onChange={e => { const n = [...rutasReclutamiento]; n[i] = { ...n[i], operado_por: e.target.value }; setRutasReclutamiento(n) }}
                                         className="w-full text-xs border border-gray-200 rounded px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-[#1A6B3C]"
                                       >
-                                        <option value="hr_connect">Operada por HR Connect</option>
+                                        <option value="hr_connect">Operada por {nombreAgencia || 'la agencia'}</option>
                                         <option value="empresa">Operada por la empresa</option>
                                       </select>
                                       <input
@@ -1720,7 +1731,7 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
 
                           <div className="border border-gray-200 rounded-lg p-3 space-y-2 bg-gray-50 mt-3">
                             <label className="text-xs font-medium text-gray-700">
-                              <strong>Opción 3 — Oficina/punto fijo:</strong> 📍 HR Connect (Apodaca/carpa) o punto propio de la empresa — catálogo de {negocios.find(n => n.id === form.negocio_id)?.nombre ?? 'la empresa'}
+                              <strong>Opción 3 — Oficina/punto fijo:</strong> 📍 {nombreAgencia || 'la agencia'} o punto propio de la empresa — catálogo de {negocios.find(n => n.id === form.negocio_id)?.nombre ?? 'la empresa'}
                             </label>
                             <div className="space-y-2">
                               {puntosReclutamiento.map((p, i) => (
@@ -1729,7 +1740,7 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
                                     <div className="flex-1 space-y-1">
                                       <input type="text" value={p.nombre} onChange={e => { const n = [...puntosReclutamiento]; n[i] = { ...n[i], nombre: e.target.value }; setPuntosReclutamiento(n) }} placeholder="Nombre del punto, ej. Teatro de la Ciudad" className="w-full text-xs font-medium border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#1A6B3C]" />
                                       <select value={p.operado_por ?? 'hr_connect'} onChange={e => { const n = [...puntosReclutamiento]; n[i] = { ...n[i], operado_por: e.target.value }; setPuntosReclutamiento(n) }} className="w-full text-xs border border-gray-200 rounded px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-[#1A6B3C]">
-                                        <option value="hr_connect">Operado por HR Connect</option>
+                                        <option value="hr_connect">Operado por {nombreAgencia || 'la agencia'}</option>
                                         <option value="empresa">Operado por la empresa</option>
                                       </select>
                                       <input type="text" value={p.direccion ?? ''} onChange={e => { const n = [...puntosReclutamiento]; n[i] = { ...n[i], direccion: e.target.value }; setPuntosReclutamiento(n) }} placeholder="Dirección" className="w-full text-xs border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#1A6B3C]" />

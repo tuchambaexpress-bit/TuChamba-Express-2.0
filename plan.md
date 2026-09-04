@@ -362,7 +362,17 @@ tuchamba-v2/
     │   │                            recuadro "Requerimiento" (cupo real, HU-16), días
     │   │                            de entrevista de la empresa (5.25, dentro de "Qué
     │   │                            decirle al candidato"), widget FaqWidget montado
-    │   │                            al final (4.14/4.15, cascada 3 niveles)
+    │   │                            al final (4.14/4.15, cascada 3 niveles). **Sección 9
+    │   │                            completada (7.38, 2026-09-04):** 2 consultas nuevas
+    │   │                            (vacante_ruta_reclutamiento/vacante_punto_reclutamiento
+    │   │                            con join al catálogo por negocio_id) reemplazan el
+    │   │                            placeholder de 7.46 — muestra solo lo seleccionado
+    │   │                            para esa vacante, no el catálogo completo de la empresa.
+    │   │                            Nombre real de agencia dinámico (`nombreAgencia`, ver §5)
+    │   │                            en vez de "HR Connect" hardcodeado. "Ubicación de la
+    │   │                            empresa" movida de Sección 5 a Sección 2 (a petición de
+    │   │                            José) — la condición que muestra la Sección 5 ya NO
+    │   │                            incluye `ubicacion_maps` (bug encontrado al mover, ver §5)
     │   ├── vacantes/page.tsx     ✅ Listado para consulta libre (5.20), incluye días
     │   │                            de entrevista de la empresa (5.25)
     │   ├── comisiones/page.tsx   ✅ Panel comisiones — corregido para calcular
@@ -592,6 +602,14 @@ Se documenta aquí como patrón reutilizable para el futuro: cualquier tabla que
 **La solución, ya construida — `components/candidato/CapturaReferido.tsx`:** componente invisible, mismo patrón que `TraficoTracker.tsx` (que ya resolvía el mismo problema para el tracking de visitas, pero nadie conectó que el mismo problema aplicaba también a la captura del `ref`). Se monta junto a `TraficoTracker` en cualquier página server-side nueva que reciba tráfico externo.
 
 **Regla adoptada para el futuro:** cualquier página nueva bajo `app/` que pueda recibir un visitante que llega **directo** (compartido, anuncio, QR, etc.) — no solo navegando desde dentro del sitio — debe montar `<CapturaReferido />` explícitamente. No asumir que "ya está resuelto en otro lado" solo porque `/` y `/vacantes` lo tienen. Revisar esto en cualquier página nueva de cara al candidato, mismo criterio que ya se aplica para RLS en tablas nuevas.
+
+### Patrón: nunca hardcodear el nombre de una agencia en texto — el sistema es multi-agencia (`7.38`, 2026-09-04)
+
+**El hallazgo:** José detectó, revisando la Sección 9 de `VacanteModal`, que el texto "Operada/Operado por HR Connect" estaba escrito literal en el código — no leía la agencia real de la vacante. Como TuChamba Express es multi-agencia por diseño (HR CONNECT es hoy la única agencia real usándolo, pero el sistema está construido para más), cualquier texto que asuma "la agencia siempre es HR Connect" es una bomba de tiempo — funciona perfecto hasta el día que una segunda agencia real empiece a usar el sistema, y ahí se rompe en silencio (sin error, solo información incorrecta mostrada al usuario).
+
+**La corrección:** un estado `nombreAgencia`, jalado en vivo de `agencias.nombre` vía el `agenciaId`/`agencia_id` de la vacante en cuestión — nunca un string fijo. Aplicado en `VacanteModal.tsx` y en la ficha operativa del reclutador (`app/reclutador/detalle/[id]/page.tsx`).
+
+**Regla adoptada para el futuro:** antes de escribir cualquier texto visible que mencione una agencia, una empresa, o cualquier entidad que varíe según quién esté usando el sistema, preguntarse "¿esto es siempre así, o solo porque hoy solo hay una agencia real probando el sistema?". Si es lo segundo, jalar el dato real, nunca hardcodearlo — aunque hoy coincida siempre con el mismo valor. Mismo espíritu que la regla de `<CapturaReferido />` de arriba: lo que funciona hoy porque solo hay un caso real probado no significa que esté bien construido para cuando haya más.
 
 ### Administradores — dos roles, RLS a nivel de base de datos (2026-08-21)
 
