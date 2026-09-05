@@ -200,7 +200,14 @@ tuchamba-v2/
 │   │   │                            **7.55:** + prop `ocultarAvisoPrivacidad` (default
 │   │   │                            false) — sigue mostrando el aviso para quien entra
 │   │   │                            directo sin pasar por el formulario (sesión
-│   │   │                            guardada, botón "Sí, continuar")
+│   │   │                            guardada, botón "Sí, continuar"). **7.58
+│   │   │                            (2026-09-05):** mensaje inicial precargado para el
+│   │   │                            candidato ("¡Hola!👋🏼 Quiero pedir informes sobre
+│   │   │                            esta vacante.") — solo si `mensajesCargados` ya
+│   │   │                            confirmó que la conversación está vacía de verdad,
+│   │   │                            nunca durante el instante de carga de una
+│   │   │                            conversación existente (bug real, encontrado antes
+│   │   │                            de que José lo probara)
 │   │   ├── TraficoTracker.tsx    ✅ Tracker de fuente en página vacante individual
 │   │   ├── CapturaReferido.tsx   ✅ NUEVO (7.53, 2026-09-04) — componente invisible,
 │   │   │                            mismo patrón que TraficoTracker.tsx: solo monta

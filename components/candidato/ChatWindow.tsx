@@ -33,6 +33,19 @@ export default function ChatWindow({ chatId, nombreCandidato, etapaActual, sende
   const scrollRef = useRef<HTMLDivElement>(null)
   const supabase = createClient()
 
+  // Mensaje precargado, listo para enviar (2026-09-05) — solo para el
+  // candidato, y solo si la conversación sigue sin ningún mensaje. Se
+  // dispara una vez que ya se confirmó que mensajes está vacío de
+  // verdad (no solo "todavía cargando") — así nunca le borra un
+  // mensaje real a alguien que ya viene conversando.
+  const [mensajesCargados, setMensajesCargados] = useState(false)
+
+  useEffect(() => {
+    if (mensajesCargados && senderTipo === 'candidato' && !soloLectura && mensajes.length === 0 && texto === '') {
+      setTexto('¡Hola!👋🏼 Quiero pedir informes sobre esta vacante.')
+    }
+  }, [mensajesCargados, mensajes.length, senderTipo, soloLectura])
+
   // Si el padre decide que hay una etapa "base" distinta (ej. al confirmar
   // identidad en ChatModal), sincronizamos — sin pisar actualizaciones en
   // vivo que ya hayan llegado por Realtime después.
@@ -47,6 +60,7 @@ export default function ChatWindow({ chatId, nombreCandidato, etapaActual, sende
         .eq('chat_id', chatId)
         .order('timestamp', { ascending: true })
       if (data) setMensajes(data)
+      setMensajesCargados(true)
     }
     cargarMensajes()
 
@@ -199,7 +213,7 @@ export default function ChatWindow({ chatId, nombreCandidato, etapaActual, sende
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
         {mensajes.length === 0 && (
           <p className="text-center text-gray-400 text-sm mt-8">
-            Tu mensaje será enviado al reclutador. Pronto te contactarán.
+            Tu mensaje será enviado al reclutador. En un momento te contactarán.
           </p>
         )}
         {mensajes.map((m, i) => {
