@@ -221,6 +221,36 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
       if (!postulacion.candidatos?.residencia) faltantes.push('residencia')
       if (postulacion.asistio_entrevista !== true) faltantes.push('confirmar que sí se presentó a la entrevista')
 
+      // Candado nuevo (2026-09-05): checklist de documentos completo.
+      // Consulta fresca, no confía en postulacion.vacantes.documentos_requeridos
+      // — ese campo no siempre viene incluido en el objeto que pasa
+      // KanbanBoard.tsx (mismo hueco ya documentado en 8.21b).
+      const supabaseCheck = createClient()
+      const { data: vacanteCheck } = await supabaseCheck
+        .from('vacantes')
+        .select('documentos_requeridos')
+        .eq('id', postulacion.vacante_id)
+        .single()
+      const requeridosCheck: string[] = vacanteCheck?.documentos_requeridos ?? []
+
+      if (requeridosCheck.length > 0) {
+        const { data: postCheck } = await supabaseCheck
+          .from('postulaciones')
+          .select('documentos_entrevista_checklist')
+          .eq('id', postulacion.id)
+          .single()
+        const checklistGuardadoCheck: any[] = postCheck?.documentos_entrevista_checklist ?? []
+        const pendientes = requeridosCheck.filter(doc => {
+          const existente = checklistGuardadoCheck.find((c: any) => c.documento === doc)
+          const estado = existente?.estado
+            ?? (existente && 'entregado' in existente ? (existente.entregado ? 'entregado' : 'pendiente') : 'pendiente')
+          return estado === 'pendiente'
+        })
+        if (pendientes.length > 0) {
+          faltantes.push(`checklist de documentos (${pendientes.length} pendiente${pendientes.length !== 1 ? 's' : ''})`)
+        }
+      }
+
       if (faltantes.length > 0) {
         setMostrarMenu(false)
         alert(`Antes de pasar a Inducción, completa: ${faltantes.join(', ')}.`)
@@ -966,7 +996,7 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
         {/* Nombre candidato */}
         <button
           onClick={() => setMostrarConsulta(true)}
-          className="font-semibold text-gray-900 text-sm hover:text-[#1A6B3C] hover:underline text-left"
+          className="font-semibold text-gray-900 text-base hover:text-[#1A6B3C] hover:underline text-left"
         >
           {nombre}
         </button>
@@ -1001,7 +1031,7 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
         )}
 
         {/* Vacante */}
-        <p className="text-xs text-[#1A6B3C] mt-0.5">{vacante}{empresa ? ` — ${empresa}` : ''}</p>
+        <p className="text-sm text-[#1A6B3C] mt-0.5">{vacante}{empresa ? ` — ${empresa}` : ''}</p>
 
         {/* Confirmación de asistencia (CA-15.5) — solo si ya pasó la fecha y no se ha contestado */}
         {postulacion.etapa_actual === 'Entrevista' && postulacion.fecha_entrevista && new Date(postulacion.fecha_entrevista) < new Date() && (
@@ -1140,22 +1170,39 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
         )}
 
         {postulacion.asistio_entrevista !== null && postulacion.asistio_entrevista !== undefined && (
-          <p className="text-[10px] mt-1.5 font-medium">
+          <p className="text-xs mt-1.5 font-medium">
             {postulacion.asistio_entrevista ? '✅ Sí se presentó a entrevista' : '❌ No se presentó a entrevista'}
           </p>
         )}
 
         {/* Fecha entrevista si existe */}
         {tieneEntrevista && (
-          <p className="text-xs text-blue-600 mt-1 font-medium">
-            📅 {new Date(postulacion.fecha_entrevista).toLocaleDateString('es-MX', {
+          <p className="text-sm text-blue-600 mt-1 font-medium">
+            📅 Entrevista: {new Date(postulacion.fecha_entrevista).toLocaleDateString('es-MX', {
               day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
             })}
           </p>
         )}
 
+        {/* Fecha inicio de Inducción (2026-09-05) — fecha_contratacion se
+            fija al entrar a Inducción, ver confirmarInduccion() */}
+        {postulacion.fecha_contratacion && (
+          <p className="text-sm text-purple-800 mt-1 font-semibold">
+            ☑️ Inicio inducción: {new Date(postulacion.fecha_contratacion + 'T00:00:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}
+          </p>
+        )}
+
+        {/* Fecha de Contratado (2026-09-05) — NO es la contratación legal
+            de la empresa, es cuando termina Inducción y se integra a
+            operaciones, solo para seguimiento (ver Guía de uso) */}
+        {postulacion.fecha_firma_contrato && (
+          <p className="text-sm text-green-800 mt-1 font-semibold">
+              🏭 Contratado: {new Date(postulacion.fecha_firma_contrato + 'T00:00:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}
+          </p>
+        )}
+
         {/* Días en etapa */}
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-sm text-gray-500 mt-1">
           {diasEnEtapa === 0 ? 'Hoy' : `Hace ${diasEnEtapa} día${diasEnEtapa !== 1 ? 's' : ''}`}
         </p>
 
@@ -1188,7 +1235,7 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
         <div className="flex gap-2 mt-3">
           {!postulacion.es_manual && (
             <a href={`/reclutador/chats?chat=${postulacion.chats?.[0]?.id}`}
-              className="flex-1 text-center text-xs bg-gray-50 hover:bg-gray-100 text-gray-600 py-1.5 rounded-lg border border-gray-200 transition-colors"
+              className="flex-1 text-center text-sm bg-gray-50 hover:bg-gray-100 text-gray-600 py-1.5 rounded-lg border border-gray-200 transition-colors"
             >
               💬 Chat
             </a>
@@ -1211,7 +1258,7 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
           <div className="relative">
             <button
               onClick={() => setMostrarMenu(!mostrarMenu)}
-              className="text-xs bg-[#1A6B3C] hover:bg-[#155c33] text-white px-3 py-1.5 rounded-lg transition-colors"
+              className="text-sm bg-[#1A6B3C] hover:bg-[#155c33] text-white px-3 py-1.5 rounded-lg transition-colors"
             >
               Mover ▾
             </button>
@@ -1248,7 +1295,7 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
             {enEntrevista && (
               <button
                 onClick={() => { setMostrarModalEntrevista(true); cargarOpcionesLlegada() }}
-                className="flex-1 text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 py-1.5 rounded-lg border border-blue-200 transition-colors"
+                className="flex-1 text-sm bg-blue-50 hover:bg-blue-100 text-blue-700 py-1.5 rounded-lg border border-blue-200 transition-colors"
               >
                 📅 {tieneEntrevista ? 'Ver entrevista' : 'Agendar'}
               </button>
@@ -1256,7 +1303,7 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
             <a href={sinMovimiento48h ? generarLinkSeguimiento() : generarLinkWhatsApp()}
               target="_blank"
               rel="noopener noreferrer"
-              className={`flex-1 text-center text-xs py-1.5 rounded-lg border transition-colors ${
+              className={`flex-1 text-center text-sm py-1.5 rounded-lg border transition-colors ${
                 sinMovimiento48h
                   ? 'bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200'
                   : 'bg-green-50 hover:bg-green-100 text-green-700 border-green-200'

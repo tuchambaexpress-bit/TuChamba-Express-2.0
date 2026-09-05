@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import AvisoPrivacidadChat from '@/components/shared/AvisoPrivacidadChat'
 
 interface Mensaje {
   id: string
@@ -98,8 +97,6 @@ export default function ChatCoordinadorReclutador({ chatId, nombreRemitente, sen
 
   return (
     <div className="flex flex-col h-full">
-      <AvisoPrivacidadChat />
-
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
         {mensajes.length === 0 && (
           <p className="text-center text-gray-400 text-sm mt-8">

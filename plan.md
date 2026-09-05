@@ -207,7 +207,13 @@ tuchamba-v2/
 │   │   │                            confirmó que la conversación está vacía de verdad,
 │   │   │                            nunca durante el instante de carga de una
 │   │   │                            conversación existente (bug real, encontrado antes
-│   │   │                            de que José lo probara)
+│   │   │                            de que José lo probara). **7.59:** fix del
+│   │   │                            auto-crecer del cuadro de texto — el saludo
+│   │   │                            precargado se veía cortado a 1 línea, porque el
+│   │   │                            ajuste de altura medía `scrollHeight` antes de
+│   │   │                            que el modal terminara su transición. Envuelto
+│   │   │                            en el mismo `setTimeout(...,100)` que ya usaba
+│   │   │                            el scroll al último mensaje, más abajo
 │   │   ├── TraficoTracker.tsx    ✅ Tracker de fuente en página vacante individual
 │   │   ├── CapturaReferido.tsx   ✅ NUEVO (7.53, 2026-09-04) — componente invisible,
 │   │   │                            mismo patrón que TraficoTracker.tsx: solo monta
@@ -248,7 +254,11 @@ tuchamba-v2/
 │   │   ├── KanbanBoard.tsx       ✅ Tablero principal (desktop + móvil), incluye
 │   │   │                            columna "Descartados", Realtime (canal sobre
 │   │   │                            `postulaciones`, agregado 6.8b — antes no existía
-│   │   │                            ningún Realtime en esta pantalla), historial previo
+│   │   │                            ningún Realtime en esta pantalla), historial previo.
+│   │   │                            **7.59 (2026-09-05):** `.select()` ampliado con
+│   │   │                            `fecha_contratacion`/`fecha_firma_contrato` — sin
+│   │   │                            esto, `KanbanCard.tsx` nunca podía mostrarlas
+│   │   │                            (reincidencia del bug de props de `8.23`, ver §13)
 │   │   ├── KanbanColumn.tsx      ✅ Columna por etapa (incl. "Descartado")
 │   │   ├── KanbanCard.tsx        ✅ Card candidato — modales descarte/inducción/firma
 │   │   │                            contrato/entrevista/documentos; botón único de
@@ -278,7 +288,13 @@ tuchamba-v2/
 │   │   │                            `documentos_entrevista_checklist jsonb`);
 │   │   │                            precarga completa de todo lo anterior al
 │   │   │                            reabrir "Ver entrevista" (antes solo
-│   │   │                            precargaba fecha/hora)
+│   │   │                            precargaba fecha/hora). **7.59 (2026-09-05):**
+│   │   │                            candado nuevo — checklist de documentos sin
+│   │   │                            pendientes, obligatorio antes de Inducción
+│   │   │                            (consulta fresca, mismo criterio que `8.21b`);
+│   │   │                            fechas de "Inicio inducción"/"Contratado"
+│   │   │                            visibles y acumulables en la tarjeta; texto
+│   │   │                            del frente subido un escalón de tamaño
 │   │   ├── FaqWidget.tsx         ✅ NUEVO (4.14/4.15) — widget de preguntas del
 │   │   │                            reclutador, montado en la ficha operativa.
 │   │   │                            Cascada 3 niveles, modal "Ejemplos de preguntas",
@@ -321,7 +337,11 @@ tuchamba-v2/
 │   │                                     que todavía describen la versión vieja
 │   ├── shared/
 │   │   ├── ChatCoordinadorReclutador.tsx ✅ Chat general único por par
-│   │   │                                      reclutador-coordinador
+│   │   │                                      reclutador-coordinador. **7.59
+│   │   │                                      (2026-09-05):** quitado
+│   │   │                                      AvisoPrivacidadChat — es consentimiento
+│   │   │                                      de candidato, nunca aplicó a un chat
+│   │   │                                      100% interno
 │   │   ├── AvisoPrivacidadChat.tsx ✅ (7.3c) Franja fija (no cerrable) con link a
 │   │   │                                 /aviso-de-privacidad, montada en
 │   │   │                                 ChatWindow.tsx y ChatCoordinadorReclutador.tsx
@@ -376,7 +396,15 @@ tuchamba-v2/
     │   │                            para candidatos que llegan por redes/WhatsApp/
     │   │                            presencial), envuelve KanbanBoard
     │   ├── chats/page.tsx        ✅ Lista chats + ChatWindow Realtime, "Ordenar por"
-    │   ├── chat-coordinador/     ✅ Chat con su coordinador (5.13)
+    │   ├── chat-coordinador/     ✅ Chat con su coordinador (5.13). **7.59
+    │   │                            (2026-09-05, reescrito completo):** soporta
+    │   │                            2+ agencias activas — antes usaba
+    │   │                            `.maybeSingle()` asumiendo máximo 1, truena con
+    │   │                            2 y mostraba "No se encontró tu coordinador
+    │   │                            asignado" aunque sí existiera. Con 1 agencia,
+    │   │                            va directo al chat (sin cambio visible); con
+    │   │                            2+, lista tipo WhatsApp para elegir — general,
+    │   │                            no depende de `es_maestro`
     │   │   └── page.tsx
     │   ├── detalle/[id]/
     │   │   └── page.tsx          ✅ Ficha operativa, revalidate=0, PDFs de ruta de
@@ -421,7 +449,11 @@ tuchamba-v2/
     │   │                              verificado contra código real (solo tasks.md) —
     │   │                              José pidió más profundidad, se retoma sección por
     │   │                              sección con el archivo real de cada una (ver
-    │   │                              tasks.md 7.51 para el plan completo)
+    │   │                              tasks.md 7.51 para el plan completo). **7.59
+    │   │                              (2026-09-05):** sección Pipeline actualizada con
+    │   │                              el candado del checklist y la aclaración de que
+    │   │                              "Contratado" NO es la contratación legal de la
+    │   │                              empresa, es solo fin de seguimiento interno
     │   ├── alertas/page.tsx      ✅ Panel alertas automáticas
     │   └── perfil/page.tsx       ✅ (HU-26, 7.52, verificado en vivo 2026-09-04) — sub-sección de redes
     │                                 sociales (hasta 6 links), ícono "👤 Perfil"
@@ -1310,6 +1342,8 @@ Cuando un dato "pertenece" a la empresa pero una vacante puntual necesita poder 
 3. **El más serio, no descubierto hasta que José probó el flujo completo con SQL en mano:** los botones "Sí"/"No" de asistencia a entrevista nunca escribían el resultado en la tabla `entrevistas` — dependían de `postulacion.entrevista_activa_id`, que casi seguro nunca llegaba en el prop, así que la condición `if (postulacion.entrevista_activa_id)` se saltaba en silencio, sin ningún error visible. El historial de asistencia real **nunca se estaba guardando**, aunque la tarjeta del momento se veía perfecta — el bug era invisible sin ir a la base de datos a confirmar.
 
 **Regla concreta para cualquier componente que reciba datos por prop de un padre no visible en la sesión actual:** si el código va a **leer** un campo que se agregó recién (no estaba en el diseño original del padre), o va a **depender de un campo para decidir si ejecuta una escritura** (como el `if` del punto 3), hacer una consulta propia a Supabase en ese momento en vez de confiar en el prop. Cuesta una consulta extra; el precio de no hacerlo es un fallo silencioso que puede pasar desapercibido durante toda una sesión de pruebas, porque el estado *visible* en pantalla se ve correcto aunque lo que se guarda no lo sea.
+
+**Reincidencia confirmada, 4 días después (`7.59`, 2026-09-05):** las 2 fechas nuevas de la tarjeta (`fecha_contratacion`/`fecha_firma_contrato`) no aparecían por exactamente esta misma causa — `KanbanBoard.tsx` (el mismo archivo señalado arriba) no las traía en su `.select()`. Esta vez el síntoma sí era visible (las fechas simplemente no salían, sin ambigüedad), pero confirma que este archivo en particular sigue siendo un punto ciego recurrente — cualquier campo nuevo que necesite `KanbanCard.tsx` debe verificarse contra el `.select()` real de `KanbanBoard.tsx` antes de asumir que ya viene incluido, no después.
 
 ### RLS `TO anon` se rompe si el navegador tiene CUALQUIER sesión de Auth abierta en otra pestaña — usar `TO anon, authenticated` (`7.39`, 2026-09-02)
 

@@ -31,6 +31,21 @@ export default function ChatWindow({ chatId, nombreCandidato, etapaActual, sende
   const [postulacionId, setPostulacionId] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  // Ajusta la altura del cuadro de texto cada vez que `texto` cambia —
+  // no solo cuando el usuario teclea (onInput nunca se dispara si el
+  // valor cambia por código, como el mensaje precargado de 7.58, así
+  // que ese caso se quedaba con la altura mínima de una sola línea).
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto'
+        textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 80) + 'px'
+      }
+    }, 100)
+    return () => clearTimeout(t)
+  }, [texto])
   const supabase = createClient()
 
   // Mensaje precargado, listo para enviar (2026-09-05) — solo para el
@@ -264,6 +279,7 @@ export default function ChatWindow({ chatId, nombreCandidato, etapaActual, sende
       ) : (
         <div className="border-t border-gray-100 p-3 flex gap-2">
           <textarea
+            ref={textareaRef}
             value={texto}
             onChange={e => setTexto(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviarMensaje() } }}
@@ -271,11 +287,6 @@ export default function ChatWindow({ chatId, nombreCandidato, etapaActual, sende
             rows={1}
             className="flex-1 border border-gray-200 rounded-2xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A6B3C] resize-none overflow-hidden"
             style={{ maxHeight: '80px', overflowY: 'auto' }}
-            onInput={e => {
-              const t = e.target as HTMLTextAreaElement
-              t.style.height = 'auto'
-              t.style.height = Math.min(t.scrollHeight, 80) + 'px'
-            }}
           />
           <button
             onClick={enviarMensaje}

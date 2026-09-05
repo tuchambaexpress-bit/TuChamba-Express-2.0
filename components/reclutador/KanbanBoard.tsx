@@ -17,6 +17,8 @@ interface Postulacion {
   candidato_id: string
   vacante_id: string
   agencia_id: string
+  fecha_contratacion: string | null
+  fecha_firma_contrato: string | null
   candidatos: Candidato
   vacantes: {
     titulo: string
@@ -80,7 +82,7 @@ export default function KanbanBoard() {
       .from('postulaciones')
       .select(`
         id, etapa_actual, candidato_id, vacante_id, agencia_id, created_at, updated_at,
-        motivo_descarte, motivo_descarte_detalle, fecha_garantia_fin, garantia_cumplida, precalificado, asistio_entrevista, fecha_entrevista, es_manual,
+        motivo_descarte, motivo_descarte_detalle, fecha_garantia_fin, garantia_cumplida, precalificado, asistio_entrevista, fecha_entrevista, fecha_contratacion, fecha_firma_contrato, es_manual,
         candidatos(id, nombre, telefono, edad, escolaridad, residencia),
         vacantes(titulo, horario, ruta_para_entrevista, punto_reunion, etapas_personalizadas, dias_garantia, comision_base_mxn, tiene_promocion, promocion_fin, promocion_monto_mxn, dias_induccion, induccion_dentro_garantia, negocios(nombre, dias_descanso, dias_entrevista)),
         chats(id)
