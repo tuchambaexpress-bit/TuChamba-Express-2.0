@@ -48,6 +48,7 @@ export default async function FichaVacante({ params, searchParams }: Props) {
       salario_visible, ciudad, estado, colonia_zona,
       modalidad, jornada, horario, tipo_contrato, turno, salario_periodo,
       tiene_ruta, ruta_para_entrevista, permite_directo_planta,
+      proceso_reclutamiento, filtro_1, pase_de_visita,
       estacionamiento, comedor, uniforme,
       empresa_visible, destacada, status, prioridad,
       dias_garantia, dias_induccion, induccion_dentro_garantia,
@@ -461,6 +462,27 @@ export default async function FichaVacante({ params, searchParams }: Props) {
             {vacante.tiene_ruta && vacante.ruta_para_entrevista && (
               <div className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
                 <p className="text-xs text-amber-700">🚌 Las rutas de transporte también están disponibles para ir a entrevista, en esta vacante.</p>
+              </div>
+            )}
+
+            {vacante.pase_de_visita && (
+              <div className="bg-orange-50 border border-orange-200 rounded-xl px-3 py-2 mt-2">
+                <p className="text-xs font-semibold text-orange-700">🪪 Requiere pase de visita</p>
+                <p className="text-xs text-orange-600 mt-0.5">El candidato necesita tramitar un pase para poder entrar a la empresa.</p>
+              </div>
+            )}
+
+            {vacante.proceso_reclutamiento && (
+              <div className="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 mt-2">
+                <p className="text-xs font-semibold text-gray-700 mb-1">Proceso de reclutamiento</p>
+                <p className="text-xs text-gray-600 whitespace-pre-line">{vacante.proceso_reclutamiento}</p>
+              </div>
+            )}
+
+            {vacante.filtro_1 && (
+              <div className="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 mt-2">
+                <p className="text-xs font-semibold text-gray-700 mb-1">Preguntas de filtro obligatorias</p>
+                <p className="text-xs text-gray-600 whitespace-pre-line">{vacante.filtro_1}</p>
               </div>
             )}
 

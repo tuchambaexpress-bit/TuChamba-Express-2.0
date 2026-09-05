@@ -42,6 +42,7 @@ export async function GET(req: NextRequest) {
         descripcion, tags, requisitos, beneficios,
         tiene_ruta, zonas_ruta, ruta_para_entrevista, estacionamiento, comedor, uniforme,
         permite_directo_planta,
+        proceso_reclutamiento, filtro_1, pase_de_visita,
         letras_chiquitas,
         dias_garantia, comision_base_mxn,
         tiene_promocion, promocion_descripcion, promocion_monto_mxn, promocion_fin,
@@ -194,6 +195,7 @@ export async function GET(req: NextRequest) {
         fila[`RUTA_RECLUTAMIENTO_${i + 1}_CHOFER_VEHICULO`] = r?.chofer_vehiculo ?? ''
         fila[`RUTA_RECLUTAMIENTO_${i + 1}_CONTACTO`] = r?.contacto_nombre ?? ''
         fila[`RUTA_RECLUTAMIENTO_${i + 1}_MAPS`] = r?.ubicacion_maps ?? ''
+        fila[`RUTA_RECLUTAMIENTO_${i + 1}_PARADAS`] = Array.isArray(r?.paradas) ? r.paradas.join('\n') : ''
       }
       for (let i = 0; i < maxPuntosRecl; i++) {
         const p = puntosReclEmpresa[i]
@@ -208,6 +210,12 @@ export async function GET(req: NextRequest) {
       // Opción 4 (transporte de la empresa) — al final, para no
       // confundirla con "Directo a planta" (José, 2026-09-01)
       fila['RUTA PARA ENTREVISTA'] = v.ruta_para_entrevista ? 'SI' : 'NO'
+
+      // Nuevo (2026-09-05) — por VACANTE, no por empresa
+      fila['PROCESO_RECLUTAMIENTO'] = v.proceso_reclutamiento ?? ''
+      fila['FILTRO_1'] = v.filtro_1 ?? ''
+      fila['PASE_DE_VISITA'] = v.pase_de_visita ? 'SI' : 'NO'
+
       fila['ESTATUS'] = v.status === 'vigente' ? 'Vigente' : v.status === 'pausada' ? 'Pausada' : 'Cerrada'
 
       return fila

@@ -57,7 +57,7 @@ function extraerRutas(fila: Record<string, any>): { nombre: string; paradas: str
 // extraerRutas() de arriba, que es transporte de trabajadores ya
 // contratados. Paradas y días quedan solo capturables en el sistema.
 function extraerRutasReclutamiento(fila: Record<string, any>): {
-  nombre: string; operado_por: string; chofer_vehiculo: string | null; contacto_nombre: string | null; ubicacion_maps: string | null
+  nombre: string; operado_por: string; chofer_vehiculo: string | null; contacto_nombre: string | null; ubicacion_maps: string | null; paradas: string[]
 }[] {
   const rutas: ReturnType<typeof extraerRutasReclutamiento> = []
   let i = 1
@@ -65,12 +65,20 @@ function extraerRutasReclutamiento(fila: Record<string, any>): {
     const nombre = String(fila[`RUTA_RECLUTAMIENTO_${i}_NOMBRE`] ?? '').trim()
     if (nombre) {
       const operadoTexto = String(fila[`RUTA_RECLUTAMIENTO_${i}_OPERADO_POR`] ?? '').trim().toLowerCase()
+      // Paradas ahora también por Excel (2026-09-05) — antes solo se
+      // capturaban en el sistema. Una por línea; \n real o literal
+      // "\n" (por si el Excel guardó el salto como texto plano).
+      const paradasTexto = String(fila[`RUTA_RECLUTAMIENTO_${i}_PARADAS`] ?? '').trim()
+      const paradas = paradasTexto
+        ? paradasTexto.split(/\r\n|\n|\\n/).map(p => p.trim()).filter(Boolean)
+        : []
       rutas.push({
         nombre,
         operado_por: OPERADO_POR_INVERSO[operadoTexto] ?? 'hr_connect',
         chofer_vehiculo: String(fila[`RUTA_RECLUTAMIENTO_${i}_CHOFER_VEHICULO`] ?? '').trim() || null,
         contacto_nombre: String(fila[`RUTA_RECLUTAMIENTO_${i}_CONTACTO`] ?? '').trim() || null,
         ubicacion_maps: String(fila[`RUTA_RECLUTAMIENTO_${i}_MAPS`] ?? '').trim() || null,
+        paradas,
       })
     }
     i++
@@ -247,6 +255,10 @@ export async function POST(req: NextRequest) {
           induccion_dentro_garantia: esSiNo(fila['INDUCCIÓN DENTRO DE GARANTÍA'] ?? 'SI'),
           cupo_requerido: fila['CUPO REQUERIDO'] ? Number(fila['CUPO REQUERIDO']) : 1,
           status: String(fila['ESTATUS'] ?? '').trim().toLowerCase() === 'vigente' ? 'vigente' : 'pausada',
+          // Nuevo (2026-09-05) — por vacante, texto libre
+          proceso_reclutamiento: String(fila['PROCESO_RECLUTAMIENTO'] ?? '').trim() || null,
+          filtro_1: String(fila['FILTRO_1'] ?? '').trim() || null,
+          pase_de_visita: esSiNo(fila['PASE_DE_VISITA']),
           agencia_id: agenciaId,
           // Si la columna FECHA viene vacía o no se puede leer, se omite
           // del payload por completo: en un INSERT toma el DEFAULT now()
@@ -365,9 +377,10 @@ export async function POST(req: NextRequest) {
         .eq('negocio_id', negocioId)
       const mapaExistentes = new Map((existentes ?? []).map(r => [r.nombre.trim(), r.id]))
       const idsNuevos = new Set<string>()
+      const nombresEnEsteImport = new Set(rutas.map(r => r.nombre))
 
       for (const r of rutas) {
-        const registro = {
+        const registro: Record<string, any> = {
           negocio_id: negocioId,
           nombre: r.nombre,
           operado_por: r.operado_por,
@@ -375,6 +388,11 @@ export async function POST(req: NextRequest) {
           contacto_nombre: r.contacto_nombre,
           ubicacion_maps: r.ubicacion_maps,
         }
+        // Paradas también por Excel (2026-09-05) — solo pisa si el
+        // Excel trajo algo, para no borrar paradas ya capturadas a
+        // mano en el sistema si la celda venía vacía.
+        if (r.paradas.length > 0) registro.paradas = r.paradas
+
         if (mapaExistentes.has(r.nombre)) {
           await supabase.from('rutas_reclutamiento').update(registro).eq('id', mapaExistentes.get(r.nombre)!)
         } else {
@@ -383,6 +401,19 @@ export async function POST(req: NextRequest) {
         }
       }
       idsNuevasRutasReclPorNegocio.set(negocioId, idsNuevos)
+
+      // 2026-09-05, a petición de José: el Excel es la fuente de verdad
+      // completa del catálogo de esta empresa en cada import — cualquier
+      // ruta que ya NO aparezca se borra de verdad (antes era aditivo:
+      // nunca borraba nada, solo agregaba/actualizaba por nombre, lo que
+      // dejaba pruebas/rutas viejas acumulándose para siempre).
+      const idsABorrar = (existentes ?? [])
+        .filter(r => !nombresEnEsteImport.has(r.nombre.trim()))
+        .map(r => r.id)
+      if (idsABorrar.length > 0) {
+        await supabase.from('vacante_ruta_reclutamiento').delete().in('ruta_id', idsABorrar)
+        await supabase.from('rutas_reclutamiento').delete().in('id', idsABorrar)
+      }
     }
 
     for (const [negocioId, puntos] of puntosReclutamientoPorNegocio) {
@@ -392,6 +423,7 @@ export async function POST(req: NextRequest) {
         .eq('negocio_id', negocioId)
       const mapaExistentes = new Map((existentes ?? []).map(p => [p.nombre.trim(), p.id]))
       const idsNuevos = new Set<string>()
+      const nombresEnEsteImport = new Set(puntos.map(p => p.nombre))
 
       for (const p of puntos) {
         const registro = {
@@ -411,6 +443,15 @@ export async function POST(req: NextRequest) {
         }
       }
       idsNuevosPuntosReclPorNegocio.set(negocioId, idsNuevos)
+
+      // Mismo criterio que rutas, arriba
+      const idsABorrar = (existentes ?? [])
+        .filter(p => !nombresEnEsteImport.has(p.nombre.trim()))
+        .map(p => p.id)
+      if (idsABorrar.length > 0) {
+        await supabase.from('vacante_punto_reclutamiento').delete().in('punto_id', idsABorrar)
+        await supabase.from('puntos_reclutamiento').delete().in('id', idsABorrar)
+      }
     }
 
     // Auto-selecciona lo NUEVO del catálogo (creado en este import) para

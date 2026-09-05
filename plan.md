@@ -147,7 +147,14 @@ tuchamba-v2/
 │   │                                 traducción bidireccionales, parser de fechas,
 │   │                                 normalización de nombres de empresa, mapa de
 │   │                                 días de la semana (LUN..DOM, 3 letras — 1 sola
-│   │                                 letra es ambigua entre Martes y Miércoles)
+│   │                                 letra es ambigua entre Martes y Miércoles).
+│   │                                 **2026-09-05:** columnas nuevas
+│   │                                 PROCESO_RECLUTAMIENTO/FILTRO_1/PASE_DE_VISITA
+│   │                                 (por vacante) + RUTA_RECLUTAMIENTO_N_PARADAS;
+│   │                                 instrucciones de OPERADO_POR aclaradas — debe
+│   │                                 ser texto exacto "Agencia"/"Empresa", cualquier
+│   │                                 otra cosa cae en default sin avisar (hallazgo
+│   │                                 real de captura de José en CRIOTEC)
 │   ├── faq.ts                    ✅ NUEVO (4.14/4.15) — buscarRespuestaNivel1()
 │   │                                 (~10 reglas por palabra clave, sin IA),
 │   │                                 buscarRespuestaNivel2() (overlap de palabras
@@ -630,6 +637,14 @@ Se documenta aquí como patrón reutilizable para el futuro: cualquier tabla que
 **La corrección:** un estado `nombreAgencia`, jalado en vivo de `agencias.nombre` vía el `agenciaId`/`agencia_id` de la vacante en cuestión — nunca un string fijo. Aplicado en `VacanteModal.tsx` y en la ficha operativa del reclutador (`app/reclutador/detalle/[id]/page.tsx`).
 
 **Regla adoptada para el futuro:** antes de escribir cualquier texto visible que mencione una agencia, una empresa, o cualquier entidad que varíe según quién esté usando el sistema, preguntarse "¿esto es siempre así, o solo porque hoy solo hay una agencia real probando el sistema?". Si es lo segundo, jalar el dato real, nunca hardcodearlo — aunque hoy coincida siempre con el mismo valor. Mismo espíritu que la regla de `<CapturaReferido />` de arriba: lo que funciona hoy porque solo hay un caso real probado no significa que esté bien construido para cuando haya más.
+
+### Patrón: detectar "qué se borró" requiere un snapshot ANTERIOR a la edición — nunca comparar el estado actual contra sí mismo (`7.56`, 2026-09-05)
+
+**El hallazgo, encontrado 2 veces el mismo día, en 2 lugares distintos** (importador de Excel y `VacanteModal.tsx`, ambos sobre el catálogo de rutas/puntos de reclutamiento): el código que decidía "qué se eliminó de la lista" comparaba el arreglo en memoria **contra sí mismo**, en el momento de guardar — pero para ese momento, cualquier fila que el usuario ya había borrado con el botón 🗑️ **ya no estaba en el arreglo**, porque el clic en 🗑️ actualiza el estado de inmediato, antes de que exista un botón "Guardar" de por medio. Preguntarle a una lista ya editada "¿qué te falta?" nunca puede contestar nada — la respuesta siempre es "nada", porque lo que falta, por definición, ya no está ahí para compararlo.
+
+**La corrección, mismo patrón en los 2 lugares:** guardar un snapshot de los `id` reales **antes** de que el usuario pueda tocar nada (al cargar los datos desde Supabase, o al leer el Excel de esta importación) — y comparar ESE snapshot contra el estado final al momento de guardar. Solo así "qué falta" tiene una respuesta real.
+
+**Regla adoptada para el futuro:** cualquier función de "sincronizar una lista completa" (agregar lo nuevo, actualizar lo que cambió, borrar lo que ya no está) necesita 2 momentos distintos de datos — el "antes" (snapshot al cargar, inmutable durante la edición) y el "después" (estado al guardar) — nunca uno solo. Si el código de detección de borrados solo usa una variable (el estado actual) en ambos lados de la comparación, es señal segura de este bug, aunque compile y corra sin error visible.
 
 ### Administradores — dos roles, RLS a nivel de base de datos (2026-08-21)
 

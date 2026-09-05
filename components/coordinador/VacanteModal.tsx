@@ -47,6 +47,9 @@ const FORM_INICIAL = {
   fecha_publicacion: '',
   negocio_id: '',
   permite_directo_planta: true,
+  proceso_reclutamiento: '',
+  filtro_1: '',
+  pase_de_visita: false,
   empresa_visible: true,
   ciudad: '',
   estado: '',
@@ -165,6 +168,13 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
   // necesita una FK real a un punto/ruta específico, no un jsonb suelto.
   const [puntosReclutamiento, setPuntosReclutamiento] = useState<any[]>([])
   const [rutasReclutamiento, setRutasReclutamiento] = useState<any[]>([])
+  // Snapshot de los IDs tal como venían de Supabase al cargar — necesario
+  // para saber qué se borró de verdad al guardar. Compararlo contra
+  // `rutasReclutamiento` en ese momento no sirve: ese arreglo ya no
+  // tiene la fila borrada, porque el botón 🗑️ ya la quitó del estado
+  // antes de llegar a "Guardar" (bug real, 2026-09-05).
+  const [rutasReclOriginalIds, setRutasReclOriginalIds] = useState<string[]>([])
+  const [puntosReclOriginalIds, setPuntosReclOriginalIds] = useState<string[]>([])
   const [puntosSeleccionados, setPuntosSeleccionados] = useState<Set<string>>(new Set())
   const [rutasReclSeleccionadas, setRutasReclSeleccionadas] = useState<Set<string>>(new Set())
   // Protección contra pérdida de datos (2026-08-27): estos 4 campos de
@@ -214,9 +224,11 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
     const { data: puntosData } = await supabase
       .from('puntos_reclutamiento').select('*').eq('negocio_id', negocioId).order('created_at')
     setPuntosReclutamiento(puntosData ?? [])
+    setPuntosReclOriginalIds((puntosData ?? []).map((p: any) => p.id))
     const { data: rutasData } = await supabase
       .from('rutas_reclutamiento').select('*').eq('negocio_id', negocioId).order('created_at')
     setRutasReclutamiento((rutasData ?? []).map((r: any) => ({ ...r, paradasTexto: (r.paradas ?? []).join('\n') })))
+    setRutasReclOriginalIds((rutasData ?? []).map((r: any) => r.id))
 
     if (vacanteId) {
       const { data: vp } = await supabase.from('vacante_punto_reclutamiento').select('punto_id').eq('vacante_id', vacanteId)
@@ -475,6 +487,9 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
       cupo_requerido: form.cupo_requerido ? Number(form.cupo_requerido) : 1,
       prioridad: form.prioridad || 'normal',
       permite_directo_planta: form.permite_directo_planta,
+      proceso_reclutamiento: form.proceso_reclutamiento?.trim() || null,
+      filtro_1: form.filtro_1?.trim() || null,
+      pase_de_visita: form.pase_de_visita,
       // Igual que en el Excel: si se deja vacío, no se toca — un INSERT
       // toma el DEFAULT now() de la base, un UPDATE deja la fecha que
       // ya tenía la vacante, sin pisarla.
@@ -533,9 +548,10 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
         }
       }
       // Borra del catálogo los puntos que el coordinador quitó de la lista
-      const idsPuntosOriginales = puntosReclutamiento.filter(p => p.id).map(p => p.id)
-      const idsPuntosBorrados = idsPuntosOriginales.filter(id => !puntosReclutamiento.some(p => p.id === id && p.nombre?.trim()))
+      const idsPuntosActuales = new Set(puntosReclutamiento.filter(p => p.id).map(p => p.id))
+      const idsPuntosBorrados = puntosReclOriginalIds.filter(id => !idsPuntosActuales.has(id))
       if (idsPuntosBorrados.length > 0) {
+        await supabase.from('vacante_punto_reclutamiento').delete().in('punto_id', idsPuntosBorrados)
         await supabase.from('puntos_reclutamiento').delete().in('id', idsPuntosBorrados)
       }
 
@@ -563,9 +579,10 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
           }
         }
       }
-      const idsRutasOriginales = rutasReclutamiento.filter(r => r.id).map(r => r.id)
-      const idsRutasBorradas = idsRutasOriginales.filter(id => !rutasReclutamiento.some(r => r.id === id && r.nombre?.trim()))
+      const idsActuales = new Set(rutasReclutamiento.filter(r => r.id).map(r => r.id))
+      const idsRutasBorradas = rutasReclOriginalIds.filter(id => !idsActuales.has(id))
       if (idsRutasBorradas.length > 0) {
+        await supabase.from('vacante_ruta_reclutamiento').delete().in('ruta_id', idsRutasBorradas)
         await supabase.from('rutas_reclutamiento').delete().in('id', idsRutasBorradas)
       }
 
@@ -1822,6 +1839,45 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
                                 Esta vacante no tiene ruta de transporte configurada — actívala en la Sección 5 ("¿Tiene ruta de transporte?") si esta empresa ofrece esa opción.
                               </p>
                             )}
+                          </div>
+
+                          <div className="border border-gray-200 rounded-lg p-3 mt-3 space-y-3">
+                            <p className="text-xs font-medium text-gray-700">
+                              Proceso de reclutamiento y filtro
+                              <InfoTooltip texto="Texto libre por esta vacante en particular — no se comparte con otras vacantes de la misma empresa, aunque hoy digan lo mismo." />
+                            </p>
+                            <div>
+                              <label className="text-[11px] text-gray-500 block mb-1">Proceso de reclutamiento</label>
+                              <textarea
+                                value={form.proceso_reclutamiento}
+                                onChange={e => setForm({ ...form, proceso_reclutamiento: e.target.value })}
+                                rows={4}
+                                placeholder="Ej. Entrevista con RH, examen médico, cita a ingreso los jueves..."
+                                className="w-full text-xs border border-gray-200 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#1A6B3C]"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-[11px] text-gray-500 block mb-1">
+                                Preguntas de filtro para el candidato
+                                <InfoTooltip texto="Preguntas que el reclutador debe hacer sí o sí en la entrevista, para saber si el candidato es apto para ESTE puesto." />
+                              </label>
+                              <textarea
+                                value={form.filtro_1}
+                                onChange={e => setForm({ ...form, filtro_1: e.target.value })}
+                                rows={4}
+                                placeholder={'Una por línea, ej.\n¿Tienes experiencia con torno CNC?\n¿Disponibilidad de rotar turnos?'}
+                                className="w-full text-xs border border-gray-200 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#1A6B3C]"
+                              />
+                            </div>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={form.pase_de_visita}
+                                onChange={e => setForm({ ...form, pase_de_visita: e.target.checked })}
+                                className="accent-[#1A6B3C]"
+                              />
+                              <span className="text-xs text-gray-600">Requiere pase de visita para entrar a la empresa</span>
+                            </label>
                           </div>
                         </>
                       )}
