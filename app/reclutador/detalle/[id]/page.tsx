@@ -57,7 +57,7 @@ export default async function FichaVacante({ params, searchParams }: Props) {
       punto_reunion, documentos_requeridos, guion_candidato, comentarios_salario,
       requiere_examen_medico, requiere_antidoping, requiere_estudio_socioeconomico,
       cupo_requerido, cupo_desde, agencia_id,
-      negocios(nombre, dias_entrevista, ubicacion_maps, rutas, documentos_negocio(id, nombre_archivo, archivo_url))
+      negocios(nombre, dias_entrevista, ubicacion_maps, rutas, pase_visita_imagen_url, documentos_negocio(id, nombre_archivo, archivo_url))
     `)
     .eq('id', params.id)
     .single()
@@ -468,7 +468,20 @@ export default async function FichaVacante({ params, searchParams }: Props) {
             {vacante.pase_de_visita && (
               <div className="bg-orange-50 border border-orange-200 rounded-xl px-3 py-2 mt-2">
                 <p className="text-xs font-semibold text-orange-700">🪪 Requiere pase de visita</p>
-                <p className="text-xs text-orange-600 mt-0.5">El candidato necesita tramitar un pase para poder entrar a la empresa.</p>
+                <p className="text-xs text-orange-600 mt-0.5">El candidato debe mostrar el pase para poder entrar a la empresa.</p>
+                {(vacante.negocios as any)?.pase_visita_imagen_url ? (
+                  <a
+                    href={(vacante.negocios as any).pase_visita_imagen_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    download
+                    className="inline-block mt-2 text-xs bg-orange-600 hover:bg-orange-700 text-white px-3 py-1.5 rounded-lg"
+                  >
+                    ⬇️ Descargar imagen del pase
+                  </a>
+                ) : (
+                  <p className="text-xs text-orange-500 mt-1 italic">El coordinador aún no subió la imagen del pase.</p>
+                )}
               </div>
             )}
 

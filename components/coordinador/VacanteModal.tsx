@@ -14,6 +14,7 @@ interface Negocio {
   dias_entrevista: number[]
   rutas: { nombre: string; paradas: string[] }[]
   ubicacion_maps: string | null
+  pase_visita_imagen_url: string | null
 }
 
 interface Props {
@@ -206,6 +207,7 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
       setDiasEntrevista(negocio.dias_entrevista ?? [1, 2, 3, 4, 5])
       setRutas((negocio.rutas ?? []).map(r => ({ nombre: r.nombre, paradas: (r.paradas ?? []).join(', ') })))
       setUbicacionMaps(negocio.ubicacion_maps ?? '')
+      setPaseVisitaUrl(negocio.pase_visita_imagen_url ?? null)
       setDatosEmpresaCargados(true)
       cargarCatalogoReclutamiento(form.negocio_id)
     } else {
@@ -273,9 +275,40 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
     const supabase = createClient()
     const { data } = await supabase
       .from('negocios')
-      .select('id, nombre, dias_descanso, dias_entrevista, rutas, ubicacion_maps')
+      .select('id, nombre, dias_descanso, dias_entrevista, rutas, ubicacion_maps, pase_visita_imagen_url')
       .order('nombre')
     if (data) setNegocios(data)
+  }
+
+  const [paseVisitaUrl, setPaseVisitaUrl] = useState<string | null>(null)
+  const [subiendoPaseVisita, setSubiendoPaseVisita] = useState(false)
+  const [errorPaseVisita, setErrorPaseVisita] = useState('')
+
+  async function subirPaseVisita(archivo: File) {
+    if (!form.negocio_id) return
+    setSubiendoPaseVisita(true)
+    setErrorPaseVisita('')
+
+    const formData = new FormData()
+    formData.append('file', archivo)
+    formData.append('negocioId', form.negocio_id)
+
+    const res = await fetch('/api/pase-visita', { method: 'POST', body: formData })
+    const data = await res.json()
+
+    if (!res.ok) {
+      setErrorPaseVisita(data.error ?? 'Error al subir la imagen')
+    } else {
+      setPaseVisitaUrl(data.url)
+    }
+    setSubiendoPaseVisita(false)
+  }
+
+  async function eliminarPaseVisita() {
+    if (!form.negocio_id) return
+    if (!confirm('¿Eliminar la imagen del pase de visita? Esta acción no se puede deshacer.')) return
+    await fetch(`/api/pase-visita?negocioId=${form.negocio_id}`, { method: 'DELETE' })
+    setPaseVisitaUrl(null)
   }
 
   async function cargarDocumentosRuta(negocioId: string) {
@@ -1878,6 +1911,37 @@ export default function VacanteModal({ abierto, onCerrar, agenciaId, vacanteId, 
                               />
                               <span className="text-xs text-gray-600">Requiere pase de visita para entrar a la empresa</span>
                             </label>
+
+                            {form.pase_de_visita && (
+                              <div className="border-t border-gray-100 pt-3 mt-1">
+                                <p className="text-[11px] text-gray-500 mb-2">
+                                  Imagen del pase — compartida entre todas las vacantes de esta empresa.
+                                </p>
+                                {!form.negocio_id ? (
+                                  <p className="text-xs text-gray-400">Selecciona o guarda la empresa primero para poder subir la imagen.</p>
+                                ) : paseVisitaUrl ? (
+                                  <div className="flex items-center gap-3">
+                                    <img src={paseVisitaUrl} alt="Pase de visita" className="h-16 w-16 object-cover rounded-lg border border-gray-200" />
+                                    <div className="flex flex-col gap-1">
+                                      <a href={paseVisitaUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 underline">Ver completa</a>
+                                      <button onClick={eliminarPaseVisita} className="text-xs text-red-500 hover:text-red-700 text-left">🗑️ Eliminar</button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div>
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      disabled={subiendoPaseVisita}
+                                      onChange={e => e.target.files?.[0] && subirPaseVisita(e.target.files[0])}
+                                      className="text-xs"
+                                    />
+                                    {subiendoPaseVisita && <p className="text-xs text-gray-400 mt-1">Subiendo...</p>}
+                                    {errorPaseVisita && <p className="text-xs text-red-500 mt-1">{errorPaseVisita}</p>}
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </>
                       )}

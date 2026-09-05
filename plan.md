@@ -464,6 +464,13 @@ tuchamba-v2/
         ├── registro-agencia/route.ts ✅ Registra agencia + coordinador
         ├── documentos/route.ts   ✅ Documentos del candidato (bucket privado, links firmados)
         ├── documentos-negocio/route.ts ✅ PDFs de rutas por empresa (bucket público)
+        ├── pase-visita/route.ts  ✅ NUEVO (7.57, 2026-09-05) — imagen del pase de
+        │                             visita, por empresa, bucket público dedicado
+        │                             (pase-visita). A diferencia de documentos-negocio
+        │                             (varios archivos, timestamp en el nombre): UNA
+        │                             sola imagen vigente por empresa, nombre de
+        │                             archivo fijo + upsert:true (reemplaza en el
+        │                             mismo lugar, sin huérfanos), URL con cache-bust
         ├── exportar-vacantes/route.ts  ✅ Excel hoja Vacantes + hoja Instrucciones
         │                                    (44+ columnas, incluye DÍAS DE DESCANSO
         │                                    EMPRESA — campo de `negocios`, no `vacantes`)
