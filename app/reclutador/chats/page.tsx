@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, Suspense } from 'react'
+import { useEffect, useState, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import ChatWindow from '@/components/candidato/ChatWindow'
@@ -14,7 +14,7 @@ interface Chat {
   ultimo_sender_tipo: string | null
   leido_reclutador: boolean
   candidatos: { nombre: string; telefono: string }
-  vacantes: { titulo: string }
+  vacantes: { titulo: string; negocios: { nombre: string } | null }
   postulaciones: { etapa_actual: string }[]
 }
 
@@ -28,6 +28,12 @@ function ChatsReclutadorInner() {
   const [chatSeleccionado, setChatSeleccionado] = useState<string | null>(chatIdParam)
   const [sesion, setSesion] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const chatsRef = useRef<Chat[]>([])
+
+  // Espejo de `chats` accesible desde dentro del canal de Realtime sin
+  // agregar `chats` a las dependencias de ese efecto (eso obligaría a
+  // reconectar el canal en cada cambio de estado).
+  useEffect(() => { chatsRef.current = chats }, [chats])
 
   useEffect(() => {
     const data = localStorage.getItem('reclutador_sesion')
@@ -56,10 +62,16 @@ function ChatsReclutadorInner() {
         }
 
         const cambio = payload.new as Record<string, any>
-        const soloMarcadoLeido = payload.old &&
-          Object.keys(cambio).every(k =>
-            k === 'leido_reclutador' || (cambio as any)[k] === (payload.old as any)[k]
-          )
+
+        // Comparamos contra lo que YA teníamos en pantalla (chatsRef),
+        // no contra payload.old — Supabase Realtime no siempre manda la
+        // fila completa en "old" (depende de REPLICA IDENTITY de la
+        // tabla), y confiar en eso hacía recargar la lista completa en
+        // cada clic, aunque solo cambiara el estado de leído. Fix 2026-09-05.
+        const chatPrevio = chatsRef.current.find(c => c.id === cambio.id)
+        const soloMarcadoLeido = chatPrevio &&
+          chatPrevio.ultimo_mensaje_at === cambio.ultimo_mensaje_at &&
+          chatPrevio.ultimo_mensaje === cambio.ultimo_mensaje
 
         if (soloMarcadoLeido) {
           // Solo cambió el estado de "leído" — actualizamos esa fila sin
@@ -83,7 +95,7 @@ function ChatsReclutadorInner() {
       .select(`
         id, candidato_id, ultimo_mensaje, ultimo_mensaje_at, ultimo_sender_tipo, leido_reclutador,
         candidatos(nombre, telefono),
-        vacantes(titulo),
+        vacantes(titulo, negocios(nombre)),
         postulaciones(etapa_actual)
       `)
       .eq('reclutador_id', reclutadorId)
@@ -175,7 +187,10 @@ function ChatsReclutadorInner() {
                       <p className="font-semibold text-gray-900 text-sm truncate">
                         {c.candidatos?.nombre}
                       </p>
-                      <p className="text-xs text-[#1A6B3C] truncate">{c.vacantes?.titulo}</p>
+                      <p className="text-xs text-[#1A6B3C] truncate">
+                        {c.vacantes?.titulo}
+                        {c.vacantes?.negocios?.nombre && ` — ${c.vacantes.negocios.nombre}`}
+                      </p>
                       {c.ultimo_mensaje && (
                         <p className="text-xs text-gray-400 truncate mt-0.5">{c.ultimo_mensaje}</p>
                       )}

@@ -306,7 +306,8 @@ tuchamba-v2/
 │   │   │                            sin depender de ningún servicio externo) para
 │   │   │                            que el reclutador comparta una vacante
 │   │   │                            específica con su propio ref, desde la lista de
-│   │   │                            Vacantes. Botón "Copiar" → "✅ Copiado" 4s
+│   │   │                            Vacantes. Botón "Copiar" → "✅ Copiado" 4s.
+│   │   │                            **7.62:** se cierra con `Esc`
 │   │   └── ReclutadorNav.tsx     ✅ Nav compartido, contadores Realtime de chats/alertas.
 │   │                                 9 links: Dashboard, Pipeline, Vacantes,
 │   │                                 📈 Tráfico (7.39), Chats, Comisiones,
@@ -403,7 +404,15 @@ tuchamba-v2/
     │   │                            "+ Candidato" junto al título (HU-25, alta manual
     │   │                            para candidatos que llegan por redes/WhatsApp/
     │   │                            presencial), envuelve KanbanBoard
-    │   ├── chats/page.tsx        ✅ Lista chats + ChatWindow Realtime, "Ordenar por"
+    │   ├── chats/page.tsx        ✅ Lista chats + ChatWindow Realtime, "Ordenar por".
+    │   │                            **7.63 (2026-09-05):** fix — la lista se
+    │   │                            reordenaba/recargaba completa al abrir
+    │   │                            cualquier chat; causa: comparaba contra
+    │   │                            `payload.old` de Realtime, no siempre viene
+    │   │                            completo (depende de `REPLICA IDENTITY`, ver
+    │   │                            §13). Ahora compara contra `chatsRef` (espejo
+    │   │                            del estado real vía `useRef`). Empresa agregada
+    │   │                            junto al título de la vacante en cada chat
     │   ├── chat-coordinador/     ✅ Chat con su coordinador (5.13). **7.59
     │   │                            (2026-09-05, reescrito completo):** soporta
     │   │                            2+ agencias activas — antes usaba
@@ -702,6 +711,14 @@ Se documenta aquí como patrón reutilizable para el futuro: cualquier tabla que
 **La corrección, mismo patrón en los 2 lugares:** guardar un snapshot de los `id` reales **antes** de que el usuario pueda tocar nada (al cargar los datos desde Supabase, o al leer el Excel de esta importación) — y comparar ESE snapshot contra el estado final al momento de guardar. Solo así "qué falta" tiene una respuesta real.
 
 **Regla adoptada para el futuro:** cualquier función de "sincronizar una lista completa" (agregar lo nuevo, actualizar lo que cambió, borrar lo que ya no está) necesita 2 momentos distintos de datos — el "antes" (snapshot al cargar, inmutable durante la edición) y el "después" (estado al guardar) — nunca uno solo. Si el código de detección de borrados solo usa una variable (el estado actual) en ambos lados de la comparación, es señal segura de este bug, aunque compile y corra sin error visible.
+
+### Patrón: `payload.old` de Supabase Realtime no siempre viene completo — nunca comparar contra él, comparar contra el estado local (`7.63`, 2026-09-05)
+
+**El hallazgo:** `app/reclutador/chats/page.tsx` tenía lógica para evitar recargar toda la lista de chats cuando solo cambiaba el estado de "leído" (comparando `payload.new` contra `payload.old` en la suscripción de Realtime, campo por campo). Se veía razonable, pero fallaba siempre — la lista se recargaba completa en cada clic, sintiéndose como que "se reordenaba sola". Causa real: Postgres solo incluye la fila **completa** en el `old` de un evento de replicación si la tabla tiene `REPLICA IDENTITY FULL` configurado — por default, `REPLICA IDENTITY` solo incluye la llave primaria. Sin ese ajuste (que este proyecto no tiene en `chats`, y no hay por qué asumir que lo tiene en ninguna tabla salvo que se confirme), `payload.old` llega con solo el `id`, y cualquier comparación de otros campos contra `undefined` sale falsa — el código caía siempre en la rama de "sí cambió algo importante, recarga todo".
+
+**La corrección:** comparar `payload.new` contra el **estado que el propio componente ya tiene en React** (via un `useRef` que espeja el estado más reciente, para poder leerlo desde dentro del canal sin forzar una reconexión cada vez que cambia) — nunca contra `payload.old`. El estado local es 100% confiable porque el componente mismo lo escribió; `payload.old` depende de una configuración de Postgres que no se puede dar por hecha.
+
+**Regla adoptada para el futuro:** cualquier canal de Realtime que necesite saber "¿qué cambió exactamente respecto a antes?" para decidir si actualiza en el sitio o recarga todo, debe comparar `payload.new` contra el estado de React (`useRef` si hace falta leerlo dentro del callback del canal), nunca contra `payload.old`. Revisar cualquier otro canal de Realtime existente en el proyecto que ya use `payload.old` de esta forma — el mismo bug puede estar dormido en otro lado sin que se haya notado todavía.
 
 ### Administradores — dos roles, RLS a nivel de base de datos (2026-08-21)
 

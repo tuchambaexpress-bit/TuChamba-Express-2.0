@@ -40,7 +40,7 @@ const NOMBRES_DIA_CORTO: Record<number, string> = {
   0: 'Dom', 1: 'Lun', 2: 'Mar', 3: 'Mié', 4: 'Jue', 5: 'Vie', 6: 'Sáb',
 }
 
-const COLUMNAS_GRID = 'minmax(220px,2fr) minmax(130px,1fr) minmax(110px,auto) minmax(170px,auto) minmax(110px,auto) minmax(170px,auto) minmax(90px,auto) minmax(100px,auto)'
+const COLUMNAS_GRID = 'minmax(220px,2fr) minmax(130px,1fr) minmax(110px,auto) minmax(170px,auto) minmax(110px,auto) minmax(170px,auto) minmax(90px,auto) 110px'
 const COLUMNAS_ENCABEZADO = [
   { campo: 'titulo', label: 'Título' },
   { campo: 'empresa', label: 'Empresa' },
@@ -211,8 +211,8 @@ export default function VacantesReclutador() {
               placeholder="Buscar por puesto, empresa o ciudad..."
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#1A6B3C] mb-2"
             />
-            <div className="bg-white rounded-t-2xl shadow-sm overflow-x-auto">
-              <div className="grid text-sm min-w-[900px]" style={{ gridTemplateColumns: COLUMNAS_GRID }}>
+            <div className="bg-white rounded-t-2xl shadow-sm overflow-x-auto pr-4">
+              <div className="grid text-sm min-w-[1010px]" style={{ gridTemplateColumns: COLUMNAS_GRID }}>
                 {COLUMNAS_ENCABEZADO.map(col => (
                   <div key={col.campo} className="bg-white border-b border-gray-100 px-4 py-3">
                     <button
@@ -251,7 +251,7 @@ export default function VacantesReclutador() {
             <p className="text-gray-500 font-medium">Sin vacantes que coincidan</p>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl shadow-sm overflow-x-auto">
+          <div className="bg-white rounded-2xl shadow-sm overflow-x-auto pr-4">
             <div
               className="grid text-sm min-w-[900px]"
               style={{ gridTemplateColumns: COLUMNAS_GRID }}
@@ -328,7 +328,7 @@ export default function VacantesReclutador() {
                     <div className="px-4 py-3 border-b border-gray-50 group-hover:bg-gray-50 transition-colors">
                       <button
                         onClick={() => setVacanteCompartir(v)}
-                        className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg border border-blue-200 transition-colors"
+                        className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg border border-blue-200 transition-colors whitespace-nowrap"
                       >
                         🔗 Compartir
                       </button>

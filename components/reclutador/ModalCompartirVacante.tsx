@@ -25,6 +25,14 @@ export default function ModalCompartirVacante({ vacanteId, vacanteTitulo, tokenR
       .catch(() => setQrDataUrl(null))
   }, [url])
 
+  useEffect(() => {
+    function handleEsc(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', handleEsc)
+    return () => document.removeEventListener('keydown', handleEsc)
+  }, [onClose])
+
   async function copiarLink() {
     await navigator.clipboard.writeText(url)
     setCopiado(true)
