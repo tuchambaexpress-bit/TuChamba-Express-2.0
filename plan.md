@@ -308,6 +308,11 @@ tuchamba-v2/
 │   │   │                            específica con su propio ref, desde la lista de
 │   │   │                            Vacantes. Botón "Copiar" → "✅ Copiado" 4s.
 │   │   │                            **7.62:** se cierra con `Esc`
+│   │   ├── ModalQRReferido.tsx   ✅ NUEVO (7.65, 2026-09-05) — mismo patrón que
+│   │   │                            ModalCompartirVacante.tsx (QR + descarga + Esc),
+│   │   │                            componente aparte a propósito (no generalizado)
+│   │   │                            para el link de referido general, botón "QR"
+│   │   │                            en app/reclutador/dashboard/page.tsx
 │   │   └── ReclutadorNav.tsx     ✅ Nav compartido, contadores Realtime de chats/alertas.
 │   │                                 9 links: Dashboard, Pipeline, Vacantes,
 │   │                                 📈 Tráfico (7.39), Chats, Comisiones,
@@ -493,7 +498,11 @@ tuchamba-v2/
     │   ├── vacantes/page.tsx     ✅ Listado + filtros + Exportar/Importar Excel +
     │   │                            Duplicar, Realtime, columna "Cupo" calculada en
     │   │                            vivo (HU-16, no depende de `cupo_cubierto`)
-    │   ├── reclutadores/page.tsx ✅ CRUD reclutadores, LADA internacional
+    │   ├── reclutadores/page.tsx ✅ CRUD reclutadores, LADA internacional.
+    │   │                            **7.64 (2026-09-05):** editar/eliminar solo
+    │   │                            dentro de las primeras 24h del alta (candado
+    │   │                            extra: nunca borra si ya hay actividad real),
+    │   │                            `InfoTooltip` explicando la regla
     │   ├── pipeline/page.tsx     ✅ Panel de reclutadores → Kanban solo-lectura (5.11),
     │   │                            badge de asistencia. **Corregido 2026-09-03:**
     │   │                            ya NO tiene botón "Ver chat" — retirado en `8.23`,
@@ -719,6 +728,14 @@ Se documenta aquí como patrón reutilizable para el futuro: cualquier tabla que
 **La corrección:** comparar `payload.new` contra el **estado que el propio componente ya tiene en React** (via un `useRef` que espeja el estado más reciente, para poder leerlo desde dentro del canal sin forzar una reconexión cada vez que cambia) — nunca contra `payload.old`. El estado local es 100% confiable porque el componente mismo lo escribió; `payload.old` depende de una configuración de Postgres que no se puede dar por hecha.
 
 **Regla adoptada para el futuro:** cualquier canal de Realtime que necesite saber "¿qué cambió exactamente respecto a antes?" para decidir si actualiza en el sitio o recarga todo, debe comparar `payload.new` contra el estado de React (`useRef` si hace falta leerlo dentro del callback del canal), nunca contra `payload.old`. Revisar cualquier otro canal de Realtime existente en el proyecto que ya use `payload.old` de esta forma — el mismo bug puede estar dormido en otro lado sin que se haya notado todavía.
+
+### Hallazgo de esquema: relación circular `postulaciones` ↔ `entrevistas` — hay que romperla antes de cualquier borrado masivo (`7.66`, 2026-09-05)
+
+**El hallazgo:** al preparar el borrado completo de datos de prueba antes del arranque en producción, se descubrió que `postulaciones.entrevista_activa_id` apunta a `entrevistas`, **y** `entrevistas.postulacion_id` apunta de regreso a `postulaciones` — una referencia circular entre las 2 tablas. No estaba documentado en ningún lado antes de esta sesión, y no se había notado porque en el uso normal del sistema (crear/actualizar filas una por una) el ciclo nunca causa ningún problema — solo se vuelve un obstáculo real al intentar **borrar** cualquiera de las 2 tablas por completo, porque Postgres rechaza el `DELETE` mientras la otra tabla le siga apuntando.
+
+**La corrección, para cualquier borrado masivo futuro que involucre estas 2 tablas:** antes de borrar, romper el ciclo con `UPDATE postulaciones SET entrevista_activa_id = NULL` — después de eso, `entrevistas` y `postulaciones` se pueden borrar en el orden normal (hojas primero).
+
+**Regla adoptada para el futuro:** antes de cualquier borrado masivo (no solo de estas 2 tablas), correr la consulta de `information_schema.table_constraints` sobre **todas** las tablas involucradas de antemano (no solo la tabla raíz) — un ciclo circular no se detecta revisando una tabla a la vez, hace falta ver el mapa completo de una sola vez. La consulta completa usada hoy queda documentada en `tasks.md` `7.66`, lista para reutilizarse si hace falta un borrado similar en el futuro.
 
 ### Administradores — dos roles, RLS a nivel de base de datos (2026-08-21)
 

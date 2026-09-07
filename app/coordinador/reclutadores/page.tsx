@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import CoordinadorNav from '@/components/coordinador/CoordinadorNav'
+import InfoTooltip from '@/components/ui/InfoTooltip'
 
 interface Reclutador {
   id: string
@@ -116,6 +117,39 @@ export default function ReclutadoresCoordinador() {
     setModalAbierto(true)
   }
 
+  // Candado de 24h (2026-09-05): editar/eliminar un reclutador solo
+  // dentro de las primeras 24h desde su alta — evita tocar datos de un
+  // usuario que ya lleva tiempo operando (código, historial, etc.)
+  function dentroDe24h(r: Reclutador): boolean {
+    return Date.now() - new Date(r.created_at).getTime() < 24 * 60 * 60 * 1000
+  }
+
+  async function eliminarReclutador(r: Reclutador) {
+    if (!confirm(`¿Eliminar definitivamente a ${r.nombre}? Esta acción no se puede deshacer.`)) return
+
+    const supabase = createClient()
+
+    // Candado extra: nunca borrar si ya tiene actividad real, aunque
+    // esté dentro de las 24h — protege contra el caso raro de que ya
+    // haya recibido algo en los primeros minutos.
+    const [{ count: postulacionesCount }, { count: chatsCount }, { count: traficoCount }] = await Promise.all([
+      supabase.from('postulaciones').select('*', { count: 'exact', head: true }).eq('reclutador_id', r.id),
+      supabase.from('chats').select('*', { count: 'exact', head: true }).eq('reclutador_id', r.id),
+      supabase.from('trafico_referidos').select('*', { count: 'exact', head: true }).eq('reclutador_id', r.id),
+    ])
+
+    if ((postulacionesCount ?? 0) > 0 || (chatsCount ?? 0) > 0 || (traficoCount ?? 0) > 0) {
+      alert('Este reclutador ya tiene actividad real (postulaciones, chats o tráfico) — no se puede eliminar. Solo se puede desactivar.')
+      return
+    }
+
+    await supabase.from('alertas').delete().eq('reclutador_id', r.id)
+    await supabase.from('reclutador_agencia').delete().eq('reclutador_id', r.id)
+    await supabase.from('reclutadores').delete().eq('id', r.id)
+
+    cargarReclutadores(sesion.agencia_id)
+  }
+
   function abrirEditar(r: Reclutador) {
     setEditando(r)
     setForm({
@@ -216,7 +250,7 @@ export default function ReclutadoresCoordinador() {
             <p className="text-gray-500 font-medium">Aún no tienes reclutadores registrados</p>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-sm overflow-visible">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100 text-left text-gray-500 text-xs">
@@ -227,19 +261,25 @@ export default function ReclutadoresCoordinador() {
                   <th className="px-4 py-3 font-medium">Vacantes activas</th>
                   <th className="px-4 py-3 font-medium">Candidatos en proceso</th>
                   <th className="px-4 py-3 font-medium">Status</th>
-                  <th className="px-4 py-3 font-medium"></th>
+                  <th className="px-4 py-3 font-medium">
+                    <InfoTooltip texto="El nombre y código solo son editables/eliminables durante las primeras 24 horas después del alta." />
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {reclutadores.map(r => (
                   <tr key={r.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-3">
-                      <button
-                        onClick={() => abrirEditar(r)}
-                        className="font-medium text-gray-900 hover:text-[#1A6B3C] hover:underline text-left"
-                      >
-                        {r.nombre}
-                      </button>
+                      {dentroDe24h(r) ? (
+                        <button
+                          onClick={() => abrirEditar(r)}
+                          className="font-medium text-gray-900 hover:text-[#1A6B3C] hover:underline text-left"
+                        >
+                          {r.nombre}
+                        </button>
+                      ) : (
+                        <span className="font-medium text-gray-900">{r.nombre}</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-gray-600">{r.codigo}</td>
                     <td className="px-4 py-3 text-gray-600">{r.pais} ({r.lada})</td>
@@ -252,12 +292,30 @@ export default function ReclutadoresCoordinador() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <button
-                        onClick={() => toggleActivo(r)}
-                        className="text-xs text-gray-500 hover:text-[#1A6B3C] border border-gray-200 rounded-lg px-2 py-1"
-                      >
-                        {r.activo ? 'Desactivar' : 'Reactivar'}
-                      </button>
+                      <div className="flex gap-1.5 items-center">
+                        <button
+                          onClick={() => toggleActivo(r)}
+                          className="text-xs text-gray-500 hover:text-[#1A6B3C] border border-gray-200 rounded-lg px-2 py-1"
+                        >
+                          {r.activo ? 'Desactivar' : 'Reactivar'}
+                        </button>
+                        {dentroDe24h(r) && (
+                          <>
+                            <button
+                              onClick={() => abrirEditar(r)}
+                              className="text-xs text-blue-600 hover:text-blue-800 border border-blue-200 rounded-lg px-2 py-1"
+                            >
+                              ✏️ Editar
+                            </button>
+                            <button
+                              onClick={() => eliminarReclutador(r)}
+                              className="text-xs text-red-500 hover:text-red-700 border border-red-200 rounded-lg px-2 py-1"
+                            >
+                              🗑️ Eliminar
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

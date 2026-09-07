@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useAlertas } from '@/hooks/useAlertas'
 import ReclutadorNav from '@/components/reclutador/ReclutadorNav'
+import ModalQRReferido from '@/components/reclutador/ModalQRReferido'
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 
 const ETAPAS_FUNNEL = ['Aplicado', 'Contactado', 'Entrevista', 'Inducción', 'Contratado']
@@ -26,6 +27,7 @@ export default function DashboardReclutador() {
   const router = useRouter()
   const [sesion, setSesion] = useState<any>(null)
   const [copiadoRef, setCopiadoRef] = useState(false)
+  const [mostrarQR, setMostrarQR] = useState(false)
   useAlertas(sesion?.id ?? null)
   const [filtro, setFiltro] = useState<'semana' | 'mes' | 'todo'>('mes')
   const supabase = createClient()
@@ -404,8 +406,22 @@ export default function DashboardReclutador() {
             >
               {copiadoRef ? '✓ Copiado' : 'Copiar'}
             </button>
+            <button
+              onClick={() => setMostrarQR(true)}
+              className="bg-white/20 hover:bg-white/30 text-white font-semibold text-xs px-3 py-2 rounded-lg flex-shrink-0 flex items-center gap-1.5"
+            >
+              <img src="/QR_logo.jpg" alt="" className="w-4 h-4 rounded-sm" />
+              QR
+            </button>
           </div>
         </div>
+
+        {mostrarQR && (
+          <ModalQRReferido
+            url={`${process.env.NEXT_PUBLIC_APP_URL ?? 'https://tu-chamba-express.vercel.app'}?ref=${sesion.token_referido}`}
+            onClose={() => setMostrarQR(false)}
+          />
+        )}
 
         {/* Métricas básicas */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
