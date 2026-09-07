@@ -114,7 +114,9 @@ tuchamba-v2/
 ├── next.config.js                ✅
 ├── tailwind.config.ts            ✅
 ├── tsconfig.json                 ✅ (⚠️ moduleResolution "node" obsoleto, ver tasks.md 7.13)
-├── package.json                  ✅ (+ xlsx, recharts, ver tasks.md 7.13 riesgo conocido)
+├── package.json                  ✅ (+ xlsx, recharts, ver tasks.md 7.13 riesgo conocido;
+│                                     + qrcode, 7.60 — QR generado en el navegador,
+│                                     sin dependencia de servicio externo)
 ├── public/                       ✅
 │   ├── manifest.json             ✅ PWA manifest
 │   ├── favicon.png               ✅
@@ -299,6 +301,12 @@ tuchamba-v2/
 │   │   │                            reclutador, montado en la ficha operativa.
 │   │   │                            Cascada 3 niveles, modal "Ejemplos de preguntas",
 │   │   │                            borrado manual, Realtime
+│   │   ├── ModalCompartirVacante.tsx ✅ NUEVO (7.60, 2026-09-05) — link directo +
+│   │   │                            QR (librería `qrcode`, generado en el navegador,
+│   │   │                            sin depender de ningún servicio externo) para
+│   │   │                            que el reclutador comparta una vacante
+│   │   │                            específica con su propio ref, desde la lista de
+│   │   │                            Vacantes. Botón "Copiar" → "✅ Copiado" 4s
 │   │   └── ReclutadorNav.tsx     ✅ Nav compartido, contadores Realtime de chats/alertas.
 │   │                                 9 links: Dashboard, Pipeline, Vacantes,
 │   │                                 📈 Tráfico (7.39), Chats, Comisiones,
@@ -425,7 +433,10 @@ tuchamba-v2/
     │   │                            José) — la condición que muestra la Sección 5 ya NO
     │   │                            incluye `ubicacion_maps` (bug encontrado al mover, ver §5)
     │   ├── vacantes/page.tsx     ✅ Listado para consulta libre (5.20), incluye días
-    │   │                            de entrevista de la empresa (5.25)
+    │   │                            de entrevista de la empresa (5.25). **7.60
+    │   │                            (2026-09-05):** columna nueva "🔗 Compartir" al
+    │   │                            final de cada fila, abre
+    │   │                            ModalCompartirVacante.tsx
     │   ├── comisiones/page.tsx   ✅ Panel comisiones — corregido para calcular
     │   │                            "cumplida" en vivo desde `fecha_garantia_fin`,
     │   │                            no desde `garantia_cumplida` (campo roto, nunca

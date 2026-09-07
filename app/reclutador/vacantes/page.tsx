@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import ReclutadorNav from '@/components/reclutador/ReclutadorNav'
+import ModalCompartirVacante from '@/components/reclutador/ModalCompartirVacante'
 
 interface Vacante {
   id: string
@@ -39,7 +40,7 @@ const NOMBRES_DIA_CORTO: Record<number, string> = {
   0: 'Dom', 1: 'Lun', 2: 'Mar', 3: 'Mié', 4: 'Jue', 5: 'Vie', 6: 'Sáb',
 }
 
-const COLUMNAS_GRID = 'minmax(220px,2fr) minmax(130px,1fr) minmax(110px,auto) minmax(170px,auto) minmax(110px,auto) minmax(170px,auto) minmax(90px,auto)'
+const COLUMNAS_GRID = 'minmax(220px,2fr) minmax(130px,1fr) minmax(110px,auto) minmax(170px,auto) minmax(110px,auto) minmax(170px,auto) minmax(90px,auto) minmax(100px,auto)'
 const COLUMNAS_ENCABEZADO = [
   { campo: 'titulo', label: 'Título' },
   { campo: 'empresa', label: 'Empresa' },
@@ -56,6 +57,8 @@ export default function VacantesReclutador() {
   const [loading, setLoading] = useState(true)
   const [busqueda, setBusqueda] = useState('')
   const [reclutadorId, setReclutadorId] = useState<string | null>(null)
+  const [tokenReferido, setTokenReferido] = useState<string | null>(null)
+  const [vacanteCompartir, setVacanteCompartir] = useState<Vacante | null>(null)
   const [cupoReal, setCupoReal] = useState<Map<string, number>>(new Map())
   const [ordenPor, setOrdenPor] = useState<string | null>(null)
   const [ordenAsc, setOrdenAsc] = useState(true)
@@ -94,6 +97,7 @@ export default function VacantesReclutador() {
     if (!data) { router.push('/reclutador/login'); return }
     const s = JSON.parse(data)
     setReclutadorId(s.id)
+    setTokenReferido(s.token_referido)
     cargarVacantes(s.id)
   }, [])
 
@@ -222,6 +226,7 @@ export default function VacantesReclutador() {
                     </button>
                   </div>
                 ))}
+                <div className="bg-white border-b border-gray-100 px-4 py-3"></div>
               </div>
             </div>
           </div>
@@ -266,6 +271,7 @@ export default function VacantesReclutador() {
                   </button>
                 </div>
               ))}
+              <div className="bg-white border-b border-gray-100 px-4 py-3"></div>
 
               {/* Filas — cada una envuelta en "contents" para que sus
                   celdas participen directo en la rejilla exterior, sin
@@ -319,6 +325,14 @@ export default function VacantesReclutador() {
                         {v.status}
                       </span>
                     </div>
+                    <div className="px-4 py-3 border-b border-gray-50 group-hover:bg-gray-50 transition-colors">
+                      <button
+                        onClick={() => setVacanteCompartir(v)}
+                        className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg border border-blue-200 transition-colors"
+                      >
+                        🔗 Compartir
+                      </button>
+                    </div>
                   </div>
                 )
               })}
@@ -326,6 +340,15 @@ export default function VacantesReclutador() {
           </div>
         )}
       </div>
+
+      {vacanteCompartir && (
+        <ModalCompartirVacante
+          vacanteId={vacanteCompartir.id}
+          vacanteTitulo={vacanteCompartir.titulo}
+          tokenReferido={tokenReferido}
+          onClose={() => setVacanteCompartir(null)}
+        />
+      )}
     </div>
   )
 }
