@@ -116,8 +116,6 @@ export default function ChatCoordinadorReclutadorPage() {
     setLoading(false)
   }
 
-  if (!sesion) return null
-
   const chatActivo = chatsAgencias.find(c => c.agenciaId === agenciaSeleccionadaId) ?? null
   const esMultiAgencia = chatsAgencias.length > 1
 

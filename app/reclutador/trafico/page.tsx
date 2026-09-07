@@ -148,12 +148,15 @@ export default function TraficoReclutador() {
     setCargando(false)
   }
 
-  if (!sesion) return null
-
   return (
     <div className="min-h-screen bg-gray-50">
       <ReclutadorNav subtitulo="Tráfico de tus vacantes" />
 
+      {!sesion ? (
+        <div className="max-w-5xl mx-auto px-4 py-8">
+          <p className="text-center text-gray-400 text-sm py-10">Cargando...</p>
+        </div>
+      ) : (
       <div className="max-w-5xl mx-auto px-4 py-8">
         <h2 className="text-xl font-bold text-gray-900 mb-1">📈 Tráfico</h2>
         <p className="text-sm text-gray-500 mb-6">Cuántas personas ven tus vacantes y cuántas inician su postulación.</p>
@@ -236,6 +239,7 @@ export default function TraficoReclutador() {
         </>
         )}
       </div>
+      )}
     </div>
   )
 }

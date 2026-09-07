@@ -5,12 +5,23 @@ import { createClient } from '@/lib/supabase/client'
 import { getSemanaISO, calcularGarantiaFinHabil } from '@/lib/utils'
 
 
+import { useDraggable } from '@dnd-kit/core'
+import { GripVertical } from 'lucide-react'
+
 interface Props {
   postulacion: any
   etapasDisponibles: string[]
   onActualizarEtapa: (postulacionId: string, nuevaEtapa: string) => void
   reclutadorId: string
   tieneHistorialPrevio?: boolean
+  // Arrastrar y soltar (2026-09-06) — el padre (KanbanBoard) detecta el
+  // drop y le "pide" a la tarjeta correcta que ejecute su propia
+  // cambiarEtapa(), en vez de escribir directo a la base de datos desde
+  // afuera. Así el arrastre nunca duplica ningún candado (checklist,
+  // modales de Inducción/Contratado/Descartado, etc.) — usa exactamente
+  // la misma función que ya usa el botón "Mover ▾".
+  solicitudEtapa?: string | null
+  onSolicitudProcesada?: () => void
 }
 
 const MOTIVOS_DESCARTE = [
@@ -24,8 +35,9 @@ const MOTIVOS_DESCARTE = [
 
 const MOTIVO_NO_CONCLUYO_INDUCCION = { value: 'no_concluyo_induccion', label: 'No concluyó inducción' }
 
-export default function KanbanCard({ postulacion, etapasDisponibles, onActualizarEtapa, reclutadorId, tieneHistorialPrevio }: Props) {
+export default function KanbanCard({ postulacion, etapasDisponibles, onActualizarEtapa, reclutadorId, tieneHistorialPrevio, solicitudEtapa, onSolicitudProcesada }: Props) {
   const [moviendo, setMoviendo] = useState(false)
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: postulacion.id })
   const [mostrarMenu, setMostrarMenu] = useState(false)
   const [mostrarModalDescarte, setMostrarModalDescarte] = useState(false)
   const [mostrarModalEntrevista, setMostrarModalEntrevista] = useState(false)
@@ -204,6 +216,18 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
         ...(anteriorEtapa ? [anteriorEtapa] : []),
         'Descartado'
       ]
+
+  // Cuando el padre detecta que esta tarjeta se soltó en otra columna,
+  // ejecuta exactamente la misma función que el botón "Mover ▾" — sin
+  // esto, arrastrar sería un camino paralelo que podría desincronizarse
+  // de los candados reales.
+  useEffect(() => {
+    if (solicitudEtapa) {
+      cambiarEtapa(solicitudEtapa)
+      onSolicitudProcesada?.()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [solicitudEtapa])
 
   async function cambiarEtapa(nuevaEtapa: string) {
     if (nuevaEtapa === 'Descartado') {
@@ -988,11 +1012,22 @@ export default function KanbanCard({ postulacion, etapasDisponibles, onActualiza
 
   return (
     <>
-      <div className={`rounded-xl p-3 shadow-sm border ${
-        postulacion.motivo_descarte === 'no_concluyo_induccion'
-          ? 'bg-red-50 border-red-100'
-          : 'bg-white border-gray-100'
-      } ${moviendo ? 'opacity-50' : ''}`}>
+      <div
+        ref={setNodeRef}
+        {...listeners}
+        {...attributes}
+        style={{ cursor: isDragging ? 'grabbing' : 'grab', WebkitTapHighlightColor: 'transparent' }}
+        className={`relative rounded-xl p-3 shadow-sm border touch-none select-none ${
+          postulacion.motivo_descarte === 'no_concluyo_induccion'
+            ? 'bg-red-50 border-red-100'
+            : 'bg-white border-gray-100'
+        } ${moviendo || isDragging ? 'opacity-40' : ''}`}
+      >
+        {/* Solo un aviso visual de "esto se puede arrastrar" — toda la
+            tarjeta ya es arrastrable (los listeners están arriba, en el
+            div completo), este ícono no necesita ningún comportamiento
+            propio (2026-09-06) */}
+        <GripVertical className="absolute top-2 right-2 w-4 h-4 text-gray-300 pointer-events-none" />
         {/* Nombre candidato */}
         <button
           onClick={() => setMostrarConsulta(true)}

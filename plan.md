@@ -253,16 +253,26 @@ tuchamba-v2/
 │   │   │                            /admin/login
 │   │   └── LogoutButton.tsx      ✅ Botón "Salir" del panel admin
 │   ├── reclutador/
-│   │   ├── KanbanBoard.tsx       ✅ Tablero principal (desktop + móvil), incluye
+│   │   ├── KanbanBoard.tsx       🟡 Tablero principal (desktop + móvil), incluye
 │   │   │                            columna "Descartados", Realtime (canal sobre
 │   │   │                            `postulaciones`, agregado 6.8b — antes no existía
 │   │   │                            ningún Realtime en esta pantalla), historial previo.
 │   │   │                            **7.59 (2026-09-05):** `.select()` ampliado con
 │   │   │                            `fecha_contratacion`/`fecha_firma_contrato` — sin
 │   │   │                            esto, `KanbanCard.tsx` nunca podía mostrarlas
-│   │   │                            (reincidencia del bug de props de `8.23`, ver §13)
-│   │   ├── KanbanColumn.tsx      ✅ Columna por etapa (incl. "Descartado")
-│   │   ├── KanbanCard.tsx        ✅ Card candidato — modales descarte/inducción/firma
+│   │   │                            (reincidencia del bug de props de `8.23`, ver §13).
+│   │   │                            **7.67 (2026-09-06, SIN AUDITORÍA FINAL):**
+│   │   │                            `DndContext`/`DragOverlay` de arrastrar-y-soltar,
+│   │   │                            efecto imán calculado a mano (ver §13) — José lo
+│   │   │                            probó y confirmó en vivo, pero Claude nunca revisó
+│   │   │                            el código final de los 3 archivos del Kanban tras
+│   │   │                            la última ronda de ajustes, puede quedar código
+│   │   │                            muerto de intentos abandonados (`useDroppable`,
+│   │   │                            `overValido`, tipos de `@dnd-kit` sin usar)
+│   │   ├── KanbanColumn.tsx      🟡 Columna por etapa (incl. "Descartado"). **7.67:**
+│   │   │                            zona de destino del arrastre — mismo pendiente de
+│   │   │                            auditoría final que KanbanBoard.tsx, arriba
+│   │   ├── KanbanCard.tsx        🟡 Card candidato — modales descarte/inducción/firma
 │   │   │                            contrato/entrevista/documentos; botón único de
 │   │   │                            WhatsApp que cambia a "seguimiento" tras 48h sin
 │   │   │                            movimiento (6.9); botones ✅/❌ de confirmación de
@@ -403,7 +413,11 @@ tuchamba-v2/
     ├── reclutador/
     │   ├── layout.tsx            ✅
     │   ├── login/page.tsx        ✅ Login por código
-    │   ├── dashboard/page.tsx    ✅ Métricas + link referido + filtro fechas
+    │   ├── dashboard/page.tsx    ✅ Métricas + link referido + filtro fechas.
+    │   │                            **7.65:** botón "QR" junto a "Copiar", con ícono
+    │   │                            propio. **7.68 (2026-09-06):** fix — pantalla en
+    │   │                            blanco (barra incluida) mientras cargaba la sesión,
+    │   │                            `if (!sesion) return null` vivía antes de la nav
     │   ├── pipeline/page.tsx     ✅ Client Component (antes Server, la conexión a
     │   │                            Supabase del servidor nunca se usaba) — botón
     │   │                            "+ Candidato" junto al título (HU-25, alta manual
@@ -426,7 +440,9 @@ tuchamba-v2/
     │   │                            asignado" aunque sí existiera. Con 1 agencia,
     │   │                            va directo al chat (sin cambio visible); con
     │   │                            2+, lista tipo WhatsApp para elegir — general,
-    │   │                            no depende de `es_maestro`
+    │   │                            no depende de `es_maestro`. **7.68 (2026-09-06):**
+    │   │                            fix — pantalla en blanco (barra incluida) mientras
+    │   │                            cargaba la sesión, mismo `if (!sesion) return null`
     │   │   └── page.tsx
     │   ├── detalle/[id]/
     │   │   └── page.tsx          ✅ Ficha operativa, revalidate=0, PDFs de ruta de
@@ -449,8 +465,11 @@ tuchamba-v2/
     │   ├── vacantes/page.tsx     ✅ Listado para consulta libre (5.20), incluye días
     │   │                            de entrevista de la empresa (5.25). **7.60
     │   │                            (2026-09-05):** columna nueva "🔗 Compartir" al
-    │   │                            final de cada fila, abre
-    │   │                            ModalCompartirVacante.tsx
+    │   │                            final de cada fila, abre ModalCompartirVacante.tsx.
+    │   │                            **7.62:** ajustes de ancho fijo/scroll/Esc.
+    │   │                            **7.69 (2026-09-06):** fix — columna Sueldo con
+    │   │                            texto largo se encimaba con Requerimiento
+    │   │                            (`whitespace-nowrap` quitado solo de esa celda)
     │   ├── comisiones/page.tsx   ✅ Panel comisiones — corregido para calcular
     │   │                            "cumplida" en vivo desde `fecha_garantia_fin`,
     │   │                            no desde `garantia_cumplida` (campo roto, nunca
@@ -461,7 +480,9 @@ tuchamba-v2/
     │   │                            el dashboard. Mensaje explícito si
     │   │                            `agenciasReclutador` llega vacío (a diferencia
     │   │                            del dashboard viejo, que se queda en "Cargando..."
-    │   │                            para siempre en ese caso — ver `7.50` punto 3)
+    │   │                            para siempre en ese caso — ver `7.50` punto 3).
+    │   │                            **7.68 (2026-09-06):** fix — pantalla en blanco
+    │   │                            (barra incluida) mientras cargaba la sesión
     │   ├── recursos/
     │   │   ├── page.tsx           ✅ (7.18) 2 pestañas — Soft Skills y Marketing para
     │   │   │                          tu link. Contenido estático, en tarjetas cortas.
@@ -736,6 +757,20 @@ Se documenta aquí como patrón reutilizable para el futuro: cualquier tabla que
 **La corrección, para cualquier borrado masivo futuro que involucre estas 2 tablas:** antes de borrar, romper el ciclo con `UPDATE postulaciones SET entrevista_activa_id = NULL` — después de eso, `entrevistas` y `postulaciones` se pueden borrar en el orden normal (hojas primero).
 
 **Regla adoptada para el futuro:** antes de cualquier borrado masivo (no solo de estas 2 tablas), correr la consulta de `information_schema.table_constraints` sobre **todas** las tablas involucradas de antemano (no solo la tabla raíz) — un ciclo circular no se detecta revisando una tabla a la vez, hace falta ver el mapa completo de una sola vez. La consulta completa usada hoy queda documentada en `tasks.md` `7.66`, lista para reutilizarse si hace falta un borrado similar en el futuro.
+
+### Patrón: `if (!sesion) return null` nunca debe ir antes de la barra de navegación (`7.68`, 2026-09-06)
+
+**El hallazgo:** 3 pantallas del reclutador (`trafico`, `chat-coordinador`, `dashboard`) se ponían en blanco por completo — **incluida la barra verde de navegación** — durante la fracción de segundo en que la sesión todavía se está leyendo de `localStorage`. La causa: un `if (!sesion) return null` colocado antes de `<ReclutadorNav />`, cortando el render del componente entero, nav incluida. Las pantallas que nunca tuvieron este problema (Pipeline, Vacantes) siempre tenían `<ReclutadorNav />` fuera de cualquier condición de ese tipo.
+
+**Regla adoptada para el futuro:** `<ReclutadorNav />` (o `<CoordinadorNav />`) nunca debe vivir detrás de un freno de "esperar a que cargue algo" — debe ser lo primero que se dibuja, siempre, sin condición. Si el resto del contenido necesita esperar a `sesion`/datos, ese freno va **dentro** del JSX, después de la nav, no antes de ella. Si otros campos de `sesion` se leen sin `?.` en el resto del componente (como pasó en `dashboard/page.tsx`), el freno si puede quedarse, pero debe regresar la nav + un estado de carga, nunca `null` puro.
+
+### Patrón: con `@dnd-kit`, un efecto de "imán" que reposiciona la tarjeta NUNCA debe depender de la misma detección de colisión que decide el destino (`7.67`, 2026-09-06)
+
+**El hallazgo, tras varias rondas de intentos fallidos:** al construir arrastrar-y-soltar en el Pipeline, un efecto de "imán" (centrar la tarjeta flotante sobre la columna destino) que usaba el `over`/`pointerWithin` nativo de `@dnd-kit` para decidir cuándo activarse generaba un ciclo de retroalimentación — mover la tarjeta hacia el centro de una columna podía hacer que la librería decidiera que ahora estás sobre OTRA columna, lo cual volvía a mover la tarjeta, sin parar (parpadeo), o el efecto solo funcionaba en la primera columna probada y nunca en las demás.
+
+**La corrección:** calcular la columna destino **a mano**, con `getBoundingClientRect()` real de cada columna (vía `document.getElementById`, dentro de `onDragMove`) — nunca usar el resultado de detección de colisión de la librería para decisiones que a su vez van a mover la posición de lo que esa misma detección está midiendo. Una sola fuente de verdad calculada por fuera de la librería, no 2 sistemas (el nativo + el nuestro) opinando sobre el mismo dato.
+
+**Regla adoptada para el futuro:** cualquier efecto visual que reposicione un elemento mientras se arrastra (imanes, snapping, alineación automática) debe usar una medición independiente de la detección de colisión que decide el destino real del drop — mezclar ambas cosas en la misma función casi garantiza un ciclo de retroalimentación difícil de diagnosticar solo con teoría, sin ver el comportamiento en vivo.
 
 ### Administradores — dos roles, RLS a nivel de base de datos (2026-08-21)
 

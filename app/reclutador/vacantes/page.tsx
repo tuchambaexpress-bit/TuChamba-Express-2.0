@@ -309,7 +309,7 @@ export default function VacantesReclutador() {
                     <div className="px-4 py-3 border-b border-gray-50 text-gray-600 whitespace-nowrap group-hover:bg-gray-50 transition-colors">
                       {new Date(v.fecha_publicacion).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}
                     </div>
-                    <div className="px-4 py-3 border-b border-gray-50 text-gray-600 whitespace-nowrap group-hover:bg-gray-50 transition-colors">
+                    <div className="px-4 py-3 border-b border-gray-50 text-gray-600 group-hover:bg-gray-50 transition-colors">
                       {salario}
                     </div>
                     <div className="px-4 py-3 border-b border-gray-50 text-gray-600 group-hover:bg-gray-50 transition-colors">

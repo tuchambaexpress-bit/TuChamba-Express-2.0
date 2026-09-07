@@ -11,6 +11,13 @@ interface Props {
   onActualizarEtapa: (postulacionId: string, nuevaEtapa: string) => void
   reclutadorId: string
   candidatosConHistorial?: Set<string>
+  solicitudArrastre?: { postulacionId: string; etapa: string } | null
+  onSolicitudProcesada?: () => void
+  // Arrastrar y soltar, rediseño (2026-09-06): ya no usamos el `isOver`
+  // de dnd-kit (ese fue la causa del bug de "solo funciona una vez") —
+  // el padre calcula a mano, con posiciones reales, cuál columna es el
+  // destino del imán, y nos lo pasa aquí directo.
+  esDestinoImán?: boolean
 }
 
 const COLORES_ETAPA: Record<string, string> = {
@@ -22,7 +29,7 @@ const COLORES_ETAPA: Record<string, string> = {
   'Descartado': 'bg-red-100 text-red-700',
 }
 
-export default function KanbanColumn({ etapa, postulaciones, todasPostulaciones, onActualizarEtapa, reclutadorId, candidatosConHistorial }: Props) {
+export default function KanbanColumn({ etapa, postulaciones, todasPostulaciones, onActualizarEtapa, reclutadorId, candidatosConHistorial, solicitudArrastre, onSolicitudProcesada, esDestinoImán }: Props) {
   return (
     <div className="w-72 flex-shrink-0 h-full flex flex-col">
       {/* Header de columna — ya vive fuera del área con scroll por
@@ -36,8 +43,15 @@ export default function KanbanColumn({ etapa, postulaciones, todasPostulaciones,
         <span className="text-xs text-gray-400">{postulaciones.length}</span>
       </div>
 
-      {/* Cards — scroll propio, independiente de las demás columnas */}
-      <div className="space-y-3 min-h-[100px] flex-1 overflow-y-auto pr-1">
+      {/* Cards — scroll propio, independiente de las demás columnas.
+          ref+isOver del useDroppable, para detectar el drop y resaltar
+          la columna mientras se arrastra algo encima (2026-09-06) */}
+      <div
+        id={`kanban-col-${etapa}`}
+        className={`space-y-3 min-h-[100px] flex-1 overflow-y-auto pr-1 rounded-lg transition-colors ${
+          esDestinoImán ? 'bg-[#1A6B3C]/5 ring-0 ring-[#1A6B3C]/30' : ''
+        }`}
+      >
         {postulaciones.map(p => (
           <KanbanCard
             key={p.id}
@@ -46,6 +60,8 @@ export default function KanbanColumn({ etapa, postulaciones, todasPostulaciones,
             onActualizarEtapa={onActualizarEtapa}
             reclutadorId={reclutadorId}
             tieneHistorialPrevio={candidatosConHistorial?.has(p.candidato_id) ?? false}
+            solicitudEtapa={solicitudArrastre && solicitudArrastre.postulacionId === p.id ? solicitudArrastre.etapa : null}
+            onSolicitudProcesada={onSolicitudProcesada}
           />
         ))}
         {postulaciones.length === 0 && (

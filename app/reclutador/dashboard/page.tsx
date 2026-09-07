@@ -355,7 +355,16 @@ export default function DashboardReclutador() {
     setCargandoNumeros(false)
   }
 
-  if (!sesion) return null
+  if (!sesion) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <ReclutadorNav />
+        <div className="max-w-6xl mx-auto px-4 py-8">
+          <p className="text-center text-gray-400 text-sm py-10">Cargando...</p>
+        </div>
+      </div>
+    )
+  }
 
   const etiquetasFiltroCorte: Record<FiltroCorte, string> = {
     corte_abierto: 'Corte abierto',

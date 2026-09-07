@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, type DragEndEvent, type DragStartEvent, type DragMoveEvent, type Modifier } from '@dnd-kit/core'
 import KanbanColumn from './KanbanColumn'
 import KanbanCard from './KanbanCard'
 
@@ -50,6 +51,120 @@ export default function KanbanBoard() {
   const [candidatosConHistorial, setCandidatosConHistorial] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
   const [sesion, setSesion] = useState<any>(null)
+
+  // Arrastrar y soltar (2026-09-06). `distance: 4` evita que un clic
+  // normal (abrir la ficha del candidato, dar "Mover ▾", etc.) se
+  // confunda con el inicio de un arrastre — mismo umbral que ya usa
+  // EditableList.tsx en este proyecto.
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }))
+  const [solicitudArrastre, setSolicitudArrastre] = useState<{ postulacionId: string; etapa: string } | null>(null)
+  const [activeId, setActiveId] = useState<string | null>(null)
+  // Rediseño completo (2026-09-06): ya no usamos `over`/colisión de
+  // dnd-kit para decidir el imán — esa decisión y la posición ya
+  // modificada por el imán se retroalimentaban entre sí, y solo
+  // funcionaba en la primera columna. Ahora `snapEtapa` es NUESTRO
+  // propio cálculo, con posiciones reales del DOM, y es la ÚNICA fuente
+  // de verdad — tanto para mover visualmente la tarjeta como para
+  // decidir dónde se suelta al final. dnd-kit ya no decide nada de esto.
+  const [snapEtapa, setSnapEtapa] = useState<string | null>(null)
+
+  // Misma regla exacta que CA-02.9 en KanbanCard.tsx (ORDEN_ETAPAS/
+  // opcionesMenu) — un paso a la vez, adelante o atrás, "Descartado"
+  // siempre disponible desde cualquier etapa activa, "Contratado" y
+  // "Descartado" son terminales sin ningún movimiento posible.
+  function esMovimientoValido(etapaActual: string, etapaDestino: string): boolean {
+    if (etapaActual === etapaDestino) return false
+    if (etapaActual === 'Descartado' || etapaActual === 'Contratado') return false
+    const ORDEN_ETAPAS = ['Aplicado', 'Contactado', 'Entrevista', 'Inducción', 'Contratado']
+    const idx = ORDEN_ETAPAS.indexOf(etapaActual)
+    const siguiente = idx >= 0 && idx < ORDEN_ETAPAS.length - 1 ? ORDEN_ETAPAS[idx + 1] : null
+    const anterior = idx > 0 ? ORDEN_ETAPAS[idx - 1] : null
+    return etapaDestino === siguiente || etapaDestino === anterior || etapaDestino === 'Descartado'
+  }
+
+  function handleDragStart(event: DragStartEvent) {
+    setActiveId(String(event.active.id))
+    setSnapEtapa(null)
+  }
+
+  // Cancelar con Escape — refuerza la intención de "no quiero moverlo",
+  // mismo patrón que ya usan los demás modales del proyecto.
+  useEffect(() => {
+    if (!activeId) return
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        setActiveId(null)
+        setSnapEtapa(null)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [activeId])
+
+  // Se dispara en cada milisegundo mientras arrastras. Calcula, con las
+  // posiciones REALES del DOM (document.getElementById, no nada de
+  // dnd-kit), qué tanto porcentaje del ancho de la tarjeta ya se mete en
+  // cada columna válida — el colchón del tercio vive aquí, una sola vez,
+  // aplicado igual a TODAS las columnas (antes solo funcionaba en la
+  // primera, por el problema de retroalimentación ya explicado).
+  function handleDragMove(event: DragMoveEvent) {
+    const { active, delta } = event
+    const postulacion = postulaciones.find(p => p.id === String(active.id))
+    const rectInicial = active.rect.current.initial
+    if (!postulacion || !rectInicial) { setSnapEtapa(null); return }
+
+    const cardIzq = rectInicial.left + delta.x
+    const cardDer = cardIzq + rectInicial.width
+
+    let mejorEtapa: string | null = null
+    let mejorFraccion = 0
+    for (const etapa of ['Aplicado', 'Contactado', 'Entrevista', 'Inducción', 'Contratado', 'Descartado']) {
+      if (!esMovimientoValido(postulacion.etapa_actual, etapa)) continue
+      const el = document.getElementById(`kanban-col-${etapa}`)
+      if (!el) continue
+      const rect = el.getBoundingClientRect()
+      const izq = Math.max(cardIzq, rect.left)
+      const der = Math.min(cardDer, rect.right)
+      const ancho = Math.max(0, der - izq)
+      const fraccion = ancho / rectInicial.width
+      if (fraccion > mejorFraccion) { mejorFraccion = fraccion; mejorEtapa = etapa }
+    }
+    setSnapEtapa(mejorFraccion >= 1 / 3 ? mejorEtapa : null)
+  }
+
+  // El imán en sí — antes REEMPLAZABA la posición X por completo, lo
+  // cual peleaba contra el mouse y no dejaba cancelar (tenías que
+  // "ganarle" al imán a la fuerza). Ahora solo JALA un 40% hacia el
+  // centro de la columna, dejando que tu mouse siga mandando el 60% —
+  // se siente "atraído" en vez de "atrapado", y basta con mover un poco
+  // hacia afuera para que se rompa el umbral del tercio y te suelte.
+  const modificadorImanColumna: Modifier = ({ transform, active }) => {
+    if (!snapEtapa || !active) return transform
+    const rectOriginal = active.rect.current.initial
+    if (!rectOriginal) return transform
+    const el = document.getElementById(`kanban-col-${snapEtapa}`)
+    if (!el) return transform
+    const rectColumna = el.getBoundingClientRect()
+    const centroColumna = rectColumna.left + rectColumna.width / 2
+    const centroTarjetaOriginal = rectOriginal.left + rectOriginal.width / 2
+    const targetX = centroColumna - centroTarjetaOriginal
+    const factor = 0.4
+    return { ...transform, x: transform.x + (targetX - transform.x) * factor }
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    setActiveId(null)
+    // Se suelta exactamente donde el imán ya estaba mostrando — nunca
+    // le preguntamos a dnd-kit "over" para esta decisión, así nunca hay
+    // desacuerdo entre lo que ves (la tarjeta ya imantada) y lo que pasa
+    // al soltar. Si snapEtapa es null (nunca llegaste a un tercio de
+    // ninguna columna válida), no pasa nada — se queda donde estaba.
+    if (snapEtapa) {
+      const postulacionId = String(event.active.id)
+      setSolicitudArrastre({ postulacionId, etapa: snapEtapa })
+    }
+    setSnapEtapa(null)
+  }
 
   useEffect(() => {
     const data = localStorage.getItem('reclutador_sesion')
@@ -196,22 +311,54 @@ export default function KanbanBoard() {
       </div>
     </div>
 
-    {/* Vista desktop — Kanban horizontal, cada columna con su propio scroll */}
-    <div className="hidden md:block h-full pb-4">
-      <div className="flex gap-4 min-w-max h-full">
-        {todasEtapas.map(etapa => (
-          <KanbanColumn
-            key={etapa}
-            etapa={etapa}
-            postulaciones={postulaciones.filter(p => p.etapa_actual === etapa)}
-            todasPostulaciones={postulaciones}
-            onActualizarEtapa={actualizarEtapa}
-            reclutadorId={sesion?.id}
-            candidatosConHistorial={candidatosConHistorial}
-          />
-        ))}
+    {/* Vista desktop — Kanban horizontal, cada columna con su propio scroll.
+        Arrastrar y soltar solo aquí (2026-09-06) — la vista móvil se
+        queda con el botón "Mover ▾" únicamente, arrastrar con el dedo
+        en una lista vertical de una sola columna no aporta nada real. */}
+    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragMove={handleDragMove} onDragEnd={handleDragEnd} modifiers={[modificadorImanColumna]}>
+      <div className="hidden md:block h-full pb-4">
+        <div className="flex gap-4 min-w-max h-full">
+          {todasEtapas.map(etapa => (
+            <KanbanColumn
+              key={etapa}
+              etapa={etapa}
+              postulaciones={postulaciones.filter(p => p.etapa_actual === etapa)}
+              todasPostulaciones={postulaciones}
+              onActualizarEtapa={actualizarEtapa}
+              reclutadorId={sesion?.id}
+              candidatosConHistorial={candidatosConHistorial}
+              solicitudArrastre={solicitudArrastre}
+              onSolicitudProcesada={() => setSolicitudArrastre(null)}
+              esDestinoImán={snapEtapa === etapa}
+            />
+          ))}
+        </div>
       </div>
-    </div>
+
+      {/* Copia flotante — vive fuera de cualquier contenedor con scroll
+          (dnd-kit la renderiza en un portal aparte), así que se mueve
+          libre por toda la pantalla sin que el overflow-y-auto de cada
+          columna la recorte. Solo una vista simplificada, no la tarjeta
+          interactiva completa. */}
+      <DragOverlay dropAnimation={null}>
+        {activeId && (() => {
+          const p = postulaciones.find(post => post.id === activeId)
+          if (!p) return null
+          return (
+            <div
+              className={`rounded-xl p-3 shadow-2xl bg-white w-72 cursor-grabbing outline-none transition-all duration-150 border border-gray-200 ring-1 ${
+                snapEtapa ? 'rotate-0 scale-105 ring-[#1A6B3C]/50' : 'rotate-2 ring-[#1A6B3C]/35'
+              }`}
+            >
+              <p className="font-semibold text-gray-900 text-base">{p.candidatos?.nombre}</p>
+              <p className="text-sm text-[#1A6B3C] mt-0.5">
+                {p.vacantes?.titulo}{p.vacantes?.negocios?.nombre ? ` — ${p.vacantes.negocios.nombre}` : ''}
+              </p>
+            </div>
+          )
+        })()}
+      </DragOverlay>
+    </DndContext>
     </>
     )}
     </>
