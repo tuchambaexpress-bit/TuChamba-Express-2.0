@@ -194,3 +194,53 @@ Motivo/autor/autorización: agente bajo mandato del PO «Recuperación de soport
 - Validación futura propuesta: mocks que registren llamadas y demuestren cero lecturas sensibles/URLs/escrituras ante autorización fallida; sesión inválida/inactiva, IDs ajenos, agencia alterada y pares de recursos incoherentes; casos legítimos, archivos/enlaces inválidos y recursos compartidos. Después, integración aislada con permisos BD/Storage reales del entorno de prueba y contrato de audiencia aprobado. Pruebas detalladas por ficha; ninguna ejecutada ahora.
 - Puerta de salida: retirar únicamente el bloqueo de «cinco diagnósticos actuales no conservados». Mantener recuperación de fuentes históricas o sustitución expresamente aceptada, conciliación TCE-012, precisión de TCE-003, aceptación de prioridades/criterios y cobertura integral pendiente o excepciones del PO. La declaración de soporte cubierto no demuestra explotación ni corrige el producto.
 - Antes de implementar en F2: autorización específica, tarea técnica identificada, alcance, riesgo, criterios, pruebas y reversión conforme a R-DOC; no reutilizar REC-F1-001/002 para implementación. F1 abierta, F2 no iniciada. Recomendación de cierre íntegro todavía suspendida.
+
+## Transición condicionada y primer bloque — propuesta 2026-11-06
+
+Motivo: preparar aceptación documental del diagnóstico F1 y transferencia explícita de verificaciones, sin afirmar auditoría integral terminada. Autor: agente bajo mandato del PO «Cierre documental condicionado de F1». Secciones afectadas: propuesta de puerta de salida y secuencia futura; se conservan procedimientos anteriores. Requisito rector: SPEC «Propuesta de aceptación documental condicionada F1 y transición»; mapa y evidencia en HALLAZGOS; REC-F2-001 a REC-F2-007 y continuidad en TASKS. SIN_COMMIT; propuesta pendiente de aprobación.
+
+Procedimiento propuesto de aceptación:
+1. Presentar al PO inventario, matriz, soportes actuales y limitaciones; distinguir diagnóstico realizado, corrección pendiente y validación pendiente.
+2. Obtener decisión explícita sobre aceptación de reconstrucciones en lugar de originales no localizados, discrepancias TCE-003/012, prioridades y alcance integral no verificado. Registrar reservas, riesgos residuales y condiciones; no resolver contradicciones por inferencia.
+3. Asignar responsables y acordar criterios/entornos para todas las tareas heredadas. Si falta asignación o aceptación del riesgo, no declarar cumplida la puerta de salida. Una tarea PENDIENTE no acredita garantía de BD o seguridad.
+4. Si el PO aprueba, registrar cierre documental condicionado con alcance y versión; distinguirlo de cierre de hallazgos y de aceptación técnica/producción. Si no aprueba, F1 sigue abierta con sus bloqueos.
+5. Obtener autorización separada y delimitada para comenzar el bloque F2. No ejecutar la secuencia siguiente por anticipado.
+
+Primer bloque futuro: arquitectura de identidad, sesiones, autorización y aislamiento multiagencia.
+- REC-F2-001 es el entregable de diseño. Precisar actores e identificadores, contrato de sesión/cookies/renovación/logout/revocación y desactivación, roles Maestro/Limitado conforme a contratos existentes y facultades coordinador/reclutador por agencia. Separar flujo público de candidato de recuperación privada y atribución de referidos.
+- Definir compatibilidad Supabase Auth con código + contraseña sin correo obligatorio, sin contraseñas propias ni identidades ficticias inseguras; entregar alternativas, decisión y riesgos al PO antes de fijar mecanismo. No tratar hipótesis técnicas como decisión funcional aprobada.
+- Construir matriz de permisos por operación y recurso, y mapa API/SSR/consultas directas/Realtime/Storage; identificar qué acceso requiere sesión y qué lectura pública mínima debe conservarse. Compartir contratos entre TCE-001/002/003/005/006/007/008/009/012/013; preservar TCE-004 y su contrato administrativo.
+- Apoyar el diseño con revisión autorizada de BD/RLS (REC-F2-002), Storage (003), entorno/infraestructura (004) y seguridad (005). Empezar por inventario local y evidencias no sensibles; cualquier consulta externa o BD requiere permiso explícito. Una especificación SQL histórica no demuestra esquema desplegado.
+- Proponer implementación en incrementos futuros con archivos exactos, tarea, pruebas negativas/positivas, riesgo y reversión por cambio. No asignar archivos de implementación como autorizados desde este plan.
+- Preparar REC-F2-006: integrar primero TCE-004 en entorno aislado con datos sintéticos y sesión real; después validar cada incremento autorizado de identidad/autorización. Si no existe entorno seguro, registrar BLOQUEADA al ejecutar la tarea autorizada y detener dependencias; nunca usar el único Supabase productivo como sustituto.
+- Planificar REC-F2-007 para cobertura funcional por rol, listados completos, rendimiento medido y accesibilidad con criterios aprobados; trasladar esta cobertura expresamente y no declararla ya realizada.
+
+Criterios del bloque: contrato y matriz revisados, decisiones de identidad y autoridad resueltas, permisos propuestos contrastables con modelo BD, plan de pruebas/reversión aprobado, controles compensatorios conservados y autorización del PO. La aceptación de arquitectura no acepta implementación, pruebas ni despliegue.
+
+Mantener Vercel Authentication / All Deployments como medida temporal informada por PO, sin acceso a consola ni verificación actual; no retirarla automáticamente al pasar de fase ni presumir que protege acceso directo a Supabase/Storage. TCE-004 permanece local y pendiente de integración integral; no refactorizarlo para iniciar el bloque.
+
+F1 continúa abierta, F2 no iniciada y todos los hallazgos abiertos. No se ratifican documentos 0.1 ni se autoriza producción, configuración, migraciones, dependencias, pruebas, código o commits por esta propuesta.
+
+## Formalización del VoBo del PO — cierre documental condicionado F1, 2026-11-06
+
+Autoridad y fuente: propietario del proyecto, instrucción expresa «Formalización del cierre documental F1» de fecha 2026-11-06. El PO declara otorgado su VoBo para el cierre documental condicionado bajo los seis criterios de su mandato anterior. Esta autorización aprueba ese cierre delimitado y un único checkpoint local de HALLAZGOS, SPEC, PLAN y TASKS; no ratifica integralmente las versiones 0.1 ni las gobernanzas.
+
+**Estado vigente de F1: CERRADA DOCUMENTALMENTE CON CONDICIONES.**
+**F2: NO INICIADA.**
+Los estados previos «F1 abierta» y «propuesta pendiente de aprobación del cierre» se conservan como instantáneas históricas y quedan sucedidos exclusivamente por esta autorización de cierre documental. La propuesta de transición permanece íntegra; sus permisos de ejecución, responsables y validaciones no se consideran concedidos ni realizados por el VoBo.
+
+Alcance de los seis criterios aceptados, sin convertirlos en resultados técnicos:
+1. Conservar TCE-001 a TCE-017 ABIERTOS hasta corrección autorizada y validación/aceptación pertinentes. Se mantienen los estados individuales de seguimiento: TCE-004 EN_VALIDACION, los demás según ficha/registro vigente; no se cierra ningún hallazgo ni tarea por el cierre de fase documental.
+2. Reconocer las reconstrucciones estáticas actuales como soporte documental del código y versión revisados; no son informes históricos recuperados ni certificados de producción. Informes originales y severidades históricas no recuperadas siguen identificados como tales. El VoBo acepta el soporte actual con esta limitación, no inventa los originales.
+3. Mantener pendientes las discrepancias históricas TCE-003 (título sobre reclutadores frente a ficha de vacante revisada) y TCE-012 (coordinadores frente a reclutadores, opción C); no resolverlas ni renumerarlas por inferencia.
+4. Transferir expresamente las verificaciones de BD/RLS/Storage/infraestructura/seguridad/integración y cobertura pendiente a REC-F2-001 a REC-F2-007, con sus criterios de aceptación y dependencias ya registrados. Todas permanecen PENDIENTES, sin pruebas ni consultas ejecutadas; responsables y permisos de entorno por definir antes de iniciar. La cobertura no realizada es reserva del cierre documental, no auditoría integral aprobada como probada.
+5. Conservar protección temporal de Vercel Authentication / All Deployments según información del PO y corrección local TCE-004 del commit a26775d54c1374666ed2890ddd032e5c9f563e81, pendiente de validación integral. No se accede a Vercel, no se verifica la protección ni se acredita despliegue de la corrección; no retirar/debilitar protección ni publicar sin autorización específica.
+6. Registrar REC-F2-001, arquitectura de identidad, sesiones, autorización y aislamiento multiagencia, como siguiente bloque de diseño. Registrarlo no inicia la tarea, la fase ni la implementación; requiere autorización delimitada posterior.
+
+Límites expresos: el cierre es documental y condicionado, no cierre técnico de defectos, aprobación de seguridad global, validación integral de BD/infraestructura ni autorización comercial o productiva. No nuevas pruebas de producto, cambios de código/configuración/dependencias, migraciones, datos reales, servicios externos ni despliegues. La falta de evidencia técnica continúa bloqueando aceptación/habilitación de la operación correspondiente. Los siete puntos operativos de la propuesta SPEC y los criterios técnicos de TASKS se conservan como planificación/condiciones; este registro no afirma que todos estén cumplidos.
+
+Trazabilidad: propuesta precedente y matriz de 17 hallazgos en HALLAZGOS; condiciones/alcance en SPEC; transferencia y secuencia en PLAN; siete tareas y continuidad en TASKS. Línea base anterior: b94d24d12c5684eafe57959459036c6fe0b0a021. El checkpoint nuevo comprenderá la propuesta preservada y esta formalización; su hash no se anticipa y se entregará después del único commit autorizado. Este registro no se atribuye al hash anterior.
+
+Aplicación al procedimiento: se formaliza ahora el VoBo del cierre documental; los pasos de autorización del bloque F2 y de ejecución/validación continúan pendientes. Antes de REC-F2-001: delimitar entregable de diseño, responsable/revisor, datos y entorno, decisiones abiertas y autorización de inicio. No ejecutar otras tareas por el solo orden propuesto.
+
+Control de esta actualización: motivo, formalizar autorización expresa del PO; secciones afectadas, estado actual/continuidad documental y encabezado de fase de TASKS, sin sustituir el procedimiento histórico; autor material, agente bajo instrucción del propietario; aprobación, mandato citado; evidencia, cuatro documentos y controles Git/documentales; commit asociado, checkpoint local autorizado cuyo hash definitivo se comunica al terminar.

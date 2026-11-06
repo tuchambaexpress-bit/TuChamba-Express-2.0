@@ -1,6 +1,6 @@
 Versión: 0.1
 Estado: Propuesta pendiente de aprobación del propietario
-Fase activa: F1 — Auditoría integral
+Estado F1: CERRADA DOCUMENTALMENTE CON CONDICIONES. F2: NO INICIADA.
 Documento de requisitos: SPEC_RECUPERACION.md
 Documento de ejecución: PLAN_RECUPERACION.md
 Registrar y controlar todas las actividades del Plan de Recuperación de TuChambaExpress 2.0, garantizando trazabilidad entre requisitos, tareas, hallazgos, evidencias, decisiones y commits.
@@ -339,3 +339,120 @@ Este punto sucede a la consolidación F1 anterior, que se conserva como instant�
 - Pruebas de aceptación F2 propuestas en HALLAZGOS y agrupadas en PLAN; no ejecutadas. Sin HTTP, secretos, datos, migraciones, instalaciones, Supabase, Vercel ni producción.
 - Estado final: master, mismo HEAD, cuatro documentos modificados, staging vacío; SIN_COMMIT por restricción expresa. Sin commits, push/pull/fetch ni cambios de rama. F1 activa; F2 no iniciada; gobernanzas/borradores no ratificados.
 - Siguiente paso autorizado: entregar tabla por hallazgo y bloqueos al PO, detenerse y esperar autorización. No queda autorizada otra validación, conciliación del índice, commit o reparación por este registro.
+
+## Tareas heredadas y primer bloque F2 — propuesta 2026-11-06
+
+Autorización documental: mandato del PO «Cierre documental condicionado de F1». Se permite registrar y preparar estas tareas, no ejecutarlas. Búsqueda previa en los documentos de recuperación y gobernanzas sin registros REC-F2-001 a REC-F2-007; se asignan para trazabilidad del trabajo futuro. REC-F1-001 sigue reservado a DEC-REC-005 y REC-F1-002 a registro documental, ambos sin cierre.
+
+Reglas comunes aplicables a las siete fichas:
+- Estado: PENDIENTE, no iniciadas. Responsable ejecutor/revisor independiente: por designar expresamente por el PO; autoridad de aceptación: PO. Prioridad, calendario y aceptación de riesgo: pendientes de aprobación.
+- Requisitos SPEC: sección «Propuesta de aceptación documental condicionada F1 y transición» y R-DOC-001/002/003/004/006/007/008/009/010. Procedimiento PLAN: «Transición condicionada y primer bloque», además del procedimiento específico de cada hallazgo.
+- Autorización de ejecución: NO OTORGADA. Aprobar el cierre documental o esta planificación no autoriza código, consultas externas, uso de credenciales/datos, cambios BD/Storage/configuración, instalaciones, migraciones, pruebas, commits ni despliegue. Una ejecución futura requiere mandato de entorno, operaciones, datos y alcance delimitados.
+- Evidencia de partida: las fichas y matriz de HALLAZGOS y checkpoint b94d24d12c5684eafe57959459036c6fe0b0a021. Ningún resultado técnico nuevo obtenido al registrar las tareas.
+- Pruebas ejecutadas: ninguna. Las pruebas/criterios de cada ficha son previstos y pendientes; no usar producción ni datos reales. Registrar fallos, limitaciones, entorno, versión y salida verificable sin secretos.
+- Riesgos y reversión: tratar cada tarea como verificación/diseño inicialmente; no hay implementación que revertir ahora. Antes de cualquier cambio autorizado, documentar estado previo, impacto y reversión específica; no considerar un git revert suficiente para datos/migraciones/efectos externos.
+- Commits de ejecución: ninguno; no hay commit autorizado por esta propuesta. Decisión de cierre: pendiente de evidencia, revisión y aceptación del PO. Próximo paso común: aprobar alcance/responsables/entorno antes de iniciar, o mantener PENDIENTE.
+- Toda validación fallida bloquea la aceptación técnica de su operación y su habilitación/publicación, aunque se haya aprobado un cierre documental condicionado de F1. No se crean garantías por trasladar un pendiente de fase.
+
+### REC-F2-001 — Arquitectura de identidad, sesiones y autorización multiagencia
+
+- Objetivo/alcance: primer bloque de diseño para identidad confiable y permiso por recurso; incluir reclutador, candidato, coordinador y administrador en sus contratos actuales; mapear endpoints, SSR, consultas directas, Realtime y Storage. No crear un segundo sistema administrativo ni alterar TCE-004.
+- Hallazgos: TCE-007/008/009/012/013; consumidores TCE-001/002/003/005/006 y contrato administrativo TCE-004. Dependencias: contrato de producto/roles, discrepancias TCE-003/012, evidencias de REC-F2-002/003/004/005 para finalizar el diseño. El borrador puede alimentar esas verificaciones, no exige finalizarlas antes de empezar a diseñar.
+- Sistemas/archivos candidatos: flujos existentes de login/perfil/pipeline, middleware, clientes Supabase y API identificadas en HALLAZGOS; lista de cambios exacta debe aprobarse después, no queda autorizada aquí.
+- Criterios de aceptación: matriz actor-operación-recurso-agencia completa; decisión documentada del mapeo código + contraseña a Supabase Auth sin correo obligatorio; contratos de alta, primer cambio, recuperación por coordinador vigente, expiración, renovación, logout, revocación y desactivación; separación de identidad global y membresía local; política explícita para facultades globales, referidos y acceso privado del candidato; CSRF y permiso antes de privilegios. Ambigüedades bloqueadas, sin inventar política. Revisión y aprobación del PO antes de implementación.
+- Pruebas previstas/evidencia de salida: casos de amenaza y aceptación trazados a recursos y consultas; diseños y decisiones versionados cuando se autorice, con plan de pruebas negativas/positivas y reversión por incremento. Ninguna prueba ni diseño técnico aprobado todavía.
+
+### REC-F2-002 — Modelo BD, restricciones, RLS e integridad
+
+- Objetivo/alcance: contrastar esquema efectivo autorizado con código: tablas, roles/grants, políticas RLS, funciones/RPC, triggers, FK, unicidad y transacciones. Incluir negocio compartido, membresías, atribución, etapas, historial, comisiones e invitaciones. No inferir despliegue desde SQL histórico.
+- Hallazgos: TCE-001/002/004/005/006/007/008/009/010/011/012/013/014/015/016. Dependencias: entorno autorizado REC-F2-004 y matriz preliminar REC-F2-001; acceso efectivo BD aún no autorizado.
+- Sistemas afectados previstos: Supabase/Postgres del entorno de prueba, esquema/migraciones disponibles y políticas; no se autoriza modificar ninguno ahora.
+- Criterios de aceptación: inventario fechado del modelo realmente revisado y su versión; matriz de permisos contrastada con políticas/roles, incluido anon/authenticated y alcance de servicio; pruebas de lectura/escritura por identidad/agencia y restricciones; garantías transaccionales e idempotencia de cortes/transiciones/consumo documentadas con evidencia o defecto abierto. Demostrar rechazo cruzado y preservación de integridad en entorno aislado para cada operación que vaya a habilitarse. Diferenciar modelo propuesto, observado y probado; aceptación del PO.
+- Pruebas previstas/evidencia: dos agencias, reclutador compartido, identidad inactiva/ajena, restricciones, reintentos, fallos intermedios y concurrencia; conservar resultados por tabla/operación/rol. Garantías aún no demostradas, ninguna consulta externa ejecutada.
+
+### REC-F2-003 — Storage y protección de documentos
+
+- Objetivo/alcance: comprobar políticas/privacidad de buckets, acceso directo, URL pública/firmada y autorización por candidato/postulación/negocio/agencia; consistencia archivo-registro.
+- Hallazgos: TCE-001/006; relacionados TCE-003/011/015. Dependencias: contratos REC-F2-001, modelo REC-F2-002 y entorno REC-F2-004. Sistemas previstos: buckets y endpoints documentales del entorno aislado, no producción.
+- Criterios de aceptación: evidencia de configuración y políticas efectivas; matriz por recurso/actor que rechace lectura, firma, subida, sustitución y borrado ajenos; relaciones incoherentes rechazadas; caducidad de URL firmada y privacidad acordada comprobadas; casos autorizados y fallos Storage/BD sin estado aceptado como íntegro por error. No usar getPublicUrl como prueba de bucket público. Aprobar tratamiento de negocio compartido y revisión PO.
+- Pruebas previstas/evidencia: archivos sintéticos, acceso directo permitido/denegado, vencimiento, tamaño/tipo y fallos de almacenamiento/registro; resultados y versión sin URLs sensibles ni documentos reales.
+
+### REC-F2-004 — Entorno aislado, infraestructura y medidas temporales
+
+- Objetivo/alcance: preparar y validar aislamiento, capacidades locales, runtime y configuración no secreta; trazabilidad commit-entorno, respaldos/reversión y conservación de protección temporal.
+- Hallazgos: TCE-004/017 y precondición de validación de todos. Dependencias: autorización de herramientas/entorno y responsable designado; existencia de un entorno aislado no se presume.
+- Sistemas previstos: herramientas locales y, solo con permiso específico futuro, metadatos/configuración no secreta de infraestructura. Prohibido usar el único Supabase de producción para pruebas por falta de alternativa.
+- Criterios de aceptación: entorno de pruebas sin conexión ni credenciales productivas, datos sintéticos, runtime/gestor documentados y compatibles; configuración de origen segura y contrato Preview/Production diferenciado; procedimiento de respaldo/restauración y reversión verificable en aislamiento; relación con commit documentada. Protección Vercel Authentication / All Deployments conservada y, cuando se autorice consultarlo, alcance/estado no sensibles registrados. Cualquier cambio de protección o despliegue requiere autorización independiente.
+- Pruebas previstas/evidencia: comprobación de aislamiento y restauración en entorno de prueba autorizado, compatibilidad de origen y configuración; ninguna instalación, acceso a consola ni prueba ejecutada ahora. Si no existe alternativa aislada autorizada, no avanzar integración.
+
+### REC-F2-005 — Seguridad, privilegios y dependencias
+
+- Objetivo/alcance: revisar contratos de autenticación/autorización, CSRF, exposición de datos, mínimo privilegio y controles anti-abuso; contrastar avisos de dependencias con paquete/versión/fuente verificable y compatibilidad.
+- Hallazgos: TCE-001 a TCE-017 según su superficie; priorizar controles administrativos/documentales/identidad y TCE-017 sin declarar CVE por nombre de paquete. Dependencias: arquitectura preliminar REC-F2-001 y entorno REC-F2-004; las fuentes externas y pruebas necesitan autorización futura.
+- Sistemas/archivos candidatos: handlers/componentes ya identificados, package.json/lock y configuración no secreta; no actualizar paquetes ni modificar producto en esta tarea sin ampliación expresa.
+- Criterios de aceptación: amenazas y permisos documentados por operación, pruebas negativas de sesión/rol/recurso/agencia/origen y ausencia de efectos privilegiados al rechazar; verificación de secreto público solo con procedimiento autorizado, sin valores en evidencias; fuentes y aplicabilidad de avisos registradas o pendientes explícitos; plan de actualización compatible y regresión aprobado. Revisión independiente y aceptación PO; no afirmar seguridad global.
+- Pruebas previstas/evidencia: mocks e integración aislada, entradas manipuladas, CSRF y abuso según límites aprobados; matriz versiones/avisos y riesgo residual, sin explotación de producción, secretos ni instalaciones ahora.
+
+### REC-F2-006 — Integración aislada y regresión por incremento
+
+- Objetivo/alcance: validar primero TCE-004 tal como está consolidado; después validar cada incremento de identidad/autorización y, cuando se implementen con autorización propia, integridad, invitaciones, publicación y paginación. Esta tarea de validación no autoriza implementar esas correcciones.
+- Hallazgos: TCE-001 a TCE-017 según incremento disponible. Dependencias: entorno REC-F2-004 y contratos/modelo/permisos REC-F2-001/002/003/005; correcciones fuera de TCE-004 deben existir y estar autorizadas antes de probar su aceptación.
+- Sistemas previstos: aplicación y Supabase Auth/BD/Storage de prueba con identidades/datos sintéticos; nunca proyecto productivo.
+- Criterios de aceptación: login real, getUser, lectura/renovación de cookies, expiración/logout/revocación y administrador activo/permisos conforme al contrato; cuatro API TCE-004 aceptan casos legítimos y rechazan sesión/rol/origen inválidos o clave antigua sola sin efectos de negocio. Por incremento posterior, identidad/recurso/agencia, comisiones/etapas/historial/invitaciones consistentes y reintentos/concurrencia según matriz. Evidencia por prueba y versión, fallos/no ejecutadas explícitos; revisión y aceptación PO antes de proponer publicación.
+- Pruebas previstas/evidencia: integración real aislada más mocks/regresiones pertinentes. Las 117 pruebas históricas de TCE-004 no sustituyen esta integración ni se presentan como repetidas en esta tarea.
+
+### REC-F2-007 — Cobertura funcional, completitud, rendimiento y accesibilidad
+
+- Objetivo/alcance: cobertura integral no ejecutada en F1 para Candidato, Reclutador, Coordinador y Administrador; listados/paginación, filtros/orden/conteos, experiencia y accesibilidad; medición con volúmenes sintéticos.
+- Hallazgos: TCE-016 y flujos afectados por TCE-007 a TCE-015; regresión pública/documental TCE-001/002/003/005/006. Dependencias: entorno REC-F2-004, contratos y cada incremento pertinente, REC-F2-006. No esperar validación de toda F2 para planificar escenarios; no probar funcionalidades inexistentes como terminadas.
+- Sistemas previstos: interfaces/API/consultas de prueba, sin carga sobre producción.
+- Criterios de aceptación: inventario de flujos y roles con requisitos históricos/recuperación enlazados y resultado reproducible; dataset supera límites configurados, páginas sin omisiones/duplicados y totales fiables; metas de latencia/volumen y matriz accesible/móvil definidas y aprobadas antes de medir, no inventadas al cierre; errores, bloqueos y pruebas no ejecutadas explícitos. Defectos continúan abiertos hasta resolución y aceptación PO.
+- Pruebas previstas/evidencia: navegación/teclado/estados de error, flujo funcional positivo/negativo por rol, completitud y carga sintética controlada; registros de entorno, límites y métricas, revisión y aceptación. No realizadas ahora.
+
+## Punto de continuidad vigente — propuesta de cierre condicionado F1, 2026-11-06
+
+- Esta nota sucede a puntos previos sin reescribirlos. Actividad documental vinculada a REC-F1-002, EN_VALIDACION; no autoriza implementación y no cierra tareas previas.
+- Inicio: master, HEAD b94d24d12c5684eafe57959459036c6fe0b0a021, árbol limpio y staging vacío. Ese checkpoint documental conserva consolidación y soportes estáticos; los SIN_COMMIT anteriores son instantáneas previas al checkpoint, no descripción del estado actual del historial.
+- Autorización vigente: PO «Cierre documental condicionado de F1», solo HALLAZGOS/SPEC/PLAN/TASKS. Resultado: propuesta de aceptación con reservas, mapa de pendientes y siete tareas F2 PENDIENTES con criterios; primer bloque de arquitectura definido, no ejecutado.
+- Evidencia de esta actividad: lectura documental/Git, búsqueda previa de disponibilidad de IDs, comprobación de unicidad de 17 fichas/matriz y siete tareas, preservación del contenido previo de los cuatro documentos y control de alcance. No nueva auditoría del código, pruebas de producto ni comprobaciones externas.
+- Decisiones pendientes del PO: aceptación/sustitución de fuentes, discrepancias TCE-003/012, alcance excluido/excepciones, prioridades y riesgos, responsables y criterios, versión aceptada y permisos del primer bloque. No se crea una decisión aprobada ni se ratifican borradores.
+- Protección temporal Vercel conservada por instrucción del PO y sin verificación remota; corrección TCE-004 local preservada y validación integral pendiente. Diecisiete hallazgos abiertos; F1 abierta y F2 no iniciada.
+- Archivos modificados: únicamente los mismos cuatro documentos existentes; sin nuevas creaciones, producto, TCE-004, configuración, dependencias, migraciones, gobernanzas, históricos ni índice modificados.
+- Pruebas ejecutadas: ninguna del producto. Comprobaciones documentales y git diff --check; no pruebas BD/RLS/Storage/infraestructura/seguridad/integración. Estas últimas quedan propuestas, no aprobadas ni ejecutadas.
+- Commits: checkpoint previo b94d24d12c5684eafe57959459036c6fe0b0a021; esta propuesta SIN_COMMIT, sin autorización para confirmar. Reversión documental, si se solicita, debe retirar solo añadidos de esta propuesta preservando la línea base; no se ejecuta ahora.
+- Estado final esperado y comprobado al entregar: master, mismo HEAD, cuatro documentos modificados, staging vacío. Sin commits, push/pull/fetch, despliegues ni accesos externos.
+- Próximo paso autorizado: entregar propuesta y detenerse. Esperar aprobación expresa de cierre documental y autorización separada para inicio del bloque F2; no ejecutar ninguna tarea por haberla registrado.
+
+## Formalización del VoBo del PO — cierre documental condicionado F1, 2026-11-06
+
+Autoridad y fuente: propietario del proyecto, instrucción expresa «Formalización del cierre documental F1» de fecha 2026-11-06. El PO declara otorgado su VoBo para el cierre documental condicionado bajo los seis criterios de su mandato anterior. Esta autorización aprueba ese cierre delimitado y un único checkpoint local de HALLAZGOS, SPEC, PLAN y TASKS; no ratifica integralmente las versiones 0.1 ni las gobernanzas.
+
+**Estado vigente de F1: CERRADA DOCUMENTALMENTE CON CONDICIONES.**
+**F2: NO INICIADA.**
+Los estados previos «F1 abierta» y «propuesta pendiente de aprobación del cierre» se conservan como instantáneas históricas y quedan sucedidos exclusivamente por esta autorización de cierre documental. La propuesta de transición permanece íntegra; sus permisos de ejecución, responsables y validaciones no se consideran concedidos ni realizados por el VoBo.
+
+Alcance de los seis criterios aceptados, sin convertirlos en resultados técnicos:
+1. Conservar TCE-001 a TCE-017 ABIERTOS hasta corrección autorizada y validación/aceptación pertinentes. Se mantienen los estados individuales de seguimiento: TCE-004 EN_VALIDACION, los demás según ficha/registro vigente; no se cierra ningún hallazgo ni tarea por el cierre de fase documental.
+2. Reconocer las reconstrucciones estáticas actuales como soporte documental del código y versión revisados; no son informes históricos recuperados ni certificados de producción. Informes originales y severidades históricas no recuperadas siguen identificados como tales. El VoBo acepta el soporte actual con esta limitación, no inventa los originales.
+3. Mantener pendientes las discrepancias históricas TCE-003 (título sobre reclutadores frente a ficha de vacante revisada) y TCE-012 (coordinadores frente a reclutadores, opción C); no resolverlas ni renumerarlas por inferencia.
+4. Transferir expresamente las verificaciones de BD/RLS/Storage/infraestructura/seguridad/integración y cobertura pendiente a REC-F2-001 a REC-F2-007, con sus criterios de aceptación y dependencias ya registrados. Todas permanecen PENDIENTES, sin pruebas ni consultas ejecutadas; responsables y permisos de entorno por definir antes de iniciar. La cobertura no realizada es reserva del cierre documental, no auditoría integral aprobada como probada.
+5. Conservar protección temporal de Vercel Authentication / All Deployments según información del PO y corrección local TCE-004 del commit a26775d54c1374666ed2890ddd032e5c9f563e81, pendiente de validación integral. No se accede a Vercel, no se verifica la protección ni se acredita despliegue de la corrección; no retirar/debilitar protección ni publicar sin autorización específica.
+6. Registrar REC-F2-001, arquitectura de identidad, sesiones, autorización y aislamiento multiagencia, como siguiente bloque de diseño. Registrarlo no inicia la tarea, la fase ni la implementación; requiere autorización delimitada posterior.
+
+Límites expresos: el cierre es documental y condicionado, no cierre técnico de defectos, aprobación de seguridad global, validación integral de BD/infraestructura ni autorización comercial o productiva. No nuevas pruebas de producto, cambios de código/configuración/dependencias, migraciones, datos reales, servicios externos ni despliegues. La falta de evidencia técnica continúa bloqueando aceptación/habilitación de la operación correspondiente. Los siete puntos operativos de la propuesta SPEC y los criterios técnicos de TASKS se conservan como planificación/condiciones; este registro no afirma que todos estén cumplidos.
+
+Trazabilidad: propuesta precedente y matriz de 17 hallazgos en HALLAZGOS; condiciones/alcance en SPEC; transferencia y secuencia en PLAN; siete tareas y continuidad en TASKS. Línea base anterior: b94d24d12c5684eafe57959459036c6fe0b0a021. El checkpoint nuevo comprenderá la propuesta preservada y esta formalización; su hash no se anticipa y se entregará después del único commit autorizado. Este registro no se atribuye al hash anterior.
+
+## Punto de continuidad vigente — F1 cerrada documentalmente con condiciones, 2026-11-06
+
+- Última actividad: formalización documental autorizada del VoBo F1, asociada a la función de registro REC-F1-002 sin convertirla en tarea técnica ni cerrar automáticamente REC-F1-001/002. Las instantáneas anteriores y propuesta están conservadas.
+- Inicio: master, HEAD b94d24d12c5684eafe57959459036c6fe0b0a021; cuatro documentos de transición modificados, staging vacío y ningún archivo nuevo. Se incorporan al checkpoint junto a esta formalización.
+- Estado F1: CERRADA DOCUMENTALMENTE CON CONDICIONES por autorización expresa del PO fechada 2026-11-06. F2: NO INICIADA. TCE-001 a TCE-017 ABIERTOS; TCE-004 conserva seguimiento EN_VALIDACION y validación integral pendiente.
+- Tareas: REC-F2-001 a REC-F2-007 PENDIENTES, no ejecutadas ni autorizadas técnicamente. Responsables/revisores por designar y alcance/entorno por autorizar. Siguiente bloque: REC-F2-001, diseño de identidad, sesiones, autorización y aislamiento multiagencia; no iniciar implementación ni diseño ejecutado sin nuevo mandato delimitado.
+- Reservas: originales no recuperados, reconstrucciones actuales aceptadas con límites, discrepancias TCE-003/012 pendientes; garantías BD/RLS/Storage/infraestructura/seguridad/integración y cobertura funcional/no funcional pendientes conforme a tareas. VoBo no es resultado de prueba ni demuestra producción segura.
+- Protección: conservar Vercel Authentication / All Deployments informado por PO y corrección local TCE-004; sin consulta o modificación de producción ni verificación remota actual.
+- Archivos afectados: únicamente HALLAZGOS, SPEC, PLAN y TASKS de recuperación. Ningún archivo nuevo; producto, TCE-004, pruebas, dependencias, configuración, migraciones, gobernanzas, históricos e índice intactos.
+- Comprobaciones: conservación de contenido anterior (solo encabezado actual de fase TASKS actualizado), propuesta/evidencias y 17 fichas/filas preservadas; siete tareas únicas, correspondencia del estado/condiciones entre cuatro documentos, alcance de staging y git diff --check. No pruebas de producto ni servicios externos.
+- Commit: autorizado uno solo con mensaje docs(recovery): approve conditional F1 closure. Se parte de b94d24d12c5684eafe57959459036c6fe0b0a021; no anticipar hash. El hash definitivo se comunica al PO en el informe final; el propio checkpoint se identifica por este mensaje, padre y cuatro rutas. No se crea un segundo commit para insertar su hash dentro de sí mismo.
+- Reconciliación: los SIN_COMMIT y prohibiciones de commit anteriores describen sus respectivas sesiones; este mandato autoriza únicamente el checkpoint documental actual. No se reescriben autorizaciones ni evidencias pasadas.
+- Resultado y siguiente paso: completar comprobaciones, realizar único commit autorizado, informar hash/estado Git y detenerse. No push/pull/fetch, despliegue ni otro trabajo. Esperar autorización específica para el siguiente bloque.
