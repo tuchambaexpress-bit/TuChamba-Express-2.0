@@ -32,8 +32,7 @@ export default function InvitacionesPanel({ invitacionesIniciales }: Props) {
     const res = await fetch('/api/invitaciones', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'x-admin-key': process.env.NEXT_PUBLIC_ADMIN_KEY ?? ''
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({ telefonoEsperado: telefonoEsperado.trim() || null })
     })

@@ -33,8 +33,7 @@ export default function SolicitudesPanel({ solicitudes }: Props) {
     const res = await fetch('/api/admin/aprobar-agencia', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'x-admin-key': process.env.NEXT_PUBLIC_ADMIN_KEY ?? ''
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({ agenciaId, coordinadorId, email })
     })
@@ -51,8 +50,7 @@ export default function SolicitudesPanel({ solicitudes }: Props) {
     const res = await fetch('/api/admin/rechazar-agencia', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'x-admin-key': process.env.NEXT_PUBLIC_ADMIN_KEY ?? ''
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({ agenciaId, coordinadorId })
     })
