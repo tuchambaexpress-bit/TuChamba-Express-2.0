@@ -129,16 +129,28 @@ La relación con R-DOC y PLAN que se anota en las fichas es administrativa para 
 - Descripción disponible: RECONSTRUCCIÓN DOCUMENTAL: Inicio de sesión de reclutadores mediante código con confianza en localStorage. Descripción original literal: PENDIENTE DE RECUPERACIÓN.
 - Fuente y tipo de fuente: RECONSTRUCCIÓN DOCUMENTAL. Resumen de antecedentes conversacionales proporcionado por el PO; informe original no localizado. Antecedentes locales previamente registrados: REFERENCIA SIN SOPORTE; SPEC_RECUPERACION.md:32–33, PLAN_RECUPERACION.md:8 y 139 y TASKS_RECUPERACION.md:30, referencias colectivas al rango técnico.
 - Clasificación o severidad original: PENDIENTE DE RECUPERACIÓN. El ámbito técnico del inventario no acredita una clasificación individual original.
-- Estado de verificación: referido como preliminar en el conjunto TCE; verificación individual PENDIENTE DE RECUPERACIÓN.
-- Estado de trabajo: PENDIENTE DE RECUPERACIÓN del estado individual original; no se asigna un estado operativo por inferencia.
-- Riesgo identificado: PENDIENTE DE RECUPERACIÓN del riesgo original específico.
-- Evidencias disponibles: [referencias colectivas en SPEC](INDICE_EVIDENCIAS.md#documento-spec-recuperacion), PLAN y TASKS; no equivalen a evidencia técnica individual.
+- Estado de verificación: CONFIRMADO_ESTÁTICAMENTE por diagnóstico dirigido posterior; no confirmado por prueba ni en producción. El estado original del informe sigue pendiente de recuperación.
+- Estado de trabajo: EN_ANALISIS; diagnóstico de identidad registrado, implementación diferida a F2, no iniciada ni autorizada; sin cierre.
+- Riesgo identificado: identidad y acceso a interfaz basados en almacenamiento modificable; consultas directas por ID del cliente, con acceso efectivo condicionado por RLS. Riesgo original literal pendiente de recuperación.
+- Evidencias disponibles: VERIFICACIÓN POSTERIOR registrada 2026-11-06 sobre código local, HEAD a26775d54c1374666ed2890ddd032e5c9f563e81: app/api/reclutador/login/route.ts:17–43 verifica código/activo y devuelve datos sin emitir sesión; app/reclutador/login/page.tsx:32–38 almacena identidad; app/reclutador/dashboard/page.tsx:63–71 confía en ese objeto; components/reclutador/ReclutadorNav.tsx:96–98 solo borra almacenamiento al salir; middleware.ts:83 excluye reclutador y API. Referencias colectivas anteriores conservadas en SPEC, PLAN y TASKS. Procedimiento: lectura y seguimiento estático del flujo en diagnóstico conversacional previo; sin solicitudes ni pruebas ejecutables. No sustituye el informe original.
 - Evidencias pendientes: [informe técnico original](INDICE_EVIDENCIAS.md#informe-tecnico-original), ficha original, ubicación exacta del soporte, fecha, versión y evidencia individual; NO LOCALIZADOS EN LA BÚSQUEDA PREVIA.
 - Requisitos SPEC relacionados: SPEC_RECUPERACION.md, R-DOC-001, R-DOC-003, R-DOC-004, R-DOC-007, R-DOC-008 y R-DOC-010; sección 4, evidencia reproducible y aprobación. Sección 5, conservación del conjunto TCE. Requisito sustantivo específico: PENDIENTE DE RECUPERACIÓN.
 - Procedimientos PLAN relacionados: PLAN_RECUPERACION.md, línea 8, consolidación técnica; líneas 15–18, contraste y diagnóstico; 86–103, campos e historial de hallazgos. Acción técnica específica: PENDIENTE DE RECUPERACIÓN.
 - Tareas TASKS relacionadas: REC-F1-002, registro documental de esta ficha, no resolución del hallazgo. Otras tareas individuales: PENDIENTE DE RECUPERACIÓN.
 - Criterios de cierre pendientes de validación: recuperar la ficha y evidencia original, definir criterios específicos reproducibles con el PO, validar el resultado autorizado y registrar aceptación. Estos mínimos son propuesta administrativa, no sustituyen criterios originales ni autorización de pruebas.
 - Historial de decisiones y actualizaciones: 2026-11-05, REC-F1-002 crea esta ficha bajo autorización documental expresa del PO; sin validación técnica, corrección ni cierre. Actualización 2026-11-05, dentro de REC-F1-002: descripción reconstruida suministrada por el PO; sin nueva verificación técnica, cambios de estado ni cierre.
+
+### Actualización TCE-007 — 2026-11-06
+
+Fuente: instrucción del PO «Registrar TCE-007 y continuar F1» y antecedentes conversacionales de diagnóstico/diseño; registro derivado, sin certificado del informe original. Se conserva íntegra la descripción reconstruida previa y la severidad original permanece pendiente. Diagnóstico posterior confirmado estáticamente; no equivale a explotación ni impacto demostrado en producción.
+
+- Aprobado funcionalmente: código individual + contraseña; alta y recuperación mediante coordinador autorizado.
+- Diseño propuesto: contraseña temporal y cambio inicial obligatorio; Supabase Auth como primera alternativa pendiente de validar código personalizado y ausencia de correo obligatorio; Turnstile y límites de intentos complementarios.
+- Pendiente: mecanismo técnico de asociación Auth, entrega y caducidad de credenciales, recuperación multiagencia, revocación, adaptación de consultas y RLS. No se presentan como implementados ni aprobados definitivamente.
+- Invariante de autorización: identidad verificada, permiso sobre recurso y pertenencia vigente a agencia; localStorage no es prueba de identidad.
+- Dependencias: TCE-005 confirmada como dependencia de autorización; TCE-008/TCE-009 posibles, sujetas a diagnóstico dirigido.
+- Fase: reparación futura F2, no F3. Relación con SPEC_RECUPERACION.md, sección «Registro específico TCE-007», y PLAN_RECUPERACION.md, registro F2. REC-F1-002 conserva solo su función de registro documental, no se convierte en tarea de implementación.
+- Restricciones: sin implementación, modificación de esquema/RLS ni producción autorizadas; criterios de cierre específicos y aceptación del PO siguen pendientes. Ningún hallazgo cerrado.
 
 ## TCE-008
 

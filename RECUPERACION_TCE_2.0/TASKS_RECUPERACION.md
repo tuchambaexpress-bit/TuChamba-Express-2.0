@@ -180,7 +180,7 @@ Si falta evidencia, el estado deberá reflejarlo. No se inventarán resultados p
 
 - Actualización documental 2026-11-05, autorizada por el PO en «Recuperación de descripciones de los 33 hallazgos»: incorporados sus 33 resúmenes como RECONSTRUCCIÓN DOCUMENTAL en HALLAZGOS_RECUPERACION.md; fuente: Resumen de antecedentes conversacionales proporcionado por el PO; informe original no localizado. Descripciones originales literales y soportes siguen pendientes. Se conservan estados, evidencias, GOV-REC-001/002 y DEC-REC-005; INDICE_EVIDENCIAS.md intacto. Solo HALLAZGOS y TASKS modificados. Comprobación mínima: 33 fichas únicas y 33 descripciones reconstruidas; sin repetir verificaciones de REC-F1-002, auditoría ni pruebas del producto. REC-F1-002 permanece EN_VALIDACION y SIN_COMMIT; aceptación pendiente del PO. Próximo paso: informar y detenerse, sin nuevas tareas ni IDs.
 
-## Punto de continuidad vigente — REC-F1-002
+## Punto de continuidad — instantánea histórica de REC-F1-002
 
 La instantánea «Último estado conocido» anterior se conserva como historial de REC-F1-001; este bloque es el punto vigente y no modifica aquella tarea ni DEC-REC-005.
 
@@ -194,3 +194,16 @@ La instantánea «Último estado conocido» anterior se conserva como historial 
 - Decisiones pendientes y bloqueos: aceptación documental del PO, recuperación de informes y soportes originales, decisión de custodia; auditoría formal F1 no declarada concluida.
 - Pruebas del producto: no ejecutadas. SIN_COMMIT.
 - Próximo paso: entregar resumen, comparación verificable y estado Git; detenerse. Recuperación, validación o cambios posteriores requieren autorización.
+
+## Punto de continuidad vigente — registro TCE-007 y continuación F1
+
+- Fecha: 2026-11-06. Fuente de autorización: instrucción expresa del PO «Registrar TCE-007 y continuar F1»; solo actualización de apartados documentales existentes y diagnóstico dirigido TCE-008.
+- Registro relacionado: REC-F1-002, únicamente como conservación documental de la ficha; su EN_VALIDACION y aceptación pendiente no cambian. No se inicia una tarea de reparación.
+- TCE-007: CONFIRMADO_ESTÁTICAMENTE, sin prueba de producción; login por código y localStorage sin sesión verificable; reestructuración del ciclo de identidad necesaria. Ficha EN_ANALISIS, no cerrada.
+- Aprobado: experiencia código individual + contraseña, alta y recuperación por coordinador autorizado. Propuesto: credencial temporal y cambio inicial, Supabase Auth sujeto a compatibilidad sin correo obligatorio, Turnstile y límites de intentos. Exigir autorización por identidad, recurso y agencia.
+- Dependencias: TCE-005; posibles TCE-008/TCE-009. Implementación diferida a F2, no F3; sin autorización para cambiar esquema, RLS o producción.
+- Archivos documentales afectados: HALLAZGOS_RECUPERACION.md, SPEC_RECUPERACION.md, PLAN_RECUPERACION.md y TASKS_RECUPERACION.md. Versiones 0.1 pendientes de aprobación integral; decisiones técnicas pendientes no ratificadas.
+- Rama master; HEAD a26775d54c1374666ed2890ddd032e5c9f563e81. Estado inicial limpio. SIN_COMMIT para esta actualización; no autorizado.
+- Siguiente paso de esta instrucción: diagnóstico dirigido de consultas de postulaciones/chats por teléfono TCE-008 y entrega en conversación; sin código, pruebas destructivas ni servicios externos. Detenerse tras el informe.
+- Resultado del diagnóstico TCE-008 (2026-11-06): confirmado en código el uso de teléfono y chatId controlados por navegador sin verificación de identidad en el flujo; acceso efectivo a datos ajenos condicionado por RLS no consultada. app/api/postular/route.ts:5–9 usa cliente anónimo; 38–52 valida presencia/longitud y busca candidato por teléfono; 70–91 devuelve chatId y etapa de postulación existente sin prueba de posesión. components/candidato/ChatModal.tsx:111–133 consulta etapa por teléfono y abre chatId del almacenamiento; ChatWindow.tsx:72–86 consulta mensajes/estado por chatId. Dependencia conceptual con TCE-007 (identidad verificable del reclutador) y posible punto compartido con TCE-009 (mismo POST recibe atribución/precalificación). No se amplió la auditoría a TCE-009 ni se comprobó explotación o producción. Informe entregado en conversación; sin pruebas ejecutables.
+- Estado de cierre de esta sesión: cuatro documentos de recuperación modificados, staging vacío; ningún archivo de producto, pruebas ni TCE-004 modificado. SIN_COMMIT. Próximo paso: revisión del PO y nueva autorización para continuar; F1 y hallazgos permanecen abiertos.
