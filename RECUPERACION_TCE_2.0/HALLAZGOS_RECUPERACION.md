@@ -964,3 +964,17 @@ PLAN «protocolo propuesto de laboratorio y experimentos» contiene matriz únic
 Transferencia operativa propuesta: REC-F2-002 modelo/RLS, 003 Storage, 004 aislamiento, 005 seguridad, 006 integración. No se inician por el registro ni se modifica su estado. Laboratorio independiente no acreditado; no credenciales/datos productivos, no ejecución ni servicios externos. Persisten autoridad global de recuperación, mecanismo de identidad/sesión/candidato, TTL y permisos/responsables del laboratorio por aprobar.
 
 Las 17 fichas y 17 filas técnicas previas, estados, fuentes, riesgos y discrepancias se conservan íntegros. Todos los hallazgos ABIERTOS, TCE-003/012 pendientes; F1 cierre documental condicionado. REC-F2-001 EN_CURSO solo diseño, sin aceptación final ni viabilidad definitiva; protección temporal informada de Vercel intacta y sin comprobación remota.
+
+## REC-F2-004 — aislamiento local y alcance de evidencia, 2026-11-06
+
+Fuente: instrucción PO «implementar aislamiento mínimo», sobre HEAD 40dab9b14b2779386bec0a36ce9a268f07ed3ecb. Proyecto informado por PO: TCE-2-LAB (ieioysefckvafdbasqxl, Free, East US, Nano); existencia/configuración no verificadas remotamente. Producción TuChamba-V2-Oficial excluida.
+
+VERIFICACIÓN LOCAL AISLADA: suite tests/lab-isolation.test.cjs con 18 PASS, 0 FAIL, 0 SKIP, configuración ficticia y ningún servicio. Se comprueba rechazo de configuración/origen/URL/herencia y claves incompatibles, copia por allowlist sin privados/enlaces/cachés/dependencias, eliminación offline de GTM/Pixel/Lead y arranque bloqueado. Fuentes del procedimiento en scripts/lab-launcher.cjs y controles en next.config.js/layout/VacanteDetalle; detalle y límites en SPEC/PLAN/TASKS.
+
+No es verificación técnica nueva de TCE-001 a TCE-017 ni prueba de corrección de sus endpoints. Fichas, matriz, certeza/severidades y evidencias previas intactas. TCE-004 y su suite no modificados ni reejecutados; su validación integral pendiente. TCE-003/012 conservan discrepancias históricas.
+
+Los nueve experimentos Auth/BD/RLS/Storage siguen NO EJECUTADOS. Esta suite de rechazo es preparación de REC-F2-004, no ejecución de aquellos ni aceptación de identidad o autorización de recursos. REC-F2-001 en diseño; REC-F2-004 EN_CURSO sin aceptación final.
+
+Bloqueos explícitos: HTTPS y control de egress no acreditados, claves reales no usadas/verificadas, claves opacas rechazadas, archivo privado no creado/ACL pendiente, copia sin dependencias, build Next e integración no ejecutados. Contrastar ref/rol de clave legacy no valida firma ni demuestra que un backend la acepte. Allowlist no demuestra ausencia de secretos insertados arbitrariamente en archivos de código. Por estos límites, next.config.js bloquea servicios en modo/copia lab.
+
+Protección Vercel informada por PO se conserva sin comprobación remota; los 17 hallazgos permanecen ABIERTOS y F1 mantiene cierre documental condicionado. Ningún acceso, dato o configuración de producción modificado. SIN_COMMIT.

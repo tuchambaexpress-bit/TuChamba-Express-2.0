@@ -2,7 +2,9 @@ import type { Metadata, Viewport } from 'next'
 import Script from 'next/script'
 import './globals.css'
 
-const SITE_URL = 'https://tu-chamba-express.vercel.app'
+const SITE_URL = process.env.NEXT_PUBLIC_TCE_LAB_MODE === 'true'
+  ? process.env.NEXT_PUBLIC_APP_URL!
+  : 'https://tu-chamba-express.vercel.app'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -79,7 +81,7 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        <Script
+        {process.env.NEXT_PUBLIC_TCE_LAB_MODE !== 'true' && <Script
           id="gtm-script"
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{
@@ -91,18 +93,18 @@ export default function RootLayout({
               })(window,document,'script','dataLayer','${GTM_ID}');
             `,
           }}
-        />
+        />}
       </head>
       <body>
-        <noscript>
+        {process.env.NEXT_PUBLIC_TCE_LAB_MODE !== 'true' && <noscript>
           <iframe
             src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
             height="0"
             width="0"
             style={{ display: 'none', visibility: 'hidden' }}
           />
-        </noscript>
-        <Script
+        </noscript>}
+        {process.env.NEXT_PUBLIC_TCE_LAB_MODE !== 'true' && <Script
           id="fb-pixel"
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{
@@ -119,8 +121,8 @@ export default function RootLayout({
               fbq('track', 'PageView');
             `,
           }}
-        />
-        <noscript>
+        />}
+        {process.env.NEXT_PUBLIC_TCE_LAB_MODE !== 'true' && <noscript>
           <img
             height="1"
             width="1"
@@ -128,7 +130,7 @@ export default function RootLayout({
             src={`https://www.facebook.com/tr?id=${FB_PIXEL_ID}&ev=PageView&noscript=1`}
             alt=""
           />
-        </noscript>
+        </noscript>}
         {children}
       </body>
     </html>

@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "lab:check": "node scripts/lab-launcher.cjs check",
+    "lab:prepare": "node scripts/lab-launcher.cjs prepare"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

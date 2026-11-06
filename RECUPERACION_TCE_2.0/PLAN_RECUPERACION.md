@@ -308,3 +308,28 @@ Todos los estados: NO EJECUTADO. Resultado esperado significa condición a verif
 Dependencias de seguridad: proteger login de enumeración y abuso con controles servidor; captchaToken del SDK no confirma soporte de Turnstile en backend. Asegurar estado/membresía actuales y no confiar en roles editables del navegador. Signed URLs son credenciales de acceso temporal: revocación de sesión/capacidad no demuestra que dejen de funcionar.
 
 Estado: protocolo preparado, laboratorio no provisionado ni acreditado, nueve experimentos NO EJECUTADOS; REC-F2-001 EN_CURSO solo diseño, sin viabilidad definitiva. Sin cambios TCE-004 ni protección Vercel; F1 mantiene cierre documental condicionado y todos los hallazgos abiertos.
+
+## REC-F2-004 — procedimiento disponible y arranque bloqueado, 2026-11-06
+
+Motivo/autor/autorización: implementar aislamiento mínimo bajo mandato expreso del PO; agente ejecutor, sin delegación para servicios o producción. Base 40dab9b14b2779386bec0a36ce9a268f07ed3ecb; SIN_COMMIT. Vínculos: SPEC «aislamiento mínimo local implementado», TASKS continuidad y HALLAZGOS límites.
+
+Proyecto TCE-2-LAB (ieioysefckvafdbasqxl, Free, East US, Nano) informado creado por el PO; no conectado ni comprobado remotamente. La autorización actual no permite abrir salida al proyecto ni ejecutar SQL o pruebas de los nueve experimentos. El protocolo histórico local/egress denegado no se transforma silenciosamente en acceso remoto autorizado.
+
+Procedimiento offline disponible, compatible con Windows:
+1. Desde el repositorio, node scripts/lab-launcher.cjs check (también npm run lab:check) comprueba nombres heredados y existencia de configuración explícita. Sin archivo privado debe terminar LAB_CONFIG_MISSING; no crea configuración ni ejecuta Next.
+2. La ubicación futura exclusiva es .lab-private/lab.config.json. Solo cuatro claves de configuración de SPEC; formato JSON, sin interpolación dotenv, fallback a .env ni extras. No creado por esta intervención. No copiar archivos de producción ni pegarlos para probar rechazo. Antes de aportar credenciales reales se requieren autorización y permisos locales adecuados: estar ignorado por Git no equivale a ACL privada.
+3. Si se autoriza aportar configuración de laboratorio, preparar con node scripts/lab-launcher.cjs prepare (npm run lab:prepare). Exige destino exacto del proyecto y origen https://localhost:3443; no provee certificado. Para claves legacy solo contrasta ref/rol, no firma ni permisos; claves opacas no verificables quedan rechazadas sin contacto.
+4. El lanzador crea un directorio temporal nuevo tce-2-lab-run-* fuera del repositorio. Copia solo archivos elegibles del manifiesto, excluyendo .env*, .git/.vercel, documentos privados, dependencias, artefactos, cachés y enlaces. Escribe únicamente un marcador no secreto con ref/origen y servicios no autorizados; no escribe configuración ni claves en la copia.
+5. La copia se validó mediante una prueba con valores ficticios sin leer el archivo privado. No dispone de node_modules; no instalar dependencias ni enlazar cachés del principal por inferencia. Revisar destino de provisión y aislamiento en una autorización posterior.
+6. No hay comando autorizado para iniciar servicios. next.config.js impide next dev/build en copia o modo laboratorio, incluso una invocación directa sin flags. No quitar LAB_SERVICES_NOT_AUTHORIZED hasta disponer de HTTPS y controles de salida verificados y autorización específica. El bloqueo es una protección deliberada, no prueba de que exista un entorno ejecutable.
+7. Antes de uso real futuro: permisos del archivo privado, identidad de claves por procedimiento autorizado, HTTPS, red con allowlist exclusiva del laboratorio y terceros bloqueados, dependencias/artefactos independientes y limpieza/restauración. Luego, permisos separados para esquema/datos y experimentos.
+
+Pruebas autorizadas ejecutadas: node --test tests/lab-isolation.test.cjs, 18 PASS, 0 FAIL, sin skips. Solo configuración ficticia, fixtures/copia temporales y transformación offline TypeScript/minificador. Ningún build Next, servidor, HTTP, Supabase/Vercel, migración o credencial real. No ejecutar npm lab:check contra configuración real por esta nota.
+
+Telemetría: app/layout.tsx condiciona ambos scripts y ambos noscript a modo no laboratorio; VacanteDetalle condiciona Lead. Prueba de salida JavaScript generada offline sin destinos GTM/Pixel/evento Lead, más control de ramas no laboratorio conservadas. Esto no demuestra ausencia de todo tráfico externo de la aplicación (p. ej. fuentes externas) ni salida de red bloqueada; por eso servicios permanecen desautorizados. NEXT_TELEMETRY_DISABLED se fija en el entorno previsto, no se ejecuta Next para comprobarlo.
+
+Artefactos de prueba: una copia real de fuentes en TEMP, además de fixtures sintéticos temporales; no son proyectos Supabase ni laboratorios adicionales activos. No se inician ni se borran automáticamente. Limpieza futura solo tras verificar rutas absolutas concretas y preservar evidencia requerida; nunca borrar recursivamente un destino calculado sin validarlo.
+
+Reversión propuesta: revisión del diff y reversión selectiva de lanzador/guards/modo de telemetría y documentación, manteniendo TCE-004 y decisiones históricas; ninguna reversión productiva necesaria porque no se modificó producción. Descartar solo copias temporales verificadas cuando se autorice limpieza. No revertir ni confirmar cambios ahora.
+
+Vínculos con experimentos existentes: configuración/cookies/CSRF se apoya en estas comprobaciones locales, pero los nueve experimentos Auth/BD/RLS/Storage siguen NO EJECUTADOS. REC-F2-002/003/005/006 pendientes; REC-F2-004 EN_CURSO en preparación, sin aceptación integral. Protección Vercel y corrección TCE-004 conservadas.

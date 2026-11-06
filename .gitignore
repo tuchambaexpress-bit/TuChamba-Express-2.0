@@ -11,6 +11,8 @@
 # variables de entorno
 .env*.local
 .env
+/.lab-private/
+/.next-lab/
 
 # logs
 npm-debug.log*

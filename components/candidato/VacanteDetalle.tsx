@@ -96,7 +96,7 @@ export default function VacanteDetalle({ vacante, esModal, reclutadorId }: Props
   // clic en "Postularme", además del PageView automático del layout.
   // Guard por si el script del Pixel no ha terminado de cargar.
   function abrirChatConTracking() {
-    if (typeof window !== 'undefined' && (window as any).fbq) {
+    if (process.env.NEXT_PUBLIC_TCE_LAB_MODE !== 'true' && typeof window !== 'undefined' && (window as any).fbq) {
       (window as any).fbq('track', 'Lead', { content_name: vacante.titulo })
     }
     registrarEventoTrafico('postularme', vacante.id)
