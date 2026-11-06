@@ -186,3 +186,46 @@ Criterios de aceptación propuestos para el diseño/validación técnica, no res
 Dependencias: REC-F2-002 (BD/RLS), 003 (Storage), 004 (aislamiento/infraestructura), 005 (seguridad), 006 (integración); TCE-005/007/008/009/012/013 y recursos TCE-001/002/003/006. TCE-003 y TCE-012 mantienen sus discrepancias históricas; resolver un criterio futuro no recupera sus informes originales.
 
 Siguiente actividad propuesta: viabilidad técnica de autenticación y sesiones, con comparación y plan de validación aislada; no se ejecuta por este registro. REC-F2-001 permanece EN_CURSO en análisis/diseño, sin aceptación final ni implementación. F1 continúa CERRADA DOCUMENTALMENTE CON CONDICIONES, los 17 hallazgos ABIERTOS y REC-F2-002 a REC-F2-007 PENDIENTES. Protección temporal de producción y corrección local TCE-004 conservadas, sin comprobación remota.
+
+## REC-F2-001 — viabilidad local y requisitos de laboratorio, 2026-11-06
+
+Fuente/autorización: PO «REC-F2-001: documentación de viabilidad y preparación de laboratorio»; exclusivamente registro en cuatro documentos. Base Git: a3b536d6967d54ac83048192127514fd16b73e2b. Estudio previo de lectura registrado en conversación; versiones y referencias del SDK reconsultadas localmente al documentar. No pruebas de Auth ni servidor externo. Este bloque no modifica los cuatro criterios funcionales aprobados ni aprueba una alternativa técnica.
+
+### Evidencia local comprobada y límites
+
+| Componente instalado | Versión | Evidencia local / alcance |
+|---|---|---|
+| Next.js | 14.1.4 | node_modules/next/package.json:3,320; exige Node >=18.17.0 |
+| supabase-js | 2.110.0 | node_modules/@supabase/supabase-js/package.json:3,113; exige Node >=22.0.0 |
+| auth-js | 2.110.0 | node_modules/@supabase/auth-js/package.json:3,48; exige Node >=22.0.0 |
+| ssr | 0.12.0 | node_modules/@supabase/ssr/package.json:3,46–47; peer supabase-js ^2.108.0, satisfecho por versión instalada |
+
+Contratos disponibles: node_modules/@supabase/auth-js/src/lib/types.ts:637–644 admite email/password o phone/password; GoTrueClient.ts:1173–1203 implementa esas dos ramas, no código arbitrario/username. El código del reclutador requiere resolver una identidad Auth admitida; no basta enviarlo a signInWithPassword. GoTrueClient.ts contiene OAuth:1312, intercambio PKCE:1491, OTP:2181, verificación OTP:2372, SSO:2472, getUser:3115, updateUser:3297, refreshSession:3692 y signOut:3949. Su existencia no prueba habilitación/configuración del servidor ni compatibilidad con un proveedor concreto.
+
+GoTrueAdminApi.ts:485–505,789–805 expone creación/actualización por ID delegadas a servidor; no aporta transacción con tablas de aplicación. Sus comentarios:413–415 exigen legitimidad/verificación antes de marcar email/phone confirmado. No se considera comprobada la propiedad de un teléfono o correo por asignarle un booleano.
+
+Limitaciones de sesión comprobadas en el SDK: GoTrueClient.ts:3908–3949 documenta scopes local/global/others, global por defecto, y JWT emitido válido hasta expiración pese a logout. No se confunde revocación de renovación con invalidación inmediata de acceso. lib/types.ts:1945–1959 incluye session_id en el contrato de claims, no evidencia de un token productivo.
+
+SSR: node_modules/@supabase/ssr/src/utils/constants.ts:3–9 configura sameSite=lax, httpOnly=false y maxAge de cookie de 400 días; esto no demuestra duración real de sesión/JWT. createServerClient.ts:44–84 requiere propagación getAll/setAll y:153–156 usa PKCE, autoRefreshToken=false y persistencia; las actualizaciones pueden ocurrir al cargar/verificar sesión. No asumir renovación automática continua en servidor ni cookies HttpOnly compatibles con un navegador que necesita leer tokens.
+
+### Alternativas aún NO APROBADAS
+
+| Alternativa | Seguridad / cobertura | Complejidad, mantenimiento y experiencia | Evidencia faltante |
+|---|---|---|---|
+| Código a teléfono real y Auth | Requiere número legítimo, normalizado y vínculo seguro; ausente/compartido/reciclado impide tratarlo como solución universal | Cambio moderado; mantiene código/contraseña sin SMS habitual, pero recuperación/cambio de número delicados | Reglas del servidor, unicidad, confirmación y política de números compartidos/ausentes |
+| Código a identidad técnica administrada y Auth | Podría no depender de teléfono/correo personal; exige namespace/dominio bajo control, ciclo de propiedad y recuperación, sin identidades personales falsas | Mayor operación de identidades; login puede mantener código/contraseña sin buzón personal | Aprobación PO, documentación oficial vigente y pruebas Auth/configuración; aceptación por SDK no acredita seguridad del sistema |
+| Correo personal real opcional, proveedor adicional o autenticación propia | Opciones de comparación, no sustitución silenciosa de requisitos; correo obligatorio no cubre a todos, sistema propio añade custodia de contraseñas | Proveedor/sistema adicional amplía alcance y mantenimiento; no recomendado como atajo | Nueva decisión de alcance y compatibilidad; contraseñas propias/correos ficticios inseguros no autorizados |
+
+Recomendación provisional: conservar Supabase Auth como verificador y comparar primero teléfono real e identidad técnica administrada en laboratorio autorizado. Ninguna seleccionada; no prometer cobertura universal del teléfono ni viabilidad definitiva del alias técnico. El código no es secreto; conocer el identificador nativo tampoco debe conceder permiso.
+
+### Requisitos propuestos de validación
+
+Identidad global y perfil vinculados por ID estable; código único como identificador operativo, membresías/estados/permisos por agencia independientes. No fusionar por teléfono/nombre ni permitir que una recuperación desde una agencia domine una cuenta global. Falta aprobar autoridad final, verificación de solicitante/destinatario, entrega, caducidad, consumo y revocación.
+
+Contraseña temporal Auth no garantiza uso único/caducidad específica/cambio inicial: comparar credencial de activación limitada con controles de servidor/BD y contraseña inicial Auth con bloqueo de negocio. No almacenar contraseñas permanentes propias. Hash de un token de activación es un mecanismo diferente de almacenar contraseñas; su uso sigue propuesto. Fallos Auth/BD y concurrencia requieren recuperación consistente, no presunción de transacción entre servicios.
+
+Consultas directas/Realtime/Storage deben aplicar identidad y pertenencia actuales; API con privilegios de servicio exige autorización explícita. Decidir SSR/browser frente a intermediación servidor; cookies HttpOnly no pueden imponerse aisladamente si el SDK necesita leerlas. Privados de candidato requieren credencial limitada al recurso, no teléfono/chatId; revocar una capacidad no invalida necesariamente URL firmada ya emitida. Definir vida acotada o descarga intermediada según revocación requerida.
+
+Laboratorio: entorno independiente con datos sintéticos, endpoints exclusivamente locales y salida de red denegada por defecto; sin credenciales, datos, copias de configuración o recursos productivos. Auth/BD/Storage locales o dobles identificados como tales; dobles no acreditan comportamiento del backend real. Runtime satisface Node >=22 y versiones fijadas. No se declara disponible ni se instala/inicia ahora. Aislamiento aprobado antes de crear identidades o ejecutar experimentos. Protocolo/matriz única de experimentos en PLAN; seguimiento y vínculos REC-F2-002/003/004/005/006 en TASKS.
+
+Aceptación futura: resultados reproducibles por versión/entorno, entradas sintéticas y criterios de rechazo de PLAN; fallos/no ejecutados explícitos, sin secretos en evidencia. La documentación externa necesaria (Auth/configuración, cambios de identidad, restricciones de sesiones y proveedor antiabuso) no fue consultada; exige autorización posterior. REC-F2-001 EN_CURSO solo diseño, sin aceptación final ni viabilidad definitiva. F1 cierre documental condicionado; 17 hallazgos abiertos, TCE-003/012 pendientes, TCE-004 y protección Vercel preservados. SIN_COMMIT.
