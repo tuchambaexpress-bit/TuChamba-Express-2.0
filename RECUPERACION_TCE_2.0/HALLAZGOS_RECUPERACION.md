@@ -978,3 +978,21 @@ Los nueve experimentos Auth/BD/RLS/Storage siguen NO EJECUTADOS. Esta suite de r
 Bloqueos explícitos: HTTPS y control de egress no acreditados, claves reales no usadas/verificadas, claves opacas rechazadas, archivo privado no creado/ACL pendiente, copia sin dependencias, build Next e integración no ejecutados. Contrastar ref/rol de clave legacy no valida firma ni demuestra que un backend la acepte. Allowlist no demuestra ausencia de secretos insertados arbitrariamente en archivos de código. Por estos límites, next.config.js bloquea servicios en modo/copia lab.
 
 Protección Vercel informada por PO se conserva sin comprobación remota; los 17 hallazgos permanecen ABIERTOS y F1 mantiene cierre documental condicionado. Ningún acceso, dato o configuración de producción modificado. SIN_COMMIT.
+
+## REC-F2-004 — evidencia offline de sonda y bloqueo de endpoint, 2026-11-06
+
+Fuente: mandato PO «implementar sonda mínima», sobre HEAD 9ecb4dd6c0686228da15f73600d309383c5ba31e. Scripts de sonda y suite nueva; 36 pruebas offline PASS (18 previas + 18 de sonda), 0 FAIL/SKIP. No credenciales reales, servicios, conexiones, SQL o datos remotos.
+
+Bloqueo confirmado de evidencia disponible: SDK local define ruta REST/cabeceras, pero no acredita contrato de GET /rest/v1/ como verificador de clave pública. Es candidato de simulación, no endpoint seleccionado para conexión; no se concluye inexistencia universal de un endpoint. El comando real lab:probe falla cerrado antes de configuración/red hasta confirmar contrato y autorización. Documentación externa pendiente.
+
+Controles implementados y probados mediante dobles: archivo de dos campos sin credencial privilegiada, rechazo de herencia/links/hardlinks, política ACL Windows restrictiva previa a contenido, destino/método/TLS, redirecciones/timeout/respuesta, salida sanitizada. No se verificó ACL real de archivo de credenciales ni se implementó transporte de red. Un 200 o par 401/200 simulado no acredita autenticación. httpsReachable=null, simulatedHttpsReachable=true y authenticationValidated=false separan las observaciones ficticias.
+
+Nueve experimentos originales siguen NO EJECUTADOS; las pruebas de preparación no verifican TCE-001 a TCE-017 ni RLS/Storage. Fichas/matriz/evidencias anteriores preservadas, todos los hallazgos ABIERTOS y discrepancias TCE-003/012 pendientes. TCE-004 y bloqueo general de aplicación intactos.
+
+Vínculos: SPEC contrato/capacidades/limitaciones; PLAN procedimiento de sonda y siguiente autorización; TASKS resultados. REC-F2-004 EN_CURSO sin aceptación final, REC-F2-001 en diseño; laboratorio TCE-2-LAB informado por PO y protección temporal productiva sin comprobación remota. SIN_COMMIT.
+
+## REC-F2-004 — revisión de cierre offline, 2026-11-06
+
+Mandato vigente autoriza revisión de los nueve archivos pendientes, documentación oficial y un único commit local si pasa revisión. Suite confirmada: 36 PASS, 0 FAIL/SKIP; git diff --check sin errores. Preservadas las 17 fichas, siete tareas F2 y matriz de nueve experimentos NO EJECUTADOS; sin cambio de sus evidencias ni de TCE-004.
+
+Documentación oficial consultada en SPEC; health de Auth es candidato sin datos de usuarios, pero no se demostró contrato de rechazo de apikey inválida. Sigue BLOQUEADA la validación real de clave. Alternativa mínima y puertas futuras en PLAN, sin nueva infraestructura. anon legacy y publishable no son formatos intercambiables en las guardas actuales: soporte publishable pendiente de revisión. La CLI sigue bloqueada antes de credenciales/red; no conexiones Supabase/Vercel ni arranque. Se cierra implementación offline, no aceptación integral de REC-F2-004 ni ninguno de los 17 hallazgos.

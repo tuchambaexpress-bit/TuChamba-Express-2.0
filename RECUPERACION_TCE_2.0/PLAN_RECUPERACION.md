@@ -333,3 +333,40 @@ Artefactos de prueba: una copia real de fuentes en TEMP, además de fixtures sin
 Reversión propuesta: revisión del diff y reversión selectiva de lanzador/guards/modo de telemetría y documentación, manteniendo TCE-004 y decisiones históricas; ninguna reversión productiva necesaria porque no se modificó producción. Descartar solo copias temporales verificadas cuando se autorice limpieza. No revertir ni confirmar cambios ahora.
 
 Vínculos con experimentos existentes: configuración/cookies/CSRF se apoya en estas comprobaciones locales, pero los nueve experimentos Auth/BD/RLS/Storage siguen NO EJECUTADOS. REC-F2-002/003/005/006 pendientes; REC-F2-004 EN_CURSO en preparación, sin aceptación integral. Protección Vercel y corrección TCE-004 conservadas.
+
+## REC-F2-004 — protocolo de sonda offline, 2026-11-06
+
+Fuente: PO «implementar sonda mínima», sobre 9ecb4dd6c0686228da15f73600d309383c5ba31e. Autor material: agente bajo mandato. Requisitos: SPEC «sonda mínima offline y contrato de endpoint bloqueado»; evidencia y continuidad TASKS/HALLAZGOS. SIN_COMMIT; no conexión autorizada.
+
+Comando disponible: node scripts/lab-launcher.cjs probe (npm run lab:probe). Actualmente SOLO comunica bloqueo de contrato de endpoint y autorización de red; no abre credenciales ni inicia Next. Flags de conexión o argumentos adicionales se rechazan. check/prepare conservan sus validaciones, y la copia incluye el módulo de sonda sin habilitar servicios.
+
+Perfil futuro de sonda: .lab-private/probe.config.json con únicamente URL y clave pública del laboratorio, separado de la configuración completa. No crearlo ni introducir valores ahora. readProbeConfig comprobaría herencia de variables por nombre, enlaces/ubicación/tamaño, ACL Windows de directorio/archivo, Git ignore y solo después el contenido. Get-Acl es consulta de metadatos, sin Get-Content/Set-Acl; sus salidas se usan internamente, no se imprimen. Política: dueño SID actual, herencia deshabilitada, acceso explícito solo dueño y SYSTEM. No cambiar ACL ni leer archivos reales por este registro.
+
+Endpoint BLOQUEADO: SDK local muestra prefijo REST y cabeceras, no contrato de la raíz para autenticación de apikey. GET /rest/v1/ se usa solo como candidato simulado. No usar GET público de health/settings o auth.getUser para inferir aceptación de una clave pública; 200 no basta. Hace falta documentación técnica autorizada y verificable que defina el endpoint apropiado y respuesta al control negativo antes de cualquier transporte real.
+
+Matriz de comprobación offline de la sonda: configuración ausente/campos extra/URL o clave incompatibles; ACL insegura, dueño incorrecto, reglas heredadas o grants ajenos; enlaces; métodos y destinos fuera de allowlist; TLS/peer no válidos; redirect; timeout; cuerpo excesivo; error que contiene detalle sensible; control negativo 401 y configurado 200 o ambos 200; CLI y --connect bloqueados. Todo se ejecutó con valores/respuestas ficticios; ningún resultado valida autenticación real.
+
+Control del transporte simulado: GET único host canónico HTTPS/443 y ruta fija, sin redirecciones/proxies/reintentos; máximo dos peticiones de control, timeout total <=10 s, <=64 KiB por respuesta descartada. Cancelación AbortController y errores por código, sin cabeceras/cuerpo/stack. No hay fetch, https.request o SDK real en esta implementación; el transporte de red posterior sigue pendiente de diseño/revisión. Un descriptor con flags no equivale por sí solo a control de red de una implementación futura.
+
+Siguientes pasos propuestos, NO ejecutados ni autorizados aquí:
+1. Acreditar contrato del endpoint y criterio de aceptación con documentación oficial autorizada; si no se logra, mantener bloqueo.
+2. Autorizar lectura de una clave pública obtenida exclusivamente del proyecto LAB y su archivo con ACL verificada; mantener fuera credenciales productivas y privilegiadas.
+3. Autorizar implementación/revisión del transporte HTTPS restringido, DNS/TLS/egress y peticiones exactas. No añadir habilitación por variable o flag sin revisión.
+4. Ejecutar únicamente esa sonda si se autoriza, separando resultado TLS, HTTP y aceptación efectiva de clave. No retirar bloqueo general Next ni preparar DB por éxito de sonda.
+
+Suite ejecutada: 36/36 PASS, sin skips; incluye 18 regresiones de aislamiento/telemetría y 18 de sonda/ACL, con prueba real del dispatcher sin abrir servicios. No build completo, certificado local, conexión, migración, creación de usuarios ni validez real de claves. Las pruebas de ACL simulan proveedor Windows; verificar ACL efectiva futura sigue pendiente. Nueve experimentos originales siguen NO EJECUTADOS. REC-F2-004 EN_CURSO en preparación, sin aceptación integral, TCE-004 intacto.
+
+## REC-F2-004 — procedimiento mínimo posterior al cierre offline, 2026-11-06
+
+La consulta oficial autorizada ahora identifica GET /auth/v1/health como candidato sin datos de usuarios: [referencia de Supabase](https://supabase.com/kb/troubleshooting/how-do-i-check-gotrueapi-version-of-a-supabase-project-lQAnOR). Endpoint exacto y criterio diferencial en SPEC «cierre offline y contrato pendiente». No se acredita contrato de rechazo de apikey inválida: mantener bloqueo, sin sustituirlo por GET /rest/v1/ ni inferir autenticación de health/settings públicos.
+
+Alternativa mínima, propuesta y NO ejecutada: conservar dobles offline y solicitar al PO evidencia oficial o confirmación técnica de Supabase sobre el control negativo de health alojado. La procedencia que confirme el PO en API Keys de TCE-2-LAB identifica la clave, pero no acredita aceptación HTTP. Si solo se autoriza comprobar conectividad/salud con health, reportar ese alcance y authenticationValidated=false; nunca promoverlo a validación de clave. No crear tablas, funciones, usuarios, endpoints ni infraestructura para resolver este bloqueo.
+
+Puertas para primera conexión, en orden:
+1. Acreditar contrato del candidato y respuesta negativa; aprobar endpoint y criterio diferencial. Si no se acredita, mantener validación de clave BLOQUEADA.
+2. PO confirma procedencia exclusivamente TCE-2-LAB/ref ieioysefckvafdbasqxl y tipo público. Autorizar lectura del perfil privado y verificar ACL efectiva antes del contenido. No leer claves existentes ahora.
+3. Revisar transporte HTTPS saliente/DNS/TLS/egress, límites y sanitización. Para publishable revisar soporte explícito: hoy se rechaza; no desactivar guardas ni usar Authorization Bearer con clave opaca.
+4. Autorizar específicamente las dos peticiones diferenciales al host LAB, primero control inválido sintético del mismo formato y después clave pública. Sin cookies ni sesión, sin redirects/proxy/reintentos; como máximo 10 s total y 64 KiB por respuesta. Distinguir rechazo de gateway de cualquier 401 de otra causa, con criterio de error previamente documentado y sin imprimir cuerpos/claves.
+5. Registrar solo evidencia sanitizada de TLS, estados y conclusión limitada. Cualquier resultado inconcluso mantiene el bloqueo; incluso éxito no habilita Next, SQL, migraciones o los nueve experimentos.
+
+Este procedimiento es preparación documental, no autorización ni implementación del transporte. Cierre offline autorizado con un único commit local de nueve archivos; arranque general y conexiones reales continúan bloqueados.

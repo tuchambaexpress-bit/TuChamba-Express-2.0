@@ -79,7 +79,7 @@ function allowedFile(relative) {
   if (parts.some(p => !p || p === '.' || p === '..' || p.startsWith('.'))) return false
   if (parts.some(p => /^(node_modules|coverage|out|build|dist|logs?|credentials?|secrets?|certs?)$/i.test(p))) return false
   if (['package.json', 'package-lock.json', 'next.config.js', 'next-env.d.ts', 'tsconfig.json', 'postcss.config.js', 'tailwind.config.ts', 'tailwind.config.js'].includes(relative)) return true
-  if (relative === 'scripts/lab-launcher.cjs') return true
+  if (['scripts/lab-launcher.cjs', 'scripts/lab-probe.cjs'].includes(relative)) return true
   if (/^(app|components|hooks|lib|types)\//.test(relative)) return /\.(ts|tsx|js|jsx|css)$/.test(relative) && !/\.(test|spec)\./.test(relative)
   if (relative.startsWith('public/')) return /\.(png|jpe?g|webp|gif|svg|ico|woff2?|ttf)$/.test(relative) || relative === 'public/manifest.json'
   return false
@@ -120,7 +120,11 @@ function validateRuntime(env) {
 
 function main(args = process.argv.slice(2)) {
   try {
-    if (args.length !== 1 || !['check', 'prepare'].includes(args[0])) fail('LAB_ONLY_CHECK_OR_PREPARE_NO_SERVICES')
+    if (args.length !== 1 || !['check', 'prepare', 'probe'].includes(args[0])) fail('LAB_COMMAND_NOT_ALLOWED')
+    if (args[0] === 'probe') {
+      rejectInherited(process.env)
+      return require('./lab-probe.cjs').main()
+    }
     const root = path.resolve(__dirname, '..')
     const config = readPrivateConfig(root, process.env)
     cleanEnvironment(process.env, config) // No process is launched, nor env file written.
@@ -137,5 +141,5 @@ function main(args = process.argv.slice(2)) {
   }
 }
 
-module.exports = { PROJECT_REF, LAB_URL, APP_ORIGIN, CONFIG_RELATIVE, MARKER, rejectInherited, validateConfig, cleanEnvironment, readPrivateConfig, allowedFile, prepareCopy, validateRuntime, main }
+module.exports = { PROJECT_REF, LAB_URL, APP_ORIGIN, CONFIG_RELATIVE, MARKER, rejectInherited, validateKey, validateConfig, cleanEnvironment, readPrivateConfig, allowedFile, prepareCopy, validateRuntime, main }
 if (require.main === module) main()

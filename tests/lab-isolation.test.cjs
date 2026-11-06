@@ -49,7 +49,7 @@ test('missing private configuration fails without reading any env file', () => {
   }
   for (const args of [[], ['start'], ['prepare', '--skip-validation']]) {
     const result = command(args)
-    assert.deepEqual(result.errors, ['LAB_ONLY_CHECK_OR_PREPARE_NO_SERVICES'])
+    assert.deepEqual(result.errors, ['LAB_COMMAND_NOT_ALLOWED'])
     assert.deepEqual(result.operations, [])
   }
 })
