@@ -244,3 +244,23 @@ Trazabilidad: propuesta precedente y matriz de 17 hallazgos en HALLAZGOS; condic
 Aplicación al procedimiento: se formaliza ahora el VoBo del cierre documental; los pasos de autorización del bloque F2 y de ejecución/validación continúan pendientes. Antes de REC-F2-001: delimitar entregable de diseño, responsable/revisor, datos y entorno, decisiones abiertas y autorización de inicio. No ejecutar otras tareas por el solo orden propuesto.
 
 Control de esta actualización: motivo, formalizar autorización expresa del PO; secciones afectadas, estado actual/continuidad documental y encabezado de fase de TASKS, sin sustituir el procedimiento histórico; autor material, agente bajo instrucción del propietario; aprobación, mandato citado; evidencia, cuatro documentos y controles Git/documentales; commit asociado, checkpoint local autorizado cuyo hash definitivo se comunica al terminar.
+
+## REC-F2-001 — aplicación del VoBo funcional y siguiente validación, 2026-11-06
+
+Fuente/aprobación: PO, mandato «REC-F2-001: registro de decisiones aprobadas», VoBo de 2026-11-06. Autor material del registro: agente bajo ese mandato. Secciones afectadas: diseño de identidad y secuencia de validación, sin modificar procedimientos ni evidencia históricos. Requisitos vinculantes: cuatro acuerdos registrados en SPEC «REC-F2-001 — criterios funcionales aprobados por el PO»; seguimiento TASKS y dependencias HALLAZGOS. Este mandato autoriza registro y un commit documental, no implementación ni validación externa.
+
+Aplicación de los acuerdos: conservar código + contraseña sin correo/SMS en cada login; separar identidad global de membresías/estados/permisos por agencia; recuperación por solicitudes verificables sin control global automático del coordinador; postulación pública sin registro y privacidad por mecanismo verificable ligado al recurso. No fijar teléfono como identificador Auth, cookie HttpOnly, capacidades de candidato, autoridad final de recuperación ni TTL concretos como decisiones ya aprobadas.
+
+Siguiente actividad propuesta — viabilidad técnica de autenticación y sesiones:
+1. Verificar contratos locales de Supabase/Next.js y comparar mapeo del código a teléfono legítimo u otra identidad admitida sin correo obligatorio; inventariar restricciones de formato/duplicados sin consultar datos reales. No asumir username nativo.
+2. Comparar sesión SSR/browser con mayor intermediación servidor; definir lectura/renovación de cookies, logout, expiración e invalidación de acceso antiguo; distinguir revocación de refresh de la de JWT emitidos.
+3. Diseñar bootstrap/cambio inicial y recuperación con control de concurrencia, caducidad, entrega y trazabilidad sin secretos; comprobar que una membresía no permite dominar una identidad global compartida.
+4. Diseñar acceso privado de candidato independiente de postulación pública, evitando recuperación de datos por teléfono/chatId; comparar mecanismos limitados al recurso y recuperación entre dispositivos.
+5. Proponer escenarios reproducibles, entorno aislado, mocks/fixtures y evidencia de aceptación por los cuatro criterios de SPEC. Contrastar después RLS/Storage mediante REC-F2-002/003 con permisos específicos; no dar por protegidas consultas directas o Realtime solo por cambios de UI/API.
+6. Presentar resultados, riesgos, alternativa recomendada, bloqueos y archivos exactos de un eventual incremento al PO. Solo después de aprobación y autorización correspondiente plantear implementación; no instalar, probar integración o acceder a servicios por esta secuencia documental.
+
+Aceptación de la siguiente etapa: alternativas justificadas con evidencia, casos no cubiertos explícitos, matriz de permisos y ciclo de sesión completos, garantías de aislamiento verificables, estrategia de recuperación global aceptada y plan de pruebas/reversión aprobado. Los criterios funcionales ya aceptados no equivalen a aceptar la solución ni sus pruebas.
+
+Dependencias/riesgos: teléfono compartido/reciclado, Auth y perfiles no vinculados por ID, privilegios de servicio, sesiones coexistentes, revocación diferida, toma global de cuenta por recuperación local, exposición de privados de candidato y desalineación de RLS. REC-F2-004 debe acreditar entorno aislado antes de integración; si no existe, no usar Supabase productivo. Turnstile y límites de intentos siguen propuestos.
+
+Estado vigente: REC-F2-001 EN_CURSO — análisis y diseño, sin implementación ni aceptación final; REC-F2-002 a REC-F2-007 PENDIENTES. F1 CERRADA DOCUMENTALMENTE CON CONDICIONES. TCE-004 y protección Vercel conservados sin cambios. Único commit autorizado: docs(recovery): approve F2 identity functional criteria; hash definitivo se informa al terminar, no se anticipa.

@@ -156,3 +156,33 @@ Límites expresos: el cierre es documental y condicionado, no cierre técnico de
 Trazabilidad: propuesta precedente y matriz de 17 hallazgos en HALLAZGOS; condiciones/alcance en SPEC; transferencia y secuencia en PLAN; siete tareas y continuidad en TASKS. Línea base anterior: b94d24d12c5684eafe57959459036c6fe0b0a021. El checkpoint nuevo comprenderá la propuesta preservada y esta formalización; su hash no se anticipa y se entregará después del único commit autorizado. Este registro no se atribuye al hash anterior.
 
 Aplicación a requisitos: el PO acepta la delimitación del cierre documental y la transferencia de verificaciones pendientes bajo los seis criterios, sin afirmar cumplimiento técnico integral de la puerta de salida original. Los requisitos vigentes y criterios de aceptación de tareas/correcciones conservan su exigibilidad. Cualquier condición incumplida se registra y se somete al PO; no se borra evidencia ni se amplía esta excepción a publicación o ejecución F2.
+
+## REC-F2-001 — criterios funcionales aprobados por el PO, 2026-11-06
+
+Autoridad/fuente: propietario del proyecto, VoBo otorgado el 2026-11-06 y comunicado expresamente mediante «REC-F2-001: registro de decisiones aprobadas». Se aprueban los cuatro criterios funcionales siguientes. No se aprueba definitivamente una alternativa de implementación, esquema, sesión o proveedor adicional ni se declara aceptada REC-F2-001.
+
+1. Reclutadores: acceso mediante código individual y contraseña. No exigir correo ni SMS en cada inicio de sesión.
+2. Multiagencia: identidad global única, con membresías, estados y permisos independientes por agencia. Un coordinador no puede suspender globalmente a un reclutador por tener autoridad sobre una sola agencia.
+3. Recuperación: coordinadores autorizados pueden gestionar solicitudes de recuperación bajo un procedimiento verificable. No adquieren automáticamente control sobre la identidad global de reclutadores compartidos.
+4. Candidatos: mantener postulación pública sencilla, sin registro obligatorio. El acceso a expedientes, conversaciones y documentos privados requiere credencial o mecanismo verificable limitado al recurso.
+
+Estos acuerdos vinculan el diseño posterior y precisan las ambigüedades funcionales anteriores, conservadas como historial. No se presenta como resuelta la compatibilidad técnica con Supabase Auth: el código de reclutador no se presume identificador nativo de contraseña. Supabase Auth sigue como primera alternativa a evaluar; no se permite sustituirlo silenciosamente por contraseñas propias.
+
+Pendientes técnicos y alternativas NO APROBADAS:
+- Mapeo código-identidad Auth: teléfono real normalizado y verificado, sujeto a unicidad/teléfonos compartidos/cambio de número/configuración; correo real como alternativa solo si compatible con el requisito sin correo obligatorio; proveedor adicional o autenticación propia implican otro alcance y aprobación. No usar correos ficticios inseguros ni asumir soporte de username arbitrario. No se requiere ni aprueba SMS/correo en cada login.
+- Transporte de sesión: SSR con cookies y SDK de navegador, o mayor intermediación del servidor; elección pendiente. No afirmar HttpOnly si el SDK necesita acceso de navegador. Definir renovación, logout efectivo, expiración y revocación de accesos emitidos, no solo refresh tokens.
+- Alta y recuperación: entrega, caducidad/uso único de credencial temporal, cambio inicial obligatorio como diseño propuesto, verificación de identidad, autoridad multiagencia y compensación ante fallos Auth/BD. Solicitar recuperación no equivale a permiso de sustituir credenciales globales.
+- Candidato: sesión/capacidad limitada al recurso u otra prueba verificable; teléfono, chatId, nombre y localStorage no constituyen por sí solos identidad. Elegir recuperación entre dispositivos y tratamiento de postulaciones existentes sin devolver datos privados por teléfono.
+- Estado/roles: vínculo estable con Auth, separación de perfiles y membresías, permisos por operación y recurso, coexistencia de roles y fuente de estado confiable; garantizar denegación ante agencia o identidad inactiva según contrato. No otorgar rol administrativo por es_maestro del reclutador.
+- RLS/Storage, CSRF, antiabuso/Turnstile y límites, compatibilidad de versiones/configuración e integración real permanecen por validar. No se modifican ni prueban aquí.
+
+Criterios de aceptación propuestos para el diseño/validación técnica, no resultados:
+- Demostrar viabilidad código + contraseña sin correo/SMS habitual sobre identificador Auth legítimo y documentar casos no cubiertos; contrastar contrato del SDK con configuración de entorno de prueba autorizado.
+- Con dos agencias y un reclutador compartido, demostrar aislamiento de membresías, permisos y recursos; una acción autorizada en A no suspende identidad global ni habilita acceso a B.
+- Recuperación exige solicitante autorizado, alcance vigente, evidencia mínima de verificación, caducidad/uso único/revocación definidos y decisión sobre autoridad global; un coordinador ajeno no obtiene control ni información privada.
+- Postulación pública funciona sin registro; expediente/chat/documento privado se rechaza sin mecanismo válido o con recurso diferente, expirado o revocado. No recuperar historial solo por teléfono.
+- Completar matriz actor-operación-recurso-agencia, contrato de sesión y plan de regresión/reversión; distinguir observado, propuesto y probado, con límites y revisión del PO antes de aceptar REC-F2-001. Fallos de autenticación/autorización impiden efectos privilegiados.
+
+Dependencias: REC-F2-002 (BD/RLS), 003 (Storage), 004 (aislamiento/infraestructura), 005 (seguridad), 006 (integración); TCE-005/007/008/009/012/013 y recursos TCE-001/002/003/006. TCE-003 y TCE-012 mantienen sus discrepancias históricas; resolver un criterio futuro no recupera sus informes originales.
+
+Siguiente actividad propuesta: viabilidad técnica de autenticación y sesiones, con comparación y plan de validación aislada; no se ejecuta por este registro. REC-F2-001 permanece EN_CURSO en análisis/diseño, sin aceptación final ni implementación. F1 continúa CERRADA DOCUMENTALMENTE CON CONDICIONES, los 17 hallazgos ABIERTOS y REC-F2-002 a REC-F2-007 PENDIENTES. Protección temporal de producción y corrección local TCE-004 conservadas, sin comprobación remota.

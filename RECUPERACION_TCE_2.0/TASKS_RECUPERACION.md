@@ -1,6 +1,6 @@
 Versión: 0.1
 Estado: Propuesta pendiente de aprobación del propietario
-Estado F1: CERRADA DOCUMENTALMENTE CON CONDICIONES. F2: NO INICIADA.
+Estado F1: CERRADA DOCUMENTALMENTE CON CONDICIONES. F2: REC-F2-001 EN_CURSO, solo análisis y diseño; implementación NO INICIADA.
 Documento de requisitos: SPEC_RECUPERACION.md
 Documento de ejecución: PLAN_RECUPERACION.md
 Registrar y controlar todas las actividades del Plan de Recuperación de TuChambaExpress 2.0, garantizando trazabilidad entre requisitos, tareas, hallazgos, evidencias, decisiones y commits.
@@ -456,3 +456,30 @@ Trazabilidad: propuesta precedente y matriz de 17 hallazgos en HALLAZGOS; condic
 - Commit: autorizado uno solo con mensaje docs(recovery): approve conditional F1 closure. Se parte de b94d24d12c5684eafe57959459036c6fe0b0a021; no anticipar hash. El hash definitivo se comunica al PO en el informe final; el propio checkpoint se identifica por este mensaje, padre y cuatro rutas. No se crea un segundo commit para insertar su hash dentro de sí mismo.
 - Reconciliación: los SIN_COMMIT y prohibiciones de commit anteriores describen sus respectivas sesiones; este mandato autoriza únicamente el checkpoint documental actual. No se reescriben autorizaciones ni evidencias pasadas.
 - Resultado y siguiente paso: completar comprobaciones, realizar único commit autorizado, informar hash/estado Git y detenerse. No push/pull/fetch, despliegue ni otro trabajo. Esperar autorización específica para el siguiente bloque.
+
+## REC-F2-001 — actualización vigente: criterios funcionales aprobados, 2026-11-06
+
+- Fuente/autorización: PO, VoBo otorgado el 2026-11-06 para cuatro criterios funcionales, comunicado en «REC-F2-001: registro de decisiones aprobadas». Autorizado actualizar cuatro documentos y un único commit local; no código, esquema, dependencias, servicios externos, migraciones ni implementación.
+- Estado vigente de REC-F2-001: EN_CURSO — análisis y diseño exclusivamente; sin aceptación final. Este estado sucede a la instantánea de siete tareas PENDIENTES de la planificación: REC-F2-002 a REC-F2-007 permanecen PENDIENTES. No se cierran REC-F1-001/002 ni hallazgos por este registro.
+- Acuerdos: (1) código individual + contraseña sin correo/SMS en cada login; (2) identidad global única y membresías/estados/permisos independientes por agencia, sin suspensión global por autoridad local; (3) solicitudes de recuperación por coordinador autorizado con verificación, sin control global automático; (4) postulación pública sin registro y privados con mecanismo verificable limitado al recurso.
+- Requisitos/plan: SPEC «REC-F2-001 — criterios funcionales aprobados por el PO» contiene texto vinculante y aceptación propuesta; PLAN «REC-F2-001 — aplicación del VoBo funcional y siguiente validación» define secuencia. HALLAZGOS relaciona TCE-005/007/008/009/012/013 y recursos documentales, sin alterar evidencias.
+- Responsable de aceptación: PO; ejecutor material de este registro, agente bajo el mandato. Responsable técnico/revisor de próxima validación y autorización de entorno: por designar/confirmar por el PO, sin inventar delegación.
+- Antecedente: análisis/diseño previo realizado solo en conversación bajo autorización de lectura, sin modificación de TASKS; no se presenta como aceptación final. La actualización actual concilia ese avance con el estado documental.
+- Riesgos y dependencias: compatibilidad código-Auth, teléfono/identificador legítimo y unicidad, entrega/caducidad/uso único inicial, recuperación compartida, sesión/cookies/CSRF, revocación y RLS/Storage. Dependencias REC-F2-002/003/004/005/006; no ejecutadas por este mandato.
+- Alternativas pendientes de aprobación: mapeo con teléfono real, otras identidades admitidas sin correo obligatorio, proveedor adicional/autenticación propia, SSR/browser frente a intermediación servidor y mecanismo privado del candidato. No confundir alternativas con decisiones funcionales aceptadas; no contraseñas propias ni correos ficticios inseguros.
+- Criterios de aceptación: demostrar viabilidad del login sin correo/SMS habitual; dos agencias con aislamiento y sin suspensión global desde A; recuperación sin control global por membresía local; privados de candidato rechazados sin credencial válida y postulación pública preservada; completar matriz, ciclo de sesiones, riesgos y plan de pruebas/reversión para revisión PO. Ninguno consta probado por este registro.
+- Evidencia obtenida: instrucción expresa del PO y correspondencia entre cuatro documentos; no nueva auditoría o prueba técnica. Pruebas ejecutadas: ninguna del producto/integración. No ejecutadas: Auth real, RLS/Storage, concurrencia, revocación, antiabuso y flujos de aceptación; requieren próxima etapa y permisos de entorno.
+- Resultado: cuatro criterios funcionales formalizados; diseño técnico no aceptado y sin implementación. TCE-001 a TCE-017 ABIERTOS, discrepancias TCE-003/012 pendientes; TCE-004 conserva corrección local y validación integral pendiente.
+- Siguiente actividad propuesta: viabilidad técnica de autenticación y sesiones, con evidencia y comparación de alternativas; detenerse ahora y esperar autorización de esa actividad/entorno. No se inicia automáticamente por figurar en PLAN.
+- Commits: línea base 92098c3f2fc940dd90b0eb66069fb60997b85dd6; autorizado únicamente docs(recovery): approve F2 identity functional criteria. Hash definitivo se comunica tras crearlo; no se anticipa ni se requiere un segundo commit para insertarlo dentro de sí mismo.
+- Reversión: ningún producto o dato afectado; cualquier reversión documental futura debe preservar historia y alcance de la autorización, no borrar decisiones silenciosamente. Decisión de aceptación final REC-F2-001: PENDIENTE.
+
+## Punto de continuidad vigente — REC-F2-001 en diseño, 2026-11-06
+
+- Inicio: master, HEAD 92098c3f2fc940dd90b0eb66069fb60997b85dd6, árbol limpio y staging vacío. Se mantiene F1 CERRADA DOCUMENTALMENTE CON CONDICIONES.
+- Trabajo actual: registro de cuatro decisiones funcionales aprobadas por el PO; REC-F2-001 EN_CURSO solo análisis/diseño. No inicio de implementación ni autorización implícita de otras tareas F2.
+- Archivos: únicamente SPEC, PLAN, TASKS y HALLAZGOS de recuperación; sin archivos nuevos. Índice, gobernanzas, históricos, código, TCE-004, pruebas, dependencias y configuración intactos.
+- Comprobaciones: presencia de 17 fichas y 17 filas de matriz, siete tareas únicas, conservación de contenido histórico y correspondencia de criterios/estado entre documentos, alcance de staging y git diff --check. Sin pruebas de producto ni servicios externos.
+- Protección de producción: Vercel Authentication informado por PO conservado; sin acceso a Vercel/Supabase, sin datos reales ni modificación productiva.
+- Decisiones pendientes: alternativa técnica, responsabilidades, verificación/recuperación global, sesiones, mecanismo de candidato y entorno aislado; no aceptación final de diseño.
+- Próximo paso autorizado: verificar, crear único checkpoint documental, informar hash/estado Git y detenerse. Después, esperar autorización para viabilidad técnica. No push/pull/fetch ni despliegue; hash posterior no anticipado.

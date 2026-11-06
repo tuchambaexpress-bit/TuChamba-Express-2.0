@@ -933,3 +933,18 @@ Límites expresos: el cierre es documental y condicionado, no cierre técnico de
 Trazabilidad: propuesta precedente y matriz de 17 hallazgos en HALLAZGOS; condiciones/alcance en SPEC; transferencia y secuencia en PLAN; siete tareas y continuidad en TASKS. Línea base anterior: b94d24d12c5684eafe57959459036c6fe0b0a021. El checkpoint nuevo comprenderá la propuesta preservada y esta formalización; su hash no se anticipa y se entregará después del único commit autorizado. Este registro no se atribuye al hash anterior.
 
 Registro de hallazgos: las 17 fichas y 17 filas de matriz permanecen intactas; el VoBo cambia únicamente el estado documental de F1, no su certeza, evidencia, riesgo, corrección o validación. Las reservas y tareas heredadas siguen siendo parte del diagnóstico aceptado con condiciones. Los hallazgos GOV y sus decisiones no se cierran por este mandato.
+
+## REC-F2-001 — decisiones funcionales vinculantes y trazabilidad, 2026-11-06
+
+Fuente: VoBo del PO de fecha 2026-11-06, mandato «REC-F2-001: registro de decisiones aprobadas». Registro de decisión funcional, no nueva comprobación técnica. Texto vinculante completo en SPEC, sección «REC-F2-001 — criterios funcionales aprobados por el PO»; aplicación en PLAN y estado en TASKS.
+
+- TCE-007: código individual + contraseña, sin correo ni SMS en cada inicio. Supabase Auth y mapeo concreto pendientes de viabilidad; no se declaran implementados credencial temporal, cambio inicial, antiabuso ni sesión.
+- TCE-012/013 y dependencias TCE-009: identidad global única con membresías/estados/permisos independientes; coordinador de una sola agencia no puede suspender globalmente al reclutador. Esto fija el requisito futuro, no demuestra que el comportamiento actual lo cumpla.
+- Recuperación relacionada TCE-007/005/012: coordinadores autorizados gestionan solicitudes mediante procedimiento verificable, sin adquirir control automático de la identidad global compartida. Autoridad final, comprobaciones y ciclo de credenciales pendientes de diseño.
+- TCE-008 y privacidad TCE-001/003/006/015: postulación pública sin registro obligatorio; expedientes, conversaciones y documentos privados exigen mecanismo verificable limitado al recurso. No se aprueba el teléfono como prueba de identidad ni un mecanismo técnico específico.
+
+Se conservan íntegros fichas, estados, evidencias y matriz de 17 hallazgos: todos ABIERTOS; TCE-004 EN_VALIDACION y corrección local intacta. TCE-003 y TCE-012 siguen discrepancias históricas pendientes; el nuevo criterio no reconcilia sus descripciones originales ni cierra hallazgos. Fuentes/severidades originales no recuperadas conservan su limitación.
+
+Riesgos/dependencias heredados: mapeo de identificador Auth, teléfono compartido/reciclado, recuperación multiagencia, sesiones y JWT no invalidados instantáneamente, permisos de servicio, RLS/Storage y acceso directo del navegador. REC-F2-002 a REC-F2-006 aportarán comprobaciones autorizadas, no realizadas ahora. Alternativas aún no aprobadas: teléfono interno de Auth, correo real como opción limitada, proveedor adicional/autenticación propia, modelo de cookies y capacidad de candidato; no almacenar contraseñas propias ni usar correos ficticios inseguros.
+
+Aceptación pendiente: escenarios por criterio en SPEC, con identidad/recursos ajenos, dos agencias, recuperación sin autoridad global y expediente privado sin credencial; evidencia aislada y revisión PO antes de aceptar el diseño. Siguiente actividad propuesta: viabilidad técnica de autenticación y sesiones. REC-F2-001 sigue EN_CURSO en diseño, no implementación ni aceptación final. F1 mantiene cierre documental condicionado; protección temporal de producción conservada y no verificada remotamente.
