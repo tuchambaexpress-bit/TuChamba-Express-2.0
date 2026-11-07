@@ -438,3 +438,186 @@ Trazabilidad: REC-F2-001 contrato y ratificación; REC-F2-002 modelo físico/aut
 Las cuatro decisiones están APROBADAS POR EL PO: A, código individual+contraseña mediante identidad técnica estable con Supabase Auth; B, recuperación verificable e independiente sin control unilateral del coordinador sobre credenciales globales; C, autorización por identidad/rol/agencia/recurso/membresía activa/permisos vigentes; D, coordinador multiagencia y autorización híbrida bajo los diez puntos anteriores. El texto íntegro de A/B/C permanece sin cambios en sus secciones; este resumen no lo sustituye ni reinterpreta. D no extiende al coordinador el mecanismo de login del reclutador, no otorga poderes globales y no modifica Maestro/Limitado, TCE-004 ni el contrato público/privado del candidato.
 
 REC-F2-001/002 continúan EN_CURSO solo diseño, sin aceptación final. REC-F2-006/007 mantienen pendientes sus trabajos técnicos. Los 17 hallazgos y nueve experimentos originales no se cierran ni se declaran probados. Este mandato autoriza un solo commit documental con las modificaciones pendientes de las cuatro rutas; sin omitir hooks, sin push y sin habilitar código, SQL, migraciones, servicios o agentes. Las notas SIN_COMMIT y de propuesta pendiente de intervenciones anteriores conservan su valor histórico, sucedidas solo en el alcance de este checkpoint y de la ratificación D.
+
+## REC-F2-001 — contrato técnico propuesto de identidad y autorización, 2026-11-06
+
+Fuente: PO, solicitud de contrato técnico y autorización «Implement the plan». Base 580ef81828e56cf2ac2f57074be9c4303bd61adc. A/B/C/D permanecen ratificadas; lo siguiente es DISEÑO TÉCNICO PROPUESTO, pendiente de validación/aceptación. Solo cuatro documentos, sin código, SQL, servicios ni commit.
+
+Autenticación: proponer POST de login existente con código y contraseña por HTTPS. Normalizar código conforme a política por aprobar; no recortar ni transformar contraseña. Resolver en servidor mediante mapeo privado código→identidad técnica aleatoria/inmutable→sujeto Auth→perfil estable. Código, token_referido e identidad técnica no autentican solos. Usar Supabase Auth para verificar contraseña, sin almacenar contraseñas propias. Namespace legítimamente controlado, formato y provisión pendientes de validación; no inventar dominio operativo. Unicidad y vínculo estable obligatorios, sin fusionar por correo/teléfono ni sustituir IDs existentes.
+
+Interfaz lógica propuesta: autenticar(codigo, contraseña) entrega sesión Auth y proyección mínima de perfil/membresías habilitadas; no devuelve el mapeo técnico en respuestas propias. No escoger primera agencia como autoridad implícita. Error genérico común ante código inexistente, contraseña inválida o cuenta no habilitada; errores internos sin detalles sensibles. Protección acumulada por origen/código, cuotas y retrasos controlados sin bloqueo permanente inducible; umbrales/retención y mecanismos distribuidos pendientes de aprobación. Evitar diferencias observables de error/tiempo que permitan enumerar, sin prometer tiempo constante de red.
+
+Sesión propuesta y preferencia confirmada: SSR más cliente navegador, propagación getAll/setAll, verificación de identidad en servidor y autoridad vigente en BD/RLS. No prometer tokens HttpOnly ni identidad nativa invisible al navegador: sesión Auth accesible al cliente puede revelar identificadores; conocerlos no concede permisos. Identidad técnica no editable en perfil ni por metadata cliente; validar también rutas directas de cambio de identidad Auth antes de habilitar. LocalStorage solo preferencias, nunca identidad/rol/agencia autoritativos. Mutaciones con cookie requieren control de origen/CSRF; expiración, renovación y logout deben propagar cookies y fallar cerrados ante sesión no verificable. Duraciones, concurrencia de refresh y alcance de revocación por validar, sin cambiar contrato TCE-004.
+
+Ciclo de vida: alta pendiente sin privilegios hasta vinculación y estados válidos; habilitación, suspensión y baja conservan IDs/historial y separan estado global/local. Cambiar código/contacto no cambia sujeto Auth. Reintentos idempotentes; Auth y BD no comparten transacción: reconciliación/compensación explícita, sin habilitar membresía huérfana. Activación/cambio inicial, entrega y uso único siguen por especificar/aprobar.
+
+Recuperación: estados propuestos solicitada→verificación pendiente→decisión→restablecimiento limitado autorizado→consumida→cerrada; alternativas rechazada/caducada/revocada. Solicitud genérica no revela existencia ni entrega acceso. Coordinador solo gestiona solicitud autorizada, nunca adquiere credencial global. Política candidata solicitada para revisión, NO APROBADA: revisión humana central por Maestro o delegado expresamente facultado, independiente de mera solicitud del coordinador; evidencia de continuidad de titularidad más confirmación por canal previamente verificado. Si no existen evidencias/canal aceptables, escalar sin restablecer. Autoridad concreta, factores aceptables, canal de entrega, plazos y política de sesiones requieren decisión PO antes de habilitar. No considerar código/teléfono declarado/membresía como prueba suficiente.
+
+Restablecimiento propuesto: autorización opaca limitada al sujeto/acción, caducidad y consumo único; revalidar autoridad y estado al consumir. Reintento no cambia contraseña dos veces ni reutiliza éxito con payload distinto. Suspender acceso de negocio durante recuperación cuando la política aprobada lo exija; invalidar renovaciones y comprobar estado autoritativo para nuevas operaciones. No afirmar cancelación instantánea de JWT/lecturas ya emitidas. Auditoría con actor/sujeto sintético o ID interno, alcance, decisión, versión y resultado; sin contraseñas/tokens ni evidencias personales en logs generales. Retención/acceso a evidencia sensible pendiente PO.
+
+Coordinador: identidad global→membresías independientes. Incorporación propuesta solicitada→autorizada centralmente→invitada→aceptada por sujeto autenticado→activa; estados de rechazo/caducidad/revocación separados. Autorización central y aceptación ligadas a agencia, sujeto, permisos y versión exactos; ninguna condición sola activa. Cambio de alcance exige nueva aceptación. Revalidar facultad central al activar; revocación concurrente impide consumo posterior. Unicidad/idempotencia sin doble membresía; fallos mantienen pendiente sin acceso. Invitación/token/canales, plazos y almacenamiento todavía propuestos, no mecanismo aprobado. Revocar A conserva B; no administración global ni recuperación unilateral. A no prescribe nuevo login al coordinador. Maestro/Limitado y TCE-004 intactos.
+
+Autorizar(identidad, rol, operación, recurso, contexto solicitado): verificar sesión/sujeto estable y estado→rol aplicable→agencia derivada de relaciones del recurso→membresía activa→permiso vigente→efecto permitido. Contexto navegador se contrasta; fallo deniega sin efectos ni exposición de privados. Comprobar en servidor y límites BD/RLS, incluidas relaciones/vistas/RPC/Realtime; guardas previas al servicio privilegiado, que no demuestra RLS. Agencia de postulación deriva de vacante; privados de candidato ligados al recurso sin registro obligatorio. Facultades transversales administrativas deben explicitarse sin excepción general inventada a C.
+
+Invariantes: unicidad código/vínculo/membresía; IDs e historial preservados; identidad/agencia/rol no reasignables por UPDATE genérico; autorización y escritura serializadas frente a revocación; doble consumo máximo un efecto; sin unión automática de permisos entre agencias. RLS debe comprobar filas existentes y estado resultante, con grants mínimos. Sesión válida no basta, metadata/localStorage no son autoridad. Agentes IA siguen capacidad futura: no agente operativo ni delegación concreta diseñada/habilitada.
+
+Pendientes PO/técnicos: namespace/provisión, normalización/reutilización del código, cuotas, sesiones/revocación, política candidata de recuperación y evidencias, invitación/aceptación/auditoría, representación física y políticas. No declarar contrato listo para producción ni mecanismos bloqueados implementables sin resolverlos. REC-F2-001/002 EN_CURSO solo diseño; implementación PENDIENTE y pruebas NO EJECUTADAS.
+
+
+## Inventario funcional del PO — Pendientes TCE2_0.docx, 2026-11-06
+
+Fuente original íntegra leída: C:/Users/jgonz/Desktop/Pendientes TCE2_0.docx; SHA-256 D287FAB2B50011B44775A9DE716FB703E1795399D0F2E93B1676D12EAB4A824F. Paquete DOCX: 24 párrafos no vacíos, 72 nodos de texto; sin imágenes, altChunk, notas, encabezados o comentarios adicionales. Se extrajo todo word/document.xml en orden; los párrafos concatenados se desglosan en 30 solicitudes. IDs MF-PO-001 a 030 son referencias de inventario, no nuevas tareas F2 ni hallazgos. P02 es encabezado sin solicitud independiente. No usar este inventario como aprobación de implementación ni nueva fase.
+
+A/B/C/D ratificadas intactas; solicitudes del DOCX son REQUISITOS RECIBIDOS PENDIENTES DE VALIDACIÓN y priorización PO. Estados se refieren solo a superficie estática revisada: Parcial no acredita backend; No determinado no significa ausente. No se declara cobertura completa implementada sin pruebas. No se resuelve unilateralmente contradicción con requisitos históricos: privacidad de PDF público se propone actualizar expresamente antes de código.
+
+### Transcripción original para control de integridad
+
+P01: 1) agregar Sección 9 — Proceso de reclutamiento / Pendiente de construir (7.38) — catálogo de puntos de reclutamiento.  Al Vacante detalle del reclutador.
+
+P02: En la Ficha operativa, varios cambios:
+
+P03: 1) Agregarle botón (Copiar) a "📍 Ubicación de la empresa"
+
+P04: 2) Agregarle botón (Copiar) a "📎 Documentos de la ruta"
+
+P05: 3) En 🚐 Ruta dedicada agregar un espacio para cada parada y que cada parada tenga su propio link de Google Maps, con botón (Copiar).
+
+P06: 4) Validar si Punto Fijo de reclutamiento requiere lo mismo.
+
+P07: 5) Agregarle botón (Ver) a "🪪 Requiere pase de visita", pero que tenga un botón para Ver y otro solo para Descargar.Modificar el panel de Chats del reclutador para que le aparezcan mensajes pre-cargados editables, un mensaje de bienvenida automático, un mensaje diciendo que "pronto será contactado por un reclutador, que no cierre la ventana", otro para fuera de horarios, así tipo WhatsApp Business. Y compactar los chats para que al seleccionar un candidato del lado derecho aparezca la info del panel de Ficha operativa, con la información de la vacante a la que se está postulando ese candidato/chat.
+
+P08: Agregar la opción de migrar conversación completa a WhatsApp
+
+P09: Agregar en 📋 Trámites útiles con el gobierno el botón de Alta al IMSS
+
+P10: agregar también el link de validación del RFC
+
+P11: Aplicar una diferencia entre domicilio de la planta/empresa (donde se va a laborar), y domicilio de entrevista planta, porque pueden coincidir pero también pueden ser diferentes por que algunas empresas tienen varias plantas.
+
+P12: Verificar que cuando el usuario entre a una vacante por link referido, y de ahí se salga a la página principal o a la de vacantes, se conserve el referido.
+
+P13: Agregar también el link de consulta de RFCAgregarle a los Chats del reclutador la opción de borrar chat
+
+P14: Agregarle al panel de vacantes del reclutador una columna con el estado y el municipio, y agregarle un número ID pequeño a cada vacante para diferenciarlas por número.
+
+P15: en la página de redes sociales hay que crear contenido que sea de ayuda a las personas que buscan empleo, como cursos gratis de capacitación, escuelas baratas, contenido educativo, re recomendaciones etc.
+
+P16: Y hay que empezar con un slogan que diga "Sin miedo, dale Clic".
+
+P17: Agregarle al registro la frase de Teléfono/WhatsApp para contacto.
+
+P18: Agregar dos espacios para guardar PASE_de visita. (para poder subir más de uno.
+
+P19: Hay que revisar la carga de documentos de Rutas, porque cuando subo un archivo se aplica para todas las empresas.
+
+P20: Hay que agregarle la opción al Pipeline de  cambiar de vacante en el chat y en el pipeline, para que si un candidato con el que ya tenemos contacto se interesa por otra vacante, poder moverlo sin descartarlo y volver a registrarlo
+
+P21: Hay que agregarle al vacantemodal un checkbox si la ruta dedicada o el punto fijo están activos o suspendidos.
+
+P22: Validar que si una vacante ya fue cargada, pero le cambio el título y la vuelvo a subir, si conserva el mismo ID
+
+P23: Validar que cuando el CUPO sea 0, automáticamente se ponga en PAusada
+
+P24: [21/9/2026] Hay que quitar de la página/portal de candidatos, que puedan ver/descargar el PDF de las rutas de la empresa.
+
+### Inventario y aceptación propuesta
+
+Descripción original: cada fila remite al párrafo literal anterior; el resumen/ necesidad funcional separa solicitudes concatenadas, sin sustituir su texto. La evidencia abreviada detalle/[id] corresponde a app/reclutador/detalle/[id]/page.tsx; VacanteModal a components/coordinador/VacanteModal.tsx; VacantesPortal a components/candidato/VacantesPortal.tsx; ChatWindow a components/candidato/ChatWindow.tsx. Grupos de impacto/dependencias se desarrollan en PLAN y aplican a cada fila.
+
+| ID estable | Necesidad / resumen | Original | Roles | Estado estático | Evidencia concreta | Grupo | Prioridad sugerida | Aceptación propuesta |
+|---|---|---|---|---|---|---|---|---|
+| MF-PO-001 | Sección 9/catálogo en detalle | P01 | reclutador/coordinador | Parcial | app/reclutador/detalle/[id]/page.tsx:78–91,413–491; VacanteModal:220–238 | L | P2 | Mostrar catálogo asociado correcto, sin afirmar 7.38 ausente |
+| MF-PO-002 | Copiar ubicación empresa | P03 | reclutador | No determinado | detalle/[id]/page.tsx:174 | U | P3 | Copiar valor exacto autorizado y confirmar resultado |
+| MF-PO-003 | Copiar documentos ruta | P04 | reclutador | No determinado | detalle/[id]/page.tsx:274 | D | P3 | Definir si copia URL o contenido; no filtrar enlace privado |
+| MF-PO-004 | Parada con Maps y Copiar | P05 | reclutador/coordinador | Parcial | detalle/[id]/page.tsx:422–429 representa paradas string[] | L | P2 | Cada parada conserva orden, ubicación y enlace propio |
+| MF-PO-005 | Validar equivalencia en punto fijo | P06 | reclutador/coordinador | Parcial | detalle/[id]/page.tsx:87; puntos con direccion/ubicacion_maps | L | P2 | PO define campos/paradas aplicables; enlaces independientes |
+| MF-PO-006 | Ver pase y Descargar separados | P07 | reclutador | Parcial | detalle/[id]/page.tsx:472–486 enlace download | D | P2 | Acciones separadas para archivo autorizado y descarga fiable |
+| MF-PO-007 | Mensajes precargados editables | P07 | reclutador | Parcial | components/candidato/ChatWindow.tsx:31–35 alude a precargado 7.58 | C | P2 | Validar edición antes de enviar; no concluir cobertura total |
+| MF-PO-008 | Bienvenida automática | P07 | candidato/reclutador | No determinado | app/reclutador/chats/page.tsx; ChatWindow | C | P2 | Una bienvenida por evento acordado, sin duplicados |
+| MF-PO-009 | Mensaje pronto contacto/no cerrar | P07 | candidato/reclutador | No determinado | ChatWindow y panel chats, sin contrato de automatismo acreditado | C | P2 | Disparador y texto aprobados, sin prometer contacto inmediato |
+| MF-PO-010 | Mensaje fuera de horario | P07 | candidato/reclutador | No determinado | ChatWindow; política horaria no acreditada | C | P2 | Zona horaria/calendario y frecuencia aprobados |
+| MF-PO-011 | Chat compacto con ficha operativa lateral | P07 | reclutador | Parcial | app/reclutador/chats/page.tsx:96–98,191–192 muestra título/negocio | C | P2 | Ficha corresponde a postulación/chat y agencia actual |
+| MF-PO-012 | Migrar conversación completa WhatsApp | P08 | candidato/reclutador | No determinado | app/reclutador/chats/page.tsx y ChatWindow, sin exportación acreditada | W | P2 | Definir exportar/continuar/sincronizar y consentimiento antes de integrar |
+| MF-PO-013 | Alta IMSS | P09 | candidato | Parcial | VacantesPortal.tsx:309–315 ofrece Consultar NSS, no demuestra alta | U | P3 | PO precisa trámite; enlace oficial validado después, sin tramitar datos |
+| MF-PO-014 | Validación RFC | P10 | candidato | Parcial | VacantesPortal.tsx:317–323 ofrece SAT ID | U | P3 | Distinguir validación de consulta; destino oficial por validar |
+| MF-PO-015 | Planta versus entrevista | P11 | todos | No determinado | VacanteModal:ubicacion_maps; detalle consulta negocio/puntos | L | P1 | Domicilios coincidentes o distintos sin sobreescritura entre plantas |
+| MF-PO-016 | Conservar referido al salir a inicio/lista | P12 | candidato/reclutador | Parcial | VacantesPortal.tsx:99,186–192; app/vacante/[id]/page.tsx:77 href=/ | R | P1 | Probar navegación/expiración/precedencia sin alterar atribución legítima |
+| MF-PO-017 | Consulta RFC | P13 | candidato | Parcial | VacantesPortal.tsx:317–323 SAT ID | U | P3 | Aclarar posible duplicación con 014; conservar ambas solicitudes |
+| MF-PO-018 | Borrar chat reclutador | P13 | reclutador/candidato | No determinado | ChatWindow estado archivado; no acredita borrado solicitado | C | P1 | PO define archivar/ocultar/eliminar y retención; no perder historial |
+| MF-PO-019 | Columna estado/municipio | P14 | reclutador | Parcial | app/reclutador/vacantes/page.tsx:13–14,135 datos ciudad/estado | U | P3 | Definir municipio versus ciudad y verificar columna/filtros |
+| MF-PO-020 | Número ID pequeño visible | P14 | reclutador | Parcial | app/reclutador/vacantes/page.tsx:135 consulta id | I | P2 | ID legible único, separado del título y sin colisiones |
+| MF-PO-021 | Contenido útil en redes | P15 | candidato/editor | No determinado | lib/redes-sociales.ts; canal editorial externo no inspeccionado | E | P3 | PO delimita página/canal, curación y responsable |
+| MF-PO-022 | Slogan Sin miedo, dale Clic | P16 | candidato/editor | No determinado | Canal de publicación no precisado por fuente | E | P3 | Texto y ubicación aprobados, sin publicación automática |
+| MF-PO-023 | Teléfono/WhatsApp para contacto | P17 | candidato | Parcial | components/candidato/ChatModal.tsx:435 Teléfono (10 dígitos) | U | P3 | Ajustar etiqueta sin afirmar consentimiento de mensajería por sí sola |
+| MF-PO-024 | Dos espacios de pase | P18 | coordinador/reclutador | Parcial | api/pase-visita:35–55 path pase y campo escalar | D | P1 | Dos archivos distintos con orden/tipo/ámbito acordados sin reemplazo accidental |
+| MF-PO-025 | Ruta subida aparece en todas empresas | P19 | coordinador/reclutador | No determinado | api/documentos-negocio:28–47 path/registro por negocioId; VacanteModal:316–345 | D | P1 | Reproducir con empresas A/B sintéticas; A no afecta B; denuncia PO no defecto probado |
+| MF-PO-026 | Cambiar vacante sin descartar/registrar de nuevo | P20 | candidato/reclutador/coordinador | No determinado | ChatModal:72,216 sesión por vacante; chats:96–98 relación vacante | M | P1 | Conservar candidato, conversación, historial y atribución; regla de postulación destino aprobada |
+| MF-PO-027 | Activo/suspendido ruta o punto fijo | P21 | coordinador/reclutador | No determinado | VacanteModal:559–634 escritura catálogo/relaciones | L | P1 | Definir estado global/local y efecto sobre vacantes/chats existentes |
+| MF-PO-028 | Mantener ID al renombrar/reimportar | P22 | coordinador | Parcial | api/importar-vacantes:305–335 por ID o título+negocio+agencia | I | P1 | Con ID explícito renombrar preserva identidad; sin ID/título nuevo decisión PO |
+| MF-PO-029 | Pausar automáticamente CUPO=0 | P23 | coordinador/reclutador | Parcial | VacanteModal:484–487; KanbanCard:667–703,740,768 | Q | P1 | Precisar requerido/disponible/cubierto; concurrencia sin sobrecupo ni pausa tardía |
+| MF-PO-030 | Quitar PDF rutas del portal candidato | P24 | candidato/reclutador | Parcial | components/candidato/VacanteDetalle.tsx:236–242 renderiza links | D | P1 | No PDF en respuesta pública ni acceso directo no autorizado; preservar acceso interno |
+
+Prioridades P1 (decidir antes de diseño físico/habilitación afectada), P2 (definir interacción/modelo tras fundamentos), P3 (interfaz/editorial) son propuestas, no compromisos de ejecución. P1 no certifica severidad de defecto. RFC validación/consulta y mensajes se mantienen individualizados hasta que PO autorice consolidación.
+
+Decisiones PO necesarias: mover o crear postulación adicional, historial/consentimiento/comisiones/atribución al cambiar vacante y entre agencias; alcance de borrar chat; significado de migrar WhatsApp y acceso de terceros; propiedad negocio/planta/agencia y archivos compartidos; dos pases exactos o varios; direcciones y estado de catálogo global/local; ID legible y reimportación sin ID; significado de cupo; reglas de referido; horarios/disparadores/plantillas; trámite IMSS/RFC y canal editorial. No tomar el documento como autorización de cambios de seguridad o datos. IA se contempla posteriormente, sin funciones ratificadas ni agente diseñado: evaluar futuras integraciones bajo autorización, auditoría y aislamiento multiagencia.
+
+## Consolidación DF-PO-001…005, DA-PO-001 y recuperación de dos vías, 2026-11-06
+
+Fuente/autoridad: PO, mandato «Consolidación documental de decisiones del PO». Registro funcional/arquitectónico RATIFICADO POR EL PO, no resultado técnico ni autorización de implementación. Base master/580ef81828e56cf2ac2f57074be9c4303bd61adc y cambios pendientes conservados íntegros. A/B/C/D no se modifican. Esta sección sucede solo a los pendientes funcionales que resuelve; inventario y textos anteriores permanecen como historia, no decisiones vigentes contradictorias. Detalles no ratificados continúan pendientes.
+
+### DF-PO-001 — Cambio de vacante — RATIFICADA POR EL PO
+
+El candidato conserva identidad y expediente. Interés en otra vacante crea NUEVA POSTULACIÓN, sin eliminar la anterior ni exigir nuevo registro. Se preservan postulaciones, estados, chats e historial. No trasladar automáticamente comisiones ni referidos entre postulaciones. Reglas de cierre, simultaneidad, atribución y comisiones pendientes de diseño/decisión posterior. Resuelve traslado frente a nueva postulación de MF-PO-026; no autoriza consultar expediente ajeno o cruzar agencias por identidad compartida.
+
+### DF-PO-002 — Archivado de chats — RATIFICADA POR EL PO
+
+El reclutador puede archivar u ocultar conversación sin eliminar mensajes. Historial protegido, trazabilidad y relaciones candidato/postulación/agencia se conservan. Archivar no elimina postulaciones ni modifica comisiones. Retención, consulta histórica y restauración pendientes de diseño. Precisa MF-PO-018: la petición de borrar queda resuelta como archivo/ocultamiento, sin borrado físico aprobado.
+
+### DF-PO-003 — Propiedad jerárquica de documentos — RATIFICADA POR EL PO
+
+Cada documento se vincula a la entidad correspondiente: agencia, empresa, planta/sede, ruta o vacante, dentro del ámbito autorizado. Reutilizar entre entidades exige relaciones explícitas y autorización. Propiedad no concede consulta/descarga universal; definir acceso por agencia, empresa, recurso, rol y tipo documental, preservando aislamiento multiagencia. Relación con MF-PO-003/006/015/024/025/030 y catálogo 001/004/005/027. No aprobar por esta decisión jerárquica herencia automática de permisos, cardinalidad de pases ni publicación de PDF.
+
+### DF-PO-004 — Cupo agotado — RATIFICADA POR EL PO
+
+Cupo DISPONIBLE cero pausa automáticamente recepción de nuevas postulaciones, conservando identidad de vacante, postulaciones, chats e historial. Usuario autorizado puede aumentar cupo y reactivar. Prevenir sobreasignación por concurrencia. Semántica de cupo, estados, reactivación, importaciones e idempotencia pendientes. No toda pausa se debe a cupo: aumento de cupo no autoriza ignorar otras causas de suspensión. Relaciona MF-PO-029 y 026/028, sin aprobar algoritmo de conteo ni asignar cada etapa a una reserva.
+
+### DF-PO-005 — WhatsApp — INVESTIGACIÓN RATIFICADA, IMPLEMENTACIÓN NO APROBADA
+
+Se aprueba investigar viabilidad de transferir conversaciones completas TCE hacia WhatsApp. Investigación FUTURA de APIs oficiales, limitaciones, privacidad, consentimiento, costos, conservación de historial y alternativas. Abrir WhatsApp no implica importar mensajes previos. Relación MF-PO-012 y etiqueta 023: etiqueta no otorga consentimiento. Este mandato registra alcance, no ejecuta investigación externa ni implementa transferencia.
+
+### DA-PO-001 — Agente Reclutador IA — VISIÓN RATIFICADA POR EL PO
+
+Modelo de GESTIÓN OPERATIVA SUPERVISADA: IA como primer punto de atención y principal operador de actividades rutinarias; reclutador humano conserva autoridad, supervisión e intervención. Cada agencia tiene contexto operativo IA aislado bajo políticas/capacidades administradas centralmente por TCE. No equivale a un usuario humano ni hereda automáticamente permisos.
+
+Capacidades OBJETIVO, PENDIENTES DE IMPLEMENTACIÓN Y VALIDACIÓN, ninguna habilitada por este registro:
+- Atención inicial 24/7 sujeta a disponibilidad técnica.
+- Respuestas sobre vacantes, requisitos, ubicaciones y procedimientos usando fuentes autorizadas.
+- Recopilación de información y entrevistas iniciales.
+- Preselección asistida con criterios legítimos, verificables y auditables.
+- Seguimiento y recordatorios permitidos.
+- Actualización de etapas operativas autorizadas del Pipeline.
+- Identificación y escalamiento de excepciones.
+- Notificación al reclutador cuando se requiera intervención.
+- Asistencia en coordinación de entrevistas sujeta a reglas y autorizaciones.
+
+Control humano obligatorio: reclutador autorizado toma control del chat en cualquier momento; durante ese control IA NO envía respuestas automáticas. Puede devolver conversación a IA; transferencia conserva historial y contexto autorizado. Registrar controlador y ejecutor de cada acción. Diseñar exclusión de respuestas simultáneas y acciones duplicadas; mecanismo de estados/versionado/consumo todavía PROPUESTA TÉCNICA, no implementación aprobada.
+
+Límites: IA no se otorga permisos, modifica políticas de seguridad, recupera credenciales por cuenta propia, accede a agencias ajenas, ejecuta administración privilegiada, decide definitivamente contratación/rechazo sin intervención humana, inventa condiciones laborales ni promete contrataciones. Acciones con efectos en postulaciones/cupos/estados/comunicaciones pasan por contratos y operaciones autorizadas de servidor con validación/auditoría. Credencial privilegiada Supabase no sustituye autorización de negocio.
+
+Preselección responsable: criterios ligados a requisitos legítimos de vacante; no características sensibles ni inferencias discriminatorias para excluir. Ambigüedad o impacto significativo escalan a humano. Mantener explicaciones verificables y mecanismos de corrección.
+
+Considerar en REC-F2-002: identidad/autorización de agentes, aislamiento por agencia, estados/responsables de conversación, transferencia IA/humano, historial/auditoría de acciones, tareas/notificaciones, operaciones autorizadas Pipeline, idempotencia/concurrencia, protección de datos, límites operativos/fallos/supervisión. No construir agente, seleccionar proveedor, contratar servicio ni ratificar tecnología concreta. Consideración arquitectónica no crea nueva fase ni habilita ejecución del backlog IA.
+
+### Recuperación de cuentas — modelo de dos vías consolidado
+
+Decisión PO registrada: vía ordinaria mediante factor previamente verificado y controlado por titular; vía excepcional por revisión central TCE y verificación independiente cuando factor ordinario no esté disponible. FACTORES CONCRETOS, AUTORIDADES, PLAZOS, CANALES Y PROCEDIMIENTOS TÉCNICOS PENDIENTES DE APROBACIÓN. Complementa B sin apropiación unilateral del coordinador; la política candidata previa no constituye aprobación de Maestro/delegado o evidencia particular. No activar recuperación hasta definir/validar esos detalles. Tampoco IA puede recuperar credenciales por cuenta propia.
+
+### Sucesión documental, invariantes y aceptación futura
+
+DF-PO-001/002/003/004 resuelven dirección funcional de MF-PO-026/018/documentos/029; detalles y prioridades restantes del inventario no quedan aprobados en bloque. DA-PO-001 sucede a «IA solo intención futura, sin funciones ratificadas» únicamente como visión/capacidades objetivo ratificadas: sigue sin agente habilitado ni permiso operativo. MF-PO-007…011 son consumidores del control conversacional futuro, no automatismos aprobados individualmente por inferencia. MF-PO-016/020/028 requieren conservar atribución e IDs sin transferencia comercial automática. MF-PO-002/013/014/017/019/021/022/023 y detalles no resueltos conservan estado previo; el inventario MF-PO-001…030 y prioridades permanecen íntegros.
+
+Compatibilidad A/B/C/D: reclutador humano mantiene identidad técnica Auth; agente requiere identidad/capacidad propia futura, sin heredar sesión humana. B y recuperación dos vías preservan verificación independiente. C rige cada efecto por rol/agencia/recurso/membresía/permisos actuales; D conserva coordinador multiagencia sin administración global. La facultad futura limitada de autorizar membresías de D no se transfiere al Agente Reclutador de DA: este no ejecuta administración privilegiada. Maestro/Limitado, TCE-004, candidato sin registro y privados por recurso permanecen intactos.
+
+Aceptación propuesta, NO EJECUTADA: nueva postulación conserva original/estados/chats y no mueve referido/comisión; archivar conserva mensajes/relaciones y admite consulta/restauración solo con reglas aprobadas; reutilización documental exige vínculo y acceso explícitos, propiedad sola no abre descarga; cupo concurrente no sobreasigna y no reanuda pausa de otra causa; humano toma control y bloquea envíos IA incluso en carreras/reintentos, con actor/versión auditables; agencia ajena, facultad revocada, sesión humana reutilizada por agente, fuente no autorizada y decisión discriminatoria no producen efectos; fallos escalan sin promesa de disponibilidad absoluta. Recuperación ordinaria/excepcional deben acreditar titularidad según política aprobada; WhatsApp exige evidencia de viabilidad, nunca presumir importación.
+
+REC-F2-001/002 EN_CURSO diseño; implementación PENDIENTE, validación PENDIENTE, pruebas NO EJECUTADAS. No cierre técnico ni modificación de las 17 fichas/siete tareas/nueve experimentos. Requisitos ratificados no equivalen a diseño físico aprobado o autorización de agentes/servicios.

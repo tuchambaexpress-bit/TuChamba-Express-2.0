@@ -1058,3 +1058,50 @@ Dependencias conservadas: REC-F2-001 contrato técnico; REC-F2-002 modelo físic
 Riesgos técnicos aún abiertos: mapeo/custodia/anti-enumeración y ciclo de identidad técnica; recuperación independiente y revocación de sesiones; transición de coordinadores.agencia_id a membresías sin duplicados/pérdida de historial; autorización central y aceptación verificables, idempotencia/consumo y concurrencia; facultades administrativas expresas; aislamiento servidor/BD/RLS/Realtime/Storage y cachés. Auditoría, revocación y delegación futura sin mecanismo técnico validado; ningún agente habilitado ni permiso concreto de IA otorgado por la ratificación funcional. Operaciones excepcionales/alto riesgo requieren autorización humana.
 
 No se aporta prueba técnica nueva ni se cierra ningún hallazgo: 17 fichas/matriz y siete tareas preservadas; nueve experimentos originales NO EJECUTADOS; REC-F2-001/002 EN_CURSO diseño y REC-F2-006/007 PENDIENTES. F1 CERRADA DOCUMENTALMENTE CON CONDICIONES; TCE-004 EN_VALIDACION; REC-F2-004 mantiene bloqueos reales. PLAN consolida secuencia y TASKS fija próxima tarea y único commit documental autorizado. Las notas previas SIN_COMMIT/propuesta pendiente siguen históricas; este mandato autoriza solo el checkpoint local de cuatro documentos, sin omitir hooks ni hacer push, seguido de informe y detención.
+
+## REC-F2-001 — riesgos del contrato técnico propuesto, 2026-11-06
+
+Mandato «Implement the plan», base 580ef81828e56cf2ac2f57074be9c4303bd61adc. A/B/C/D aprobadas intactas; contrato SPEC y secuencia PLAN son propuestas, no evidencia de corrección. TASKS conserva continuidad y bloqueos.
+
+TCE-007/005: login/mapeo estable, protección contra enumeración e identidad nativa editable por vías Auth directas pendientes de validar. SSR/navegador conserva compatibilidad pero no invisibilidad de tokens/identificadores. TCE-008/001/006: acceso privado por recurso y Storage pendiente; no cuenta obligatoria candidata. TCE-009/012/013: agencia derivada, separación global/local y membresías vigentes, sin autoridad por localStorage. TCE-014 y patrones TCE-010/011: consumo/idempotencia, fallos Auth–BD y revocación concurrente. TCE-002/003/015/016: alcance en proyecciones, listados/joins/conteos y canales directos; TCE-004 intacto pendiente integración; TCE-017 sin nueva revisión.
+
+Recuperación central es política candidata NO APROBADA: titularidad/canal/autoridad/revocación no decididos impiden habilitarla. Namespace legítimo/provisión de identidad técnica, mapeo privado, cuotas/sesiones, transición de coordinadores y RLS efectiva siguen abiertos. No sustituir validación de backend por soporte de SDK ni prometer revocación retroactiva. IA solo capacidad futura sin agente diseñado/implementado.
+
+17 fichas/matriz, siete tareas y nueve experimentos originales preservados; experimentos NO EJECUTADOS y hallazgos ABIERTOS, TCE-004 EN_VALIDACION. TCE-003/012 conservan discrepancias históricas. REC-F2-001/002 EN_CURSO diseño, REC-F2-006/007 PENDIENTES. Ningún servicio, credencial o dato real utilizado; solo documentos, SIN_COMMIT.
+
+
+## Evidencia acotada del inventario funcional PO, 2026-11-06
+
+Fuente original DOCX y 30 referencias MF-PO en SPEC; matriz de impacto/dependencias en PLAN. Estos IDs no son nuevas fichas TCE ni defectos confirmados. Requisitos recibidos pendientes de validación PO; análisis estático sobre 580ef81828e56cf2ac2f57074be9c4303bd61adc, sin probar producción.
+
+Hechos concretos: detalle reclutador consulta catálogo por relaciones vacante (app/reclutador/detalle/[id]/page.tsx:78–91) y renderiza puntos/rutas/proceso:413–491; paradas se muestran como strings:422–429, no objetos con Maps por parada. Pase tiene un enlace con download:472–486 y API mantiene campo escalar pase_visita_imagen_url, path negocioId/pase con upsert (app/api/pase-visita/route.ts:35–55). Esto respalda cobertura parcial y cambio de cardinalidad propuesto, no prueba errores de Storage real.
+
+api/documentos-negocio/route.ts:28–47 particiona path y registro por negocioId; VacanteModal.tsx:316–345 pasa negocio/ID. El reporte PO de archivo visible en todas las empresas NO queda confirmado como defecto reproducido: hipótesis de asociación/renderizado/negocio compartido/política requiere prueba sintética. Mantener TCE-006 como autorización pendiente; no afirmar aislamiento real por path.
+
+Portal candidato renderiza enlaces archivo_url (components/candidato/VacanteDetalle.tsx:236–242), hecho contrario a la restricción funcional recibida MF-PO-030 si se ratifica. No prueba descarga efectiva ni bucket público; retirar UI sola no garantiza privacidad. api/importar-vacantes/route.ts:305–335 busca por ID en agencia o título+negocio+agencia y actualiza/inserta: con título nuevo y sin coincidencia puede crear otro ID; no defecto universal confirmado al renombrar con ID. Validar contrato antes de cambiar claves.
+
+Hay lógica de pausa en VacanteModal.tsx:484–487 y KanbanCard.tsx:667–703 (llamadas:740/768); no demuestra concurrencia ni cobertura de todas las escrituras. VacantesPortal.tsx:99 observa ref en query y enlaces:186–192 van a inicio sin ref; no basta para concluir pérdida de atribución si existe persistencia en otro nivel. ChatWindow.tsx:31–35 menciona precargado 7.58: no marcar plantillas ausentes. SAT ID/NSS ya tienen enlaces en VacantesPortal:309–323, pero no prueban trámites específicos solicitados ni vigencia externa.
+
+Compatibilidad/riesgos: TCE-007/008/009/012/013 identidad, candidato compartido/atribución y aislamiento; TCE-001/006/015 documentos y publicación; TCE-002/016 importación/IDs/listados; TCE-010/011/014 transacciones/historial/concurrencia; TCE-004 se preserva; TCE-003/012 discrepancias históricas y TCE-017 sin cambio. No convertir hipótesis en cierre o nueva auditoría. IA solo intención futura, sin funciones aprobadas ni agente operativo.
+
+17 fichas/matriz, siete tareas y nueve experimentos originales conservados NO EJECUTADOS. REC-F2-001/002 EN_CURSO diseño; tareas/hallazgos sin cierre. Solo cuatro documentos con contenido anterior intacto, SIN_COMMIT; sin datos reales, credenciales, servicios o cambios producto.
+
+## Consolidación DF/DA — decisiones, riesgos y evidencia pendiente, 2026-11-06
+
+Fuente: ratificación PO del mandato «Consolidación documental de decisiones del PO». Texto normativo en SPEC y matriz MF/REC-F2/secuencia en PLAN; seguimiento TASKS. DF-PO-001…005 y DA-PO-001 no son hallazgos técnicos nuevos ni pruebas de implementación. Recuperación dos vías registrada sin factores/autoridades/plazos/canales aprobados.
+
+| Decisión | Riesgos y trazabilidad existentes |
+|---|---|
+| DF-PO-001 | MF-PO-026/011/016/028; TCE-008/009/010/011/012/013: nueva postulación no debe destruir historia ni reasignar comisión/referido. Identidad compartida no abre expediente entre agencias |
+| DF-PO-002 | MF-PO-018 y chats; TCE-008/011/013: confundir archivo con borrado o acceso histórico universal. Retención/restauración todavía pendientes |
+| DF-PO-003 | MF-PO-003/006/015/024/025/030; TCE-001/006/015: propiedad jerárquica no acredita autorización de descarga. Reporte de archivo visible en empresas ajenas sigue hipótesis no reproducida; cardinalidad/relaciones/Storage no verificados |
+| DF-PO-004 | MF-PO-029/026/028; TCE-010/011: sobreasignación concurrente, contadores no atómicos, reimportación/reactivación que ignore otra causa de pausa. Lógica cliente previa no prueba garantías efectivas |
+| DF-PO-005 | MF-PO-012/023: API oficial/viabilidad de historial, consentimiento, costos y privacidad no investigados aquí. Abrir WhatsApp no demuestra importación, implementación no aprobada |
+| DA-PO-001 | MF-PO-007…011/018/026/029; TCE-005/007/008/009/012/013 y superficies 001/002/003/006: identidad agente sin herencia de permisos humanos, carreras IA/humano, duplicados, fuga entre agencias, fuentes falsas, discriminación e indisponibilidad. Necesidades de diseño, no defectos nuevos comprobados |
+| Recuperación dos vías | TCE-005/007/012 y contrato REC-F2-001: factor no verificado/titularidad dudosa y apropiación global; vía excepcional no permite saltar verificación. Política candidata previa no ratifica actor/factor específico |
+
+Compatibilidad: A autentica humano con Auth; agente requiere autorización propia futura. B sigue independiente; C valida cada operación/recurso/agencia/permisos y D no da administración global al coordinador. DA no otorga al Agente Reclutador facultades administrativas de D ni recuperación autónoma. Candidato sin registro, Maestro/Limitado y TCE-004 intactos. No contradicción funcional vigente: nuevas decisiones precisan pendientes; textos anteriores son antecedentes explícitamente sucedidos en su alcance. Gobernanzas no se ratifican ni modifican por incorporar decisiones puntuales.
+
+Propuesta técnica pendiente: estados/responsables de conversación, exclusión/versionado de control y acciones idempotentes/auditables, protección de datos y límites/fallos/supervisión. Criterios legítimos y explicables, sin características sensibles/inferencias discriminatorias; ambigüedad/impacto significativo exige humano y corrección. Ningún proveedor/tecnología elegido, agente construido ni capacidad habilitada. No prometer 24/7 absoluto.
+
+No nueva lectura de datos o código ni evidencia remota: hechos estáticos del inventario permanecen con sus límites, hipótesis no se convierten en defectos confirmados. 17 fichas/matriz intactas, siete tareas F2 y nueve experimentos NO EJECUTADOS; 30 MF conservadas. REC-F2-001/002 EN_CURSO diseño, todos los hallazgos abiertos; no cierres por ratificación. Sin commit; solo cuatro documentos, entregar y detenerse.
