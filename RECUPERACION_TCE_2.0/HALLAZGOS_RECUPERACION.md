@@ -1119,3 +1119,19 @@ DA-PO-001 y DC-PO-003 compatibles: IA detecta seguimiento pendiente, alerta/recu
 Cuestión abierta explícita: DF-PO-004 pausa nuevas postulaciones al agotarse disponible; DC reserva al agendar/confirmar cita válida. Reglas de admisión/lista de espera, citas excepcionales y reactivación requieren precisión PO. No se sustituye DF ni se resuelve por apertura automática, liberación temporal o prohibición inventada. Ajustes de capacidad y reversión/liberación poscontratación siguen sin política aprobada. Esta incertidumbre bloquea habilitación del flujo afectado, no el registro de lo ratificado.
 
 Prioridad vigente: corrección de hallazgos, validación técnica/seguridad con evidencia y después mejoras autorizadas; no anticipar agentes/funciones por dependencia no autorizada. 17 fichas/matriz, siete tareas F2, nueve experimentos NO EJECUTADOS y 30 MF intactos. REC-F2-001/002 EN_CURSO diseño, hallazgos abiertos y TCE-004 EN_VALIDACION; discrepancias TCE-003/012 sin cambio. Sin commit ni cambios producto; solo cuatro documentos y revisión PO pendiente.
+
+## REC-F2-001 — trazabilidad y riesgos de cinco P0 ratificadas, 2026-11-06
+
+Fuente: PO, mandato «Consolidación documental de cinco decisiones P0». Reglas funcionales APROBADAS, texto en SPEC y avance PLAN/TASKS. No nueva auditoría, evidencia técnica o prueba; no declaraciones de funcionamiento en LAB/producción.
+
+| Decisión del mandato | Trazabilidad existente | Riesgo técnico aún abierto |
+|---|---|---|
+| P0 1 — ordinaria por canal verificado o códigos de un uso | CT-01, PO-F2-001-A/B; TCE-005/007/012 | Enrolamiento inseguro, sustitución de canal y doble consumo; mecanismo/rotación/antiabuso no validados |
+| P0 2 — excepcional independiente proporcional al riesgo | CT-01, B y recuperación dos vías; TCE-007/012 | Identificación de cuentas privilegiadas/alto riesgo, aprobadores y pruebas; dos eventos de un actor no equivalen a dos aprobaciones independientes |
+| P0 3 — revocación global al completar recuperación | CT-01/02, C; TCE-004/005/007/012/013 | JWT/refresh antiguo, caché/canales directos y fallo Auth–BD; invalidar renovación sola no acredita rechazo efectivo de nuevas operaciones |
+| P0 4 — base por rol más delegaciones específicas | CT-02, C/D; TCE-001/002/003/004/005/006/009/012/013 | Autoasignación, alcance/vigencia ignorados, facultad revocada y privilegio de servicio; matriz/RLS/grants aún no contrastados |
+| P0 5 — heredadas ambiguas, asistencia y verificación independiente | CT-01/02, A/B/D; TCE-005/007/012 | Fusión por correo/teléfono/código, duplicación de identidad o acceso antes de verificación; preservar IDs/historial sin dar poder global al coordinador |
+
+Los pendientes funcionales previos se consideran resueltos solo en estas direcciones; antecedentes siguen históricos sin borrar reservas ni evidencia. A/B/C/D compatibles: suspensión local no equivale a recuperación global, que requiere reautenticación sin borrar membresías; matriz/delegaciones no da gestión administrativa a Limitado ni permisos implícitos a agentes DA. DF/DC, cupos, supervisión humana y prioridad de reparación no se alteran. No contradicción sustantiva detectada; autoridades/evidencias/canales/plazos exactos y mecanismos siguen pendientes donde no ratificados.
+
+Cierre documental CT-01/CT-02 NO otorgado; REC-F2-001/002 EN_CURSO diseño. Implementación/validación separadas y pendientes. 17 fichas/matriz y estados intactos (TCE-004 EN_VALIDACION), discrepancias TCE-003/012 conservadas, siete tareas y nueve experimentos NO EJECUTADOS, 30 MF sin cambios. Solo documentos y controles de integridad, SIN_COMMIT; no producto, servicios, datos reales ni credenciales.

@@ -672,3 +672,51 @@ DF-PO-004 sigue identificada y vigente: disponible cero pausa automáticamente r
 Siguen abiertos: lista de espera; plazos exactos de alertas/escalamiento; reaplicación/simultaneidad entre vacantes; excepciones de citas sin reserva; ajustes de capacidad, incluidas reducciones frente a compromisos existentes; política de reactivación tras agotamiento; otras liberaciones/reversiones posteriores a contratar. Definición operativa de cita válida/confirmación y relación con etapas/historial deberá concretarse sin cambiar estas reglas ratificadas. Comisiones/referidos no se trasladan automáticamente (DF-PO-001) ni se equiparan a reserva.
 
 Orden expreso: (1) recuperar/corregir hallazgos de auditoría, (2) validar técnica y seguridad con evidencia, (3) implementar después mejoras según dependencias y autorización PO. Dependencias técnicas excepcionales requieren autorización expresa; documentación anticipada no la concede. DC y DA no adelantan construcción de funcionalidades/agentes. REC-F2-001/002 siguen EN_CURSO diseño, sin cierre; 17 hallazgos abiertos, nueve experimentos NO EJECUTADOS y 30 MF conservados.
+
+## REC-F2-001 — cinco decisiones P0 ratificadas para CT-01/CT-02, 2026-11-06
+
+Fuente/autoridad: Product Owner, mandato «Consolidación documental de cinco decisiones P0». Base master/8eb9ca9b4d0615cf887c683239b38162f5893925, inicio limpio y staging vacío. APROBACIÓN FUNCIONAL expresa de las cinco reglas siguientes; no cierre documental de CT-01/CT-02, no implementación ni validación técnica. Numeración 1–5 corresponde al mandato, sin nuevas tareas ni duplicación de A/B/C/D.
+
+### P0 (1) — Recuperación ordinaria — RATIFICADA POR EL PO
+
+Canal previamente verificado o códigos de recuperación de un solo uso, mediante enrolamiento seguro. No exigir correo personal por inferencia; conocer código/contacto no equivale a controlar factor verificado. La decisión admite esas alternativas, sin imponer simultáneamente ambas ni aprobar proveedor, canal específico o algoritmo. Diseño de enrolamiento, sustitución/invalidez de factores, entrega, custodia, caducidad e intentos pendiente de especificación/validación.
+
+### P0 (2) — Recuperación excepcional proporcional al riesgo — RATIFICADA POR EL PO
+
+Revisión central independiente para cuentas ordinarias; DOS APROBACIONES INDEPENDIENTES para cuentas privilegiadas o situaciones de alto riesgo. El coordinador no adquiere recuperación global unilateral. Dos acciones del mismo aprobador no son dos aprobaciones independientes. Clasificación de riesgo, personas/facultades concretas, evidencias aceptables, conflictos de interés, plazos y procedimiento todavía pendientes; no declarar aprobado un mecanismo particular o una designación automática de Maestro/delegado.
+
+### P0 (3) — Revocación global tras recuperación — RATIFICADA POR EL PO
+
+Toda recuperación de credenciales completada revoca las sesiones anteriores y exige nueva autenticación. La autorización de nuevas operaciones no depende exclusivamente de esperar expiración del JWT. No exceptuar sesiones antiguas por tratarse de vía ordinaria, agencia distinta o JWT todavía firmado/vigente.
+
+Diseño técnico propuesto: separar invalidez de renovación, vigencia autoritativa de sesión/credenciales y autorización de negocio; comprobar revocación antes de nuevas operaciones en servidor/BD y canales directos pertinentes. La recuperación no debe declararse completada mientras una falla de revocación deje acceso previo habilitado. Tratamiento de fallos Auth–BD/reintentos, canales Realtime/Storage/cachés y operaciones en curso requiere diseño y pruebas; no prometer invalidación criptográfica instantánea del JWT ni retirada de información ya entregada. Mecanismo físico no aprobado.
+
+### P0 (4) — Permisos administrativos — RATIFICADA POR EL PO
+
+Matriz base por rol más delegaciones específicas, delimitadas por operación, ámbito y vigencia. Prohibidas autoconcesión y elevación de privilegios; delegaciones revocables y auditables. No convertir esta regla en facultad de conceder permisos a cualquier administrador ni en permiso de subdelegación implícito. Maestro/Limitado conservan su contrato: Limitado no gestiona administradores por recibir una delegación operativa. Reglas para concedentes, catálogo concreto, revocación de dependientes y revisión de conflictos pendientes de diseño/aprobación específica.
+
+### P0 (5) — Cuentas heredadas ambiguas — RATIFICADA POR EL PO
+
+Enrolamiento asistido por coordinador con verificación INDEPENDIENTE de titularidad antes de activar o vincular. Sin fusión automática ni apropiación por conocimiento de código/contacto; preservar identificadores e historial. Asistencia del coordinador no sustituye prueba independiente ni autoriza crear segunda identidad para eludir ambigüedad. Evidencias, responsable independiente, reconciliación y ciclo técnico de migración pendientes. No se inspeccionan registros reales ni se ejecuta enrolamiento ahora.
+
+### Sucesión de pendientes, invariantes y aceptación futura
+
+Esta sección precisa CT-01/CT-02 y sucede únicamente a los pendientes funcionales de elección de factor ordinario, número de aprobaciones excepcionales, revocación global al recuperar, estructura de permisos y tratamiento de cuentas ambiguas. Se conservan como antecedentes las secciones «contrato técnico propuesto», «recuperación de cuentas — modelo de dos vías» y notas de políticas aún no aprobadas; ya no implican que estas cinco direcciones funcionales sigan sin ratificar. Autoridades concretas/factores elegidos/plazos/mecanismos no definidos permanecen pendientes, sin ratificación en bloque del análisis conversacional.
+
+Compatibilidad A/B/C/D: acceso humano código+contraseña mediante identidad técnica Auth intacto; recuperación independiente B se concreta sin control global del coordinador; C exige permisos vigentes incluso con sesión previa; D mantiene autorización central/aceptación/membresías independientes. Revocación global por recuperación no elimina membresías: se exige nueva autenticación para volver a usarlas si siguen vigentes. Suspender una membresía fuera de recuperación sigue sin suspender automáticamente otras. DA no autoriza agentes a recuperar credenciales o autodelegarse; DF y DC sobre postulaciones/documentos/cupos no se alteran.
+
+Invariantes técnicos propuestos para revisión: vínculo estable y único; factor no verificado no restablece; consumo único concurrente; decisión excepcional de alto riesgo exige dos aprobadores distintos autorizados; permiso fuera de operación/ámbito/vigencia o revocado no autoriza; vínculo ambiguo no activo antes de verificación; revocación y escritura ordenadas sobre autoridad vigente; auditoría sin secretos/evidencia personal innecesaria. No seleccionar tabla, índice, RPC, hash o proveedor por esta ratificación.
+
+| Contraejemplo futuro | Criterio propuesto de aceptación, NO EJECUTADO |
+|---|---|
+| Canal no enrolado/verificado, código de recuperación repetido o consumo simultáneo | Ningún acceso indebido; máximo un efecto; respuesta pública no enumera identidad |
+| Cuenta privilegiada/alto riesgo con una aprobación, dos del mismo actor o facultad caducada | No restablecimiento; falta de independencia no se subsana contando eventos |
+| Recuperación completada seguida de JWT/refresh anterior | Sesión anterior no autoriza nuevas operaciones; nueva autenticación requerida, sin conservar excepciones entre agencias |
+| Caída entre cambio de credencial y revocación, reintento del comando | No éxito falso ni acceso previo habilitado como recuperación completada; reconciliación/idempotencia pendientes de diseño |
+| Autodelegación, rol elevado, ámbito/operación ajenos, permiso vencido/revocado | Denegar sin efecto; registro auditable y permisos base Maestro/Limitado preservados |
+| Coordinador conoce código/contacto de cuenta ambigua y pide vincular/activar | No activación sin verificación independiente; IDs/historial preservados, sin fusión automática |
+| Agencia A suspendida frente a recuperación global | Distinguir los eventos: suspensión local preserva B; recuperación exige reautenticación global sin borrar A/B |
+
+Pendientes de ingeniería: contrato de enrolamiento/recuperación/sesión, clasificación operativa de riesgo y autoridades/evidencias concretas, plazos/canales seleccionados, matriz detallada y concesión/revocación, migración/reconciliación, antiabuso y autorización servidor/BD/RLS. No trasladar decisiones de índices/bloqueos/almacenamiento al PO salvo impacto funcional/riesgo. Cierre documental de contratos necesita diseño completo, revisión y aceptación aparte; implementación/validación necesitan autorización y evidencia posteriores.
+
+Prioridad: corregir hallazgos → validar con evidencia → implementar después mejoras autorizadas. CT-01, CT-02 y REC-F2-001 NO CERRADOS; REC-F2-001/002 EN_CURSO solo diseño. 17 hallazgos abiertos, siete tareas F2 y nueve experimentos NO EJECUTADOS; inventario 30 MF preservado. Ninguna capacidad habilitada por esta actualización.

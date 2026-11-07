@@ -535,3 +535,21 @@ Secuencia documental/técnica propuesta: REC-F2-001 resolver con PO interacción
 Antes de cualquier implementación: delimitar qué corrige hallazgos versus qué es mejora; obtener autorización concreta y revisión de impacto/reversión. REC-F2-004 mantiene bloqueo de conexiones/arranque; validación futura en LAB sintético requiere permiso específico. REC-F2-006 comprobará primero TCE-004 existente y luego incrementos autorizados; REC-F2-007 cubrirá claridad de estados, pendientes y accesibilidad. Casos de SPEC desarrollan protocolo de nueve experimentos sin ejecutarlo ni duplicarlo. No crear agente IA, motor de alertas, SQL o servidor.
 
 La fórmula es criterio técnico propuesto, no decisión sobre reservas físicas por plaza. Diseño debe tratar atomicidad de resultado nuclear/historial, reintentos, carrera contratación-descarte y confirmación última plaza; entrega de alerta es efecto separado que nunca mueve cupo. No inferir liberación por timeout. Diseño de importación/capacidad/reactivación queda bloqueado en sus políticas pendientes, sin impedir revisión documental de lo ya ratificado.
+
+## REC-F2-001 — dependencias y avance tras cinco decisiones P0, 2026-11-06
+
+Reglas completas en SPEC «cinco decisiones P0 ratificadas para CT-01/CT-02»; no repetirlas como propuestas sin aprobación. P0 1–5 son referencias locales al mandato PO, no nuevas tareas o hallazgos. A/B/C/D, DF/DA/DC y pendientes no resueltos conservan vigencia.
+
+| Política ratificada | Dependencia de diseño e impacto REC-F2-002 | Condición de avance pendiente |
+|---|---|---|
+| Ordinaria: canal verificado o códigos de un uso/enrolamiento seguro | Vínculos/factores/autorización limitada y consumo único, sin contraseña propia | Especificar canal/enrolamiento/custodia/rotación y validación, sin proveedor elegido |
+| Excepcional según riesgo y dos aprobaciones para privilegiadas/alto riesgo | Estados de aprobación, identidad/facultad vigente e independencia de actores | Definir clasificación/evidencia/autoridades y procedimiento, sin delegación administrativa inventada |
+| Revocación global y nueva autenticación | Vigencia autoritativa de sesiones/credenciales, permisos actuales y canales directos | Diseñar consistencia Auth–BD, fallos y revocación efectiva sin esperar solo JWT |
+| Matriz base y delegaciones delimitadas | Roles/concesiones/ámbito/vigencia y auditoría; RLS/funciones seguras | Completar catálogo/concedentes/revocación sin autoconcesión, escalamiento ni subdelegación tácita |
+| Enrolamiento heredado asistido con verificación independiente | Estados de reconciliación y vínculo estable, IDs/historial conservados | Especificar prueba/actor independiente y resolver ambigüedad antes de activar |
+
+Secuencia propuesta: completar CT-01 en REC-F2-001 con flujos ordinario/excepcional, enrolamiento y revocación; completar CT-02 con matriz y ciclo de delegaciones/membresías; presentar mecanismos y pendientes concretos para revisión sin reabrir reglas ratificadas. Distinguir cierre documental de contrato (aún NO otorgado) de aceptación REC-F2-001, implementación y validación real. REC-F2-002 no inicia automáticamente: preparar transición solo con contratos revisados, trazabilidad y autorización de alcance.
+
+Validación futura REC-F2-005/006/007: casos de SPEC, roles legítimos positivos y negativos, sujeto ambiguo, doble consumo/aprobación/revocación concurrente, tokens previos y acceso directo a BD/Realtime/Storage. Integración primero TCE-004 existente cuando se autorice entorno; nueve experimentos originales siguen NO EJECUTADOS. REC-F2-004 mantiene conexión/arranque bloqueados; no código/SQL/migraciones/servicios/pruebas ahora.
+
+Mantener orden vigente de reparación de auditoría → evidencia técnica/seguridad → mejoras posteriores autorizadas. Las políticas P0 no autorizan funciones nuevas, agentes IA ni operación productiva. Pendientes de reservas/cupos/lista de espera/retención/atribución no se consideran resueltos por CT-01/02.
