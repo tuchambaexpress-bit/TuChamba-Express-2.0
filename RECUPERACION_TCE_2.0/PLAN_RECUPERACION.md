@@ -565,3 +565,53 @@ REC-F2-002 recibirá después contratos revisados, matriz y estados: factores/co
 Condiciones de cierre documental CT-01/02, TODAVÍA NO satisfechas: mecanismos y pendientes concretos especificados, matriz/estados/errores trazados a las seis políticas y P0, revisión independiente y aceptación expresa sobre versión identificable. Implementación y validación real son posteriores y separadas; no cerrar REC-F2-001/002. Validación futura REC-F2-005/006/007 deberá cubrir evidencia insuficiente, cuenta ordinaria de alto riesgo, independencia de aprobadores, consumo concurrente, sesiones revocadas, delegaciones ajenas y consulta histórica negada/permitida con auditoría. Nueve experimentos originales siguen NO EJECUTADOS; integración primero TCE-004 existente cuando se autorice.
 
 Mantener REC-F2-004 red/arranque bloqueados, retención/Storage vinculados a REC-F2-003 y facultades IA propias según DA sin construcción. Correcciones de hallazgos anteceden validación con evidencia y mejoras autorizadas. DF/DC y sus pendientes (cupos/lista de espera/atribución) intactos; este registro no habilita implementación.
+
+## REC-F2-001 — consolidación R1, I-11 ratificada y puertas pendientes, 2026-11-07
+
+Mandato PO «AUTORIZACIÓN PO: Consolidación documental CT-01/CT-02 R1», base master/5e0cb789927d6b5ab8892b33cfce38f6cdfd75da: escritura autorizada exclusivamente en cuatro documentos. Fuente única de políticas/contratos/matrices: SPEC_RECUPERACION.md, sección «REC-F2-001 — consolidación documental CT-01/CT-02 R1 e I-11 ratificada, 2026-11-07». H01–H12/riesgos en HALLAZGOS; trabajo realizado/continuidad en TASKS. No duplicar contratos o P01–P40 aquí.
+
+RATIFICADOS: A/B/C/D, cinco P0, seis políticas, separación central/agencia e I-11. Ya no pedir decisión conceptual de separación ni aprobación funcional de suspensión/restauración global. Mecanismos R1 incorporados como propuesta, revisión/aceptación y validación pendientes. P35 exige evidencia técnica, no nueva ratificación funcional.
+
+Secuencia documental vigente:
+1. Aplicar autorización limitada a los cuatro documentos, preservando antecedentes y contenido completo R1.
+2. Revisar diff completo, alcance, identificadores, referencias, políticas/estados y conservación; solo verificación documental, no pruebas de producto.
+3. Presentar resultado para revisión PO, sin commit/push/cambio de rama ni transición automática.
+4. Tras revisión, cualquier checkpoint mediante commit requiere autorización posterior expresa.
+
+| Puerta | Dependencia | Condición todavía pendiente |
+|---|---|---|
+| Contratos | I-01–I-11, A-01–A-12, M-01 y H01–H12 | Revisión/aceptación de versión identificable; consolidar no cierra |
+| Autoridad operativa | Personas/facultades/conflictos/evidencias/finalidades | Catálogo autorizado; no rol genérico |
+| Parámetros | Sesiones/canales/vigencias/cuotas/retención | Valores/unidades/responsables/versión y P40 |
+| Auth | Procedencia/refresh/rutas alternativas | Garantía demostrada; P01–P14/P30/P37 |
+| Auth–BD | Resultado incierto/efecto tardío | Acreditar terminación/reconciliación antes de cambio incompatible; P14/P29/P30 |
+| Concurrencia | Recuperación/revocación/delegaciones/controlador | Intercalaciones/orden y estado final; P17/P20/P29–P36 |
+| RLS/RPC/service-role | Grants/funciones/tablas/vistas/columnas | Inspección/pruebas autorizadas por superficie; P25/P38 |
+| Storage/Realtime/cachés | Objetos/entrega/URLs/privados | Evidencia específica; REC-F2-003 y P38 |
+| Migración | Corte/autoridad única/reversión | Sin fallback ni sesión anterior; P26/P39 |
+| IA/despacho | Barrera/traspaso/resultados inciertos | Transporte demostrado; no habilitación por documento |
+| Validación | P01–P40 y nueve experimentos existentes | Autorización de entorno/datos/efectos y evidencia posterior |
+
+Auth sin reconciliación demostrable de efecto incierto bloquea flujo afectado; plazo/lease no sustituyen garantía. I-11 ratificada requiere demostrar rechazo efectivo también en límites directos; restauración nunca rehabilita sesiones. Local A no suspende B. Autoridad central tampoco omite controles locales privados.
+
+REC-F2-004 mantiene conexiones/arranque bloqueados. Pruebas sintéticas futuras requieren permiso específico; primero integración TCE-004 existente cuando se autorice. P01–P40/nueve experimentos NO EJECUTADOS. REC-F2-005/006 validarán dependencias y concurrencia; REC-F2-007 roles/contexto/claridad/alcance; REC-F2-003 Storage/retención. Sin SQL, implementación o laboratorio por esta secuencia.
+
+REC-F2-001/002 EN_CURSO solo diseño. Cierre documental, implementación y validación son actos separados; REC-F2-002 no inicia automáticamente. Mantener 17 hallazgos abiertos, discrepancias TCE-003/012 y TCE-004 EN_VALIDACION. DF/DA/DC, privados del candidato, recursos compartidos/atribución y pendientes de cupo/lista de espera no se resuelven aquí. Prioridad: reparar hallazgos → validar con evidencia → mejoras autorizadas.
+
+### Segunda revisión R1 — correcciones autorizadas y puertas complementarias, 2026-11-07
+
+PO autorizó incorporar cuatro correcciones propuestas y dos precisiones de consistencia en los cuatro documentos, conservando el diff previo. Fuente contractual: SPEC, «Salidas de resultado_incierto y autoridad de reconciliación», «I-10 — exclusión, saga y resultado incierto Auth–BD», «Transporte de sesión y protección de mutaciones» y «Subcasos explícitos de aceptación». HALLAZGOS registra tratamiento/riesgos; TASKS trabajo realizado. No requiere nueva autorización para esta escritura, sí para cualquier commit/prueba/implementación.
+
+| Puerta complementaria | Condición pendiente / evidencia futura |
+|---|---|
+| Reconciliación | Designar facultad específica; demostrar resultado por intento y ausencia de efectos tardíos; fallida_bloqueada no habilita identidad; P30.a–P30.d |
+| Transacción de inicio | Consumo I-10/ejecución/generaciones/bloqueo/idempotencia/auditoría juntos, sin efecto Auth antes de commit; P14.a–P14.c |
+| Correspondencia de estados | Tabla principal/salidas/narrativa aceptan reconciliando→efecto_pendiente solo en mismo supuesto; terminal no revive; P30.b/P30.c |
+| Bloqueo transversal | Login/renovación/operaciones protegidas denegados en fallida_bloqueada por todas las rutas pertinentes; no atribuirlo a Auth sin prueba; P30.d/P25/P37/P38 |
+| Transporte | SSR/navegador/cookies coherentes y configuración confiable; CSRF fuera y dentro de administración; sin excepción por Origin ausente; P25.a/P28.a/P37.a/P37.b/P40.a |
+| Enrolamiento/entrega | Protocolo por tipo, prueba de control y tratamiento de entrega incierta; sin retirada implícita de factor anterior ni reexposición; P09.a–P09.e/P31.a |
+| Reincorporación/auditoría | A-07 con nueva autorización/aceptación cuando corresponde y A-12 sin privados implícitos; ausencia de efectos; P18.a/P18.b/P19.a/P20.a/P23.a–P23.c/P27.a/P38.a |
+
+Mantener secuencia aprobada reparación → validación con evidencia → mejoras autorizadas. No ejecutar ahora P01–P40/subcasos/nueve experimentos; REC-F2-004 red/arranque bloqueados, restantes puertas Auth/RLS/RPC/Storage/Realtime/cachés/concurrencia/migración vigentes. 30 MF-PO diferidas en implementación, sin borrar direcciones funcionales ratificadas.
+
+Paso posterior: auditoría independiente de la consolidación y revisión PO; la revisión del mismo agente no la sustituye. Sin nueva fase/tarea, sin transición automática a REC-F2-002, sin cierre de CT-01/CT-02/REC-F2-001 o 17 hallazgos. Catálogos/personas/parámetros y garantías externas siguen pendientes. Commit, pruebas o implementación requieren autorización expresa posterior.

@@ -767,3 +767,449 @@ Mecanismos técnicos PROPUESTOS/PENDIENTES: registro autoritativo de vigencia de
 Criterios de aceptación futuros NO CUBIERTOS POR PRUEBAS: evidencia insuficiente no activa/vincula/restablece; cuenta ordinaria con indicios fundamentados exige dos aprobadores facultados distintos; una facultad de ejecución no permite conceder; destinatario/ámbito/operación/vigencia alterados o revocados deniegan efecto; autorización de recuperación vencida/reutilizada no consume; factor sustituido/comprometido no recupera; sesión anterior se rechaza tras recuperación en servidor y canales directos; cierre actual no se confunde con global; suspendido no consulta historia de A, otro actor sin permiso/finalidad tampoco, B independiente conserva su tratamiento; acceso histórico legítimo queda acotado y auditado. Incluir positivos equivalentes y carreras revocación/escritura/consumo, sin declarar resultados ahora.
 
 Pendientes concretos: catálogo/evidencia suficiente y responsables facultados, evaluación/revisión de indicios, plazos/canales seleccionados/enrolamiento y sustitución, límites de sesiones por rol, matriz operativa/concedentes, retención/finalidades históricas y mecanismos de consistencia/Auth–BD/Realtime/Storage/caché, fallos y reconciliación. Son especificaciones por completar, no reaprobación de políticas resueltas. CT-01/CT-02 y REC-F2-001 siguen ABIERTOS; REC-F2-001/002 EN_CURSO diseño. Cierre documental exige revisión/aceptación separada; implementación y validación técnica aún pendientes. Prioridad: reparar hallazgos → validar con evidencia → mejoras autorizadas.
+
+## REC-F2-001 — consolidación documental CT-01/CT-02 R1 e I-11 ratificada, 2026-11-07
+
+### Fuente, alcance y sucesión delimitada
+
+Fuente/autoridad de escritura: PO, mandato «AUTORIZACIÓN PO: Consolidación documental CT-01/CT-02 R1», limitado a SPEC, HALLAZGOS, PLAN y TASKS de recuperación. Base master/5e0cb789927d6b5ab8892b33cfce38f6cdfd75da, inicio con árbol y staging limpios. La escritura documental está autorizada; no constituye aceptación técnica final, implementación, validación, commit o despliegue.
+
+Antecedente: TCE_CT01_CT02_PROPUESTA_ORIGINAL_PARA_CODEX.txt, SHA-256 `8F452D61272ABAE689B84BAAAB2DC9322EBE2719A84BD15C920037144238DC22`; revisión adversarial H01–H12; propuesta conversacional R1 y diff previo, con los ajustes de preservación íntegra y continuidad del mandato actual. Este bloque es autosuficiente: no necesita el archivo del escritorio ni conversaciones anteriores para interpretar los contratos. Conserva I-01–I-11, A-01–A-12, M-01 y P01–P40.
+
+Estado: políticas expresamente ratificadas se identifican como tales; modelo, estados, mecanismos, parámetros no seleccionados y procedimientos técnicos son **PROPUESTOS PARA VALIDACIÓN**. Autorizar su incorporación no ratifica en bloque R1 ni acredita capacidades de Supabase Auth, BD o transportes.
+
+Permanecen A/B/C/D, cinco P0 y seis políticas operativas ratificadas, Maestro/Limitado, TCE-004 y contratos público/privado del candidato. DF/DA/DC y sus pendientes no se alteran; no se habilitan agentes, motor de mensajes, comisiones, cupos o pipeline por este registro.
+
+Sucesión exclusiva: (a) la separación central/agencia deja de ser una decisión conceptual pendiente; (b) I-11/H07/P35 dejan de depender de aprobación funcional; (c) los vacíos H01–H12 reciben las correcciones contractuales propuestas siguientes. Antecedentes se preservan como históricos, sin constituir fuentes alternativas permisivas. «Completar matriz/estados» en continuidades anteriores queda sucedido por R1 incorporada; catálogos, parámetros, revisión/aceptación y evidencia siguen pendientes.
+
+### CT-02 — separación central/agencia — RATIFICADA POR EL PO
+
+La autoridad administrativa central de TuChambaExpress es independiente de las membresías operativas de agencia. Las facultades centrales deben ser expresas, delimitadas por operación, recurso y ámbito, revocables y auditables.
+
+Una facultad central no concede automáticamente membresía local ni acceso a candidatos, expedientes, conversaciones, documentos u otros recursos privados de las agencias. Las operaciones locales requieren membresía y permisos vigentes en la agencia correspondiente. Las centrales requieren autoridad central específica y vigente. Todo acceso transversal excepcional privado requiere autorización expresa, finalidad legítima, alcance limitado y auditoría. Denegar cualquier operación cuyo ámbito o autoridad no pueda demostrarse. Complementa C/D, sin sustituir sus restantes requisitos.
+
+### CT-01 / I-11 — suspensión y restauración global — RATIFICADA POR EL PO
+
+Fuente: ratificación expresa del PO anterior al mandato de consolidación y reiterada en este.
+
+1. Suspender globalmente una identidad invalida todas sus sesiones anteriores.
+2. Durante la suspensión se impiden nuevos inicios de sesión, renovaciones y operaciones protegidas.
+3. Restaurar la identidad exige autenticación nueva.
+4. Las sesiones anteriores nunca se rehabilitan.
+5. No se reactivan automáticamente membresías, permisos o delegaciones revocados.
+6. Suspender una membresía local no equivale a suspender la identidad global ni afecta otras membresías vigentes.
+
+Generaciones, registros autoritativos, bloqueos y adaptadores son mecanismos propuestos. No se promete invalidación criptográfica instantánea de JWT ni retirada de información previamente entregada. I-11 no suspende por inferencia otras membresías ni cancela bloqueos técnicos de recuperación/migración al restaurar.
+
+### Modelo lógico mínimo — PROPUESTO
+
+No se elige esquema físico ni se exige una tabla por entidad.
+
+| Entidad | Contenido y límite |
+|---|---|
+| Identidad global | ID estable, vínculo Auth único, estado y versión; correspondencia acreditada con persona o principal técnico |
+| Perfil | IDs existentes reclutador/coordinador/administrador, atributos permitidos; sin autoridad editable por cliente |
+| Credenciales | Estado, generación vigente y cambio en curso; nunca contraseña de aplicación persistida |
+| Factor | Titular, tipo, verificación, estado, versión, generación y material de comprobación protegido |
+| Sesión de negocio | Sujeto, sesión Auth verificable, procedencia de autenticación, generaciones, estado y límites temporales |
+| Membresía | Sujeto, agencia, rol, estado, versión y permisos; independencia entre agencias |
+| Facultad central | Operación, recurso, ámbito, destinatario, vigencia y autoridad de origen |
+| Delegación | Concedente/beneficiario efectivos, límites, origen, dependencias y revocación |
+| Invitación | Destinatario verificado, agencia, términos versionados, autorización central, aceptación, vigencia y consumo |
+| Recuperación | Sujeto, vía, riesgo, evidencia referenciada, revisiones/aprobaciones y autorización limitada |
+| Ejecución de recuperación | Identidad, autorización consumida, generación esperada, pasos externos y reconciliación |
+| Efecto externo | Comando autorizado, destino, controlador/versiones, intento y resultado de despacho |
+| Migración | Correspondencia privada verificada, estado, versión de corte y reconciliación |
+| Auditoría | Actor efectivo, sujeto, operación, ámbito, versiones, autorización, decisión, resultado y correlación |
+
+Una persona aprobadora puede tener varias cuentas: cuentan como una persona. La correspondencia se acredita previamente; no se deduce por nombre/correo/teléfono coincidentes. Independencia no demostrada no satisface dos aprobaciones.
+
+### Autorización común y matriz de permisos
+
+Operación protegida: identidad/capacidad verificada, estado habilitado, sesión o capacidad adecuada, generaciones actuales, autoridad y transición permitidas. Agencia del recurso se deriva de relaciones autoritativas, no del contexto cliente. Agencia habilitada para esa operación; las operaciones centrales sobre su estado se autorizan por su facultad específica, sin exigir que esté operativamente activa para administrarla.
+
+| Ámbito | Autoridad necesaria | Límite |
+|---|---|---|
+| Local privado | Rol, membresía activa y permiso vigente en agencia del recurso | No unir permisos de distintas agencias |
+| Central | Facultad específica vigente por operación/recurso/ámbito | No membresía ficticia ni acceso local automático |
+| Transversal excepcional privado | Autorización expresa, finalidad legítima, recursos/acciones/vigencia limitados y auditoría | No excepción administrativa general ni acceso histórico al suspendido |
+| Candidato | Capacidad verificable ligada al recurso, acciones y destinatario aprobados | No sesión administrativa o membresía de empleado |
+| Público | Operación/proyección expresamente públicas | Sin expedientes ni historial por contacto |
+
+Una operación compuesta acredita cada componente. Autorizar incorporación no autoriza consultar candidatos. Ámbito o autoridad indeterminados: denegar. Claims, metadata editable, localStorage y parámetros cliente no acreditan autoridad vigente.
+
+En la matriz siguiente las facultades/límites ratificados se conservan; las comprobaciones técnicas son propuestas. «Designada» exige registro central vigente con facultad específica, no mero nombre de rol.
+
+| Actor | Operación/recurso | Condiciones, concesión y límite |
+|---|---|---|
+| Público | Vacantes públicas | Proyección mínima publicable; sin columnas privadas |
+| Candidato | Postulación pública | Flujo acotado y admisión DF/DC; no concede lectura anterior ni permiso general |
+| Candidato con capacidad | Expediente/chat/documento propio | Recurso, acciones, destinatario y vigencia; mecanismo entre dispositivos pendiente, no habilitado aquí |
+| Reclutador | Login | Código+contraseña Auth; sin agencia cliente como autoridad ni cambio de vínculo |
+| Coordinador/administrador | Login | Contrato compatible vigente; sin conceder rol al entrar |
+| Titular autenticado | Sesiones propias y cierre actual/global | Sujeto propio, sesión y alcance comprobados; no amplía facultades |
+| Titular | Enrolar/sustituir factor | I-05, reautenticación y prueba; no verificación desde cliente |
+| Solicitante | Iniciar recuperación | Respuesta genérica; sin acceso ni bloqueo por mera solicitud |
+| Titular con prueba | Recuperación ordinaria | Factor previo vigente, autorización limitada y de un uso |
+| Coordinador | Asistir recuperación/enrolamiento | Ámbito local; no acredita unilateralmente ni recibe secreto global |
+| Verificador/aprobador central | Caso de recuperación | Facultad, independencia, riesgo/evidencia actuales; sin lectura general de expedientes |
+| Reclutador | Perfil propio | Solo columnas permitidas; contacto no altera identidad/factor/rol |
+| Reclutador | Recursos asignados de agencia | Membresía/permiso vigentes; no edita vacantes ni se apropia de recursos ajenos |
+| Coordinador | Equipo/recursos locales | Membresía coordinador activa y comando catalogado; sin poder global |
+| Coordinador | Solicitar incorporación | Agencia/destinatario exactos; solicitud pendiente sin acceso |
+| Coordinador invitado | Aceptar incorporación | Sujeto y términos exactos; no concede autoridad central |
+| Maestro/admin expresamente facultado | Autorizar incorporación | Facultad central conforme D; no subdelegación inferida ni lectura privada |
+| Maestro | Gestionar administradores | Contrato y límites vigentes; no facultad universal inferida |
+| Limitado | Operación administrativa permitida | Base/delegación compatible; nunca gestión de administradores por permiso operativo |
+| Autoridad de membresía | Suspender/revocar/reactivar | Facultad por operación y agencia; no toca identidad u otras agencias |
+| Autoridad central designada | Conceder/revocar delegación | Concesión/revocación separadas, beneficiario efectivo distinto, origen/techo/vigencia |
+| Otro actor autorizado | Historia | Finalidad/recursos/proyección limitados y auditoría; suspendido excluido |
+| Actor con excepción privada | Acceso transversal | Autorización expresa acotada, no rol central genérico |
+| Auditor autorizado | Auditoría/evidencia | Facultad y propósito por dato; sin apertura general de expedientes |
+| IA | Rutina delegada | Principal propio, ámbito/capacidad/límites/controlador; habilitación futura pendiente |
+| Agente Reclutador IA | Recuperación/privilegios/decisión definitiva laboral | Denegado; posibilidad futura condicionada D requiere contrato/delegación separados |
+| Servicio técnico | Paso privilegiado | Comando y efecto exactos previamente autorizados; service-role no es autoridad de negocio |
+| Cualquier actor | Operación ausente/ámbito incierto/permiso vencido | Denegar sin privados ni efecto |
+
+Cada permiso positivo requiere negativo equivalente variando actor, operación, recurso, agencia, membresía, vigencia, concedente o estado.
+
+### Convenciones de comandos, errores y auditoría — PROPUESTAS
+
+Entradas no confiables: cuerpo/ruta/query/cookies/JWT/cabeceras, actor/rol/agencia, estado esperado, finalidad e idempotencia. Fuentes confiables solo tras verificar: identidad Auth, vínculo privado, reloj servidor/BD, relaciones y autoridad de negocio. Cabecera interna solo si cliente no puede establecerla.
+
+Mutaciones: resolver actor/recurso → derivar ámbito/relaciones → comprobar sesión/generaciones/autoridad → bloquear o comparar versiones de autoridad y recurso → revalidar dentro de unidad transaccional → confirmar efecto/estado/idempotencia/auditoría juntos. Si revocación confirma primero, escritura posterior no confirma con autoridad anterior. Orden de bloqueo definido y validado posteriormente; comprobación inicial fuera de transacción no basta.
+
+Idempotencia ligada a actor/operación/ámbito/huella de contenido no secreto; misma clave/contenido consulta misma ejecución, distinto contenido conflicto. No almacenar contraseñas ni huellas reutilizables de estas. Reintento no consume de nuevo ni omite autorización actual; tampoco permite devolver privados tras revocación.
+
+Lecturas autorizan proyección antes de entregarla. Historia/evidencia/auditoría registran acceso exigido antes de liberar datos; fallo del registro bloquea entrega. Registro de lectura no recursivo. Auditoría minimizada: IDs internos, actor efectivo, sujeto, operación, ámbito/agencia/recurso, versiones, facultad/decisión, resultado y correlación; historia además finalidad. Sin contraseñas/tokens/códigos/evidencia personal completa.
+
+Efectos externos: confirmar intención no certifica entrega. Despacho tiene revalidación/concurrencia/resultados propios; no atomicidad Auth–BD/transporte asumida. Notificar después de confirmar comando, mediante entrega rastreada y reintentable solo cuando sea seguro.
+
+#### Transporte de sesión y protección de mutaciones — PROPUESTA vinculante para R1
+
+Remisión interna: sección «REC-F2-001 — contrato técnico propuesto de identidad y autorización, 2026-11-06», párrafo «Sesión propuesta y preferencia confirmada». R1 incorpora ese contrato de transporte y lo reproduce aquí para evitar dependencia de una lectura histórica separada. No reabre A/B/C/D ni cambia TCE-004. «Vinculante para R1» designa requisito de esta propuesta técnica, no ratificación de mecanismos ni evidencia de funcionamiento.
+
+Preferencia de diseño conservada: SSR más cliente navegador, propagación getAll/setAll donde corresponda, verificación de identidad en servidor y autoridad actual en BD/RLS. No se promete que tokens sean HttpOnly ni que el identificador técnico sea invisible al navegador. Conocerlo no concede permisos. localStorage conserva como máximo preferencias, nunca autoridad.
+
+Login, renovación, expiración y logout deben tratar coherentemente cookies y registro de negocio. Error de propagación no concede una sesión ni prolonga autoridad; el resultado incierto se identifica y revalida antes de continuar. No afirmar completitud del cierre externo por haber borrado una cookie.
+
+Toda mutación autenticada mediante cookies requiere controles de origen/CSRF adecuados al flujo, incluidos cambios de factor, recuperación, incorporación, delegación y operaciones locales. Proteger también flujos de login y recuperación contra envío cruzado cuando corresponda; el rechazo público no debe revelar existencia de cuenta.
+
+El origen esperado procede de configuración confiable. No confiar en valores cliente o cabeceras reenviadas sin frontera de confianza definida. SameSite, CORS o usar POST no constituyen por sí solos evidencia de protección CSRF. Origin ausente o no verificable no produce excepción permisiva: requiere mecanismo alternativo expresamente diseñado y validado; en su ausencia, denegar el flujo afectado.
+
+Rutas con credenciales no ambientales, como token explícito de principal técnico, necesitan contrato de autenticación propio. No se convierten en bypass al aceptar silenciosamente cookies como alternativa. Origen/CSRF no sustituye sesión, generaciones, membresía, permisos o autoridad central.
+
+Aplicar estas condiciones a I-01–I-11 y A-01–A-12 según transporte real; M-01 debe impedir que el camino heredado omita protecciones. Configuración efectiva, compatibilidad SDK y controles de todas las rutas permanecen pendientes de validación. Sin demostración, no habilitar flujo.
+
+| Situación | Resultado contractual |
+|---|---|
+| Sintaxis inválida | 400 sin detalles internos |
+| Login inválido/inexistente/inactivo | Error público homogéneo, sin enumerar |
+| Sesión ausente/revocada | 401 sin rehabilitar autoridad |
+| Recurso ajeno/inexistente sensible | Indistinguible de no disponible |
+| Prohibición conocida sin filtración | 403 |
+| Versión/idempotencia incompatible | 409 sin nuevo efecto parcial |
+| Abuso | 429 no enumerador |
+| Autoridad/configuración indisponible | 503, sin caché permisiva sustitutiva |
+| Saga/efecto externo incierto | Estado pendiente reconciliable, nunca éxito/fallo definitivo ficticio |
+
+### Máquinas de estados — PROPUESTAS
+
+Toda transición compara estado/versión. Expiración, inactividad y generaciones obsoletas se comprueban autoritativamente aunque materialización sea diferida.
+
+| Objeto | Transiciones | Restricción |
+|---|---|---|
+| Identidad | pendiente_vinculación→activa; activa↔suspendida; activa/suspendida→retirada | I-11 ratificada; facultad global; login no restaura; historia preservada |
+| Credenciales | no_enroladas→activación_pendiente→utilizables→cambio_en_curso; cambio_en_curso→resultado_incierto/bloqueadas/utilizables con generación nueva; resultado_incierto→cambio_en_curso/bloqueadas; →invalidadas | Salida de incertidumbre solo por reconciliación acreditada; nueva generación utilizable solo al completar ejecución; fallida_bloqueada mantiene credenciales bloqueadas. No generación anterior ni acceso con efecto incompatible pendiente |
+| Factor | pendiente_verificación→verificado→sustituido/comprometido/revocado; código de recuperación→consumido | Terminal no revive; código de login nunca es factor |
+| Sesión | registro_pendiente→activa→revocada/cerrada | Terminal/expirada/generación obsoleta no opera |
+| Membresía | pendiente→activa→suspendida/revocada; suspendida→activa autorizadamente | Revocada requiere nueva incorporación; A independiente de B |
+| Invitación | borrador→autorizada→emitida→consumida; rechazada/revocada | Aceptación exacta registrada atómicamente con consumo/activación; no estado aceptada que autorice por sí solo |
+| Recuperación ordinaria | solicitada→factor_comprobado→autorizada→ejecutando→completada/fallida_bloqueada; antes de ejecución rechazada/revocada/vencida | Prueba consumida no se restaura por fallo; resultado del caso refleja ejecución, no libera acceso |
+| Recuperación excepcional | solicitada→evaluación→evidencia_suficiente→aprobaciones_pendientes→autorizada→ejecutando→completada/fallida_bloqueada | Cambio material vuelve a evaluación e invalida decisiones afectadas; resultado refleja ejecución sin habilitación implícita |
+| Ejecución recuperación | preparada→efecto_pendiente→efecto_confirmado→reconciliando; preparada/efecto_pendiente/efecto_confirmado/reconciliando→resultado_incierto si un efecto pudo emitirse; resultado_incierto→resultado_incierto/reconciliando; reconciliando→efecto_pendiente/completada/fallida_bloqueada | Salidas solo bajo condiciones/evidencia de la tabla de reconciliación. Incierto retiene exclusión; fallida_bloqueada terminal no habilita identidad ni restaura generaciones |
+| Delegación | propuesta→activa→revocada | Cambiar términos crea nueva concesión versionada; origen/dependencias vigentes |
+| Efecto IA | pendiente→autorizado_para_despacho→en_despacho→aceptado_por_transporte; cancelado/resultado_incierto | Aceptado no es entregado/leído; incierto sin reenvío ciego |
+| Migración | clasificada→preparada→corte_en_curso→verificada; bloqueada/reversión_segura | Autoridad única; no reapertura insegura |
+
+Riesgo modificado recalcula aprobación; facultad se verifica al aprobar y consumir. Identidad activa sin membresías no es inexistente. Bloqueo técnico no es suspensión administrativa. Completar recuperación exige revocación/reconciliación; volver a operar exige autenticación nueva posterior, no requisito circular de completitud.
+
+### CT-01 — contratos de identidad, sesiones y recuperación revisados
+
+| Contrato | Precondiciones, invariantes y postcondiciones propuestas |
+|---|---|
+| I-01 Provisionar/vincular | Operador con facultad, sujeto/perfil identificados y titularidad acreditada. Reservar unicidad de sujeto/vínculo/perfil; no contacto coincidente. Provisionamiento durable reconciliable; confirmar correspondencia/versiones/auditoría al reconciliar. Fallo/ambigüedad pendiente sin privilegios; verificación central independiente cuando corresponde |
+| I-02 Login | Reclutador: código resuelto privadamente y contraseña verificada por Auth sin transformar. Estado/generaciones antes y después; registrar solo procedencia verificable del intercambio iniciado por servidor. JWT/refresh/getUser no son autenticación nueva. Ordenar con revocación/corte/recuperación; respuesta tardía no registra generación anterior. Sin roles de metadata ni sesión cliente como prueba |
+| I-03 Renovar/consultar | Solo sesión registrada no terminal, vínculo/generaciones actuales y continuidad verificable de rotación. Revalidar después de intercambio y antes de entregar contexto. Desconocida no se registra. Actividad según parámetro; refresh/polling no equivalen automáticamente a actividad humana |
+| I-04 Cerrar actual/global | Actual termina registro propio; global aumenta generación e inutiliza anteriores. Login concurrente se ordena con cierre. Negación de negocio no depende de borrar cookie. Revocación Auth pendiente rastreada; si puede afectar sesiones posteriores, bloquear registro nuevo hasta resolver |
+| I-05 Enrolar/sustituir factor | Sesión y reautenticación demostrable fresca ligada a acción; no fecha refresh. Primer factor requiere titularidad previa y prueba del nuevo; heredada ambigua pasa I-01/M-01. Sustitución exige anterior o excepcional. Confirmar sustitución/versionar e invalidar derivados antiguos atómicamente. Códigos protegidos y entrega controlada; pérdida de entrega no permite consulta ordinaria para reexponer |
+| I-06 Solicitar recuperación | Respuesta homogénea/referencia opaca/cuotas; sin datos de factor/destino/existencia ni consulta de estado sin capacidad. Mera solicitud no invalida sesiones, consume factores o reserva exclusión |
+| I-07 Autorizar ordinaria | Factor previo verificado; titular/generación/versiones/vigencia/intentos. Consumo/reserva única concurrente. Autorización opaca identidad/acción/factor/versiones/generación. Revocación/sustitución/compromiso invalida derivados; I-10 revalida |
+| I-08 Evaluar excepcional | Facultad central específica, evidencia mínima suficiente y caso versionado. Coordinador asiste, no acredita. Privilegio/indicios fundamentados elevan riesgo. Evidencia privada exige autoridad limitada propia, no lectura general. Cambio material invalida decisiones afectadas |
+| I-09 Aprobar excepcional | Sujeto/caso/evidencia/riesgo/versiones exactos. Ordinaria sin alto riesgo: revisión central independiente; privilegiada/alto riesgo: dos personas distintas facultadas independientes. Excluir titular/solicitante interesado/conflictos definidos; dos cuentas de una persona cuentan una. Independencia no acreditada bloquea. Revalidar facultad/riesgo/conflictos al ejecutar |
+| I-10 Completar recuperación/cambiar credencial | Autorización vigente limitada/de un uso y generación. Exclusión por identidad entre vías y cualquier cambio de credencial interferente; procedimiento siguiente. No sesión de negocio emitida, exige I-02 posterior. Cambio autenticado ordinario solo con autorización propia y misma exclusión; no se crea aquí ruta adicional |
+| I-11 Suspender/restaurar identidad global | Política RATIFICADA arriba. Facultad central específica/motivo/auditoría. Suspender invalida sesiones e impide login/refresh/operaciones; restaurar exige login nuevo sin rehabilitar sesiones o autoridad revocada. No cancela bloqueos técnicos ni reactiva membresías suspendidas por inferencia |
+
+Resolución privada del código: alias estable, separado de contacto/código, namespace legítimamente controlado, no editable por cliente ni devuelto en respuestas propias de resolución. Servidor no persiste contraseña de aplicación. Normalización propuesta: recorte exterior/mayúsculas solo tras análisis autorizado de colisiones; contraseñas sin normalizar; sin reutilización automática de códigos. Colisión bloquea vínculo afectado.
+
+Antiabuso: límites compartidos entre instancias por origen/código pseudonimizado, respuestas homogéneas, presupuesto de trabajo y reintentos; sin bloqueos permanentes inducibles por solicitudes anónimas. Parámetros se configuran y validan antes de habilitar.
+
+Registro de sesiones: generaciones de credenciales y global de sesiones, procedencia verificable, estado terminal y sesión Auth verificable. Solo I-02 registra; no registrarSesion(jwt) accesible al cliente. I-02 lee generaciones y ausencia de recuperación, inicia Auth servidor, verifica resultado/sesión, compara nuevamente bajo concurrencia y registra solo sin cambio ni marca terminal. Si el proveedor no ofrece vinculación suficiente demostrable, alta de sesiones bloqueada hasta mecanismo equivalente validado.
+
+### I-10 — exclusión, saga y resultado incierto Auth–BD
+
+1. I-07 comprueba y reserva/consume la prueba de factor y emite su autorización derivada en una transacción de negocio propia: una prueba no produce dos autorizaciones. I-09 registra aprobaciones versionadas. Ninguna de esas operaciones cambia por sí sola credencial Auth, invalida sesiones o concede acceso.
+2. I-10 ejecuta una única transacción de inicio bajo exclusión por identidad. Dentro revalida autorización/origen, generaciones, factor o aprobaciones, riesgo, facultades y ausencia de ejecución incompatible; consume autorización; crea ejecución durable e idempotencia; marca credenciales en cambio; invalida autorizaciones competidoras de generación anterior; aumenta generación de sesiones; impide registros nuevos; y registra auditoría. Todos esos cambios se confirman o revierten juntos. Una autorización por prueba no sustituye esta exclusión adicional por identidad.
+3. Antes de confirmar esa transacción no se emite ningún efecto Auth. Si falla/revierte, ninguno de sus cambios queda confirmado. La prueba consumida previamente por I-07 no se restaura por ese fallo; la autorización solo conserva el estado anterior a la transacción fallida. No presumir que sigue utilizable: nuevo intento revalida todo.
+4. Después del commit, trabajador autorizado registra durablemente cada intento externo antes de emitirlo. No mantiene transacción de negocio abierta durante llamada. Registro de intención no demuestra envío ni ausencia de trabajador todavía capaz de enviarla.
+5. Cambio de credencial y revocación externa son pasos separados correlacionados con misma ejecución. Duplicación, pérdida de respuesta o posible envío requieren resultado_incierto, no repetición ciega. Exclusión no se libera por expiración del trabajador.
+6. Con evidencia de resultados, transacción de finalización revalida ejecución/versiones; confirma generación nueva de credenciales; invalida factores comprometidos/sustituidos y sus derivados; registra resultado/idempotencia/auditoría. Ningún factor nuevo se activa implícitamente por completar recuperación.
+7. Marcar completada solo con efectos necesarios reconciliados y ningún intento capaz de efecto tardío incompatible. Retirar únicamente bloqueo técnico de esta ejecución, no suspensión global, bloqueo de migración u otro impedimento. I-02 solo opera si cumple restantes precondiciones.
+8. Titular vuelve mediante autenticación nueva con credencial resultante. Autorización/capacidad de recuperación nunca se convierte en sesión de negocio.
+
+Timeout/desconexión/pérdida de trabajador no prueban cancelación o fallo. Lease vencido no libera exclusión si pudo enviarse efecto. Sustituto reconcilia, no repite automáticamente. Versión BD impide confirmación obsoleta de negocio, pero no detiene petición ya enviada a Auth.
+
+Antes de otro cambio acreditar que el anterior terminó y no producirá efecto tardío incompatible. Sin prueba, mantener bloqueo técnico y escalar; tiempo arbitrario no lo resuelve. No restaurar generación anterior ni declarar éxito. No persistir contraseña en logs/colas/idempotencia; nueva aportación del titular requiere paso limitado autorizado después de resolver ejecución previa. Ventana de exclusión comienza con ejecución autorizada, nunca mera solicitud anónima. Reconciliación debe demostrarse antes de habilitar recuperación automatizada.
+
+#### Salidas de resultado_incierto y autoridad de reconciliación — PROPUESTA
+
+Resultado incierto aplica a cualquier paso externo cuyo envío/resultado no pueda determinarse, incluso caída entre registrar intención, enviar y persistir respuesta. Mantiene exclusión y bloqueo técnico de identidad; no es éxito, fallo confirmado ni permiso de reintento. La tabla principal de ejecución enumera las mismas transiciones que la siguiente; el caso ordinario/excepcional refleja el resultado de ejecución sin conceder acceso adicional.
+
+Autoridad: reconciliador técnico/humano con facultad central específica para inspeccionar y registrar ejecución. No basta coordinador, administrador genérico, titular o service-role. No permite cambiar sujeto, saltar aprobaciones, elegir otra contraseña, conceder permisos o leer expedientes privados ajenos. Personas/capacidades concretas deben designarse antes de habilitar.
+
+Evidencia mínima: identidad/ejecución correlacionadas; paso/intento; versiones/generaciones; resultado externo verificable; acreditación de que todos los intentos anteriores terminaron o no pueden producir efectos posteriores incompatibles. Evidencia de salud del servicio o temporal aislada, lease vencido, 2xx no correlacionado, JWT vigente o afirmación cliente no satisfacen la prueba. No guardar contraseñas para verificar resultados.
+
+| Salida | Condiciones y evidencia | Consecuencia |
+|---|---|---|
+| Permanecer en resultado_incierto | Evidencia insuficiente/contradictoria o intento aún capaz de ejecutarse | Conservar exclusión/bloqueo, alertar/escalar; ningún nuevo efecto incompatible |
+| resultado_incierto→reconciliando | Reconciliador facultado registra evidencia suficiente de resultado y cierre de intentos anteriores | Transición por versión y auditoría; todavía no habilitar acceso |
+| reconciliando→efecto_pendiente | Paso restante necesario todavía no emitido; ausencia demostrada de intento anterior equivalente capaz de ejecutarse; autoridad limitada vigente o nuevamente obtenida | Continuar misma ejecución con nuevo intento rastreado; no reutilizar autorización consumida como nueva |
+| reconciliando→completada | Efectos requeridos confirmados, sin efecto tardío incompatible posible y finalización de negocio confirmada | Terminar ejecución y retirar solo su bloqueo técnico; autenticación nueva y restantes controles obligatorios |
+| reconciliando→fallida_bloqueada | Fallo definitivo acreditado e intentos cerrados, sin postcondiciones de recuperación cumplidas | Terminal de ejecución; credenciales de negocio bloqueadas, generaciones/pruebas consumidas no restauradas |
+
+Requisito normativo de esta propuesta autorizado por PO: **fallida_bloqueada impide login, renovación y operaciones protegidas por todas las rutas relevantes**: servidor/SSR/navegador, SDK/rutas alternativas Auth, REST/BD/RLS/RPC, operaciones administrativas privilegiadas/service-role, Storage/Realtime/cachés/exportaciones/colas según datos y acciones protegidos. Ningún token válido, cookie residual, respuesta cacheada o restauración I-11 omite el bloqueo. No se impide por ello solicitar asistencia o iniciar un nuevo procedimiento limitado expresamente autorizado para resolverlo; ese procedimiento no concede acceso de negocio.
+
+El requisito anterior no declara que Supabase Auth ya lo aplique. Generaciones, registro autoritativo, intermediación/restricción de rutas y adaptadores son mecanismos propuestos no implementados ni validados. Si una ruta relevante no puede demostrar el rechazo exigido, queda bloqueada su habilitación; no se sustituye el requisito por esperar expiración JWT. No se promete retirar información ya entregada.
+
+fallida_bloqueada no equivale a suspensión administrativa ni se resuelve con I-11/restaurar. Termina procesamiento de esa ejecución, no habilita identidad. Una recuperación posterior exige autoridad nueva, evidencia de ausencia de efectos tardíos anteriores y traspaso transaccional a ejecución nueva sin ventana de acceso. No exige por sí sola nuevas aprobaciones sobre caso cuyo alcance no cambió: reutilizar evidencia solo si conserva vigencia/versión/independencia y reglas aplicables. Autorización de ejecución consumida nunca se reutiliza. Ninguna transición devuelve ejecución terminal a activa.
+
+Sin garantía demostrada para determinar resultado o impedir efectos tardíos, no hay salida habilitante de resultado_incierto: mantener bloqueo. I-05 conserva transacción distinta para activar factor comprobado, sustituir anterior e invalidar derivados. Crear/verificar factor no forma parte implícita de I-10. Prueba externa precede confirmación; resultado incierto no se declara verificado. Ninguna transacción de negocio incluye atómicamente Auth, canal de entrega o Storage.
+
+### CT-02 — contratos de autorización revisados
+
+| Contrato | Precondiciones, invariantes y postcondiciones propuestas |
+|---|---|
+| A-01 Contexto/agencia | Enumerar membresías propias; contexto explícito por petición, pestañas independientes. Contexto central separado. Cambio limpia caché/suscripciones del contexto; cada operación revalida, no modifica roles |
+| A-02 Recurso privado | Derivar pertenencia y exigir autoridad local actual; excepción transversal solo expresa. Filas/columnas/joins/conteos/exportaciones/metadatos cubiertos. Nunca recuperar amplio para filtrar cliente. Compartidos ambiguos bloqueados |
+| A-03 Solicitar incorporación | Solicitante facultado, destinatario/agencia/rol/permisos exactos; pendiente sin acceso ni revelación privada del destino. Duplicado equivalente misma solicitud sin enumerar ajenos |
+| A-04 Autorizar/emitir invitación | Facultad central de concesión conforme D, términos versionados y destinatario verificado; sin membresía ficticia ni privados implícitos. Secreto opaco protegido/vigencia/revocación; entregar después de registro confirmado y revalidar despacho |
+| A-05 Aceptar/activar | Derivar invitación del secreto, no ID cliente. Sujeto vinculado/autenticado acepta términos exactos; nuevo completa I-01/enrolamiento antes de activar. Revalidar central/vigencia/términos; aceptación-consumo-activación atómicos y únicos; revocación comparte orden |
+| A-06 Suspender/revocar membresía | Facultad específica y agencia derivada; versionar/auditar, bloquear accesos de esa agencia y cancelar tareas dependientes no despachadas. Preservar historia/identidad/otras agencias; sesiones identifican pero no autorizan allí |
+| A-07 Reactivar/reincorporar | Suspendida: facultad/permisos actuales sin revivir terminales; cambio de términos requiere aceptación. Revocada: nueva incorporación trazada; coordinador exige autorización central y aceptación nuevas aunque coincidan términos. Relacionar historial sin restaurar concesiones antiguas |
+| A-08 Conceder delegación | Facultad expresa de concesión, no ejecución. Beneficiario efectivo distinto, cuentas alternativas no eluden; operación/recursos/vigencia dentro del techo. Dependencias sin ciclos y origen vigente; sin subdelegación implícita ni membresía/excepción privada por sí sola |
+| A-09 Revocar delegación | Facultad específica; terminar concesión e impedir dependientes incompletos al uso, sin propagación eventual permisiva. Restaurar concedente no revive terminales; requiere concesión nueva |
+| A-10 Historia | Otro actor autorizado, finalidad legítima/recursos/proyección limitados; suspendido excluido de historia de su agencia. Central transversal requiere excepción concreta, finalidad catalogada no basta. Auditoría antes de liberar; sin modificar historia |
+| A-11 Operación IA | Principal propio/capacidad/ámbito, membresía si local, recurso/límites/controlador/versiones. Confirmar intención, despacho con procedimiento siguiente. Sin sesión humana ni recuperación/administración de privilegios |
+| A-12 Auditoría | Facultad/propósito por dato; metadatos centrales y evidencia privada separados. Filtrar filas/columnas; registro de lectura no recursivo, minimizado, antes de liberar. Fallo del registro exigido bloquea entrega |
+
+Orden concurrente específico: A-05 con revocación sobre misma autorización; A-06 con escrituras sobre membresía vigente; A-08/A-09 y uso sobre origen/dependencias; A-11 con versión del controlador. No enviar mensajes antes de confirmar comando autorizante.
+
+Delegación: identificar beneficiario humano/técnico estable, no inferir por contactos. Identidad alternativa no acreditada mantiene concesión sensible pendiente. Rechazar A→A y A→B→A y cadenas que creen facultad ausente en origen. Cambiar rol/términos/destinatario/vigencia aplica los mismos controles. Autoridad explícita para cadena no elimina prohibición de autoconcesión o escalamiento.
+
+### A-11 — despacho externo IA y toma de control humano
+
+1. Confirmar comando crea mensaje pendiente con principal/agencia/conversación/controlador/versión/destino.
+2. Antes de despacho revalidar autoridad, versión y destino; la tarea pendiente no conserva permiso indefinido.
+3. Despacho y toma humana comparten barrera por conversación.
+4. Toma humana ordenada primero cancela pendientes IA anteriores.
+5. Si despacho comenzó primero, toma bloquea nuevos despachos IA y rastrea intentos en curso; no declara cancelado lo que el transporte puede aceptar.
+6. Resultado incierto se reconcilia sin reenvío ciego ni presunción de cancelación; duplicados deben controlarse según garantía demostrada del transporte.
+7. Aceptado antes de traspaso puede llegar después; mostrar envío previo en curso, no atribuirlo al humano.
+8. Exigir que tampoco llegue después requiere garantía externa; sin ella esa modalidad bloqueada. Habilitar despacho depende de demostrar ausencia de nuevos envíos tras traspaso; no se construye ahora.
+
+### M-01 — migración, corte y reversión seguros
+
+1. Futura inspección autorizada clasifica vínculo inequívoco/sin vínculo/colisión/conflicto.
+2. Preservar IDs de perfiles/postulaciones/conversaciones/documentos/referencias/relaciones/historial.
+3. Correspondencias privadas versionadas y titularidad acreditada; no enlazar por contacto/nombre/código ni sustituir masivamente claves históricas.
+4. Ambigüedad: coordinador asiste, central verifica independientemente; insuficiencia pendiente sin acceso; no segunda identidad evasiva.
+5. Si ya existe Auth, conservar sujeto acreditado; preparar autoridad destino sin activar.
+6. Reservar corte por identidad, coordinado con login, recuperación, credenciales y vinculación; unicidades de sujeto/vínculo/membresía, conflictos a revisión.
+7. Antes de corte demostrar que los caminos heredados quedan inservibles para esa cuenta; sin ello corte bloqueado.
+8. Corte cambia origen autoritativo y versión/generación e invalida sesiones anteriores como unidad de negocio. Ningún estado admite OR permisivo entre autoridades vieja/nueva.
+9. Verificar sujeto/membresías/permisos/todos los caminos antes de login nuevo. Adaptador por correo consume correspondencia verificada, no busca dueño por correo mutable.
+10. Fallo/resultado externo incierto mantiene bloqueo y reconciliación; lotes pequeños con estado anterior/correspondencia/resultado auditados sin secretos.
+11. Reversión detiene habilitación y conserva correspondencias/historia. Solo retorna a autoridad segura verificada; si no existe, cuenta bloqueada.
+12. No restaurar login por código solo, credenciales/sesiones/permisos revocados. Contratos administrativos/coordinador preservados mediante transición explícita revisada, no compatibilidad insegura por defecto.
+
+### Inventario obligatorio de superficies y garantías pendientes
+
+El inventario concreto de endpoints/tablas/funciones se completa mediante inspección autorizada posterior. Esta lista no afirma su configuración real.
+
+| Superficie | Riesgo a excluir / condición de habilitación |
+|---|---|
+| Login servidor/SDK Auth | Sin registro fuera I-02, procedencia/sesión verificables, sin cambio cliente de identidad técnica |
+| Refresh | Sin crear/revivir autoridad; continuidad y revalidación antes/después |
+| Cambio/reset contraseña | Ruta impedida/controlada o integrada con exclusión/revocación I-10 |
+| Alias/email/teléfono/vinculación Auth | Sin transferir identidad ni convertir contacto editable en factor |
+| Invitación/magic link/OTP/OAuth/SSO si existen | Inventariar lo habilitado y controlar/impedir cada vía; no asumir existencia |
+| Administración Auth | Adaptador estrecho, actor/efecto exactos y conciliación auditada |
+| REST/tablas/grants | Mínimos, RLS sobre existente/resultante, columnas de autoridad protegidas; sin cambio de dueño/agencia ilegítimo |
+| Vistas/joins/agregados | Misma proyección/ámbito y propiedades efectivas verificadas |
+| RPC/funciones | Grants/propietario/resolución de objetos/parámetros; actor no autoritativo desde cliente |
+| Service-role/trabajadores | No CRUD genérico; comando catalogado y autorizado; ejecución privilegiada no acredita RLS |
+| Storage | Relación objeto–recurso; permisos separados lectura/descarga/subida/sustitución/borrado; ruta no prueba dueño |
+| Realtime | Autorización de suscripción y entrega; abiertos/nuevos; avisos opacos no revelan existencia |
+| Caché servidor/CDN/navegador | Sin privados compartidos por ID solo ni permisos obsoletos; almacenamiento/identidad/ámbito comprobados |
+| Exportaciones/colas | Autoridad al producir y entregar; resultado/descarga controlados tras revocación |
+
+URL firmada emitida no se considera revocada al cambiar membresía. Acceso que exige autoridad actual propone intermediación sin URL autónoma duradera incompatible; si no se demuestra, no emitir. Si Realtime no prueba autoridad por entrega, alternativa aviso opaco y A-02 requiere validación propia. Mutaciones de orden estricto pasan por función controlada, sin grants directos equivalentes que la eludan.
+
+No prometer retirada de datos entregados ni cancelación de lectura/transferencia ya autorizada e iniciada. Identificar punto de inicio; nuevas peticiones/entregas no usan comprobación anterior. Garantía no demostrada bloquea operación afectada.
+
+### Parámetros verificables y responsables pendientes
+
+Cada parámetro tendrá valor/unidad/alcance/responsable/versión/prueba de frontera. Sin valor válido, flujo afectado bloqueado. No se inventan cifras ratificadas.
+
+| Parámetro/catálogo | Regla verificable | Definición pendiente |
+|---|---|---|
+| Sesiones por riesgo | Plazo absoluto e inactividad independientes; administración más estricta | Política operativa PO/delegado |
+| Inactividad administrativa | Preservar requisito histórico 20 minutos y verificar servidor, no UI sola | Compatibilidad técnica/aceptación |
+| Actividad válida | Polling/refresh no prolongan por defecto | Propuesta operativa por aceptar |
+| Reautenticación reciente | Ventana y prueba fresca ligada a acción, no token renovado | Política operativa |
+| Factores/canales | Control, entrega/custodia y sustitución verificables | Selección operativa |
+| Autorizaciones/invitaciones | Vigencia limitada/consumo único/destinatario | Valores operativos |
+| Cuotas antiabuso | Compartidas por origen/identificador protegido; sin bloqueo permanente anónimo | Ingeniería propone, revisar impacto |
+| Independencia/conflictos | Personas/facultades verificadas y categorías/revisión | Catálogo central autorizado |
+| Evidencia/finalidad | Suficiencia mínima y finalidad legítima limitada | Autoridad central competente |
+| Delegación | Concedentes/revocadores/techos por operación | Designación expresa central |
+| Reconciliación | Alertas/escalamiento; plazo no prueba cancelación | Ingeniería/operación |
+| Idempotencia/auditoría | Retención suficiente contra repetición, minimizada y definida | Ingeniería/autoridad competente |
+| Namespace/código | Legítimo/único sin colisiones; cambio/reutilización | Ingeniería valida; política pendiente |
+
+No se requiere reaprobación A/B/C/D, P0, seis políticas, separación o I-11. Catálogos/valores requieren definición y autoridad competente; índices/hashes/bloqueos son ingeniería. Cualquier excepción funcional adicional requiere propuesta explícita, no se presume aquí.
+
+### P01–P40 — matriz futura y criterios de aceptación, NO EJECUTADA
+
+Familias de casos, no conteo de tests ejecutados. Incluir positivo/negativo equivalente, datos sintéticos, versión, actor/ámbito, orden temporal, esperado/observado, filas/estado/efectos antes/después y auditoría. HTTP denegado solo no prueba ausencia de efectos. Desarrollan nueve experimentos existentes sin sustituirlos ni crear fase.
+
+| ID | Escenario / aceptación observable |
+|---|---|
+| P01 | Código+contraseña correctos: identidad/sesión registradas verificables y membresías propias; sin mapeo en resolución |
+| P02 | Código conocido sin contraseña/inexistente/inactivo: sin sesión, respuesta/antiabuso no enumeradores |
+| P03 | JWT antiguo no registra sesión nueva aun firmado/vigente |
+| P04 | Login/recuperación, ambas intercalaciones: sin registro sobre generación invalidada |
+| P05 | Refresh revocado no revive ni accede; legítimo conserva continuidad |
+| P06 | Logout actual/global con login/refresh concurrentes y revocación Auth tardía: alcance correcto |
+| P07 | Ordinaria válida: un cambio reconciliado, factores correctos, sesiones previas denegadas y login nuevo |
+| P08 | Doble prueba/autorización: un consumo/efecto; reintento consulta misma ejecución |
+| P09 | Factor no verificado/sustituido/comprometido deniega; vigente equivalente funciona |
+| P10 | Evidencia insuficiente no vincula/restablece; suficiente sigue revisión requerida |
+| P11 | Alto riesgo requiere dos personas, no dos acciones/cuentas de una; también cuenta ordinaria |
+| P12 | Dos independientes facultados ejecutan solo sujeto/versión/alcance aprobados |
+| P13 | Revocar aprobador antes de consumo invalida; orden concurrente comprobado |
+| P14 | Fallos en cada frontera Auth–BD: sin éxito falso ni restaurar generaciones |
+| P15 | Contexto A/recurso B: sin filas/conteos/archivos/eventos/efectos ajenos |
+| P16 | Suspender A bloquea privados/historia; B independiente e historia intacta |
+| P17 | Revocación primero impide escritura posterior con autoridad anterior; probar ambas intercalaciones |
+| P18 | Invitación válida/destinatario correcto: una membresía, autorización+aceptación y consumo |
+| P19 | Token/ID/destinatario/términos distintos, revocada/vencida: sin activación ni privados ajenos |
+| P20 | Aceptación doble o aceptación/revocación: máximo activación legítima y estado consistente |
+| P21 | Ejecutar no concede: cero delegaciones |
+| P22 | Autoconcesión directa, Limitado gestiona administradores, ámbito/vigencia alterados: sin escalamiento/efecto parcial |
+| P23 | Historia legítima/ajena: otro autorizado, finalidad/proyección/auditoría; suspendido denegado y fallo registro impide entrega |
+| P24 | IA sin sesión humana ni versión obsoleta de controlador: ningún efecto nuevo autorizado |
+| P25 | Cada ruta directa Auth/REST/RPC/Storage/Realtime conserva generaciones/autoridad; positivos equivalentes |
+| P26 | Ambigüedad y doble vinculación: sin apropiación/duplicado/pérdida de IDs/historia |
+| P27 | Autoridad/auditoría caídas: distinguir antes de efecto, incierto y fallo de entrega privada |
+| P28 | Regresión TCE-004/administración: origen/sesión/rol/facultad/inactividad servidor y casos legítimos |
+| P29 | Dos recuperaciones distintas, vías combinadas y trabajadores duplicados: una ejecución vigente por identidad |
+| P30 | Auth acepta tarde tras timeout: sin cambio incompatible/login prematuro/sobrescritura tardía; estado reconciliado |
+| P31 | Emitir autorización y revocar/sustituir factor: derivados inutilizables; carrera con consumo |
+| P32 | Dos cuentas misma persona/conflicto/cambio riesgo/evidencia/privilegio: recalcular e invalidar insuficientes |
+| P33 | Central sin membresía/local sin facultad/ambas/excepción privada: independencia y revocación por ámbito |
+| P34 | Cuenta alternativa/ciclos/dependencias concurrentes/revocación origen: sin ampliación ni dependientes utilizables |
+| P35 | I-11 RATIFICADA: suspensión bloquea login/refresh/operaciones; restaurar exige login nuevo; sesiones previas y autoridad revocada no reviven |
+| P36 | Cola IA/toma humana/despacho/timeout: cancelar pendientes, rastrear en curso, sin nuevos envíos fuera barrera ni reenvío ciego |
+| P37 | Rutas alternativas credenciales/vínculos/SDK/administración Auth: controladas o sin autoridad de negocio |
+| P38 | Grants/vistas/RPC/columnas/service-role/Storage CRUD/URL previa/Realtime abierto/cachés/exportación: mismo ámbito/estado final |
+| P39 | Corte/rollback concurrente con login/correo/revocación/recuperación: autoridad única, sin fallback/sesión antigua |
+| P40 | Fronteras de vigencia/inactividad/reautenticación/cuotas/idempotencia/configuración: inválida bloquea; polling no prolonga; no enumeración |
+
+P35 ya no depende de aprobación funcional; sí de validación técnica. P36 no promete retirar mensaje aceptado antes del traspaso; modalidad más fuerte necesita garantía externa demostrada.
+
+#### Subcasos explícitos de aceptación — TODOS NO EJECUTADOS
+
+Sufijos desglosan familias existentes, no crean P41, fase o tarea. Capturar estado anterior/posterior, generaciones, factores/autorizaciones, membresías, auditoría y efectos externos pertinentes; datos sintéticos.
+
+| Subcaso | Positivo/negativo y aceptación |
+|---|---|
+| P09.a Enrolamiento inicial válido | Vínculo/titularidad acreditados, sesión/reautenticación y prueba nueva: un factor del titular utilizable, sin cambiar rol/vínculo/membresía |
+| P09.b Enrolamiento indebido | Sesión robada sin prueba fresca, factor ajeno/no comprobado o heredada ambigua: ningún factor utilizable ni autorización nueva |
+| P09.c Confirmación concurrente | Dos confirmaciones: único resultado; contenido distinto con misma idempotencia no cambia titular/destino |
+| P09.d Entrega fallida/incierta | No declarar entrega completa ni activar material no confirmado según protocolo; no reexponer por consulta ordinaria |
+| P09.e Sustitución con entrega fallida | Fallo de entrega nuevo no retira por sí solo anterior válido; anterior comprometido/revocado no revive |
+| P31.a Derivados/reemisión | Sustituir/revocar material o abandonar emisión invalida derivados pertinentes; material obsoleto no cambia credencial |
+| P14.a Antes del commit inicial | Ningún consumo I-10/ejecución/generación/bloqueo confirmado; cero llamadas Auth; no restaurar prueba previamente consumida I-07 |
+| P14.b Tras commit/antes de envío | Sesiones anteriores inválidas y bloqueo persistente; intención sin envío no se presume segura hasta descartar trabajador capaz de emitir |
+| P14.c Finalización fallida | Auth confirmado pero commit final falla: sin éxito/login; reintento reconcilia misma ejecución |
+| P30.a Incertidumbre sin evidencia | Timeout/lease/plazo no liberan ni permiten repetir; cero efectos incompatibles nuevos |
+| P30.b Reconciliación válida | Evidencia correlacionada/facultad específica solo permite transición documentada; probar éxito/fallo definitivo/pasos restantes. reconciliando→efecto_pendiente solo bajo todas sus condiciones; no desde terminal |
+| P30.c Reconciliación indebida | Actor no facultado/evidencia de otro intento/versión obsoleta/intento ejecutable: sin transición habilitante ni efecto Auth nuevo |
+| P30.d Terminal seguro | fallida_bloqueada deniega login/refresh/operaciones protegidas en todas las rutas relevantes, incluidas P25/P37/P38; probar tokens previos, cookies residuales y restauración I-11 sin eludir bloqueo. Sin generación revivida; ejecución nueva requiere autoridad nueva/cierre de intentos y traspaso sin acceso intermedio |
+| P18.a Reactivar suspendida | A-07 autorizado y términos aplicables: solo relación autorizada; B independiente, delegaciones terminales no reviven |
+| P18.b Reincorporar revocada | Coordinador con autorización central/aceptación nuevas aunque términos iguales; historia preservada, sin duplicación operativa |
+| P19.a Reincorporación incompleta | Token/aceptación anteriores, falta nueva autorización, términos no aceptados o autoridad revocada: cero acceso/membresía activa nueva |
+| P20.a Reactivación concurrente | Reincorporación/reactivación frente a revocación/términos: orden verificable, sin autoridad anterior |
+| P23.a Auditoría central legítima | A-12 facultad/propósito: solo metadatos centrales, sin evidencia privada implícita; acceso registrado sin recursión |
+| P23.b Evidencia privada legítima | A-12 autorización local/excepcional pertinente: proyección/recurso/finalidad limitados, registro previo; no otros expedientes |
+| P23.c Auditoría indebida | Administrador genérico/ámbito ajeno/propósito no autorizado/excepción vencida: cero contenido protegido, sin mutación de privilegios |
+| P27.a Fallo de registro lectura | Registro previo exigido indisponible: no liberar A-12 ni declarar éxito |
+| P38.a Reutilización auditoría | Caché/exportación/idempotencia tras revocación: no reentregar privado; resultado existente no restaura permiso |
+| P25.a SSR/navegador legítimos | Login/refresh/expiración/logout propagan cookies y conservan registro/generaciones; cliente manipulado no altera autoridad |
+| P28.a Origen/CSRF administrativos | Regresión TCE-004 conserva legítimos; origen ajeno/CSRF inválido rechazan antes de mutación/llamada externa |
+| P37.a Origen/CSRF fuera de administración | Mutaciones factores/recuperación/membresías/delegaciones/recursos: credenciales válidas no subsanan origen/CSRF inválidos |
+| P37.b Cabeceras/transporte alternativo | Origin ausente, host reenviado falsificado o mezcla cookie/token: no excepción implícita; alternativo contratado/validado |
+| P40.a Propagación/configuración | Fallo cookies/configuración confiable ausente no habilita/prolonga autoridad; distinguir cookie residual de sesión vigente |
+
+Entrega de factores: definir antes de implementar evidencia de confirmación por tipo. Acuse de transporte no prueba control ni permite declarar verificado. Candidato nuevo no utilizable hasta cumplir I-05; sustitución/versionado/invalidez de derivados juntos. Entrega incierta no autoriza reexposición o reenvío ciego. Protocolo indefinido: enrolamiento afectado bloqueado.
+
+Ausencia de efectos: no basta HTTP negativo; verificar ningún factor utilizable, activación, concesión, cambio de credencial, entrega privada o despacho indebido. Registros de rechazo/auditoría legítimos no son efectos indebidos.
+
+Trazabilidad complementaria de segunda revisión:
+- I-01/I-05/I-07, H03/H11/H12: P09.a–P09.e y P31.a.
+- I-10, H01/H02/H03: P14.a–P14.c y P30.a–P30.d.
+- A-03–A-07, H05/H06: P18.a/P18.b/P19.a/P20.a.
+- A-02/A-10/A-12, H05/H10: P23.a–P23.c/P27.a/P38.a.
+- I-02–I-04 y mutaciones I/A, H09/H10/H12: P25.a/P28.a/P37.a/P37.b/P40.a.
+- I-11/H07/P35 ratificados sin cambio; reconciliación/reincorporación no elimina suspensión global ni rehabilita sesiones.
+- A-11/H08/P24/P36 conserva barrera/garantías pendientes de transporte.
+- M-01/H11/P26/P39 conserva corte único/reversión sin permisos anteriores.
+
+Estas precisiones fueron autorizadas para incorporación por el PO tras la segunda revisión R1, incluidas correspondencia de transiciones y denegación transversal en fallida_bloqueada. No ratifican mecanismos ni declaran validación. CT-01/CT-02/REC-F2-001 y 17 hallazgos originales abiertos; P01–P40/subcasos/nueve experimentos NO EJECUTADOS; TCE-004 EN_VALIDACION; 30 mejoras MF-PO diferidas en implementación conforme a prioridad de recuperación, sin borrar sus decisiones funcionales ya ratificadas.
+
+### Trazabilidad completa, dependencias y estado
+
+| Contratos | Autoridad funcional | H / pruebas principales | Hallazgos y tareas relacionados |
+|---|---|---|---|
+| I-01, M-01 | A, P0-5, POL-CT01-01 | H09/H11; P26/P37/P39 | TCE-005/007/012; REC-F2-001/002/005/006 |
+| I-02–I-04 | A/C, P0-3, POL-CT01-04 | H02/H09/H12; P01–P06/P28/P37/P40 | TCE-004/007/012/013; REC-F2-001/002/005/006 |
+| I-05–I-07 | B, P0-1, POL-CT01-03 | H03/H12; P07–P09/P31/P40 | TCE-005/007/012; REC-F2-001/002/005/006 |
+| I-08–I-09 | B, P0-2/5, POL-CT01-01/02 | H04/H05; P10–P13/P32/P33 | TCE-007/012; REC-F2-001/002/005/006 |
+| I-10 | P0-3, POL-CT01-03/04 | H01/H02/H03/H09; P04/P07/P08/P14/P29–P31/P37 | TCE-004/005/007/012/013; REC-F2-001/002/005/006 |
+| I-11 | Ratificación PO I-11, separación global/local | H07; P35 | TCE-004/007/012/013; REC-F2-001/002/005/006 |
+| A-01–A-02 | C/D, separación central/agencia | H05/H10; P15–P17/P25/P33/P38 | TCE-001/002/003/005/006/008/009/012/013/015/016; REC-F2-001/002/003/006/007 |
+| A-03–A-07 | D, POL-CT02-02 | H05/H10; P16/P18–P20/P33 | TCE-007/012/013/014; REC-F2-001/002/006/007 |
+| A-08–A-09 | P0-4, POL-CT02-01 | H06; P21/P22/P34 | TCE-004/005/012/013; REC-F2-001/002/005/006 |
+| A-10/A-12 | POL-CT02-02, separación central/agencia, DF-PO-002/003 | H05/H10; P23/P27/P33/P38 | TCE-001/003/006/008/012/013; REC-F2-001/002/003/005/006 |
+| A-11 | C/D y límites DA/DC | H08; P24/P36 | TCE-007/011/013; REC-F2-001/002/005/006/007 |
+| Parámetros/superficies | Cinco P0/seis políticas | H09/H10/H12; P25/P28/P37/P38/P40 | Adaptadores TCE-017; REC-F2-005/006 |
+| Convenciones transaccionales | C y límites DF/DC | H01/H02/H06/H08/H11; concurrencia | TCE-009/010/011/014; REC-F2-002/006 |
+
+Relación con TCE-010/011 es dependencia de autorización/integridad, no resolución de contratos completos de comisiones/pipeline. Discrepancias TCE-003/012 intactas. H01–H12 y riesgos en HALLAZGOS, puertas en PLAN y continuidad en TASKS; sin duplicar matrices contractuales allí.
+
+Bloqueos reales: procedencia/continuidad Auth, control de rutas alternativas, reconciliación sin efectos tardíos incompatibles, exclusión/concurrencia, configuración efectiva RLS/RPC/grants/service-role, Storage/Realtime/cachés, corte/reversión, transporte IA y parámetros/catálogos sin valor autorizado. Garantía externa no demostrada mantiene bloqueada operación afectada. Candidatos entre dispositivos/recursos compartidos/atribución conservan pendientes propios. I-11 no tiene pendiente funcional nuevo; sus mecanismos/pruebas sí.
+
+Riesgos residuales: indisponibilidad prolongada ante efecto incierto, información ya entregada no recuperable, mensajes aceptados antes del traspaso que lleguen después y configuración/privilegio técnico no acreditados. R1 puede someterse a revisión documental; no autoriza implementación sin reservas.
+
+CT-01/CT-02/REC-F2-001 ABIERTOS; REC-F2-001/002 EN_CURSO solo diseño. Implementación/validación PENDIENTES; P01–P40 y nueve experimentos originales NO EJECUTADOS. 17 hallazgos abiertos, TCE-004 EN_VALIDACION, siete tareas F2 y 30 MF preservados. Ningún cierre por redacción documental. Orden: reparar hallazgos → validar con evidencia → mejoras autorizadas.
