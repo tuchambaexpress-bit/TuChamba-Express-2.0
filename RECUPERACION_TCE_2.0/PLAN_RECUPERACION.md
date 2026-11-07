@@ -553,3 +553,15 @@ Secuencia propuesta: completar CT-01 en REC-F2-001 con flujos ordinario/excepcio
 Validación futura REC-F2-005/006/007: casos de SPEC, roles legítimos positivos y negativos, sujeto ambiguo, doble consumo/aprobación/revocación concurrente, tokens previos y acceso directo a BD/Realtime/Storage. Integración primero TCE-004 existente cuando se autorice entorno; nueve experimentos originales siguen NO EJECUTADOS. REC-F2-004 mantiene conexión/arranque bloqueados; no código/SQL/migraciones/servicios/pruebas ahora.
 
 Mantener orden vigente de reparación de auditoría → evidencia técnica/seguridad → mejoras posteriores autorizadas. Las políticas P0 no autorizan funciones nuevas, agentes IA ni operación productiva. Pendientes de reservas/cupos/lista de espera/retención/atribución no se consideran resueltos por CT-01/02.
+
+## CT-01/CT-02 — avance tras seis políticas operativas, 2026-11-06
+
+Reglas ratificadas y relación con cinco P0 en SPEC «seis políticas operativas ratificadas». No crear otra fase/tarea ni repetir como pendientes las direcciones ya aprobadas.
+
+Secuencia propuesta: REC-F2-001 completar catálogo de evidencia/independencia/riesgo, autoridades y matriz de ejecutar/conceder/revocar; definir enrolamiento/sustitución y recuperación limitada con revocación global; concretar límites de sesión por rol y consulta histórica por otros actores con finalidad/ámbito auditables. Conservar contrato administrativo vigente mientras se revisan parámetros, sin inventar nuevos tiempos. Vincular cada transición y error seguro con amenaza y caso esperado.
+
+REC-F2-002 recibirá después contratos revisados, matriz y estados: factores/consumo, aprobaciones distintas, sesiones/credenciales/membresías y delegaciones, identidad heredada e historial. Diseñar protección servidor/BD/RLS y canales directos; suspensión A no abre lectura histórica al suspendido ni afecta B; recuperación global exige reautenticación sin devolver facultades revocadas. Inspección efectiva/diseño físico y ejecución requieren alcance autorizado; no iniciarlos por esta nota.
+
+Condiciones de cierre documental CT-01/02, TODAVÍA NO satisfechas: mecanismos y pendientes concretos especificados, matriz/estados/errores trazados a las seis políticas y P0, revisión independiente y aceptación expresa sobre versión identificable. Implementación y validación real son posteriores y separadas; no cerrar REC-F2-001/002. Validación futura REC-F2-005/006/007 deberá cubrir evidencia insuficiente, cuenta ordinaria de alto riesgo, independencia de aprobadores, consumo concurrente, sesiones revocadas, delegaciones ajenas y consulta histórica negada/permitida con auditoría. Nueve experimentos originales siguen NO EJECUTADOS; integración primero TCE-004 existente cuando se autorice.
+
+Mantener REC-F2-004 red/arranque bloqueados, retención/Storage vinculados a REC-F2-003 y facultades IA propias según DA sin construcción. Correcciones de hallazgos anteceden validación con evidencia y mejoras autorizadas. DF/DC y sus pendientes (cupos/lista de espera/atribución) intactos; este registro no habilita implementación.

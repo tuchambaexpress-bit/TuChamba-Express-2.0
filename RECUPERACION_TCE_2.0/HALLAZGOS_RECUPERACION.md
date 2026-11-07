@@ -1135,3 +1135,20 @@ Fuente: PO, mandato «Consolidación documental de cinco decisiones P0». Reglas
 Los pendientes funcionales previos se consideran resueltos solo en estas direcciones; antecedentes siguen históricos sin borrar reservas ni evidencia. A/B/C/D compatibles: suspensión local no equivale a recuperación global, que requiere reautenticación sin borrar membresías; matriz/delegaciones no da gestión administrativa a Limitado ni permisos implícitos a agentes DA. DF/DC, cupos, supervisión humana y prioridad de reparación no se alteran. No contradicción sustantiva detectada; autoridades/evidencias/canales/plazos exactos y mecanismos siguen pendientes donde no ratificados.
 
 Cierre documental CT-01/CT-02 NO otorgado; REC-F2-001/002 EN_CURSO diseño. Implementación/validación separadas y pendientes. 17 fichas/matriz y estados intactos (TCE-004 EN_VALIDACION), discrepancias TCE-003/012 conservadas, siete tareas y nueve experimentos NO EJECUTADOS, 30 MF sin cambios. Solo documentos y controles de integridad, SIN_COMMIT; no producto, servicios, datos reales ni credenciales.
+
+## CT-01/CT-02 — trazabilidad y riesgos de seis políticas operativas, 2026-11-06
+
+Fuente: ratificación PO «Consolidación de seis políticas operativas ratificadas CT-01/CT-02». Texto funcional único en SPEC, relación POL/P0 y condiciones PLAN, seguimiento TASKS. No nueva prueba ni observación remota; políticas aprobadas no acreditan mecanismos efectivos.
+
+| Política | Antecedentes | Riesgo residual técnico |
+|---|---|---|
+| POL-CT01-01 | P0 2/5, B; TCE-005/007/012 | Evidencia insuficiente, coordinador como única prueba o recolección excesiva; catálogo/independencia por especificar |
+| POL-CT01-02 | P0 2; TCE-007/012 | Ignorar indicios en cuenta ordinaria o contar dos eventos de una persona; facultad/independencia al decidir y consumir pendientes de diseño |
+| POL-CT02-01 | P0 4, C/D; TCE-001/002/003/004/005/006/009/012/013 | Ejecución confundida con concesión, autoelevación y permiso fuera de destinatario/ámbito/vigencia; matriz/RLS efectivas pendientes |
+| POL-CT01-03 | P0 1/2/3; TCE-005/007/012 | Factores sustituidos utilizables, doble consumo o éxito falso antes de revocar todas las sesiones; fallos Auth–BD y reconciliación |
+| POL-CT01-04 | P0 3, A/C; TCE-004/007/012/013 | JWT antiguo, cachés/canales directos y límites inadecuados; parámetros/compatibilidad con administración aún por validar |
+| POL-CT02-02 | C/D, DF-PO-002/003; TCE-001/006/008/012/013 | Lectura histórica que restaura permisos al suspendido, conservación confundida con acceso o borrado que pierde historia; finalidad/retención/auditoría pendientes |
+
+No contradicción funcional nueva detectada: POL concreta los pendientes previos solo en alcance ratificado, sin borrar antecedentes ni cinco P0. Nueva autenticación no rehabilita membresía suspendida, revocación global de recuperación no borra membresías y suspensión local no suspende implícitamente otras. Maestro/Limitado y DA sin autoridad administrativa/recuperación autónoma intactos; DF/DC y prioridad de reparación se conservan. Las notas históricas de políticas no definidas no reabren estas seis direcciones.
+
+Aceptación todavía no cubierta: pruebas de independencia/riesgo/evidencia, permisos de concesión, factores sustituidos, consumo único, sesión revocada y rechazo histórico al suspendido/actor ajeno, control positivo histórico autorizado y concurrencia/auditoría. No esquema/tecnología/proveedor ratificado ni operación ejecutada. CT-01/CT-02/REC-F2-001 abiertos, REC-F2-002 sin cierre; 17 fichas/matriz y estados, siete tareas, nueve experimentos NO EJECUTADOS y 30 MF intactos. Sin código/datos/servicios ni commit; solo cuatro documentos.

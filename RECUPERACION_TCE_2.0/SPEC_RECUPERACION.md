@@ -720,3 +720,50 @@ Invariantes técnicos propuestos para revisión: vínculo estable y único; fact
 Pendientes de ingeniería: contrato de enrolamiento/recuperación/sesión, clasificación operativa de riesgo y autoridades/evidencias concretas, plazos/canales seleccionados, matriz detallada y concesión/revocación, migración/reconciliación, antiabuso y autorización servidor/BD/RLS. No trasladar decisiones de índices/bloqueos/almacenamiento al PO salvo impacto funcional/riesgo. Cierre documental de contratos necesita diseño completo, revisión y aceptación aparte; implementación/validación necesitan autorización y evidencia posteriores.
 
 Prioridad: corregir hallazgos → validar con evidencia → implementar después mejoras autorizadas. CT-01, CT-02 y REC-F2-001 NO CERRADOS; REC-F2-001/002 EN_CURSO solo diseño. 17 hallazgos abiertos, siete tareas F2 y nueve experimentos NO EJECUTADOS; inventario 30 MF preservado. Ninguna capacidad habilitada por esta actualización.
+
+## CT-01/CT-02 — seis políticas operativas ratificadas, 2026-11-06
+
+Fuente: PO, mandato «Consolidación de seis políticas operativas ratificadas CT-01/CT-02», base master/419b6d2b1348dfa193e63093606b275a6c4a6f76, inicio limpio y staging vacío. Las seis políticas siguientes están RATIFICADAS POR EL PO. Precisiones operativas de las cinco P0, no mecanismos físicos aprobados ni cierre de contratos. A/B/C/D y DF/DA/DC se conservan íntegros.
+
+### POL-CT01-01 — Verificación independiente de titularidad — RATIFICADA
+
+TCE realiza verificación central independiente proporcional al riesgo, exige evidencia suficiente, minimiza datos personales y refuerza controles para cuentas privilegiadas o casos sensibles. Coordinador puede asistir, nunca acreditar unilateralmente titularidad. Evidencia insuficiente impide completar recuperación excepcional o vinculación ambigua. No fijar documentos personales específicos ni recolección excesiva por inferencia.
+
+### POL-CT01-02 — Clasificación de alto riesgo — RATIFICADA
+
+Recuperaciones excepcionales de cuentas privilegiadas o con indicios fundamentados de apropiación, conflicto de titularidad o fraude requieren DOS aprobaciones centrales independientes, de personas distintas y facultadas. También aplica a cuentas ordinarias con alto riesgo. No basta repetir una aprobación, cambiar etiqueta de cuenta ni ignorar indicios para eludir revisión reforzada.
+
+### POL-CT02-01 — Delegación controlada por autoridad — RATIFICADA
+
+Administración central determina expresamente quién puede conceder o revocar cada facultad. Delegación limitada por operación, ámbito, destinatario y vigencia; revocable y auditable. Prohibidas autoconcesión, subdelegación implícita y escalamiento. Permiso para ejecutar no implica permiso para conceder. No designar concedentes concretos ni ampliar facultades de Limitado/IA sin autoridad expresa; contrato Maestro/Limitado intacto.
+
+### POL-CT01-03 — Recuperación gradual y controlada — RATIFICADA
+
+Recuperación ordinaria usa factores previamente verificados; pérdida o compromiso conduce a vía excepcional central. Autorizaciones con vigencia limitada y consumo único; invalidar factores sustituidos o comprometidos. Recuperación completada revoca todas las sesiones anteriores y exige nueva autenticación. Controles reforzados según riesgo. No inventar plazo, canal, factor o procedimiento específico; las alternativas de canal verificado/códigos de un uso de P0 1 se mantienen.
+
+### POL-CT01-04 — Sesiones diferenciadas por riesgo — RATIFICADA
+
+Controles más estrictos para administración y límites operativos adecuados para coordinadores/reclutadores. Distinguir cierre de sesión actual de cierre global. Recuperación de credenciales revoca globalmente sesiones anteriores. Sesión revocada no autoriza nuevas operaciones protegidas aunque JWT sea criptográficamente válido. No aprobar tiempos concretos ni cambiar silenciosamente contrato administrativo histórico de inactividad; parámetros y compatibilidad por especificar.
+
+### POL-CT02-02 — Conservación histórica con acceso controlado — RATIFICADA
+
+Suspender membresía bloquea acceso del usuario a la agencia afectada. Preservar expedientes, conversaciones, documentos e historial conforme a retención aplicable. Consulta histórica únicamente por OTROS actores expresamente autorizados, con finalidad legítima, ámbito y recursos limitados y auditoría. No restablecer permisos al suspendido ni afectar implícitamente otras membresías independientes. Conservación no implica permiso de lectura ni retención indefinida.
+
+### Trazabilidad, sucesión y límites
+
+| Política | P0 / decisión previa que precisa |
+|---|---|
+| POL-CT01-01 | P0 2/5; B y recuperación excepcional/enrolamiento ambiguo |
+| POL-CT01-02 | P0 2; independencia de aprobaciones y riesgo de cuentas ordinarias |
+| POL-CT02-01 | P0 4; C/D, facultad de ejecutar distinta de conceder/revocar |
+| POL-CT01-03 | P0 1/2/3; recuperación dos vías y factores |
+| POL-CT01-04 | P0 3; A/C, sesión vigente frente a autorización actual |
+| POL-CT02-02 | C/D, membresías independientes; DF-PO-002/003, conservación sin acceso universal |
+
+Estas precisiones suceden solo a pendientes funcionales que resuelven: verificación central, disparadores de alto riesgo, autoridad central para definir concedentes, recuperación gradual, sesiones por riesgo y exclusión histórica del suspendido. Antecedentes conservados, sin reabrir cinco P0 ni ratificar íntegro el análisis conversacional de estados/matriz. Suspensión local no es revocación global por recuperación; nueva autenticación no devuelve una membresía suspendida. DA no otorga recuperación autónoma/administración al agente y DC no habilita resultados inventados; cupos/postulaciones no se alteran.
+
+Mecanismos técnicos PROPUESTOS/PENDIENTES: registro autoritativo de vigencia de sesiones/credenciales y membresías, control concurrente/idempotente de consumo y aprobaciones, matriz por operación/recurso y auditoría minimizada. Servidor y BD/RLS deben rechazar nueva operación revocada, sin confiar solo en expiración JWT, UI, metadata o service-role. No aprobar tabla/RPC/tecnología ni prometer retirada de información ya entregada.
+
+Criterios de aceptación futuros NO CUBIERTOS POR PRUEBAS: evidencia insuficiente no activa/vincula/restablece; cuenta ordinaria con indicios fundamentados exige dos aprobadores facultados distintos; una facultad de ejecución no permite conceder; destinatario/ámbito/operación/vigencia alterados o revocados deniegan efecto; autorización de recuperación vencida/reutilizada no consume; factor sustituido/comprometido no recupera; sesión anterior se rechaza tras recuperación en servidor y canales directos; cierre actual no se confunde con global; suspendido no consulta historia de A, otro actor sin permiso/finalidad tampoco, B independiente conserva su tratamiento; acceso histórico legítimo queda acotado y auditado. Incluir positivos equivalentes y carreras revocación/escritura/consumo, sin declarar resultados ahora.
+
+Pendientes concretos: catálogo/evidencia suficiente y responsables facultados, evaluación/revisión de indicios, plazos/canales seleccionados/enrolamiento y sustitución, límites de sesiones por rol, matriz operativa/concedentes, retención/finalidades históricas y mecanismos de consistencia/Auth–BD/Realtime/Storage/caché, fallos y reconciliación. Son especificaciones por completar, no reaprobación de políticas resueltas. CT-01/CT-02 y REC-F2-001 siguen ABIERTOS; REC-F2-001/002 EN_CURSO diseño. Cierre documental exige revisión/aceptación separada; implementación y validación técnica aún pendientes. Prioridad: reparar hallazgos → validar con evidencia → mejoras autorizadas.
