@@ -996,3 +996,65 @@ Vínculos: SPEC contrato/capacidades/limitaciones; PLAN procedimiento de sonda y
 Mandato vigente autoriza revisión de los nueve archivos pendientes, documentación oficial y un único commit local si pasa revisión. Suite confirmada: 36 PASS, 0 FAIL/SKIP; git diff --check sin errores. Preservadas las 17 fichas, siete tareas F2 y matriz de nueve experimentos NO EJECUTADOS; sin cambio de sus evidencias ni de TCE-004.
 
 Documentación oficial consultada en SPEC; health de Auth es candidato sin datos de usuarios, pero no se demostró contrato de rechazo de apikey inválida. Sigue BLOQUEADA la validación real de clave. Alternativa mínima y puertas futuras en PLAN, sin nueva infraestructura. anon legacy y publishable no son formatos intercambiables en las guardas actuales: soporte publishable pendiente de revisión. La CLI sigue bloqueada antes de credenciales/red; no conexiones Supabase/Vercel ni arranque. Se cierra implementación offline, no aceptación integral de REC-F2-004 ni ninguno de los 17 hallazgos.
+
+## REC-F2-001/002 — trazabilidad del diseño mínimo multiagencia, 2026-11-06
+
+Fuente: PO «Continuidad F2 y diseño mínimo multiagencia», checkpoint 65fa41829a1beb0e5c17d467ed6b057ab5120d88. Solo continuidad de diseño y cuatro documentos, sin nueva auditoría, pruebas, acceso remoto o commit. Requisitos ratificados y modelo PROPUESTO en SPEC «diseño mínimo de identidad y aislamiento multiagencia»; escenarios y secuencia en PLAN «validación mínima multiagencia»; Git/hooks/estado y siguiente tarea en TASKS. Código contrastado únicamente para compatibilidad, no acredita comportamiento de BD ni nuevos poderes.
+
+| Hallazgos existentes | Relación del diseño y validación futura |
+|---|---|
+| TCE-001/006 | Actor, pertenencia y permiso por documento/recurso antes del privilegio; coherencia de agencia y negocio compartido; Storage pendiente REC-F2-003 |
+| TCE-002/003 | Ámbito de agencia en import/export/ficha y proyección pública mínima; discrepancia histórica TCE-003 intacta |
+| TCE-004 | Preservar corrección y contrato administrativo Maestro/Limitado; integración real primero mediante REC-F2-006, sin modificar código |
+| TCE-005/007/008 | Vínculo estable Auth/usuario/perfil, código+contraseña aún sin mecanismo seleccionado, propiedad de perfil y privados de candidato limitados al recurso |
+| TCE-009 | Agencia derivada de vacante y atribución validada por relación activa; referido/fallback y asignación pendientes PO |
+| TCE-010/011 | Autorización actor/recurso/agencia y patrón de transacción/idempotencia/versionado; detalle de cortes/etapas/efectos se conserva en tarea original, no se rediseña aquí |
+| TCE-012/013 | Separación global/local, membresías independientes, pipeline filtrado conjuntamente; sin eliminación/bloqueo global por coordinador local; discrepancia histórica TCE-012 intacta |
+| TCE-014 | Alta pendiente, consumo único/revalidación de autoridad y compensación Auth/BD como requisito de diseño; política de invitación sin decidir ni implementar |
+| TCE-015/016 | Aislamiento también en proyecciones, joins, conteos y consultas paginadas; rendimiento/completitud real pendientes REC-F2-007 |
+| TCE-017 | Entorno/runtime/dependencias siguen bajo REC-F2-004/005; no actualización ni nueva revisión de dependencias por este diseño |
+
+Conservadas las 17 fichas, matriz técnica, evidencia/certeza/estados originales y reservas; todos los hallazgos ABIERTOS, TCE-004 EN_VALIDACION. Modelo lógico nuevo no demuestra tablas/políticas desplegadas ni corrige defectos por documentación. Se mantienen siete tareas F2 y nueve experimentos originales NO EJECUTADOS; los casos negativos añadidos desarrollan su protocolo, no son experimentos ya realizados.
+
+REC-F2-001 EN_CURSO diseño; REC-F2-002 EN_CURSO solo diseño conceptual autorizado ahora, inventario/BD/pruebas pendientes; REC-F2-004 offline cerrado sin aceptación integral, red/arranque bloqueados. F1 CERRADA DOCUMENTALMENTE CON CONDICIONES. Pendientes PO y siguiente actividad exacta en TASKS; sin aceptación técnica ni de arquitectura final. Producción y protección Vercel conservadas sin consultar servicios. SIN_COMMIT.
+
+## REC-F2-001 — trazabilidad de PO-F2-001-A/B/C ratificadas, 2026-11-06
+
+Fuente: Product Owner, ratificación expresa 2026-11-06, mandato «REC-F2-001: registro de decisiones ratificadas por el PO». APROBADAS POR EL PO con texto íntegro en SPEC «decisiones ratificadas PO-F2-001-A/B/C». No nueva evidencia técnica: se registran decisiones, no correcciones ni resultados de laboratorio. Se preserva el diseño documental pendiente anterior sobre 65fa41829a1beb0e5c17d467ed6b057ab5120d88, sin commit.
+
+| Decisión aprobada | Trazabilidad existente | Riesgos técnicos todavía abiertos |
+|---|---|---|
+| PO-F2-001-A — identidad técnica estable con Supabase Auth, código+contraseña, sin correo personal/SMS habitual | TCE-007; propietario de perfil TCE-005; atribución TCE-009 y ámbito TCE-012/013; REC-F2-001/002 | Mapeo/almacenamiento/custodia, enumeración, identificador no editable por reclutador, vínculo estable y ciclo de credenciales, fallos Auth/BD y concurrencia; dirección aprobada no demuestra viabilidad de un detalle |
+| PO-F2-001-B — verificación independiente y prohibición de apropiación unilateral por coordinador | TCE-007/005/012, identidad compartida TCE-013; REC-F2-001/002 y futuras verificaciones REC-F2-005/006 | Autoridad/factores/procedimiento, entrega/caducidad/consumo, revocación de sesiones y efectos multiagencia sin resolver; ningún mecanismo particular aprobado |
+| PO-F2-001-C — identidad/rol/agencia del recurso/membresía activa/permisos y controles servidor/BD/RLS cuando proceda | TCE-001/002/003/005/006/007/008/009/012/013; integridad TCE-010/011/014 y consultas TCE-015/016; contrato TCE-004; REC-F2-001/002 | Modelo físico, grants/políticas/funciones y RLS efectiva no verificados; acceso directo/privilegio de servicio/Realtime/Storage, estados revocados y concurrencia. Explicitar facultades transversales administrativas conforme a C sin presumir excepción |
+
+A sucede a las alternativas todavía no seleccionadas de las instantáneas anteriores solo en la dirección de autenticación; estas se conservan como historial. No contradicción funcional nueva detectada: coordinadores mantienen gestión autorizada sin apropiación global; Maestro/Limitado conservan contrato y TCE-004, es_maestro no confiere administración; reclutadores compartidos conservan identidad única y membresías independientes; candidatos conservan postulación pública y privados limitados al recurso. Detalles incompatibles futuros se bloquean y elevan al PO, sin inventar políticas. Discrepancias históricas TCE-003/012 intactas.
+
+Se preservan íntegros 17 fichas/matriz técnica, siete tareas F2 y nueve experimentos originales NO EJECUTADOS. Todos los hallazgos ABIERTOS, TCE-004 EN_VALIDACION, TCE-017 y dependencias de entorno/seguridad sin cambio. REC-F2-001/002 EN_CURSO solo diseño, no aceptadas/cerradas; implementación NO INICIADA, pruebas LAB NO EJECUTADAS. PLAN contiene secuencia mínima consolidada y TASKS distingue aprobación, pendientes y siguiente paso. REC-F2-004 mantiene bloqueadas conexión y arranque. Sin SQL/migraciones, acceso a datos/credenciales, Supabase/Vercel, servidores, producción ni operaciones remotas. SIN_COMMIT.
+
+## REC-F2-001 — propuesta PO-F2-001-D y riesgos heredados, 2026-11-06
+
+Fuente: mandato PO «REC-F2-001: ampliación coordinador multiagencia», sobre master/65fa41829a1beb0e5c17d467ed6b057ab5120d88 y cuatro documentos pendientes conservados. D es PROPUESTA FUNCIONAL PENDIENTE DE RATIFICACIÓN FORMAL FINAL DEL PO; texto íntegro en SPEC, secuencia/casos futuros en PLAN y trazabilidad REC-F2-001/002/006/007 en TASKS. A/B/C siguen aprobadas, sin modificación de texto ni alcance. No nueva evidencia técnica, auditoría o fase.
+
+| Riesgo/dependencia de la ampliación propuesta | Hallazgos/tareas existentes y tratamiento pendiente |
+|---|---|
+| Identidad de coordinador duplicada o permiso global por sesión/contexto cliente; mezcla de agencias/roles | TCE-012/013 y consumidores TCE-001/002/003/005/006/009; REC-F2-001/002: vínculo global estable, membresías/permisos locales y verificación por recurso; D no concede administración global |
+| Asignación unilateral, invitado incorrecto, alta parcial o doble aceptación | TCE-014 y patrones de integridad TCE-010/011; REC-F2-002/006: autorización central más aceptación verificable, unicidad/idempotencia, revocación y concurrencia por diseñar; no mecanismo técnico aprobado |
+| Revocar A afecta B o caché/Realtime conserva acceso indebido | TCE-012/013, REC-F2-002/006/007; mantener independencia de relaciones, probar contexto/listados y estado vigente por canal; no garantizar revocación retroactiva |
+| Facultades implícitas a Limitado o apropiación de credencial global por coordinador compartido | TCE-004/007/012; conservar Maestro/Limitado, TCE-004 y recuperación independiente B; facultad expresa de asignación no equivale a gestionar administradores ni recuperar cuenta |
+| Delegación IA sin límites, autoelevación, reglas propias modificables o alto riesgo sin humano | Dependencia de autorización/seguridad REC-F2-001/005 y diseño de controles REC-F2-002; posibilidad futura condicionada, sin agente/capacidad habilitados. Catálogo de bajo riesgo, límites, auditoría, revocación y autoridad humana pendientes |
+| Esquema actual de coordinador con una agencia frente a relaciones múltiples; regresión funcional | REC-F2-001/002/006/007: ratificar alcance, diseñar transición compatible y conservar IDs/historial antes de cambios; contexto, accesibilidad y cobertura por rol pendientes |
+
+No contradicción nueva con A/B/C: D no cambia identidad técnica del reclutador, no autoriza recuperación unilateral y conserva controles por operación/membresía. Sí propone ampliar el supuesto anterior de coordinador de una agencia: queda pendiente de ratificación/sustitución delimitada, no cambio operativo consumado. Candidatos y reclutadores compartidos conservan sus contratos; discrepancias históricas TCE-003/012 intactas. D no resuelve ni confirma el objeto histórico de TCE-012.
+
+Las 17 fichas y matriz técnica, siete tareas F2 y nueve experimentos originales se preservan íntegros; experimentos NO EJECUTADOS, hallazgos ABIERTOS y TCE-004 EN_VALIDACION. REC-F2-001/002 siguen EN_CURSO solo diseño; REC-F2-006/007 PENDIENTES y REC-F2-004 mantiene bloqueos de conexión/arranque. Sin implementación, agentes, pruebas ejecutables, SQL/migraciones, credenciales, servicios o producción. Solo verificación documental y git diff --check; SIN_COMMIT. Detenerse para revisión del PO.
+
+## REC-F2-001 — ratificación D y consolidación A/B/C/D, 2026-11-06
+
+Fuente: ratificación formal del PO el 2026-11-06, mandato «ratificación D, consolidación A/B/C/D y checkpoint». D está APROBADA POR EL PO como requisito funcional; su sección SPEC actualiza el estado y conserva antecedente de propuesta sin repetir aquí los diez puntos. A/B/C permanecen aprobadas con texto íntegro sin cambios. La ratificación sucede al supuesto funcional de coordinador de una sola agencia, sin borrar evidencia ni aprobar diseño físico o implementación.
+
+Dependencias conservadas: REC-F2-001 contrato técnico; REC-F2-002 modelo físico/autorización/RLS; REC-F2-006 integración/concurrencia; REC-F2-007 cobertura por rol/agencia, con REC-F2-003/004/005 para Storage/entorno/seguridad. Trazabilidad de D en la tabla anterior y de los 17 hallazgos en el diseño mínimo se mantiene; TCE-004 no se modifica y TCE-003/012 siguen discrepancias históricas pendientes. A/B/C no se reinterpretan y coordinador multiagencia no recibe administración global ni recuperación unilateral; Maestro/Limitado, reclutadores compartidos y candidatos conservan contrato.
+
+Riesgos técnicos aún abiertos: mapeo/custodia/anti-enumeración y ciclo de identidad técnica; recuperación independiente y revocación de sesiones; transición de coordinadores.agencia_id a membresías sin duplicados/pérdida de historial; autorización central y aceptación verificables, idempotencia/consumo y concurrencia; facultades administrativas expresas; aislamiento servidor/BD/RLS/Realtime/Storage y cachés. Auditoría, revocación y delegación futura sin mecanismo técnico validado; ningún agente habilitado ni permiso concreto de IA otorgado por la ratificación funcional. Operaciones excepcionales/alto riesgo requieren autorización humana.
+
+No se aporta prueba técnica nueva ni se cierra ningún hallazgo: 17 fichas/matriz y siete tareas preservadas; nueve experimentos originales NO EJECUTADOS; REC-F2-001/002 EN_CURSO diseño y REC-F2-006/007 PENDIENTES. F1 CERRADA DOCUMENTALMENTE CON CONDICIONES; TCE-004 EN_VALIDACION; REC-F2-004 mantiene bloqueos reales. PLAN consolida secuencia y TASKS fija próxima tarea y único commit documental autorizado. Las notas previas SIN_COMMIT/propuesta pendiente siguen históricas; este mandato autoriza solo el checkpoint local de cuatro documentos, sin omitir hooks ni hacer push, seguido de informe y detención.

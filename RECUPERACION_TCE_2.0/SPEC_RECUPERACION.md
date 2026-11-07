@@ -280,3 +280,161 @@ Fuentes oficiales consultadas sin acceder al proyecto: [API keys](https://supaba
 Endpoint propuesto solo para evaluación futura: GET https://ieioysefckvafdbasqxl.supabase.co/auth/v1/health con cabecera apikey, sin Authorization, cookies, sesión o parámetros. La fuente oficial lo documenta para versión/salud, sin datos de usuarios; no demuestra el rechazo de claves inválidas. Por tanto el contrato de autenticación sigue BLOQUEADO. GET /rest/v1/ permanece exclusivamente en simulaciones, nunca prueba concluyente.
 
 Criterio propuesto, todavía no acreditado: mismo endpoint/host/método y únicamente apikey diferente; control inválido del mismo formato rechazado explícitamente por clave (401 atribuible al gateway, no a sesión), clave LAB aceptada con 200 y respuesta de health esperada. Dos 200, un 401 genérico, redirect, timeout o error TLS son inconclusos. Requiere evidencia oficial del control negativo aplicable al servicio alojado antes de habilitar transporte; los códigos por sí solos no prueban este contrato.
+
+## REC-F2-001/002 — diseño mínimo de identidad y aislamiento multiagencia, 2026-11-06
+
+Fuente: mandato PO «Continuidad F2 y diseño mínimo multiagencia», base master/65fa41829a1beb0e5c17d467ed6b057ab5120d88. Solo diseño y cuatro documentos, sin código, SQL, migraciones, ejecución, servicios, datos/credenciales reales ni commit. Continúa F2 original; no nueva fase ni auditoría. Autor material: agente bajo mandato; aceptación del diseño: PO, pendiente. REC-F2-001 EN_CURSO en diseño; REC-F2-002 EN_CURSO únicamente en diseño conceptual desde este mandato, sin inventario de BD efectiva ni aceptación. REC-F2-004 conserva cierre offline y bloqueos de conexión/arranque.
+
+### Autoridad y requisitos recuperados
+
+Se consultaron primero GOBERNANZA_MAESTRA/GOBERNANZA_IA, después SPEC, TASKS, PLAN y HALLAZGOS; finalmente código solo para compatibilidad. DEC-REC-005 ratifica estructura documental, no integralmente gobernanzas 0.1. Vinculantes: los cuatro acuerdos de «REC-F2-001 — criterios funcionales aprobados por el PO»: código individual + contraseña sin correo/SMS en cada login; identidad global única y estados/permisos por agencia; recuperación verificable gestionada por coordinador sin control global automático; postulación pública sin registro y privados con prueba limitada al recurso. Alta por coordinador autorizado se conserva del registro TCE-007, sin autorizar alta remota ahora.
+
+Línea funcional histórica preservada por remisión de gobernanza: spec.md §2 y §3, reclutador multiagencia sin duplicar perfil y unicidad reclutador/agencia; coordinador opera su agencia, reclutador trabaja vacantes y pipeline propio sin editar vacantes. HU-18 distingue administrador Maestro (gestiona administradores) y Limitado (operación sin gestión de administradores); no se cambia su contrato de sesión/inactividad ni TCE-004. es_maestro del reclutador es una condición de distribución/inscripción, nunca rol administrativo. Fallback, inscripción automática y visibilidad histórica se conservan como contratos a compatibilizar: no habilitan acceso sin membresía vigente ni se rediseñan aquí. La aprobación funcional no ratifica el esquema histórico como desplegado o seguro.
+
+### Modelo lógico mínimo PROPUESTO, no DDL aprobado
+
+| Entidad | Identidad y campos mínimos propuestos | Relaciones y límites |
+|---|---|---|
+| agencias (existente) | id estable, nombre, estado operativo, versión | Una agencia tiene muchas membresías y recursos; conservar valores/flujo de aprobación actuales mediante mapeo revisado, sin convertir pendiente/rechazada en activa |
+| usuarios (conceptual, nueva) | id estable, auth_user_id único cuando esté vinculado, estado global, versión | Una identidad de aplicación por sujeto Auth; vínculo obligatorio para operar, nulidad solo durante alta pendiente sin privilegios. Sin contraseña, hash de contraseña propia ni rol global editable por cliente. No fusionar por email/teléfono/nombre |
+| reclutadores (existente) | id existente, usuario_id único, código individual único normalizado, estado de perfil y campos de contacto/referido existentes | Un usuario con perfil reclutador, múltiples agencias; código es identificador, token_referido es atribución, ninguno es credencial de acceso privado. Conservar IDs, contactos opcionales y es_maestro sin elevar privilegios |
+| membresías por agencia (conceptual) | id estable, usuario_id, agencia_id, rol operativo, estado local, versión | Unicidad (usuario, agencia, rol); rol limitado a reclutador/coordinador en este bloque. Si coexisten, verificar rol explícito del comando sin mezclar agencias. Membresía reclutador exige su perfil; no duplicar (reclutador_id, agencia_id) |
+
+La membresía lógica de reclutador corresponde a reclutador_agencia existente; la de coordinador al vínculo coordinadores.agencia_id y estado vigente. Propuesta física preferida para revisión: unificar autorización de membresías manteniendo perfiles/IDs existentes y una transición compatible; tabla nueva frente a extensión/adaptadores de las relaciones existentes sigue decisión de diseño del PO, no dos fuentes de permisos simultáneas. No conceder múltiples agencias a un coordinador por generalizar el modelo: conservar el alcance actual hasta aprobación específica. Ningún ALTER/CREATE ni migración se prepara ahora.
+
+Administradores conservan su entidad/roles/estado y verificación TCE-004; no se convierten en membresías locales ni se aplica a ellos la restricción de una sola agencia. La extensión del vínculo estable usuario–Auth a administradores requiere incremento separado revisado, sin cambiar hoy su comprobación por correo. Candidato sigue entidad funcional independiente sin cuenta Auth obligatoria; postulaciones/chats/documentos se vinculan al recurso y agencia, sin hacer del teléfono una identidad global de acceso. Mecanismo privado pendiente.
+
+### Contrato propuesto de pertenencia y autorización
+
+Para cada operación privada: verificar sesión en servidor → resolver sujeto Auth a usuario estable habilitado → rol del comando → agencia vigente → membresía vigente en esa misma agencia → relación y permiso sobre recurso. Un ID/agencia seleccionado por navegador es solicitud de contexto, nunca prueba; comprobarlo contra relaciones de servidor/BD. Un usuario compartido puede elegir A o B si ambas membresías están habilitadas, sin seleccionar silenciosamente la primera. Si no hay contexto verificable, denegar.
+
+La agencia de postulación procede de su vacante; documento/chat/historial/corte hereda alcance por su cadena real de relaciones. Un candidato compartido no permite exponer todas sus postulaciones en otras agencias. Atribución reclutador–vacante requiere membresía y reglas vigentes; política específica de referido/fallback sigue pendiente. Negocios compartidos no reciben dueño único inventado: bloquear habilitación de acciones ambiguas hasta aprobar política, manteniendo lectura pública expresamente permitida.
+
+| Actor/contexto | Permitido según contrato conservado, sujeto a prueba | Prohibido o pendiente |
+|---|---|---|
+| Público/candidato sin cuenta | Proyección pública mínima y postulación simple por flujo acotado | Lectura base de privados, búsqueda de historial por teléfono/código/chatId; anon no recibe CRUD general |
+| Candidato con mecanismo verificable | Solo recurso/acciones/vida de la credencial aprobada | Enumerar otros recursos, cruzar agencias, elevar credencial a sesión administrativa; mecanismo pendiente |
+| Reclutador activo en A | Perfil propio con columnas permitidas; vacantes autorizadas de A; sus postulaciones/chats/comisiones en A | Editar vacantes, ver pipeline de otro, asignarse rol/agencia, acceder B con contexto A; proyección pública de otra agencia conserva su audiencia pública |
+| Coordinador activo de A | Operación existente de A y solicitudes de alta/recuperación en ámbito verificable | Operar B, suspender identidad global compartida, cambiar credencial global por mera autoridad local, modificar perfil compartido sin política aprobada |
+| Administrador activo Maestro/Limitado | Facultades transversales ya contratadas; Maestro gestiona administradores | Limitado gestiona administradores; es_maestro reclutador se interpreta como admin; no crear nuevos poderes globales de recuperación por inferencia |
+
+### Invariantes propuestos para aceptación
+
+1. Identidad estable: unicidad de vínculo Auth/usuario/perfil y del código normalizado; normalización/reutilización del código por aprobar. Cambiar contacto no transfiere cuenta ni altera dueño. Código y referido nunca autentican por sí solos.
+2. Autorización actual: usuario/perfil, agencia y membresía deben habilitar la operación. Estado local de A no cambia B ni global; autoridad global separada y por aprobar para suspensión/recuperación. Claims, localStorage, metadata editable y roles enviados por cliente no sustituyen consulta de autoridad vigente.
+3. Integridad de ámbito: FK y, donde se replique agencia, restricciones compuestas o derivación verificable impiden mezclar recursos A/B. Identidad/agencia/autoría no se cambian con UPDATE genérico. Preservar IDs e historial; no cascadas destructivas ni borrado global desde autoridad local. Política de eliminación histórica requiere revisión explícita.
+4. RLS: denegación por defecto, grants mínimos, SELECT/DELETE sobre filas autorizadas y INSERT/UPDATE sobre estado resultante autorizado (incluidos USING/WITH CHECK propuestos). Cubrir tablas base, joins, conteos, vistas/RPC y Realtime; no conceder acceso a contactos/código por necesitar mostrar nombre público. Perfil público debe ser proyección deliberada. No aceptar seguridad por filtros UI/API.
+5. Privilegio: service_role efectivo puede saltar RLS ordinaria; todo comando privilegiado verifica actor y alcance antes de usarlo. No exponer credencial ni hacer del servicio una identidad de prueba RLS. Funciones privilegiadas futuras requieren revisión de grants, propietario, ruta de resolución y ausencia de bypass/recursión de políticas.
+6. Concurrencia: unicidad de membresía/código/vínculo impide duplicados bajo dos altas simultáneas; transiciones condicionadas por versión/estado evitan actualización perdida. Revocación y escritura autorizada en BD deben serializarse sobre el mismo estado autoritativo, con orden de bloqueo definido. Si revocación confirma primero, escritura posterior rechazada; si escritura confirma antes, registrar ese orden. No prometer cancelar lecturas/respuestas ya iniciadas ni JWT emitidos.
+7. Alta/recuperación: idempotencia durable por comando; revalidar permiso al consumir, no solo al emitir; credencial de activación/recuperación limitada, vencimiento/uso único por aprobar, sin efectos de negocio mientras alta incompleta. Auth y BD no comparten transacción: estados pendientes, compensación/reconciliación revisada y reintentos sin segunda identidad ni membresía activa huérfana. No afirmar garantías ya implementadas.
+8. Sesión/privados: política de renovación/logout/revocación y TTL por aprobar; denegar acceso con estado local/global revocado aunque JWT siga criptográficamente válido. Capacidad candidata no permite enumeración ni nuevos recursos. URLs ya emitidas, Realtime y cachés necesitan contrato de revocación medido, no garantías instantáneas inventadas.
+
+### Decisiones abiertas reservadas al PO
+
+- Mapeo código+contraseña con Supabase Auth: comparar teléfono real legítimo e identidad técnica administrada, sin seleccionar ni crear ahora. Casos sin teléfono/compartido/reciclado y legitimidad del namespace; no correo obligatorio, username supuesto, correo ficticio inseguro o contraseña propia. Normalización, cambio, unicidad/reutilización del código y vinculación inicial de identidades existentes.
+- Autoridad global de alta/vinculación, bloqueo y recuperación; evidencia de solicitante/destinatario, entrega, caducidad/uso único/cambio inicial y efectos sobre otras sesiones/agencias. Coordinador gestiona solicitud, no adquiere poder global automático.
+- Almacenamiento físico de usuarios/membresías, coexistencia de roles, edición de perfil compartido y bajas/borrado sin perder historial; resolver compatibilidad con ventana histórica de eliminación sin conservar una operación insegura por defecto.
+- Sesiones SSR/browser o intermediación, renovación, TTL/revocación, alcance de logout; conservar contrato administrativo actual (incluida inactividad) sin inventar nuevos tiempos para reclutador.
+- Mecanismo privado/recuperación entre dispositivos del candidato; permisos concretos de referidos/fallback/asignación y negocios compartidos. Conservar contratos existentes hasta decisión expresa sobre la parte conflictiva, no suponer acceso cruzado.
+- Ejecutores/revisor, criterios de riesgo, lista exacta de archivos, permisos de laboratorio y evidencia/retención. Discrepancias históricas TCE-003/012 siguen abiertas; este diseño no las resuelve.
+
+Pruebas negativas y secuencia en PLAN «validación mínima multiagencia»; avance/controles en TASKS; trazabilidad de los 17 hallazgos en HALLAZGOS. Propuesta sin aprobación final: no demuestra esquema desplegado, RLS efectiva ni viabilidad definitiva de Auth.
+
+## REC-F2-001 — decisiones ratificadas PO-F2-001-A/B/C, 2026-11-06
+
+Autoridad: Product Owner, ratificación expresa del 2026-11-06 mediante mandato «REC-F2-001: registro de decisiones ratificadas por el PO». Estado de las tres decisiones: APROBADAS POR EL PO. Alcance de esta intervención: registro y consolidación exclusivamente documental en los cuatro documentos existentes, sobre master/65fa41829a1beb0e5c17d467ed6b057ab5120d88 y sus cuatro cambios documentales pendientes, que se conservan. Sin código, SQL/migraciones, credenciales, servicios, pruebas ejecutables ni commit. Esta aprobación no ratifica íntegramente gobernanzas/borradores ni acepta o cierra REC-F2-001/002.
+
+### PO-F2-001-A — AUTENTICACIÓN — APROBADA POR EL PO
+
+El reclutador iniciará sesión mediante su código individual y contraseña.
+
+La autenticación utilizará Supabase Auth mediante una identidad técnica vinculada de forma estable al reclutador.
+
+No se exigirá correo electrónico personal ni SMS como requisito habitual de acceso.
+
+La identidad técnica no deberá exponerse como credencial editable por el reclutador ni convertirse en un mecanismo para eludir Supabase Auth.
+
+El diseño detallado del mapeo, almacenamiento, protección contra enumeración y ciclo de vida de credenciales permanece pendiente de validación técnica.
+
+### PO-F2-001-B — RECUPERACIÓN — APROBADA POR EL PO
+
+La recuperación de acceso deberá utilizar un procedimiento de verificación independiente.
+
+Ningún coordinador podrá apropiarse unilateralmente de la credencial global de un reclutador, especialmente cuando tenga membresías en varias agencias.
+
+La autoridad, los factores de verificación, la revocación de sesiones y el procedimiento de recuperación deberán especificarse antes de implementar.
+
+No inventar ni dar por aprobado un mecanismo particular de recuperación.
+
+### PO-F2-001-C — AUTORIZACIÓN MULTIAGENCIA — APROBADA POR EL PO
+
+Cada operación protegida deberá comprobar:
+
+- Identidad autenticada.
+- Rol aplicable.
+- Agencia correspondiente al recurso.
+- Membresía activa y permisos vigentes.
+
+Una sesión válida no concede acceso automático a todas las agencias.
+
+La autorización deberá aplicarse en los límites correspondientes del servidor y de la base de datos, incluyendo RLS cuando proceda.
+
+No confiar exclusivamente en filtros del cliente, identificadores enviados por el usuario ni afirmaciones de permisos no verificadas.
+
+### Consolidación, compatibilidad y pendientes técnicos
+
+A precisa los cuatro criterios funcionales anteriores y sucede exclusivamente a las expresiones «ninguna alternativa seleccionada», «Supabase Auth como primera alternativa» y a la comparación teléfono/identidad técnica aún abierta en las secciones históricas de viabilidad y diseño mínimo. La dirección aprobada es identidad técnica estable con Supabase Auth; no reabrir esa elección como siguiente decisión del PO. No se aprueban formato de identidad, dominio/namespace, algoritmo de resolución del código, tabla/columnas, exposición de identificador nativo, endpoints, almacenamiento ni implementación específica. No supone correo personal obligatorio, username nativo arbitrario, correo ficticio inseguro o contraseña propia. La contraseña sigue siendo verificada por Auth; la identidad técnica no lo elude.
+
+B consolida la separación global/local y la gestión verificable de solicitudes por coordinador autorizado, sin atribuirle potestad unilateral de restablecer credenciales globales. «Verificación independiente» no selecciona proveedor, factor, aprobador, canal o plazo concreto. Autoridad/factores, entrega, caducidad/uso único, primer cambio y alcance de revocación permanecen pendientes de especificación/validación antes de implementar.
+
+C ratifica los requisitos de autorización, pero no aprueba automáticamente las políticas ni el modelo físico del diseño mínimo. Mantener agencia de recurso derivada de relaciones confiables y membresías/estados/permisos independientes de reclutadores compartidos. Para administradores Maestro/Limitado se conserva su contrato transversal; el diseño detallado deberá explicitar cómo se verifican agencia/membresía y facultades vigentes en sus operaciones conforme a C, sin presumir ni una excepción general ni una conversión automática en membresías locales. Si aparece incompatibilidad concreta, bloquear la operación y elevarla al PO antes de implementar. No crear nuevos poderes ni reinterpretar es_maestro del reclutador como administrador.
+
+Compatibilidad documental revisada: se conservan alta/gestión de solicitudes por coordinador dentro de autoridad vigente, identidad global única sin suspensión global desde A, distinción administrativa Maestro/Limitado y TCE-004, postulación pública sin registro y privados del candidato ligados al recurso. A/B/C no imponen cuenta de reclutador a candidatos ni acceso multiagencia por mera sesión. No se detecta contradicción funcional nueva entre estos contratos; las discrepancias históricas TCE-003/012 siguen pendientes y las expresiones de alternativas no seleccionadas quedan sucedidas en el alcance de A, sin borrar evidencia histórica.
+
+Diseño técnico todavía pendiente: contrato completo de identidad técnica y vínculo estable/código, custodia y acceso al mapeo, enumeración/errores/intentos, ciclo de alta/cambio/baja y credenciales, recuperación independiente y revocación, transporte de sesión, diseño físico compatible, constraints/concurrencia, grants/RLS y autorización de todos los canales. Modelo conceptual, invariantes y matriz previos permanecen PROPUESTOS donde excedan A/B/C. Validar técnicamente no cambia unilateralmente la dirección ratificada; una inviabilidad se documenta y se eleva al PO.
+
+REC-F2-001 y REC-F2-002 continúan EN_CURSO solo diseño, sin aceptación final; implementación NO INICIADA, pruebas de laboratorio NO EJECUTADAS. Próximo entregable: consolidar contrato técnico de identidad/autenticación bajo A/B/C y, después, traducirlo a diseño físico y de políticas en REC-F2-002. Secuencia controlada en PLAN; seguimiento en TASKS; riesgos/hallazgos en HALLAZGOS.
+
+## REC-F2-001 — PO-F2-001-D, coordinador multiagencia y autorización híbrida, 2026-11-06
+
+Estado vigente: APROBADA POR EL PO como requisitos funcionales, por ratificación formal del 2026-11-06, mandato «REC-F2-001: ratificación D, consolidación A/B/C/D y checkpoint». Antecedente: mandato «ampliación coordinador multiagencia» la registró como PROPUESTA FUNCIONAL PENDIENTE DE RATIFICACIÓN FORMAL FINAL; ese estado queda sucedido por la ratificación expresa, no por inferencia. Base master/65fa41829a1beb0e5c17d467ed6b057ab5120d88 con cambios documentales previos conservados. A/B/C siguen APROBADAS POR EL PO e íntegras. Se autoriza consolidación y un único checkpoint local de cuatro documentos; no implementación ni agentes.
+
+### Contenido funcional aprobado de PO-F2-001-D
+
+1. Un coordinador podrá pertenecer a varias agencias mediante una única identidad global.
+2. Cada agencia tendrá una membresía independiente, con estado y permisos propios.
+3. La asignación a una nueva agencia requerirá autorización central de TuChambaExpress y aceptación del coordinador invitado.
+4. Inicialmente, las autorizaciones corresponderán al administrador Maestro de TCE o a administradores con facultades expresamente delegadas.
+5. En una etapa posterior podrán habilitarse agentes de IA para ejecutar autorizaciones de bajo riesgo, dentro de delegaciones explícitas, limitadas, auditables y revocables.
+6. Los agentes de IA no podrán modificar sus propias reglas, elevar sus privilegios ni concederse autorizaciones.
+7. Las operaciones excepcionales o de alto riesgo requerirán autorización humana.
+8. Revocar una membresía de agencia no revocará automáticamente las demás membresías legítimas.
+9. Cada operación protegida verificará identidad, rol, agencia, membresía activa y permisos vigentes.
+10. La condición de coordinador multiagencia no otorgará administración global de TCE ni facultades de recuperación unilateral de credenciales.
+
+### Compatibilidad y alcance de la ampliación ratificada
+
+D amplía el alcance funcional previo del coordinador de una agencia a varias mediante relaciones locales independientes; no equivale a seleccionar todas las agencias de una sesión ni a fusionar perfiles. La ratificación sustituye expresamente, solo como requisito funcional de diseño, el supuesto de una sola agencia de las frases anteriores «no conceder múltiples agencias a un coordinador» y «conservar el alcance actual hasta aprobación específica». Se conservan como antecedente histórico; ya no bloquean diseñar coordinador multiagencia. El bloqueo de implementación permanece por falta de diseño técnico validado y autorización específica, no por falta de ratificación funcional de D. No existe contradicción vigente entre dos decisiones aprobadas por esta sucesión delimitada.
+
+Compatible con A: no cambia código+contraseña e identidad técnica estable con Supabase Auth del reclutador, ni prescribe ese identificador técnico al coordinador; su vínculo global y mecanismo de acceso requieren diseño compatible con su contrato existente. Compatible con B: autorización central de una membresía y aceptación del invitado no autorizan recuperar ni sustituir credenciales globales; la verificación independiente permanece obligatoria. Compatible con C: cada comando conserva comprobación de identidad/rol/agencia del recurso/membresía/permisos, sin unión automática de permisos de varias agencias.
+
+Maestro/Limitado conservan su contrato administrativo y TCE-004. «Administrador con facultad expresa» no concede facultad a todos los Limitados ni permite gestionar administradores; su otorgamiento, alcance y revocación deben ser explícitos y compatibles con la autoridad vigente. Coordinador multiagencia y reclutador es_maestro no adquieren rol administrativo. Reclutadores compartidos mantienen estados/membresías independientes; candidatos mantienen postulación sin registro y privados por recurso. D no resuelve las discrepancias históricas TCE-003/012.
+
+La delegación futura a IA está aprobada como posibilidad funcional condicionada, no como política autónoma concreta ni autorización de implementación. No inicia otra fase ni autoriza crear agentes, herramientas, credenciales o permisos. Mientras no se definan y aprueben delegaciones concretas, no existe facultad delegada que ejecutar. La autorización humana para excepciones/alto riesgo es obligatoria, sin inventar quién aprueba cada clase de operación.
+
+### Diseño técnico y decisiones todavía pendientes
+
+- Ratificación funcional de D RESUELTA por el PO el 2026-11-06; pendientes la especificación técnica y su validación, sin reabrir la decisión de coordinador multiagencia. Invitación, aceptación, autorización, auditoría, revocación y delegación futura no tienen mecanismo técnico aprobado por esta ratificación.
+- Representación física compatible de identidad global/coordinadores/membresías: conservar IDs e historial, resolver coordinadores.agencia_id frente a relaciones múltiples sin duplicar identidad ni mantener dos fuentes permisivas de autoridad. Estados, unicidad y coexistencia de roles por definir en REC-F2-002; no esquema ni SQL aprobados.
+- Asignación: definir evidencia de autorización central y aceptación ligada al sujeto autenticado invitado y agencia exacta; emisión, entrega, caducidad, revocación, rechazo, consumo único e idempotencia pendientes. Autorización sola o aceptación sola no deben activar la relación propuesta. Definir cambios de alcance entre invitación y aceptación, fallos intermedios y concurrencia; no inventar un mecanismo de invitación.
+- Facultades expresas de administradores: quién puede concederlas, límites de agencia/operación/vigencia, verificación al decidir y al activar, revocación y auditoría. Ningún administrador o agente se autoasigna esa facultad por esta propuesta.
+- Contexto de agencia: selección validada en servidor/BD; permisos, vistas/RPC/Realtime/cachés y revocación independientes por membresía; no agencia arbitraria de localStorage, ni primera agencia como autoridad implícita. Definir límites de sesiones/lecturas en curso sin prometer revocación retroactiva.
+- Autorización híbrida futura: catálogo de decisiones delegables de bajo riesgo, clasificación de riesgo y excepciones, responsable humano, permisos mínimos/límites, evidencia/auditoría/retención, revocación y escalamiento. Falta de permiso o caso fuera de alcance debe impedir ejecución automática; reglas y privilegios no editables por el propio agente. No seleccionar tecnología ni implementar agentes.
+
+Trazabilidad: REC-F2-001 contrato y ratificación; REC-F2-002 modelo físico/autorización/RLS; REC-F2-006 pruebas de integración/concurrencia; REC-F2-007 cobertura funcional de roles y selección de agencia. Secuencia/casos futuros en PLAN, seguimiento en TASKS y riesgos heredados en HALLAZGOS. Ninguna tarea/hallazgo se cierra: implementación NO INICIADA y pruebas NO EJECUTADAS.
+
+### Consolidación vigente PO-F2-001-A/B/C/D y checkpoint
+
+Las cuatro decisiones están APROBADAS POR EL PO: A, código individual+contraseña mediante identidad técnica estable con Supabase Auth; B, recuperación verificable e independiente sin control unilateral del coordinador sobre credenciales globales; C, autorización por identidad/rol/agencia/recurso/membresía activa/permisos vigentes; D, coordinador multiagencia y autorización híbrida bajo los diez puntos anteriores. El texto íntegro de A/B/C permanece sin cambios en sus secciones; este resumen no lo sustituye ni reinterpreta. D no extiende al coordinador el mecanismo de login del reclutador, no otorga poderes globales y no modifica Maestro/Limitado, TCE-004 ni el contrato público/privado del candidato.
+
+REC-F2-001/002 continúan EN_CURSO solo diseño, sin aceptación final. REC-F2-006/007 mantienen pendientes sus trabajos técnicos. Los 17 hallazgos y nueve experimentos originales no se cierran ni se declaran probados. Este mandato autoriza un solo commit documental con las modificaciones pendientes de las cuatro rutas; sin omitir hooks, sin push y sin habilitar código, SQL, migraciones, servicios o agentes. Las notas SIN_COMMIT y de propuesta pendiente de intervenciones anteriores conservan su valor histórico, sucedidas solo en el alcance de este checkpoint y de la ratificación D.
