@@ -516,3 +516,22 @@ Secuencia propuesta:
 6. DF-PO-005 abre investigación futura de APIs oficiales/limitaciones/privacidad/consentimiento/costos/historial/alternativas, pero esta intervención no la ejecuta ni habilita transferencia. No bloqueo de modelo no afectado por falta de integración WhatsApp.
 
 No congelar esquema de conversaciones/postulaciones/cupo/documentos hasta delimitar pendientes; DA guía compatibilidad futura sin adelantar fase de construcción de agentes. A/B/C/D y requisitos históricos no sustituidos conservan vigencia. No cerrar REC-F2-001/002 ni aceptar seguridad por documentación.
+
+## REC-F2-001/002 — dependencias DC-PO-001…004 y orden F2, 2026-11-06
+
+Requisitos ratificados, invariantes propuestos y casos negativos en SPEC «DC-PO-001…004: plazas, Pipeline y supervisión». No nueva fase ni tarea, no autorización de implementación. Se conserva DF-PO-004; su interacción con reservas/lista de espera requiere precisión PO antes de habilitar caminos afectados.
+
+Orden vinculante del proyecto: recuperar/corregir hallazgos → validación técnica y de seguridad con evidencia → mejoras funcionales posteriores según dependencias y autorizaciones. Solo dependencia técnica expresamente autorizada puede alterar esa secuencia; mencionar una dependencia no la autoriza. Documentación anticipada de reservas/IA no desplaza reparación TCE.
+
+| Decisión | Dependencias existentes | Diseño/validación pendiente |
+|---|---|---|
+| DC-PO-001 | MF-PO-029/026/028; DF-PO-001/004; REC-F2-001/002/006/007 | Reserva por cita válida confirmada, conversión sin doble consumo y descarte autorizado que libera solo reserva activa; reglas posteriores a contratación pendientes |
+| DC-PO-002 | Pipeline/historial TCE-010/011; REC-F2-001/002/006/007 | Cuatro dimensiones separadas; resultados reales por reclutador con actor/fecha/motivo/evidencia; no equivalencia vencimiento-descarte |
+| DC-PO-003 | DA-PO-001, MF-PO-007…011/029; REC-F2-001/002/005/006/007 | Supervisión/alertas sin efectos de cupo; control humano, contexto y facultades vigentes; plazos sin fijar |
+| DC-PO-004 | TCE-009/010/011/012/013; REC-F2-001/002/005/006 | Invariantes propuestos, transacción/idempotencia/concurrencia y RLS por actor/agencia; ninguna garantía efectiva acreditada |
+
+Secuencia documental/técnica propuesta: REC-F2-001 resolver con PO interacción DF-PO-004 y decisiones abiertas, especificar comandos y transiciones sin seleccionar esquema; REC-F2-002 diseñar representación compatible de citas/reservas/ocupaciones/seguimiento, restricciones y autorización/RLS, preservando IDs e historial. No congelar claves/cardinalidades o usar comision_aplicable como contador autoritativo de reservas por herencia del código.
+
+Antes de cualquier implementación: delimitar qué corrige hallazgos versus qué es mejora; obtener autorización concreta y revisión de impacto/reversión. REC-F2-004 mantiene bloqueo de conexiones/arranque; validación futura en LAB sintético requiere permiso específico. REC-F2-006 comprobará primero TCE-004 existente y luego incrementos autorizados; REC-F2-007 cubrirá claridad de estados, pendientes y accesibilidad. Casos de SPEC desarrollan protocolo de nueve experimentos sin ejecutarlo ni duplicarlo. No crear agente IA, motor de alertas, SQL o servidor.
+
+La fórmula es criterio técnico propuesto, no decisión sobre reservas físicas por plaza. Diseño debe tratar atomicidad de resultado nuclear/historial, reintentos, carrera contratación-descarte y confirmación última plaza; entrega de alerta es efecto separado que nunca mueve cupo. No inferir liberación por timeout. Diseño de importación/capacidad/reactivación queda bloqueado en sus políticas pendientes, sin impedir revisión documental de lo ya ratificado.

@@ -621,3 +621,54 @@ Compatibilidad A/B/C/D: reclutador humano mantiene identidad técnica Auth; agen
 Aceptación propuesta, NO EJECUTADA: nueva postulación conserva original/estados/chats y no mueve referido/comisión; archivar conserva mensajes/relaciones y admite consulta/restauración solo con reglas aprobadas; reutilización documental exige vínculo y acceso explícitos, propiedad sola no abre descarga; cupo concurrente no sobreasigna y no reanuda pausa de otra causa; humano toma control y bloquea envíos IA incluso en carreras/reintentos, con actor/versión auditables; agencia ajena, facultad revocada, sesión humana reutilizada por agente, fuente no autorizada y decisión discriminatoria no producen efectos; fallos escalan sin promesa de disponibilidad absoluta. Recuperación ordinaria/excepcional deben acreditar titularidad según política aprobada; WhatsApp exige evidencia de viabilidad, nunca presumir importación.
 
 REC-F2-001/002 EN_CURSO diseño; implementación PENDIENTE, validación PENDIENTE, pruebas NO EJECUTADAS. No cierre técnico ni modificación de las 17 fichas/siete tareas/nueve experimentos. Requisitos ratificados no equivalen a diseño físico aprobado o autorización de agentes/servicios.
+
+## REC-F2-001 — DC-PO-001…004: plazas, Pipeline y supervisión, 2026-11-06
+
+Fuente: PO, mandato «Actualización documental REC-F2-001», base master/5584c79ec867ace57619eafe7e93b42a3d279437, inicio limpio y staging vacío. Actualización exclusivamente documental. Se conservan A/B/C/D, DF-PO-001…005, DA-PO-001, contrato técnico e inventario MF-PO-001…030. DC precisa pendientes anteriores sin borrar historia ni acreditar implementación.
+
+### DC-PO-001 — Reserva y ocupación — REGLAS FUNCIONALES RATIFICADAS
+
+Una vacante tiene capacidad total. Cuando candidato agenda y confirma una cita válida, se reserva una plaza y disminuye en una unidad la disponibilidad. Cuando reclutador confirma contratación, reserva pasa a ocupada SIN volver a descontar; se conserva trazabilidad de postulación. Cuando reclutador registra rechazo o descarte autorizado, se libera reserva activa y disponibilidad aumenta una unidad, con historial íntegro. Esto no aprueba liberar plazas ya ocupadas después de contratar: esos casos siguen abiertos.
+
+Vencimiento de cita, inactividad, falta de respuesta o alerta no liberan reserva. Operación repetida no reserva, ocupa ni libera dos veces. Reagendar no justifica duplicar reserva. No asumir semántica de confirmación doble ni requisitos de cita válida distintos de los que el PO apruebe después.
+
+### DC-PO-002 — Responsabilidad del Pipeline — REGLAS FUNCIONALES RATIFICADAS
+
+Reclutador responsable de registrar oportunamente resultados reales. Distinguir cuatro dimensiones: estado de postulación, estado de cita, estado de reserva/ocupación y cumplimiento del seguimiento. Cita vencida no implica rechazo, descarte ni liberación. Cada transición registra actor, fecha, motivo cuando corresponda y evidencia auditable. Una alerta señala pendiente, no constituye resultado del candidato.
+
+### DC-PO-003 — Supervisión IA — ALCANCE FUNCIONAL RATIFICADO, NO HABILITADO
+
+Conforme DA-PO-001, IA podrá supervisar tiempos, detectar pendientes y generar alertas, recordatorios y solicitudes de actualización: cita vencida sin resultado, candidato sin seguimiento, postulación estancada o reserva pendiente de resolución. Puede facilitar rutinas explícitamente autorizadas; no inventa resultados, confirma contrataciones ni rechaza/descarta definitivamente de forma autónoma. Alertas no modifican cupo. Toma humana y autorizaciones vigentes se conservan, incluidos bloqueo de respuestas automáticas durante control humano y límites de agencia/recurso/permisos. No agente construido ni proveedor elegido.
+
+### DC-PO-004 — Invariantes y mecanismos PROPUESTOS PARA VALIDACIÓN
+
+La dirección funcional de DC-PO-001/002/003 está ratificada; los siguientes invariantes son criterios técnicos propuestos y verificables, no modelo físico/algoritmo aprobado:
+- Disponibles = capacidad total - reservas activas - plazas ocupadas; nunca disponibilidad negativa.
+- Una reserva activa por postulación y plaza según modelo físico que se apruebe; no exigir aquí fila individual por plaza ni elegir tabla/índice.
+- Reserva activa y ocupación de esa misma plaza no se cuentan simultáneamente.
+- Conversión a ocupada sin doble consumo; liberación autorizada exactamente una vez; reagendamiento sin reserva duplicada.
+- Operaciones concurrentes controladas, historial conservado y aislamiento entre agencias.
+- Postulación/cita/seguimiento por sí solos no alteran ocupación fuera de comando autorizado y transición válida.
+
+Propuesta de mecanismo pendiente de diseño/aprobación: transacción que valide identidad/rol/agencia/recurso/membresía/permisos y estado esperado; cambie reserva/ocupación, disponibilidad e historial como unidad de negocio; use idempotencia durable y control de concurrencia. Auditoría conserva actor/fecha/motivo/evidencia mínima sin datos sensibles innecesarios. No SQL, RPC, tecnología, restricciones o política física aprobadas aquí. Diseño deberá distinguir resultado de negocio de entrega de notificación: fallo/reintento de alerta no consume ni libera plazas.
+
+### Contraejemplos y aceptación futura — NO EJECUTADA
+
+| Contraejemplo | Invariante / criterio esperado propuesto |
+|---|---|
+| Última plaza confirmada por dos candidatos concurrentes | Máximo una reserva válida; no disponible negativo; resultado rechazado sin reserva/historial de éxito falso |
+| Confirmación/reintento repetido de cita o reagendamiento | Una reserva, mismo consumo; reagendar conserva trazabilidad y no reserva de nuevo |
+| Contratación de postulación con reserva activa | Activa disminuye una, ocupada aumenta una; disponible no vuelve a bajar |
+| Dos descartes/reintentos o descarte y contratación concurrentes | Una transición válida según orden autoritativo; no liberar y ocupar la misma reserva ni inventar reversión |
+| Cita vencida, falta de respuesta, alerta duplicada o caída del supervisor | Reserva/disponibilidad permanecen; solo pendiente de seguimiento, sin rechazo/contratación implícitos |
+| Actor ajeno, IA sin facultad o permisos revocados | Ningún efecto sobre estado/cupo; auditoría del rechazo sin exposición privada |
+| Aumento de capacidad con pausa manual u otra causa | No reactivar por inferencia; aplicar política aún por aprobar y preservar DF-PO-004 |
+| Reinicio/importación y reintento tras error | No borrar reservas/historial ni resetear consumo silenciosamente; semántica exacta pendiente |
+
+### Pendientes PO, interacción DF-PO-004 y prioridad de recuperación
+
+DF-PO-004 sigue identificada y vigente: disponible cero pausa automáticamente recepción de nuevas postulaciones, sin perder vacante/historia; no toda pausa es agotamiento. DC fija ahora que reserva nace en cita válida agendada y confirmada, no en alta de postulación ni por inferencia de comisión/etapa. Falta precisar interacción de admisión de postulaciones, confirmación de citas, agotamiento y eventual lista de espera: NO aprobar lista de espera ni citas sin reserva por silencio. Este punto bloquea habilitación del flujo afectado hasta decisión; no contradicción resuelta mediante regla inventada.
+
+Siguen abiertos: lista de espera; plazos exactos de alertas/escalamiento; reaplicación/simultaneidad entre vacantes; excepciones de citas sin reserva; ajustes de capacidad, incluidas reducciones frente a compromisos existentes; política de reactivación tras agotamiento; otras liberaciones/reversiones posteriores a contratar. Definición operativa de cita válida/confirmación y relación con etapas/historial deberá concretarse sin cambiar estas reglas ratificadas. Comisiones/referidos no se trasladan automáticamente (DF-PO-001) ni se equiparan a reserva.
+
+Orden expreso: (1) recuperar/corregir hallazgos de auditoría, (2) validar técnica y seguridad con evidencia, (3) implementar después mejoras según dependencias y autorización PO. Dependencias técnicas excepcionales requieren autorización expresa; documentación anticipada no la concede. DC y DA no adelantan construcción de funcionalidades/agentes. REC-F2-001/002 siguen EN_CURSO diseño, sin cierre; 17 hallazgos abiertos, nueve experimentos NO EJECUTADOS y 30 MF conservados.
