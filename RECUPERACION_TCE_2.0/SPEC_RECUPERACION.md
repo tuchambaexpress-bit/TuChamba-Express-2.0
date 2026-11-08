@@ -1673,3 +1673,48 @@ Evidencia y auditoría se enlazan con E3/E5, A-12 y PO-REC-F2-001-SE-01, sin alt
 Pendientes PO: concedentes/revocadores de otras familias, designaciones y compatibilidades centrales, elegibilidad para solicitar cambio de código, designación/concedente/revocador del reconciliador, política restante de reenvío/sustitución/revocación/antiabuso. No se nombran por «autoridad competente»: cada decisión requiere facultad acreditada para el ámbito y acción, no rol genérico. Siguiente diseño propuesto, pendiente de autorización delimitada: identificación de dependencias y fuentes independientes, clasificación administrativa/seguridad y de resultados de operaciones, revisión competente y restablecimiento con evidencia; proponer mecanismos y resolver designaciones faltantes sin convertirlos en ratificados.
 
 CT-01/CT-02 ABIERTOS; REC-F2-001 EN_CURSO, solo diseño. Matrices 27/14, decisiones anteriores, inventarios y estados preservados; P01–P40/subcasos y nueve experimentos NO EJECUTADOS. Sin aceptación integral ni cierre técnico, implementación o revisión independiente acreditada. Solo documentación y sincronización Git MC-07 autorizadas; sin código, migraciones, configuración, servicios de producto, pruebas de producto o despliegues manuales.
+
+## AUT-05 — Compatibilidad condicionada de funciones centrales, 2026-11-08
+
+**Estado: RATIFICADA — ALCANCE FUNCIONAL.** Fuente normativa: ratificación expresa del Product Owner del 2026-11-08, mandato «REC-F2-001, ratificación AUT-05», base master/058c18ad7cfd46eaf1cffe38170aaeb8812e8890. HALLAZGOS conserva rectoría; esta sección contiene la regla normativa única, TASKS continuidad y PLAN dependencias. No autoriza implementación ni valida mecanismos técnicos P/T.
+
+### Regla y condiciones acumulativas
+
+Una misma persona puede verificar y aprobar una operación ordinaria que requiera intervención humana solamente si:
+
+1. Posee ambas facultades expresas y vigentes.
+2. La operación permite esa compatibilidad conforme a su clasificación de riesgo.
+3. Existe evidencia suficiente y pertinente.
+4. No hay conflicto de interés.
+5. La persona no está resolviendo una solicitud propia ni obteniendo un beneficio indebido.
+6. Ambas actuaciones se registran separadamente para auditoría.
+7. Se revalidan autoridad, riesgo, evidencia y condiciones al decidir y ejecutar.
+
+La compatibilidad no concede facultad de ejecución.
+
+### Separación reforzada e incompatibilidades
+
+- Los procedimientos excepcionales, privilegiados o de alto riesgo mantienen la separación de funciones exigida por sus contratos.
+- Cuando se requieran dos revisores humanos distintos e independientes, AUT-05 no permite sustituirlos por una sola persona.
+- Una clasificación ambigua, evidencia insuficiente o conflicto no resuelto impide aplicar compatibilidad y exige escalar conforme al procedimiento autorizado.
+- El operador no puede reducir unilateralmente la clasificación de riesgo para aprobar su propia intervención.
+
+### Tres modalidades funcionales
+
+- **Operación automática autorizada:** servicio aplica controles previamente autorizados sin aprobación humana individual inventada.
+- **Operación ordinaria con intervención humana:** compatibilidad condicionada de verificación y aprobación cuando corresponda.
+- **Operación excepcional o de alto riesgo:** separación reforzada conforme a contratos ratificados.
+
+No introducir aprobación manual obligatoria en operaciones automáticas ya autorizadas.
+
+### Integración y sucesión delimitada
+
+AUT-05 resuelve únicamente el principio funcional de compatibilidad de verificación y aprobación en operación ordinaria con intervención humana bajo las siete condiciones acumulativas. Las referencias anteriores a «compatibilidades centrales pendientes» quedan sucedidas solo respecto de ese principio; no equivalen a prohibición absoluta ni a autorización general de acumular capacidades. Continúan pendientes las designaciones concretas, facultades de cada persona y aplicación admisible por operación/riesgo. La propuesta de separación de «Designaciones centrales — PROPUESTO/PENDIENTE» se interpreta bajo esta regla sin borrar antecedentes. No se concede ninguna de las dos facultades por ejercer la otra, ni autoridad de ejecución, concesión o revocación por compatibilidad. AUT-01–AUT-04 conservan alcance y controles de dependencia, bloqueo y restablecimiento; una facultad suspendida o revocada no satisface AUT-05.
+
+Referencias a las 27 operaciones existentes, sin duplicar su matriz: D-01/D-02 y tramitación automática autorizada de altas en 1/3/6/7/8/11 conservan sus controles y límites, sin aprobación humana individual añadida; no se ratifican por esta remisión los mecanismos T ni se declara automática toda operación de esas filas. En 2, la clasificación técnica no adjudica disputas y la resolución central mantiene independencia según contrato. En 4/5/13 y demás operaciones con intervención humana, AUT-05 solo puede aplicarse si la operación es ordinaria, admite compatibilidad y satisface las siete condiciones, sin conceder facultades pendientes ni eliminar aceptación del invitado. Las filas 9–16/19–21 conservan permisos locales, aceptación propia o flujo público según corresponda, sin convertirse por esta decisión en aprobaciones humanas obligatorias. En 17/18, I-11 mantiene autoridad central específica y efectos propios; la compatibilidad no concede suspensión/restauración global. En 22/23, I-08/I-09 conservan separación exigida para procedimientos excepcionales y dos personas distintas facultadas e independientes cuando corresponda; AUT-05 no es excepción a esos contratos. En 24–26 se mantienen I-10, exclusión y reconciliación técnica limitada; verificar/aprobar no autoriza ejecutar ni resolver efectos inciertos por decisión de negocio. En 27 sigue el rechazo de reset ajeno sin facultad.
+
+I-01–I-11, D-01–D-04, AN-01/AN-02, AUT-01–AUT-04 y PO-REC-F2-001-SE-01 permanecen íntegros. Evidencia suficiente bajo E1–E7 y los 14 escenarios no se sustituye por concentración de funciones: insuficiencia escala y contradicciones materiales conservan sus impedimentos. Auditoría enlazada con A-12/E5: actuaciones de verificación y aprobación separadamente registradas aun si corresponden a la misma persona; forma técnica de registro, comprobación de independencia/conflictos y revalidación siguen P/T. Referencias futuras a P10–P13/P32/P33 para riesgo/independencia, P23/P27 para auditoría y P21/P22/P34 para facultades/dependencias; NO EJECUTADAS, sin nuevos IDs de prueba ni aprobación técnica.
+
+Pendientes PO: designaciones concretas de operadores, verificadores, aprobadores y ejecutores; concedentes/revocadores de otras familias; elegibilidad para solicitar cambio de código individual; designación y facultades del reconciliador; política restante de reenvío de invitaciones. Mecanismos técnicos y pruebas pendientes. Próxima decisión concreta: delimitar las designaciones centrales y sus facultades expresas, ámbito y vigencia, identificando aplicación de AUT-05 por operación/clasificación y separación contractual, sin nombrar cargos o personas por inferencia. El diseño de dependencias y restablecimiento AUT-02–AUT-04 continúa pendiente y no se inicia automáticamente.
+
+REC-F2-001 EN_CURSO; CT-01/CT-02 ABIERTOS; P01–P40 NO EJECUTADAS (subcasos y nueve experimentos igualmente NO EJECUTADOS). Matrices 27/14 e inventarios íntegros, sin cierre ni aceptación integral. Solo documentación de cuatro maestros y sincronización MC-07 autorizadas; no código, migraciones, Supabase/Vercel, infraestructura, secretos, configuración, pruebas de producto ni despliegues manuales. Entregar y detenerse para revisión PO.
