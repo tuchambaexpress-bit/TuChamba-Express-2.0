@@ -151,3 +151,26 @@ Como parte de los controles ratificados en la sección 11, toda actividad deber�
 8. Bloqueos, riesgos y siguiente actividad autorizable.
 
 Una actividad no puede declararse cerrada si falta un requisito obligatorio. El informe debe hacer explícitos los requisitos pendientes o bloqueados; informar su ausencia no equivale a cumplirlos. El cierre de una actividad documental no acredita implementación, pruebas, aceptación técnica ni cierre de contratos o hallazgos. La siguiente actividad autorizable es una propuesta y no una autorización para iniciarla; al finalizar el alcance vigente, detenerse para revisión del Product Owner.
+
+## 13. MC-07 — Sincronización obligatoria por actividad
+
+**Estado: RATIFICADA Y OBLIGATORIA.** Fuente: decisión expresa del Product Owner, mandatos «Sincronización GitHub autorizada e incorporación de MC-07» y «Selección de cuenta y sincronización GitHub», 2026-11-07. Complementa MC-01–MC-06 y la puerta de cierre de la sección 12, que permanecen íntegramente vigentes en su alcance ratificado; no ratifica otras propuestas pendientes de esta gobernanza.
+
+Toda instrucción futura a Codex deberá incluir una sección obligatoria de actualización documental, control Git y respaldo GitHub. Ninguna IA podrá omitirla al preparar dichas instrucciones.
+
+Cada actividad autorizada deberá:
+
+1. Verificar el estado Git inicial.
+2. Ejecutar exclusivamente el alcance autorizado.
+3. Documentar inmediatamente decisiones, hallazgos, variantes y cambios.
+4. Actualizar TASKS y PLAN cuando corresponda.
+5. Verificar la integridad de los archivos afectados y las evidencias.
+6. Registrar los cambios mediante commit local con alcance limitado.
+7. Publicar el commit en GitHub.
+8. Verificar la igualdad entre HEAD local y remoto.
+9. Confirmar árbol limpio y staging vacío.
+10. Informar cierre o bloqueo antes de continuar.
+
+Este ciclo no concede permisos para modificar producción, desplegar, alterar el historial, realizar operaciones destructivas ni ampliar tareas. Se conservan las autorizaciones específicas exigidas por MC-01, MC-02 y la sección 3. Si falta una autorización específica, detenerse antes de esa operación, solicitarla y registrar el estado **PENDIENTE DE SINCRONIZACIÓN** hasta resolverlo. La obligación de documentar no amplía los archivos autorizados, conforme a MC-03.
+
+No declarar cerrada una tarea mientras falte el respaldo remoto exigido, salvo excepción explícita del Product Owner con registro verificable. La sincronización por sí sola tampoco acredita cierre técnico, pruebas o aceptación. En actividades sin cambios, informar esa condición y el estado de sincronización; no crear commits vacíos para aparentar el cumplimiento del ciclo.
