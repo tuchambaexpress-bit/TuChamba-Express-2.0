@@ -1907,3 +1907,45 @@ Queda PENDIENTE la clasificación individual de las 27 operaciones en ordinarias
 Pendientes conservados: clasificación de las 27 operaciones por riesgo/capacidades; designaciones concretas y concedentes/revocadores de otras familias; procedimiento reforzado para crear administradores con delegación; cantidad mínima obligatoria de autoridades independientes; continuidad extraordinaria; elegibilidad para cambio de código individual; designación y facultades del reconciliador técnico; política restante de reenvío de invitaciones; procedimientos técnicos y pruebas. AUT-01–AUT-07 permanecen RATIFICADAS — alcance funcional, en sus alcances originales; AUT-08 no los reabre ni asigna cargos/personas/proveedores.
 
 REC-F2-001 EN_CURSO; CT-01/CT-02 ABIERTOS; P01–P40 NO EJECUTADAS, subcasos/nueve experimentos NO EJECUTADOS. Contenido anterior, matrices 27/14, decisiones e inventarios íntegros, sin aceptación integral ni cierre técnico. Solo cuatro maestros y sincronización Git MC-07; sin código, migraciones, Supabase/producción/Vercel, infraestructura, secretos, configuración, pruebas de producto o despliegues manuales. Entregar y detenerse para revisión.
+
+## Operaciones 4 y 5 — ratificación PO de solicitud y aprobación de cambio de código, 2026-11-08
+
+Fuente: ratificación funcional expresa del Product Owner del 2026-11-08, mandato «REC-F2-001, ratificación PO de operaciones 4 y 5», base master/5e8e8dfc66cdec9261eff23e6411b236a118a67d. HALLAZGOS conserva rectoría; esta sección contiene la norma única, TASKS continuidad y PLAN dependencias. Cada decisión: **RATIFICADA — ALCANCE FUNCIONAL**. No ratifica clasificación general de riesgos, mecanismos técnicos P/T, implementación ni pruebas.
+
+Correspondencia documental: **PO-REC-F2-001-OP04-01** identifica esta decisión sobre la operación canónica **4 — solicitar cambio de código**; **PO-REC-F2-001-OP05-01** identifica esta decisión sobre la operación canónica **5 — autorizar cambio**. Son identificadores nuevos de decisión, comprobados sin colisión; no nuevas operaciones, tareas, fases o hallazgos. Se conservan AN-01 y «AN-02 — autoridad central sobre códigos» como fundamentos previos, sin reutilizar sus referencias conversacionales ambiguas para identificar estas dos ratificaciones nuevas ni alterar su texto.
+
+### PO-REC-F2-001-OP04-01 — operación 4
+
+**Estado: RATIFICADA — ALCANCE FUNCIONAL.**
+
+1. El titular puede solicitar directamente el cambio mediante autenticación válida.
+2. Un coordinador expresamente autorizado puede asistir y tramitar la solicitud.
+3. La asistencia requiere consentimiento verificable del titular.
+4. La asistencia no concede facultad de aprobación, ejecución, decisión de titularidad ni modificación unilateral.
+5. La solicitud no produce automáticamente un cambio de código.
+6. Evidencia insuficiente, contradictoria o titularidad ambigua impide la aprobación ordinaria y requiere tratamiento por autoridad competente.
+
+### PO-REC-F2-001-OP05-01 — operación 5
+
+**Estado: RATIFICADA — ALCANCE FUNCIONAL.**
+
+1. El cambio requiere aprobación de autoridad central específicamente facultada.
+2. La facultad de registrar reclutadores, asistir solicitudes o designar operadores no concede por sí sola autoridad para aprobar cambios de código.
+3. El titular y el coordinador asistente no pueden aprobar administrativamente su propia solicitud o asistencia.
+4. La aprobación debe corresponder al sujeto, solicitud, ámbito y condiciones autorizadas.
+5. La ejecución posterior permanece separada y limitada conforme a AUT-08.
+6. Las designaciones concretas, concedentes/revocadores y separación reforzada específica permanecen pendientes de definición.
+
+### Invariantes y sucesión delimitada
+
+Se preservan código individual único, prohibición permanente de reasignación a otra persona, identidad técnica estable, historial y trazabilidad del cambio, ninguna creación implícita de una identidad distinta y ninguna ampliación de permisos, membresías o facultades por el cambio de código. AN-01/AN-02 mantienen vínculo Auth/perfil estable y prohibición histórica de reasignación; no cambia contraseña, token de referido o atribución por inferencia. D-02 conserva emisión automática bajo reglas centrales; no autoriza cambio autónomo por un servicio o coordinador.
+
+Resuelto funcionalmente el pendiente de elegibilidad de los dos canales en «Cambio de código individual — PROPUESTO/PENDIENTE salvo AN-01/AN-02» y referencias anteriores: solicitud directa autenticada del titular y asistencia de coordinador expresamente autorizado con consentimiento verificable. También queda explícita aprobación central específica, exclusión del titular/coordinador asistente como aprobadores de su propia intervención y separación de ejecución. Los textos históricos y marcas P de las matrices permanecen íntegros, sucedidos solo en estos puntos por las decisiones identificadas; consentimiento, autenticación, facultad, titularidad y aprobación requieren cumplimiento verificable, no una simple declaración ni habilitación técnica por documentar.
+
+AUT-01–AUT-08 conservan su alcance: ejecutar/asistir/registrar/designar no concede aprobar ni delegar esa capacidad; AUT-05 no permite aprobar solicitud propia o asistencia propia ni eludir independencia contractual. No se ratifica aquí una cantidad de revisores ni separación reforzada específica de cambio de código: sigue pendiente, sin eliminar exigencias aplicables por contratos ya ratificados. AUT-02–AUT-04 mantienen dependencia efectiva, bloqueo, preservación de evidencia y restablecimiento expreso; AUT-06/AUT-07 mantienen continuidad ordinaria sin poderes globales o subdelegación inferida. AUT-08 conserva tramitación/verificación/aprobación/ejecución diferenciadas y requisitos del concedente específico.
+
+Referencias canónicas sin duplicación: operación 4 en matriz 27 (solicitud), operación 5 (autorización) y operación 6 (ejecución acotada de comando central). La clasificación general de las 27 operaciones y la asignación individual de riesgos/capacidades siguen pendientes: el análisis conversacional previo no se incorpora como ratificado, ni sus etiquetas Sensible/Alto para 4/5. No se ratifica en bloque la matriz complementaria ni los 14 escenarios P/T. Se enlazan I-01/I-02/M-01 para correspondencia estable y código, I-08/I-09 cuando proceda tratamiento competente de ambigüedad/riesgo, A-08/A-09/A-12 y E1–E7/PO-REC-F2-001-SE-01 para facultades, evidencia y trazabilidad. Insuficiencia exige escalamiento y contradicciones materiales mantienen sus impedimentos; la intervención humana no permite aprobarlas sin resolución.
+
+Pendientes: designaciones concretas, concedentes/revocadores de aprobación y asistencia, separación reforzada específica; procedimiento de consentimiento/autenticación/evidencia, unicidad histórica, concurrencia, idempotencia, ejecución/auditoría y garantías técnicas; clasificación de las 27 operaciones. Otros pendientes AUT-08 permanecen: procedimiento reforzado para crear administradores con delegación, mínimo obligatorio de autoridades independientes, continuidad extraordinaria, designación/facultades del reconciliador, política restante de reenvío, procedimientos de identidad/recuperación y pruebas. No volver a pedir elegir entre los dos canales ya ratificados; diseñar sus condiciones verificables y delimitar autoridades sin concederlas por inferencia. Trazabilidad futura a P26/P33/P39/P40 y subcasos pertinentes existentes, NO EJECUTADAS; sin nuevo caso de prueba.
+
+REC-F2-001 EN_CURSO; CT-01/CT-02 ABIERTOS; AUT-01–AUT-08 RATIFICADAS en su alcance funcional; P01–P40 NO EJECUTADAS y subcasos/nueve experimentos NO EJECUTADOS. Contenido previo y matrices 27/14 íntegros. Operaciones 4/5 no implementadas, probadas ni cerradas por esta ratificación. Solo cuatro maestros y sincronización Git MC-07, sin código, migraciones, servicios/producción/infraestructura, pruebas de producto, despliegues o archivos adicionales. Entregar y detenerse para revisión PO.
