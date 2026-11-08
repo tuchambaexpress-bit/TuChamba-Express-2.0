@@ -1842,3 +1842,68 @@ Auditoría y evidencia enlazadas con A-12/E3/E5: acreditar fuente, objeto y lím
 Pendientes expresos: designaciones concretas y concedentes/revocadores de otras familias; procedimiento reforzado de creación de administradores con delegación; cantidad mínima obligatoria de autoridades independientes; continuidad extraordinaria; elegibilidad para cambio de código individual; designación y facultades del reconciliador; política restante de invitaciones; procedimientos técnicos y pruebas. Las referencias históricas de pendientes se conservan, precisadas exclusivamente por el reparto funcional ratificado, sin resolver esos puntos por inferencia. Próxima decisión concreta PO: delimitar designaciones/delegaciones centrales concretas y autorizar el diseño del procedimiento reforzado diferenciado; decidir posteriormente si el criterio de al menos dos autoridades debe convertirse en mínimo obligatorio, sin tratarlo ahora como norma ni quórum.
 
 REC-F2-001 EN_CURSO; CT-01/CT-02 ABIERTOS; P01–P40 NO EJECUTADAS, subcasos/nueve experimentos NO EJECUTADOS. AUT-01–AUT-06, demás decisiones, matrices 27/14 e inventarios íntegros. Sin cierre técnico ni aceptación integral; solo cuatro maestros y sincronización Git MC-07, sin código, migraciones, servicios/producción, infraestructura, secretos, configuración, pruebas de producto o despliegues. Entregar y detenerse para revisión PO.
+
+## AUT-08 — Delegación diferenciada de capacidades centrales, 2026-11-08
+
+**Estado: RATIFICADA — ALCANCE FUNCIONAL.** Fuente normativa: ratificación expresa del Product Owner del 2026-11-08, mandato «REC-F2-001, ratificación AUT-08», base master/cdfb070ce2b1310246760bf7eb2c130cfa7da41b. HALLAZGOS conserva rectoría; esta sección contiene el texto normativo único, TASKS continuidad y PLAN dependencias. Son capacidades funcionales diferenciadas, no cargos nuevos ni arquitectura paralela; la ratificación no autoriza implementación ni aprueba mecanismos técnicos P/T.
+
+### A. Tramitación central
+
+Permite recibir solicitudes, reunir información y organizar evidencias dentro del ámbito autorizado.
+
+No concede aprobación, ejecución ni autoridad para decidir titularidad.
+
+### B. Verificación central
+
+Permite evaluar evidencia, identidad y condiciones de operaciones autorizadas.
+
+La facultad se limita al ámbito y nivel de riesgo expresamente concedidos.
+
+No concede automáticamente aprobación ni capacidad para otorgar permisos.
+
+### C. Aprobación central
+
+Permite autorizar o rechazar operaciones dentro del ámbito expresamente concedido.
+
+La aprobación ordinaria solo puede ser delegada por una autoridad con facultad específica para conceder esa capacidad.
+
+Las aprobaciones críticas requieren autorización diferenciada y separación reforzada conforme a los contratos vigentes.
+
+No concede automáticamente ejecución ni ampliación de autoridad propia.
+
+### D. Ejecución técnica
+
+Permite aplicar operaciones válidamente autorizadas, bajo condiciones verificables y con registro de resultados.
+
+No concede autoridad para decidir identidad, titularidad, aprobar solicitudes ni otorgar permisos.
+
+Los servicios automatizados deberán operar bajo identidades técnicas y facultades limitadas; sus mecanismos concretos permanecen pendientes de diseño.
+
+### Límites acumulativos
+
+1. La concesión de una capacidad no concede las demás.
+2. Ningún administrador puede exceder su autoridad ni el techo de delegación.
+3. Las operaciones críticas no pueden reclasificarse como ordinarias para eludir controles.
+4. La compatibilidad de verificación y aprobación se rige por AUT-05.
+5. Toda concesión, modificación, suspensión y revocación debe ser trazable, incluyendo autoridad de origen, beneficiario, ámbito, vigencia, condiciones y evidencia.
+6. La facultad de designar operadores no incluye crear administradores con poder de delegación, conforme a AUT-07.
+7. Ninguna capacidad equivale a un permiso genérico de acceso total.
+8. La autorización para ejecutar una operación no sustituye las aprobaciones humanas o automáticas exigidas por su contrato.
+
+### Integración con AUT-01–AUT-07 y contratos vigentes
+
+AUT-08 ratifica la distinción funcional entre tramitar, verificar, aprobar y ejecutar; las propuestas anteriores que delimitaban esas capacidades quedan precisadas solo en este alcance. No designa beneficiarios ni concede capacidades concretas por cargo, visibilidad, compatibilidad o necesidad operativa. AUT-01 conserva su familia de facultades administrativas de coordinadores; AUT-06 conserva delegación expresa de designación/revocación de operadores dentro de techo autorizado, sin convertir a cualquier designador en concedente de aprobación ordinaria. Para conceder esta última se debe acreditar facultad específica conforme C; concedentes/revocadores de otras familias siguen pendientes. AUT-07 mantiene diferenciación de creación de administradores con poder de delegación, procedimiento reforzado pendiente y prohibición de subdelegación implícita.
+
+AUT-02–AUT-04 conservan dependencia efectiva, fuentes independientes válidas, suspensión preventiva, bloqueo, tratamiento de confirmadas/inciertas y restablecimiento expreso sin reactivación automática. AUT-05 permite compatibilidad de verificar/aprobar únicamente bajo sus siete condiciones acumulativas, sin conceder ninguna capacidad ni ejecución; independencia y separación reforzada excepcional/privilegiada/alto riesgo de I-08/I-09 permanecen exigibles. Continuidad ordinaria AUT-06/AUT-07 conserva autoridades vigentes suficientes sin aprobación conjunta de cada ordinaria; disponibilidad de al menos dos autoridades independientes para funciones críticas sigue criterio de diseño, no mínimo obligatorio o quórum. Continuidad extraordinaria sigue sin procedimiento aprobado.
+
+CT-01/CT-02, A-08/A-09/A-12, E3/E5 y PO-REC-F2-001-SE-01 mantienen autoridad verificable, auditoría, evidencia suficiente y prohibición de privilegios por inferencia; mecanismo físico de identidades técnicas, capacidades, registro y revalidación sigue P/T. D-01–D-04, AN-01/AN-02 e I-01–I-11 conservan identidad estable, códigos nunca reasignables, membresías independientes, autoridad central específica y permisos locales por agencia. Ejecución técnica no resuelve titularidad ni autoriza por sí misma una recuperación; I-10 y reconciliación limitada conservan sus bloqueos ante incertidumbre, sin reintento automático por nueva autorización.
+
+### Relación conceptual con la matriz canónica y clasificación pendiente
+
+AUT-08 se vincula conceptualmente con las 27 operaciones existentes: las capacidades deben distinguirse en cada operación conforme a su contrato, actor, ámbito y riesgo, sin modificar ni duplicar la matriz canónica o la matriz complementaria de facultades. Tampoco se reproduce o altera la matriz de 14 escenarios. No se asigna ahora una categoría de riesgo o combinación de capacidades a ninguna fila, ni se presume que toda operación requiera aprobación humana. Operaciones automáticas ya autorizadas conservan controles previos sin aprobación humana individual inventada; AUT-08 no ratifica sus mecanismos técnicos pendientes.
+
+Queda PENDIENTE la clasificación individual de las 27 operaciones en ordinarias, sensibles y excepcionales, sus capacidades requeridas, incompatibilidades y controles específicos, preservando las clasificaciones y separaciones ya ratificadas que resulten aplicables. Esa actividad no puede rebajar riesgo para eludir controles ni convertir una facultad pendiente en permiso aprobado. Siguiente actividad documental PROPUESTA: preparar dicha clasificación sobre las referencias canónicas, para revisión PO con distinción expresa de obligaciones ratificadas, propuestas y mecanismos P/T, sin crear otra matriz operativa ni iniciar implementación.
+
+Pendientes conservados: clasificación de las 27 operaciones por riesgo/capacidades; designaciones concretas y concedentes/revocadores de otras familias; procedimiento reforzado para crear administradores con delegación; cantidad mínima obligatoria de autoridades independientes; continuidad extraordinaria; elegibilidad para cambio de código individual; designación y facultades del reconciliador técnico; política restante de reenvío de invitaciones; procedimientos técnicos y pruebas. AUT-01–AUT-07 permanecen RATIFICADAS — alcance funcional, en sus alcances originales; AUT-08 no los reabre ni asigna cargos/personas/proveedores.
+
+REC-F2-001 EN_CURSO; CT-01/CT-02 ABIERTOS; P01–P40 NO EJECUTADAS, subcasos/nueve experimentos NO EJECUTADOS. Contenido anterior, matrices 27/14, decisiones e inventarios íntegros, sin aceptación integral ni cierre técnico. Solo cuatro maestros y sincronización Git MC-07; sin código, migraciones, Supabase/producción/Vercel, infraestructura, secretos, configuración, pruebas de producto o despliegues manuales. Entregar y detenerse para revisión.
