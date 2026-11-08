@@ -1610,3 +1610,66 @@ No puede resolver titularidad, aprobar recuperación, seleccionar/cambiar creden
 Próxima decisión PO: ratificar o ajustar, por familia, quién puede conceder y revocar y con qué techo; designaciones y compatibilidades centrales; elegibilidad de solicitud de código y separación propuesta; capacidad técnica limitada del reconciliador. Sin esa decisión no se habilitan facultades nuevas. Después corresponde política restante de reenvío/sustitución/revocación/antiabuso y procedimientos de correo/recuperación; esta propuesta no los resuelve ni inicia. No contradicción normativa irresoluble detectada: autorizar incorporación de coordinadores no equivale a conceder toda facultad; suspensión local no es revocación de membresía ni suspensión global; clasificación técnica no adjudica disputas. Pendientes de garantías Auth, concurrencia, evidencia, revocación y auditoría efectiva siguen sin validar.
 
 CT-01/CT-02 ABIERTOS; REC-F2-001 EN_CURSO solo diseño. Matrices únicas de 27 operaciones y 14 escenarios, PO-REC-F2-001-SE-01 e I-01–I-11 intactos. P01–P40/subcasos y nueve experimentos NO EJECUTADOS. Sin nuevas tareas/fases/hallazgos, implementación, pruebas de producto, migraciones, servicios o despliegues. Solo cuatro documentos y sincronización MC-07 autorizadas; entregar y detenerse para revisión PO.
+
+## AUT-01 a AUT-04 — ratificación funcional de controles de delegación, 2026-11-08
+
+Fuente normativa: ratificación expresa del Product Owner del 2026-11-08, mandato «REC-F2-001, ratificación AUT-01 a AUT-04», base master/94b017348925eb5187fa8de928783becf5b2fbb7. Estado de cada decisión: **RATIFICADA — ALCANCE FUNCIONAL**. HALLAZGOS conserva rectoría y trazabilidad; esta sección contiene el texto normativo único, TASKS la continuidad y PLAN las dependencias. La ratificación es exclusivamente funcional y normativa: no autoriza implementación ni valida mecanismos técnicos P/T.
+
+### AUT-01 — Concesión y revocación de facultades administrativas de coordinadores
+
+**RATIFICADA — ALCANCE FUNCIONAL**.
+
+- El Maestro conserva la autoridad inicial.
+- Los administradores expresamente delegados pueden conceder y revocar facultades administrativas de coordinadores únicamente dentro del alcance autorizado.
+- Toda delegación debe identificar autoridad de origen, beneficiario, facultades, agencia o recursos, límites, vigencia o condiciones de término y trazabilidad.
+- Prohibida la autoconcesión, ampliación unilateral, delegación superior al techo autorizado y subdelegación por inferencia.
+- La autoridad para ejecutar operaciones no implica autoridad para conceder facultades.
+- No extender esta ratificación a facultades globales, recuperación de identidad, administración de administradores ni otras familias pendientes.
+
+### AUT-02 — Suspensión preventiva de facultades dependientes
+
+**RATIFICADA — ALCANCE FUNCIONAL**.
+
+- La revocación de una autoridad concedente obliga a identificar las facultades cuya validez dependa de ella.
+- Las facultades efectivamente dependientes quedan suspendidas preventivamente hasta revisión competente.
+- La suspensión no afecta indiscriminadamente facultades con fuentes independientes válidas.
+- Distinguir revocación administrativa de revocación por seguridad.
+- En incidentes de seguridad, revisar además concesiones y operaciones potencialmente comprometidas.
+- No suspender automáticamente identidad global ni membresías locales por la sola revocación de una facultad.
+- No presumir que todas las concesiones históricas fueron ilegítimas.
+
+### AUT-03 — Tratamiento de operaciones pendientes
+
+**RATIFICADA — ALCANCE FUNCIONAL**.
+
+- Las operaciones aún no ejecutadas que dependan de una facultad suspendida quedan bloqueadas.
+- Preservar estado, evidencia, historial, autorizaciones, intentos y resultados conocidos.
+- Las operaciones ya ejecutadas con resultado confirmado conservan su resultado registrado y se revisan cuando proceda; no se revierten por suposición.
+- Las operaciones con resultado externo incierto mantienen bloqueo y pasan a reconciliación técnica limitada.
+- La continuación, cancelación o reinicio de una operación bloqueada requiere una nueva decisión de autoridad competente.
+- Una nueva autorización no permite repetir automáticamente una operación de resultado incierto.
+- El reconciliador técnico no adquiere autoridad para resolver titularidad, aprobar recuperaciones o elegir credenciales.
+
+### AUT-04 — Restablecimiento controlado
+
+**RATIFICADA — ALCANCE FUNCIONAL**.
+
+- Una facultad suspendida solo puede recuperar eficacia mediante revisión y autorización expresa de autoridad competente.
+- Registrar evidencia, autoridad, fundamento, alcance y momento efectivo.
+- Recuperar la autoridad del concedente original no reactiva automáticamente las facultades dependientes suspendidas.
+- Mantener separados el restablecimiento de facultades, la activación de membresías locales y la restauración de identidad global.
+- No revivir facultades terminalmente revocadas, sesiones invalidadas ni derechos previamente extinguidos.
+
+### Integración, sucesión delimitada y referencias existentes
+
+AUT-01 precisa el concedente/revocador de facultades administrativas de coordinadores: Maestro como autoridad inicial y administradores expresamente delegados dentro de su alcance. No designa personas ni convierte a todos los administradores en concedentes. Sucede únicamente al pendiente de autoridad inicial en esa familia dentro de «Facultades, concedentes y designaciones — propuesta para revisión PO»; los textos históricos y las celdas P se conservan como antecedente, interpretados bajo esta delimitación. No asignar automáticamente esta solución a todas las facultades operativas de la matriz, al beneficiario reclutador, a capacidades técnicas de servicios ni a quien delega en administradores. La autoridad y condiciones de la delegación del administrador deben estar acreditadas, sin atribuir por inferencia un concedente de otra familia. D-01–D-04 conservan su reparto funcional y precondiciones; PO-F2-001-D conserva autorización central y aceptación para incorporar coordinadores, sin confundir incorporación con concesión de facultades.
+
+Vínculo con A-08/A-09: AUT-01 ratifica los límites funcionales expresos de origen, beneficiario, alcance, techo, vigencia/trazabilidad y prohibiciones de concesión anteriores; no acepta en bloque sus mecanismos. AUT-02 exige identificar dependencia efectiva y suspender preventivamente, preservando fuentes independientes; AUT-03 distingue pendiente no ejecutada, ejecutada confirmada y resultado externo incierto; AUT-04 exige revisión y autorización expresa para restablecer suspendidas. Las menciones previas de cancelar dependientes no despachados se leen como impedir efectos no autorizables y someter continuación/cancelación/reinicio a decisión competente, no como cancelación automática o borrado. Una facultad suspendida no es una facultad terminalmente revocada. No hay contradicción con la prohibición de revivir terminales de A-09 ni con I-11: recuperar autoridad del concedente no restaura automáticamente dependientes, identidad, membresías o sesiones.
+
+Referencias a la matriz única de 27 operaciones, sin nuevas filas ni duplicación: 1/9–16/20 conservan permisos y ámbitos locales propios; 13 conserva D sobre incorporación de coordinadores, sin extender AUT-01 a concedentes de otras familias. 2–8/17–19/21–27 mantienen sus autoridades, prohibiciones y pendientes específicos. AUT-02–AUT-04 se aplican al tratamiento de dependencia y estado cuando efectivamente corresponda en cualquiera de las 27 operaciones; no crean facultad positiva para ejecutarlas ni delegarlas. En 24–26, I-10/R1 conservan exclusión, evidencia correlacionada y bloqueo por incertidumbre; una nueva decisión de negocio no demuestra cierre de intentos ni habilita reintento ciego. En 27 permanece el rechazo al reset ajeno sin facultad. I-01–I-11, AN-01/AN-02, identidad estable, unicidad histórica y prohibición absoluta de reasignación de códigos permanecen intactos.
+
+Evidencia y auditoría se enlazan con E3/E5, A-12 y PO-REC-F2-001-SE-01, sin alterar suficiencia proporcional, independencia I-08/I-09 o los 14 escenarios existentes. Trazabilidad de validación futura: P21/P22/P34 para delegación/revocación/dependencias; P18–P20/P33 para alcance local; P14/P29/P30 y subcasos para ejecución e incertidumbre; P23/P27 para evidencia/auditoría; P35 para separación respecto de restauración global. Son referencias a pruebas existentes NO EJECUTADAS; no nuevos casos P41 ni resultados de producto.
+
+Pendientes PO: concedentes/revocadores de otras familias, designaciones y compatibilidades centrales, elegibilidad para solicitar cambio de código, designación/concedente/revocador del reconciliador, política restante de reenvío/sustitución/revocación/antiabuso. No se nombran por «autoridad competente»: cada decisión requiere facultad acreditada para el ámbito y acción, no rol genérico. Siguiente diseño propuesto, pendiente de autorización delimitada: identificación de dependencias y fuentes independientes, clasificación administrativa/seguridad y de resultados de operaciones, revisión competente y restablecimiento con evidencia; proponer mecanismos y resolver designaciones faltantes sin convertirlos en ratificados.
+
+CT-01/CT-02 ABIERTOS; REC-F2-001 EN_CURSO, solo diseño. Matrices 27/14, decisiones anteriores, inventarios y estados preservados; P01–P40/subcasos y nueve experimentos NO EJECUTADOS. Sin aceptación integral ni cierre técnico, implementación o revisión independiente acreditada. Solo documentación y sincronización Git MC-07 autorizadas; sin código, migraciones, configuración, servicios de producto, pruebas de producto o despliegues manuales.
