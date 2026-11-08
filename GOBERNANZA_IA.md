@@ -77,3 +77,77 @@ Las modificaciones de esta gobernanza requieren propuesta versionada, análisis 
 Definir modelos/proveedores permitidos, ubicación y retención de datos, criterios laborales y jurídicos aplicables, canales de contacto, consentimientos, matriz real de permisos, presupuestos por agente, métricas de autonomía y responsables de supervisión.
 
 Identificar al PO y las delegaciones aplicables a la IA, las versiones documentales aprobadas y las decisiones que determinan su vigencia. La incorporación de una decisión puntual no ratifica automáticamente esta gobernanza ni habilita agentes operativos.
+
+## 11. Controles obligatorios ratificados por el Product Owner — MC-01–MC-06
+
+**Fuente y versión de esta incorporación:** decisión expresa del Product Owner, mandato «Incorporación de controles obligatorios en GOBERNANZA_IA.md», 2026-11-07. **Estado de esta sección y de la puerta de cierre de la sección 12: RATIFICADAS Y OBLIGATORIAS** para ChatGPT, Codex y cualquier agente de IA que participe en el proyecto, en las futuras actividades y dentro de sus autorizaciones aplicables.
+
+Esta ratificación es puntual: no aprueba íntegramente la versión 0.1 ni sus propuestas pendientes. Las menciones generales a BORRADOR y a reglas adicionales pendientes de ratificación se mantienen como antecedentes y no dejan pendientes estos controles expresamente aprobados. Se conserva la subordinación y jerarquía de la sección 1; estos mecanismos complementan las reglas existentes sin otorgar permisos de ejecución ni alterar decisiones de REC-F2-001.
+
+### MC-01 — Autoridad y alcance
+
+Aplicación de las secciones 1, 2 (reglas 2 y 8), 3 y 9:
+
+- El Product Owner determina prioridades, alcance y autorizaciones.
+- Ninguna IA puede ampliar unilateralmente una tarea. Las recomendaciones no constituyen autorización.
+- Toda desviación requiere aprobación previa. La IA debe detenerse al completar el alcance autorizado.
+
+### MC-02 — Control permanente de Git
+
+Complementa las autorizaciones de la sección 3 y el tratamiento de discrepancias de la sección 9:
+
+- Verificar rama, HEAD, árbol de trabajo, staging y relación local/remoto al iniciar y cerrar actividades. Registrar cambios pendientes de commit y publicación.
+- Distinguir el estado remoto conocido mediante referencias locales del estado confirmado mediante una consulta remota autorizada, indicando su alcance y actualidad. Este control no autoriza fetch, push ni ninguna operación remota; si no hay permiso para consultar, informar esa limitación sin afirmar que el remoto está actualizado.
+- No acumular actividades sobre cambios sin respaldo sin autorización expresa. Commit y push requieren autorización según las reglas del proyecto; una autorización para uno no implica autorización para el otro.
+- Si el remoto presenta divergencia, indisponibilidad o cambios no autorizados, detenerse y reportar. Ante incertidumbre de control Git, aplicar MC-05.
+- Nunca utilizar force push, reset, rebase o merge para resolver automáticamente una discrepancia.
+
+### MC-03 — Actualización inmediata de documentos y tareas
+
+Complementa la consulta documental de la sección 1 y la verdad y evidencia de las secciones 2 y 3:
+
+- Toda decisión ratificada se incorpora a su documento correspondiente durante la actividad autorizada. Actualizar TASKS y PLAN cuando corresponda.
+- Registrar tareas realizadas, abiertas, bloqueadas y pendientes de validación. Distinguir documentación, implementación, pruebas y aceptación.
+- No declarar completada una tarea sin cumplir sus criterios de cierre. No arrastrar decisiones ratificadas únicamente en el chat.
+- La obligación documental no amplía los archivos ni las operaciones autorizados. Si el mandato no permite la escritura necesaria, aplicar la sección 9 y MC-05: informar la incorporación pendiente y la autorización requerida, sin efectuarla ni declarar satisfecho el requisito.
+
+### MC-04 — Control de ramas, variantes y alternativas
+
+Complementa el alcance autorizado de las secciones 1 y 3:
+
+- Registrar nuevas ramas, variantes técnicas, cambios de diseño, dependencias y alternativas, con justificación, impacto, autorización y relación con SPEC/TASKS/PLAN.
+- Distinguir alternativas propuestas de alternativas autorizadas y ejecutadas. No ejecutar alternativas por iniciativa de la IA.
+- No crear fases o tareas duplicadas. El registro de una alternativa no autoriza crear una rama ni modificar el diseño.
+
+### MC-05 — Bloqueo ante incumplimientos
+
+Aplica el escalamiento de la sección 2 (regla 7) y el procedimiento de conflictos de la sección 9:
+
+- Ante falta de autorización, evidencia, trazabilidad, documentación o control Git, detener la siguiente actividad ordinaria.
+- Informar el bloqueo, su causa, impacto y acción necesaria. No improvisar soluciones ni modificar el historial.
+- Las excepciones requieren autorización explícita y registro verificable. El bloqueo no autoriza por sí mismo ninguna operación correctiva.
+
+### MC-06 — Separación de autoridad y ejecución
+
+Precisa las responsabilidades bajo las secciones 1, 3 y 5:
+
+- **Product Owner:** autoridad de decisión.
+- **ChatGPT:** análisis, coordinación, preparación de instrucciones y verificación, sin autoridad para ampliar el alcance.
+- **Codex:** ejecutor limitado a las instrucciones autorizadas.
+- **Otros agentes:** sujetos a las mismas restricciones.
+- Ningún agente puede aprobar sus propias excepciones. Una auditoría automatizada no sustituye la aceptación del Product Owner ni elimina la revisión independiente exigida por la sección 3.
+
+## 12. Puerta obligatoria de cierre de cada actividad
+
+Como parte de los controles ratificados en la sección 11, toda actividad deberá informar:
+
+1. Identificador y alcance autorizado.
+2. Trabajo efectivamente realizado.
+3. Decisiones documentadas.
+4. TASKS/PLAN actualizados o justificación de no aplicación.
+5. Evidencias y pruebas ejecutadas o NO EJECUTADAS.
+6. Estado Git local y remoto, con las limitaciones de actualidad indicadas en MC-02.
+7. Commit y push realizados o pendientes.
+8. Bloqueos, riesgos y siguiente actividad autorizable.
+
+Una actividad no puede declararse cerrada si falta un requisito obligatorio. El informe debe hacer explícitos los requisitos pendientes o bloqueados; informar su ausencia no equivale a cumplirlos. El cierre de una actividad documental no acredita implementación, pruebas, aceptación técnica ni cierre de contratos o hallazgos. La siguiente actividad autorizable es una propuesta y no una autorización para iniciarla; al finalizar el alcance vigente, detenerse para revisión del Product Owner.
