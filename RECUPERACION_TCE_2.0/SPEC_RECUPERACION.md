@@ -1519,3 +1519,31 @@ Para revisión PO: aceptar o ajustar esta aplicación por escenarios; concretar 
 Ingeniería puede proponer, sin convertirlo en decisión PO: representación/versionado de evidencia, comprobación de procedencia/vigencia, revalidación de permisos, concurrencia/idempotencia, revocación de derivados y trazabilidad de intentos. Reautenticación/notificación/sesiones concretas, protección efectiva de evidencia, garantías Supabase Auth y reconciliación requieren diseño y validación posterior autorizados. Tratamiento/retención y validación legal pertinente siguen pendientes, sin requisitos legales inferidos. Parámetros con efecto funcional se elevan al PO; decisiones puramente técnicas compatibles no se presentan como nueva ratificación funcional.
 
 Siguiente dependencia dentro de REC-F2-001: revisión PO de esta propuesta y pendientes indispensables → diseñar corrección previa/cambio posterior con estados/versiones e invalidación → recuperación excepcional/revocación/reconciliación → revisión independiente y aceptación documental identificable. No iniciar esas actividades por esta sección. CT-01/CT-02/REC-F2-001 ABIERTOS; sin nueva fase, tarea o hallazgo, sin implementación ni pruebas. La autorización actual permite solo esta documentación y su commit/push limitado conforme MC-07, no ejecución técnica.
+
+## PO-REC-F2-001-SE-01 — suficiencia funcional de evidencia, 2026-11-08
+
+**Estado: RATIFICADA POR EL PO.** Fuente: mandato expreso «REC-F2-001, registro de ratificación PO sobre suficiencia de evidencia». Alcance: suficiencia funcional de evidencia aplicable a la matriz de 14 escenarios de «Acreditación operativa de titularidad — propuesta por escenarios, 2026-11-08», dentro de CT-01/CT-02 y REC-F2-001. Esta es la disposición normativa única de esta decisión; HALLAZGOS conserva rectoría y trazabilidad, TASKS registra continuidad y PLAN dependencias.
+
+**Criterio 1 — Proporcionalidad**
+
+La evidencia debe ser proporcional a la operación solicitada y al riesgo del escenario.
+
+**Criterio 2 — Correo e identidad**
+
+El control de un correo electrónico no acredita por sí solo la titularidad completa de una identidad.
+
+**Criterio 3 — Contradicciones materiales**
+
+Las contradicciones materiales impiden la aprobación automática.
+
+**Criterio 4 — Evidencia insuficiente**
+
+La evidencia insuficiente exige escalamiento, nunca aprobación por suposición.
+
+**Criterio 5 — Mecanismos técnicos pendientes**
+
+Los mecanismos P/T permanecen sujetos a diseño, implementación y validación posterior. La ratificación funcional no equivale a aprobación técnica.
+
+Relación normativa: estos cinco criterios se aplican a la evidencia pertinente E1–E7 y a los contratos CT-01/CT-02, preservando el catálogo, sus límites y APROBAR/ESCALAR/RECHAZAR. Contradicciones materiales no autorizan aprobación humana que omita su resolución: siguen vigentes las condiciones ratificadas de APROBAR. No se sustituye ni duplica la matriz de 14 escenarios o la de 27 operaciones; todas sus referencias y detalles P/T se conservan. Las notas anteriores de revisión pendiente quedan sucedidas exclusivamente respecto de estos cinco criterios funcionales, no de la aceptación integral de la aplicación por escenarios ni de mecanismos operativos/técnicos.
+
+Siguen pendientes facultades, concedentes, designaciones, elegibilidad no definida para solicitar cambio de código y política restante de reenvío/sustitución/revocación/antiabuso. No se introducen facultades, documentos obligatorios, factores, umbrales, proveedores o plazos. Procedencia/versionado de evidencia, concurrencia, revocación, reautenticación/notificación/sesiones, garantías Auth y reconciliación requieren diseño y validación posterior autorizados. CT-01/CT-02 ABIERTOS; REC-F2-001 EN_CURSO solo diseño; P01–P40/subcasos y nueve experimentos NO EJECUTADOS. Ningún cierre técnico, de tarea o hallazgo por esta ratificación.
