@@ -1718,3 +1718,95 @@ I-01–I-11, D-01–D-04, AN-01/AN-02, AUT-01–AUT-04 y PO-REC-F2-001-SE-01 per
 Pendientes PO: designaciones concretas de operadores, verificadores, aprobadores y ejecutores; concedentes/revocadores de otras familias; elegibilidad para solicitar cambio de código individual; designación y facultades del reconciliador; política restante de reenvío de invitaciones. Mecanismos técnicos y pruebas pendientes. Próxima decisión concreta: delimitar las designaciones centrales y sus facultades expresas, ámbito y vigencia, identificando aplicación de AUT-05 por operación/clasificación y separación contractual, sin nombrar cargos o personas por inferencia. El diseño de dependencias y restablecimiento AUT-02–AUT-04 continúa pendiente y no se inicia automáticamente.
 
 REC-F2-001 EN_CURSO; CT-01/CT-02 ABIERTOS; P01–P40 NO EJECUTADAS (subcasos y nueve experimentos igualmente NO EJECUTADOS). Matrices 27/14 e inventarios íntegros, sin cierre ni aceptación integral. Solo documentación de cuatro maestros y sincronización MC-07 autorizadas; no código, migraciones, Supabase/Vercel, infraestructura, secretos, configuración, pruebas de producto ni despliegues manuales. Entregar y detenerse para revisión PO.
+
+## AUT-06 — Designación delegada y continuidad de autoridades centrales, 2026-11-08
+
+**Estado: RATIFICADA — ALCANCE FUNCIONAL.** Fuente: ratificación expresa del Product Owner, mandato «REC-F2-001, ratificación AUT-06», base master/50898e9dedd69ea48acb93fbb4cf06a409a3c738. HALLAZGOS conserva rectoría; esta sección contiene la norma única, TASKS continuidad y PLAN dependencias. La ratificación es funcional y normativa: no autoriza implementación ni aprueba mecanismos técnicos todavía pendientes.
+
+### A. Autoridad inicial
+
+El Maestro conserva la autoridad inicial conforme a los contratos vigentes.
+
+Su intervención personal no será requisito para cada operación cotidiana ni para cada designación central que pueda efectuar válidamente una autoridad delegada.
+
+### B. Designación delegada
+
+El Maestro puede conceder expresamente a administradores autorizados la facultad de designar y revocar operadores centrales.
+
+La delegación debe identificar:
+
+- Autoridad concedente y fuente de legitimidad.
+- Administrador beneficiario.
+- Facultades concretas que puede conceder o revocar.
+- Operaciones y recursos cubiertos.
+- Ámbito de aplicación.
+- Límites y condiciones de vigencia.
+- Restricciones de compatibilidad.
+- Evidencia y auditoría.
+
+Ningún administrador adquiere esta facultad por su cargo, jerarquía aparente o participación operativa.
+
+### C. Límites de autoridad
+
+Un administrador delegado no puede:
+
+- Concederse facultades.
+- Elevar unilateralmente sus privilegios.
+- Superar el techo de su delegación.
+- Crear nuevos concedentes mediante subdelegación implícita.
+- Otorgar facultades globales fuera del alcance expresamente autorizado.
+- Eludir incompatibilidades, controles de riesgo o revisiones independientes.
+
+La capacidad de designar operadores no implica autorización para ejecutar las operaciones que dichos operadores realizan.
+
+### D. Continuidad ordinaria
+
+Las autoridades delegadas vigentes y competentes podrán continuar las operaciones autorizadas sin requerir intervención personal del Maestro.
+
+La ausencia o indisponibilidad de un administrador no paraliza automáticamente la operación si existen otras autoridades vigentes con facultades suficientes.
+
+No presumir que la ausencia de una persona permite ampliar facultades ajenas.
+
+### E. Separación de funciones
+
+Preservar AUT-05.
+
+Las operaciones ordinarias admiten compatibilidad condicionada de verificación y aprobación cuando corresponda.
+
+Los procedimientos excepcionales, privilegiados o de alto riesgo conservan las separaciones y revisiones independientes exigidas por los contratos vigentes.
+
+### F. Revocación y dependencias
+
+Aplicar AUT-01 a AUT-04.
+
+La revocación de una delegación obliga a identificar facultades efectivamente dependientes, suspenderlas preventivamente cuando corresponda, bloquear operaciones dependientes y preservar evidencias.
+
+No reactivar facultades automáticamente por recuperación de autoridad del concedente.
+
+### G. Continuidad extraordinaria — PENDIENTE ESPECÍFICO DE DISEÑO
+
+Establecer como pendiente específico el diseño de un procedimiento para recuperar o sustituir autoridades cuando no exista ninguna autoridad vigente capaz de realizar una operación indispensable.
+
+Este procedimiento:
+
+- No queda aprobado técnicamente mediante AUT-06.
+- No crea una cuenta de emergencia con privilegios ilimitados.
+- No permite omitir autenticación ni auditoría.
+- No permite recuperación unilateral de control global.
+- Deberá contemplar controles reforzados y autoridades independientes conforme a un diseño posterior ratificado por el PO.
+
+No inventar todavía número de participantes, quórums, plazos ni mecanismos de recuperación.
+
+### Integración normativa y sucesión delimitada
+
+AUT-06 precisa la fuente funcional de la delegación para designar/revocar operadores centrales: Maestro puede conceder esa facultad expresamente a administradores autorizados. Sucede solo al pendiente de ese principio, sin designaciones individuales, facultades concretas concedidas ni arquitectura paralela de autoridades. Las menciones anteriores de designaciones/concedentes pendientes se conservan como antecedentes y se interpretan bajo este alcance: no exigir presencia personal del Maestro si ya existe autoridad delegada suficiente, ni interpretar la ausencia como una delegación nueva. Administrador delegado para designar operadores no equivale a nuevo concedente universal; no habilita subdelegación implícita ni gestión de administradores por Limitado.
+
+Relación con AUT-01–AUT-05 y A-08/A-09: AUT-01 conserva su familia de facultades administrativas de coordinadores; AUT-06 no la transforma en autoridad global ni resuelve concedentes/revocadores de familias distintas de las expresamente cubiertas. Cada designación exige fuente legítima, beneficiario, operaciones/recursos, ámbito, techo/vigencia, compatibilidad y evidencia conforme B; A-08/A-09 siguen sin ratificación técnica en bloque. AUT-02–AUT-04 mantienen dependencia efectiva y fuentes independientes, suspensión preventiva, tratamiento diferenciado de operaciones y restablecimiento expreso: confirmadas no se revierten por suposición, inciertas no se repiten por nueva autorización ni por necesidad de continuidad. AUT-05 conserva sus siete condiciones ordinarias y la separación reforzada; designar no acredita independencia por caso ni concede ejecución. Las tres modalidades de AUT-05 y la automatización autorizada sin aprobación humana individual inventada permanecen vigentes.
+
+CT-01/CT-02 e I-01–I-11 conservan identidad global única, permisos locales por agencia, facultad central específica y separación de solicitud/aprobación/ejecución según operación. Referencias a las 27 operaciones, sin duplicar matrices: 1/3/6/7/8/11 conservan tramitación automática solo donde ya autorizada; 9–16/19–21 conservan permisos, aceptación y ámbitos propios; 13 mantiene D sobre incorporación de coordinadores, que no sustituye designación ni concesión de facultades. En 2/4/5/17/18/22/23, continuidad requiere autoridades efectivamente facultadas para cada actuación, sin asignarlas automáticamente por AUT-06; I-08/I-09 y sus revisores distintos e independientes siguen exigibles. En 24–26, continuidad no elimina I-10, incertidumbre o requisitos de reconciliación técnica; el reconciliador no resuelve titularidad, aprueba recuperación ni elige credenciales. En 27 sigue el rechazo de reset ajeno sin facultad. AN-01/AN-02 mantienen identidad estable, autoridad central sobre códigos y prohibición absoluta de reasignación.
+
+Auditoría/evidencia enlazadas con A-12/E3/E5 y PO-REC-F2-001-SE-01: origen y vigencia de delegación/designación, límites, decisión, operación y revocación deben poder acreditarse; mecanismos de registro, revalidación, concurrencia y comprobación de independencia siguen P/T. Trazabilidad futura a pruebas existentes P21/P22/P34 (delegación/dependencias), P10–P13/P32/P33 (riesgo/independencia), P23/P27 (auditoría) y P14/P29/P30/subcasos (incertidumbre); todas NO EJECUTADAS. Continuidad extraordinaria es pendiente dentro de REC-F2-001, no tarea/fase/hallazgo nuevo, procedimiento aprobado ni prueba nueva.
+
+Pendientes expresos: designaciones individuales de operadores centrales; concedentes/revocadores de familias distintas de las expresamente cubiertas; elegibilidad para solicitar cambio de código individual; designación del reconciliador técnico; continuidad extraordinaria; política restante de reenvío de invitaciones; procedimientos técnicos de identidad/recuperación, mecanismos y pruebas. Próxima decisión concreta PO: delimitar administradores beneficiarios y delegaciones expresas de designación/revocación central, facultades concedibles/revocables, ámbitos/recursos, límites/vigencia y compatibilidades, sin reabrir el principio AUT-06; autorizar después el diseño específico de continuidad extraordinaria con controles reforzados y autoridades independientes, sin anticipar participantes, quórums, plazos o mecanismo.
+
+AUT-01–AUT-05, D-01–D-04, AN-01/AN-02, I-01–I-11 y PO-REC-F2-001-SE-01 íntegros. Matrices 27/14 preservadas, no duplicadas; REC-F2-001 EN_CURSO; CT-01/CT-02 ABIERTOS; P01–P40 NO EJECUTADAS, subcasos y nueve experimentos NO EJECUTADOS. Sin aceptación técnica o cierre; solo documentación/Git MC-07 de cuatro maestros, sin código, migraciones, Supabase/producción/Vercel, infraestructura, secretos, configuración, pruebas de producto o despliegues manuales. Entregar y detenerse para revisión.
