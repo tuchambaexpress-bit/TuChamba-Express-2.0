@@ -1,4 +1,6 @@
 SPEC_RECUPERACION — TuChambaExpress 2.0
+
+> Lectura vigente — PO-REC-FASES-01 (2026-11-08): consultar al final «PO-REC-FASES-01 — fases vigentes y estados de evidencia». Conserva las cuatro fases existentes y precisa F2; Validación es actividad/puerta obligatoria, no fase general independiente. Cabecera 0.1 y estados históricos se conservan sin ratificación integral; estado consolidado F2 en TASKS/PLAN, bloques PO-REC-FASES-01.
 Versión: 0.1 | Estado: Propuesta pendiente de aprobación del PO | Alcance: recuperación, estabilización, mejoras y agentes IA.
 1. Objeto
 Establecer criterios verificables para recuperar y evolucionar la implementación existente, sin confundir documentación histórica con comportamiento real ni alterar producción sin autorización.
@@ -2070,3 +2072,42 @@ Mantener pendientes: evidencias concretas admisibles por supuesto; criterios ope
 Siguiente actividad documental PROPUESTA, pendiente de autorización delimitada: diseñar sustitución segura del correo en recuperación excepcional, relacionando caso/identidad, aprobación competente, verificación de control del nuevo correo antes de habilitar, invalidación de derivados anteriores, ejecución/entrega/reautenticación y sesiones, con protección de información e incertidumbre. Canal/evidencia/autoridades pendientes son dependencias, no resueltas por proponer esa secuencia. Sin estados, plazos, proveedores, almacenamiento o mecanismos técnicos ratificados por inferencia; revisión PO e independiente posteriores.
 
 Contenido anterior, REX-01/SE-01, AUT-01–AUT-08, demás decisiones/matrices 27/14/inventarios íntegros. REC-F2-001 EN_CURSO; CT-01/CT-02 ABIERTOS; P01–P40 NO EJECUTADAS, subcasos/nueve experimentos NO EJECUTADOS. Solo cuatro maestros y documentación/Git MC-07; sin archivos adicionales, código, migraciones, Supabase/producción/infraestructura, pruebas de producto o despliegues. Entregar y detenerse para revisión PO.
+
+## PO-REC-FASES-01 — fases vigentes y estados de evidencia, 2026-11-08
+
+Fuente rectora: HALLAZGOS, «PO-REC-FASES-01 — decisión rectora de cuatro fases y control de ejecución», mandato expreso PO del 2026-11-08, base master/314a720116c9104c7dcd6cb3c27db4fa81433224. **Estructura de cuatro fases RATIFICADA POR EL PO**, no creada ahora: sustituye para planificación vigente la interpretación de Validación como fase general independiente. La validación sigue siendo actividad y puerta obligatoria verificable/documentada en auditoría, preparación y reparación. No quinta fase ni cambio de IDs existentes; no ratificación integral de versiones 0.1 o mecanismos P/T.
+
+### Definición oficial y puertas conservadas
+
+- **F1 — Auditoría:** diagnóstico del proyecto existente, hallazgos, riesgos, contradicciones, cobertura y evidencia. Mantiene cierre documental condicionado de 2026-11-06 y pendientes transferidos; no auditoría técnica integral concluida ni hallazgos cerrados. Inventario/evidencia/certeza/limitaciones y aceptación documental siguen diferenciados de comprobación externa.
+- **F2 — Reparación y estabilización:** comprende, en orden controlado, (1) validación de hallazgos y contratos, (2) contraste con evidencia técnica, (3) preparación y autorización de incrementos, (4) reparación de defectos confirmados, (5) pruebas, regresiones y aceptación. No se omite validación por incluirla en F2; el cierre requiere evidencia pertinente, excepciones/riesgos explícitos y aceptación PO, conforme a criterios existentes por tarea/incremento.
+- **F3 — Mejoras:** continuación del desarrollo y evolución funcional según inventario existente y prioridades PO, preservando necesidades multiagencia ratificadas y dependencias. No reclasificar reparación de identidad/seguridad como mejora; AN-80 conserva diferimiento de desarrollo completo de negocio y exigencia de controles en superficies existentes. Mejoras se aceptan individualmente tras puertas de seguridad/calidad pertinentes.
+- **F4 — Agentes IA:** desarrollo/integración agentiva bajo puertas de seguridad, autorización, control y calidad; contratos, permisos, privacidad, pruebas adversariales/supervisión y activación gradual según alcance aprobado. Nombrar la fase no autoriza implementar ni habilitar agentes; pilotos/controles requieren evidencia y aceptación propias.
+
+### Estados documentales y técnicos no intercambiables
+
+| Condición | Significado y evidencia necesaria | Lo que no acredita |
+|---|---|---|
+| Diagnóstico documentado | Observación registrada con fuente, versión, alcance y límites | Confirmación técnica completa o corrección |
+| Hallazgo confirmado | Evidencia contrastada; distinguir CONFIRMADO_ESTÁTICAMENTE de CONFIRMADO_POR_PRUEBA | Explotación o presencia efectiva en producción por una lectura local |
+| Riesgo potencial | Escenario condicionado/hipótesis con incertidumbre explícita | Defecto reproducido o severidad histórica recuperada |
+| Contrato ratificado | Decisión expresa PO identificada con alcance | Mecanismo implementado/probado o facultad concedida a una persona |
+| Diseño pendiente de contraste | Propuesta de solución, interfaces/estados o modelo con pendientes P/T | Esquema efectivo, garantía Auth/RLS/Storage o aceptación final |
+| Reparación autorizada | Mandato específico con alcance, responsable/revisor, archivos/sistemas, pruebas y reversión | Cambio ya realizado, permiso productivo o autorización de otras correcciones |
+| Reparación implementada | Cambio versionado y trazable al mandato | Pruebas satisfactorias o cierre del hallazgo |
+| Prueba ejecutada | Resultado esperado/observado, versión/entorno y evidencia reproducible; declarar simulaciones | Cobertura de superficies no probadas o seguridad global |
+| Corrección aceptada | Criterios pertinentes cumplidos, riesgos/excepciones registrados, revisión y aceptación competente | Cierre automático de otras tareas o permiso de publicación |
+
+Estos son estados de interpretación/evidencia, no sustituyen el catálogo de estados TASKS ni renumeran hallazgos. Las ratificaciones recientes no constituyen pruebas de producto. Resultados históricos de TCE-004 y pruebas offline de 004 conservan alcance y fecha; no se presentan como repetidos ni suficientes para integración real.
+
+### Puertas de ejecución y continuidad acotada
+
+Las vistas vigentes de siete tareas en TASKS/PLAN, bloques PO-REC-FASES-01, consolidan el estado sin sustituir fichas originales: 001/002 EN_CURSO en diseño/conceptual, 004 EN_CURSO preparación con offline cerrado y aceptación integral pendiente; 003/005/006/007 PENDIENTES. F2 avanza en preparación/validación, sin reparación general aceptada. TCE-004 permanece excepción local EN_VALIDACION y no altera esa conclusión.
+
+Secuencia PROPUESTA, pendiente de autorización delimitada PO: revisión consolidada/acotada de suficiencia 001; puerta laboratorio 004; contraste 002/003/005; preparación de incremento/cobertura 006/007; autorización, implementación y pruebas del incremento. No exige terminar todos los detalles funcionales de recuperación excepcional para avanzar en preparación paralela permitida. 001 preliminar alimenta 002/005; 007 puede planificar antes de finalizar F2; ejecución requiere entorno y dependencias pertinentes. No exigir cierre total de 001 antes de obtener las evidencias de contraste que necesita para cerrarse.
+
+Para revisar suficiencia, usar contratos/matrices/pruebas existentes, distinguir pendientes indispensables de diferibles y resolver o bloquear expresamente operaciones afectadas, sin aceptar superficies inseguras. Aceptar un incremento no equivale a cerrar toda REC-F2-001: su cierre conserva matriz/sesión completas, contraste autorizado, revisión independiente/PO, pruebas y reversión previstas. Pruebas de correcciones aún inexistentes se ejecutan después de implementación autorizada; evidencia de viabilidad/alcance necesaria no se sustituye por mera planificación. No repetir ratificaciones resueltas ni convertir el siguiente detalle de correo en bloqueo universal de toda F2.
+
+Cabeceras/continuidades históricas («Fase activa F1», «F2 no iniciada», «pruebas no ejecutadas», «propuesta pendiente», «siguiente paso») mantienen fecha y alcance; para estado actual prevalecen esta decisión y las vistas consolidadas, con las ratificaciones específicas posteriores a cada antecedente. Se agregan referencias de lectura sin borrar historia. No resolver por este registro discrepancias TCE-003/012, gobernanzas no ratificadas integralmente o evidencia faltante.
+
+CT-01/CT-02 ABIERTOS, REC-F2-001 EN_CURSO; I-01–I-11, AUT-01–AUT-08, D-01–D-04, AN-01/AN-02, OP04/OP05, REX-01/REX-02/SE-01, matrices 27/14 e inventarios/hallazgos preservados. P01–P40/subcasos y nueve experimentos NO EJECUTADOS. Solo documentación/Git MC-07 de cuatro maestros; no código, Supabase/migraciones/infraestructura/despliegues, pruebas de producto, tareas/fases/documentos nuevos o autorización técnica implícita. Entregar y detenerse para revisión PO.
