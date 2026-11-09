@@ -2031,3 +2031,42 @@ Permanecen sin ratificar: canal concreto para iniciar recuperación excepcional;
 Siguiente actividad documental PROPUESTA, pendiente de autorización delimitada: delimitar canal excepcional, evidencia operativa y autoridades de evaluación/aprobación, después diseñar sustitución segura de correo/control nuevo y ejecución/entrega/reautenticación con sesiones, incertidumbre y reconciliación; revisión PO e independiente/aceptación documental posteriores. No se inicia el procedimiento por registrar el principio. Referencias a escenarios existentes de recuperación excepcional, ordinaria y reconciliación de la matriz 14; P10–P13/P26/P32/P33, P09/P31 y P14/P29/P30/subcasos, P07/P25/P35/P37 y P23/P27 pertinentes, todos NO EJECUTADAS; sin matriz o prueba nueva.
 
 Contenido anterior, I-01–I-11, AUT-01–AUT-08, demás decisiones, matrices 27/14 e inventarios íntegros. REC-F2-001 EN_CURSO; CT-01/CT-02 ABIERTOS; P01–P40 NO EJECUTADAS, subcasos/nueve experimentos NO EJECUTADOS. Sin implementación, pruebas o cierre; solo cuatro maestros y Git MC-07, sin archivos adicionales, código, Supabase/migraciones/infraestructura/producción o despliegues. Entregar y detenerse para revisión PO.
+
+## PO-REC-F2-001-REX-02 — evidencia proporcional en recuperación excepcional, 2026-11-08
+
+**Estado: RATIFICADA — ALCANCE FUNCIONAL.** Fuente: ratificación expresa del Product Owner del 2026-11-08, mandato «REC-F2-001, evidencia proporcional en recuperación excepcional», base master/80f7c4ff4de5b170f78846c5b002d0d046aa6120. Identificador único sin colisión en familia REX, complemento de PO-REC-F2-001-REX-01 y PO-REC-F2-001-SE-01, sin sustituir sus reglas. HALLAZGOS conserva rectoría; esta sección contiene la norma única, TASKS continuidad y PLAN dependencias. Sin aprobación de procedimientos técnicos, implementación o mecanismos P/T.
+
+### Diez principios funcionales ratificados
+
+1. Evaluación integral y proporcional de evidencias pertinentes.
+2. Corroboración independiente cuando corresponda.
+3. Identificación oficial no universal ni suficiente por sí sola.
+4. Datos históricos como corroboración, no como factor suficiente aislado.
+5. Agencia como fuente contextual, nunca adjudicadora unilateral.
+6. Control verificado del nuevo correo antes de habilitarlo, sin equivalencia con titularidad.
+7. Resolución obligatoria de contradicciones materiales antes de aprobar.
+8. Aprobación exclusivamente por autoridad competente, con independencia contractual.
+9. Minimización, protección y trazabilidad de datos personales.
+10. Rechazo seguro de aprobación ante insuficiencia, sin acceso provisional.
+
+### Límites e interpretación integrada
+
+Evaluación acumulativa significa considerar integralmente las evidencias pertinentes y su corroboración, procedencia, vigencia y contradicciones, sin puntuación automática de identidad, número fijo de documentos o aprobación por simple suma. Varias coincidencias débiles no compensan contradicciones materiales. No identificación oficial universal ni concluyente sola; nombre/teléfono/código/agencia o un dato histórico aislado no habilitan recuperación. Agencia aporta contexto dentro de autoridad/acceso permitidos, no adjudica identidad; coordinador asiste conforme REX-01 sin titularidad, aprobación, ejecución o cambio unilateral de correo. No cargos nuevos, privilegios globales ni facultad por cantidad de información disponible.
+
+El principio 10 deniega la aprobación y cualquier acceso provisional mientras la evidencia sea insuficiente. No convierte insuficiencia por sí sola en fraude o rechazo definitivo del caso: mantiene ESCALAR bajo los criterios ratificados de APROBAR/ESCALAR/RECHAZAR y SE-01, hasta resolución competente y evidencia suficiente. Corroboración independiente no se presume por duplicar datos del mismo origen ni sustituye la independencia contractual de verificadores/aprobadores. Se mantienen dos revisores humanos distintos facultados e independientes en los supuestos excepcionales privilegiados/alto riesgo donde ya son obligatorios; ninguna evidencia o compatibilidad AUT-05 permite omitirlos.
+
+Control verificado del nuevo correo antes de habilitarlo es requisito funcional ratificado, no prueba de titularidad completa ni facultad para sustituir el canal por sí mismo. Las menciones previas de «prueba de control del nuevo correo pendiente» quedan precisadas solo respecto de esta obligación: mecanismo, procedimiento, vínculo seguro con identidad/caso y condiciones de habilitación siguen pendientes. REX-01 mantiene evaluación/aprobación centrales y separación de ejecución; no se aprueba sustitución segura, factor nuevo implícito por recuperar ni un procedimiento de entrega/reautenticación por esta regla. Recuperación ordinaria por correo previamente verificado, activación inicial y cambio autenticado conservan sus contratos.
+
+E1–E7 y SE-01 conservan categorías, límites y proporcionalidad ratificados; admisibilidad de fuentes/pruebas concretas y criterios operativos por supuesto siguen pendientes. I-01/I-02/M-01 preservan correspondencia estable/código nunca reasignable; I-05–I-09 rigen canal/factor, solicitud, ordinaria y excepcional; I-10/I-11 mantienen exclusión, efectos inciertos y suspensión/restauración separadas. Toda recuperación completa conserva revocación de sesiones anteriores y autenticación nueva, sin revivir derechos terminales. Resolver suficiencia/titularidad no demuestra fin de intentos Auth ni libera bloqueo técnico. I-03/I-04 y sus pendientes de sesiones permanecen intactos.
+
+AUT-01–AUT-08 conservan facultades expresas/techo, dependencias/revocación/restablecimiento, separación/independencia, continuidad y capacidades diferenciadas. Tramitación, verificación, aprobación y ejecución no se conceden entre sí ni por nueva evidencia; designaciones/concedentes/revocadores no se asignan. A-12/E5 enlazan minimización/protección/trazabilidad: no autorización de almacenamiento documental, servicio externo, retención, tecnología o acceso privado general. Tratamiento de información sensible, condiciones de acceso/custodia/retención y mecanismos concretos requieren diseño/revisión posteriores, sin datos o documentos reales recabados por esta actividad.
+
+Referencias a operaciones existentes 20–24: asistencia contextual 20, ordinaria 21 preservada, evaluación central 22, aprobación independiente 23 y ejecución limitada 24; operación 26 mantiene reconciliación específica sin decisión de titularidad. Matriz 27 y escenarios 14 existentes, especialmente recuperación excepcional/ambigüedad/reconciliación, se aplican sin copiar o modificar filas. Correspondencia futura con P10–P13/P26/P32/P33 (suficiencia/independencia), P09/P31 (canal/derivados), P23/P27 (privacidad/auditoría), P14/P29/P30/subcasos (incertidumbre), todos NO EJECUTADAS; sin nuevos casos ni prueba de eficacia técnica.
+
+### Pendientes y siguiente actividad
+
+Mantener pendientes: evidencias concretas admisibles por supuesto; criterios operativos de suficiencia y contradicción; designación de verificadores/aprobadores y concedentes/revocadores; canal excepcional; sustitución segura de correo; tratamiento de información sensible; procedimientos técnicos, pruebas y reconciliación. No reabrir categorías E1–E7, los diez principios o SE-01; no se ratifica la aplicación completa de los 14 escenarios ni la clasificación general de las 27 operaciones.
+
+Siguiente actividad documental PROPUESTA, pendiente de autorización delimitada: diseñar sustitución segura del correo en recuperación excepcional, relacionando caso/identidad, aprobación competente, verificación de control del nuevo correo antes de habilitar, invalidación de derivados anteriores, ejecución/entrega/reautenticación y sesiones, con protección de información e incertidumbre. Canal/evidencia/autoridades pendientes son dependencias, no resueltas por proponer esa secuencia. Sin estados, plazos, proveedores, almacenamiento o mecanismos técnicos ratificados por inferencia; revisión PO e independiente posteriores.
+
+Contenido anterior, REX-01/SE-01, AUT-01–AUT-08, demás decisiones/matrices 27/14/inventarios íntegros. REC-F2-001 EN_CURSO; CT-01/CT-02 ABIERTOS; P01–P40 NO EJECUTADAS, subcasos/nueve experimentos NO EJECUTADOS. Solo cuatro maestros y documentación/Git MC-07; sin archivos adicionales, código, migraciones, Supabase/producción/infraestructura, pruebas de producto o despliegues. Entregar y detenerse para revisión PO.
