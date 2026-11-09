@@ -1949,3 +1949,46 @@ Referencias canónicas sin duplicación: operación 4 en matriz 27 (solicitud), 
 Pendientes: designaciones concretas, concedentes/revocadores de aprobación y asistencia, separación reforzada específica; procedimiento de consentimiento/autenticación/evidencia, unicidad histórica, concurrencia, idempotencia, ejecución/auditoría y garantías técnicas; clasificación de las 27 operaciones. Otros pendientes AUT-08 permanecen: procedimiento reforzado para crear administradores con delegación, mínimo obligatorio de autoridades independientes, continuidad extraordinaria, designación/facultades del reconciliador, política restante de reenvío, procedimientos de identidad/recuperación y pruebas. No volver a pedir elegir entre los dos canales ya ratificados; diseñar sus condiciones verificables y delimitar autoridades sin concederlas por inferencia. Trazabilidad futura a P26/P33/P39/P40 y subcasos pertinentes existentes, NO EJECUTADAS; sin nuevo caso de prueba.
 
 REC-F2-001 EN_CURSO; CT-01/CT-02 ABIERTOS; AUT-01–AUT-08 RATIFICADAS en su alcance funcional; P01–P40 NO EJECUTADAS y subcasos/nueve experimentos NO EJECUTADOS. Contenido previo y matrices 27/14 íntegros. Operaciones 4/5 no implementadas, probadas ni cerradas por esta ratificación. Solo cuatro maestros y sincronización Git MC-07, sin código, migraciones, servicios/producción/infraestructura, pruebas de producto, despliegues o archivos adicionales. Entregar y detenerse para revisión PO.
+
+## PO-REC-F2-001-OP05-02 — separación proporcional de operación 5, 2026-11-08
+
+**Estado: RATIFICADA — ALCANCE FUNCIONAL.** Fuente: ratificación expresa del Product Owner del 2026-11-08, mandato «REC-F2-001, separación proporcional de operación 5», base master/7d34e2d7f0c5f3fd260abdc711a7c7f9f061cad3. Identificador de decisión nuevo y sin colisión, complemento de **PO-REC-F2-001-OP05-01**, no nueva operación/tarea/fase/hallazgo. HALLAZGOS conserva rectoría; esta sección contiene la norma única, TASKS continuidad y PLAN dependencias. Ratificación exclusivamente funcional, sin implementación o mecanismos P/T aprobados.
+
+### Reglas funcionales ratificadas
+
+1. La solicitud de cambio conserva los canales ratificados en PO-REC-F2-001-OP04-01.
+2. La verificación corresponde a autoridad central facultada, con evaluación de titularidad, evidencia, historial y conflictos.
+3. La aprobación corresponde exclusivamente a autoridad central con facultad específica.
+4. La misma persona puede verificar y aprobar solamente si el caso se admite expresamente como operación ordinaria humana compatible y satisface íntegramente AUT-05.
+5. La compatibilidad no permite autoaprobación, beneficio indebido, conflictos de intereses ni ampliación de facultades.
+6. La ejecución posterior corresponde a servicio técnico específicamente autorizado, sin facultad decisoria implícita.
+7. Evidencia contradictoria, disputa de identidad, conflicto de intereses o sospecha fundada de suplantación impiden la aprobación ordinaria y requieren revisión central reforzada.
+8. Se conservan las exigencias contractuales de dos revisores humanos distintos e independientes para los supuestos excepcionales privilegiados o de alto riesgo donde ya son obligatorias.
+9. Ningún cambio de código altera la identidad técnica permanente, reasigna códigos a otras personas ni amplía membresías, sesiones o facultades.
+
+### Límites expresos de la decisión
+
+No interpretar esta decisión como:
+
+- Clasificación universal de la operación 5 como ordinaria.
+- Autorización para verificar y aprobar cualquier caso con una sola persona.
+- Exigencia universal de dos aprobadores.
+- Facultad de aprobación derivada de asistencia, tramitación o designación.
+- Autorización de mecanismos técnicos, interfaces, algoritmos o procedimientos concretos.
+- Designación de personas, concedentes o revocadores.
+
+La clasificación definitiva por supuesto de riesgo y las condiciones operativas específicas siguen pendientes.
+
+### Integración y sucesión delimitada
+
+La operación canónica 4 conserva solicitud directa del titular autenticado y asistencia de coordinador expresamente autorizado con consentimiento verificable conforme OP04-01. OP05-01 mantiene aprobación específica central para sujeto/solicitud/ámbito/condiciones, exclusión del titular y coordinador asistente como aprobadores administrativos de su propia solicitud/asistencia y ejecución separada. OP05-02 precisa el principio de separación proporcional: autoridad central con ambas facultades puede verificar/aprobar solo un caso expresamente admitido como ordinario humano compatible bajo todas las condiciones de AUT-05; no basta llamarlo ordinario o poseer un cargo central. La operación 6 mantiene ejecución por servicio autorizado, limitada al comando aprobado, sin elegir sujeto/código o adjudicar titularidad por decisión propia.
+
+Los pendientes históricos de separación reforzada quedan precisados exclusivamente por las reglas funcionales aquí ratificadas. No se reabre este principio ni se considera resuelta la clasificación por supuestos, condiciones operativas o designaciones. AUT-05/AUT-08 conservan capacidades distintas, facultades expresas/vigentes, evidencia suficiente/pertinente, ausencia de conflicto/interés propio, actuaciones registradas separadamente y revalidación de autoridad/riesgo/evidencia/condiciones al decidir y ejecutar. AUT-01–AUT-04 mantienen techo/dependencias/bloqueo/restablecimiento; AUT-06/AUT-07 no permiten facultad de aprobación por designar, subdelegación implícita ni poder global por continuidad.
+
+Revisión central reforzada ante los impedimentos de la regla 7 no equivale a permiso para aprobar contradicciones o conflictos sin resolver. E1–E7 y PO-REC-F2-001-SE-01 conservan criterios de suficiencia y APROBAR/ESCALAR/RECHAZAR: evidencia insuficiente exige tratamiento competente, contradicciones materiales mantienen impedimentos y la intervención humana no los subsana por sí sola. I-08/I-09 conservan independencia y dos personas distintas facultadas e independientes en los supuestos donde ya son obligatorias; no se prescribe esa cantidad para toda revisión reforzada de cambio de código ni se permite reemplazarla cuando el contrato sí la exige. No rebajar clasificación de riesgo para eludir controles.
+
+AN-01/AN-02 e I-01/I-02/M-01 conservan código único, unicidad histórica y prohibición permanente de reasignación a otra persona, identidad Auth/perfil estable e historial/trazabilidad, sin identidad nueva ni cambios de permisos, membresías, sesiones, facultades, contraseña o referido por inferencia. A-08/A-09/A-12 siguen delimitando autoridad/evidencia/auditoría sin ratificación técnica en bloque. Referencias exclusivas a operaciones 4/5/6 y a los escenarios existentes pertinentes, sin alterar o duplicar matrices 27/14. Trazabilidad futura a P26/P33/P39/P40 para identidad/código y P10–P13/P32, P23/P27 según revisión/independencia/auditoría, todos NO EJECUTADAS; sin prueba nueva ni afirmación de eficacia técnica.
+
+Pendientes conservados: clasificación definitiva de supuestos de operación 5 y clasificación general de las 27 operaciones; condiciones operativas de admisión ordinaria/revisión reforzada y evidencia; designaciones concretas y concedentes/revocadores; procedimientos de autenticación/consentimiento, verificación/aprobación, unicidad histórica, comando/ejecución, concurrencia/idempotencia/auditoría y garantías técnicas; demás pendientes AUT-08 no resueltos. Siguiente revisión PO: delimitar supuestos de riesgo, condiciones admisibles y autoridades concretas conforme al principio ratificado, sin designarlas o aprobar mecanismos por esta sección.
+
+REC-F2-001 EN_CURSO; CT-01/CT-02 ABIERTOS; P01–P40 NO EJECUTADAS, subcasos/nueve experimentos NO EJECUTADOS. AUT-01–AUT-08, OP04-01/OP05-01 y demás decisiones/matrices/inventarios íntegros, sin cierre ni implementación/pruebas de 4/5/6. Solo cuatro maestros y sincronización MC-07; sin archivos adicionales, código, migraciones, Supabase/infraestructura/producción, pruebas de producto o despliegues. Entregar y detenerse para revisión PO.
