@@ -179,9 +179,9 @@ function harness(file, scenario = {}) {
   for (const [key, value] of Object.entries(headers)) if (value === null) delete headers[key]
   const request = new Request(origin + '/api/mock', { method: 'POST', headers, body: JSON.stringify(body) })
   return {
-    async invoke() {
+    async invoke(input = request) {
       let response, failure
-      try { response = await exports.POST(request) } catch (error) { failure = error }
+      try { response = await exports.POST(input) } catch (error) { failure = error }
       assert.deepEqual(violations, [], 'mock contract violations')
       if (failure) throw failure
       return response
@@ -190,7 +190,7 @@ function harness(file, scenario = {}) {
   }
 }
 
-for (const file of routes) {
+for (const file of routes.filter(file => file !== routes[2])) {
   const rejections = [
     ['no session', { user: null }, 401],
     ['expired or invalid session', { identityError: { message: 'mock expired' } }, 401],
@@ -229,17 +229,6 @@ for (const file of routes) {
   }
 }
 
-test('limited administrator cannot reset another administrator', async () => {
-  const h = harness(routes[2], { admin: { rol: 'limitado', status: 'activo' }, targetAdmin: { rol: 'maestro' } })
-  assert.equal((await h.invoke()).status, 403)
-  assert.deepEqual(h.writes, [])
-  assert(!h.events.includes('list-users'))
-})
-test('reset target authorization fails closed on error', async () => {
-  const h = harness(routes[2], { admin: { rol: 'limitado', status: 'activo' }, targetError: { message: 'mock failure' } })
-  assert.equal((await h.invoke()).status, 503)
-  assert.deepEqual(h.writes, [])
-})
 test('old authorization and public credential removed from all six files', () => {
   for (const file of [...routes, 'components/admin/SolicitudesPanel.tsx', 'components/admin/InvitacionesPanel.tsx']) {
     const source = fs.readFileSync(path.join(__dirname, '..', file), 'utf8')
@@ -247,7 +236,7 @@ test('old authorization and public credential removed from all six files', () =>
   }
 })
 
-for (const file of routes) {
+for (const file of routes.filter(file => file !== routes[2])) {
   test(file + ': authenticated email filter ignores browser administrator claims', async () => {
     const h = harness(file, { body: { adminId: 'other-admin', adminEmail: 'other@example.test', rol: 'maestro' } })
     assert.equal((await h.invoke()).status, 200)
@@ -299,17 +288,46 @@ for (const file of routes) {
     assert(h.privileged.length > 0)
   })
 }
-test('limited reset checks target email before Auth admin operations', async () => {
-  const h = harness(routes[2], { admin: { rol: 'limitado', status: 'activo' } })
-  assert.equal((await h.invoke()).status, 200)
-  const lookups = h.queries.filter(q => q.table === 'administradores')
-  assert.deepEqual(lookups[1].calls.find(c => c.method === 'eq').args, ['email', 'target@example.test'])
-  assert(h.events.indexOf('target-checked') < h.events.indexOf('privileged:auth:list-users'))
-  assert.deepEqual(h.privileged.find(p => p.name === 'auth:update-user').args,
-    ['mock-target', { password: 'mock-password' }])
-})
-test('limited reset target lookup exception fails closed', async () => {
-  const h = harness(routes[2], { admin: { rol: 'limitado', status: 'activo' }, targetThrows: true })
-  assert.equal((await h.invoke()).status, 503)
+// REC-F2-001 / TCE-004 containment replaces the reset-specific target checks,
+// successful reset assertions and shared authentication/cookie expectations for
+// this handler. The other three handlers retain those historical cases.
+for (const rol of ['maestro', 'limitado', 'unknown', null]) {
+  for (const email of ['target@example.test', 'absent@example.test', 'admin@example.test']) {
+    test('reset unavailable without effects: role=' + rol + ', target=' + email, async () => {
+      const h = harness(routes[2], {
+        admin: rol ? { rol, status: 'activo' } : null,
+        user: rol ? undefined : null,
+        body: { email, password: 'synthetic-unused', rol },
+      })
+      const response = await h.invoke()
+      assert.equal(response.status, 503)
+      assert.deepEqual(await response.json(), {
+        error: 'Restablecimiento administrativo de contraseña no disponible',
+      })
+      assert.deepEqual(h.writes, [])
+      assert.deepEqual(h.privileged, []) // Includes listUsers and updateUserById.
+      assert(!h.events.includes('list-users'))
+      assert.deepEqual(h.queries, [])
+      assert.deepEqual(h.clients, [])
+      assert.deepEqual(h.cookieWrites, [])
+      assert.deepEqual(h.events, [])
+    })
+  }
+}
+
+test('reset does not inspect the request, parse JSON or require configuration', async () => {
+  const h = harness(routes[2], { env: { NEXT_PUBLIC_APP_URL: undefined } })
+  const unreadableRequest = new Proxy({}, {
+    get() { throw new Error('Contained POST must not inspect the request') },
+  })
+  const response = await h.invoke(unreadableRequest)
+  assert.equal(response.status, 503)
+  assert.deepEqual(await response.json(), {
+    error: 'Restablecimiento administrativo de contraseña no disponible',
+  })
   assert.deepEqual(h.privileged, [])
+  assert.deepEqual(h.writes, [])
+  assert.deepEqual(h.events, [])
+  assert.deepEqual(h.queries, [])
+  assert.deepEqual(h.clients, [])
 })
