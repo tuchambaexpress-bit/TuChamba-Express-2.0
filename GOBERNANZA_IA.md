@@ -174,3 +174,10 @@ Cada actividad autorizada deberá:
 Este ciclo no concede permisos para modificar producción, desplegar, alterar el historial, realizar operaciones destructivas ni ampliar tareas. Se conservan las autorizaciones específicas exigidas por MC-01, MC-02 y la sección 3. Si falta una autorización específica, detenerse antes de esa operación, solicitarla y registrar el estado **PENDIENTE DE SINCRONIZACIÓN** hasta resolverlo. La obligación de documentar no amplía los archivos autorizados, conforme a MC-03.
 
 No declarar cerrada una tarea mientras falte el respaldo remoto exigido, salvo excepción explícita del Product Owner con registro verificable. La sincronización por sí sola tampoco acredita cierre técnico, pruebas o aceptación. En actividades sin cambios, informar esa condición y el estado de sincronización; no crear commits vacíos para aparentar el cumplimiento del ciclo.
+
+
+## 14. Aplicación de GOV-SIMPLE-01 a la IA
+
+**RATIFICADA POR EL PO — incorporación puntual, versión 1**, por el mandato «GOV-SIMPLE-01: simplificación operativa y continuidad de I-05B», base develop/tce2-recuperacion/d0eb9b87b5ff3aaf4832c99c59b75b744ab4a273. Norma general única: [GOBERNANZA_MAESTRA.md §11](GOBERNANZA_MAESTRA.md#11-gov-simple-01--sencillez-eficiencia-y-profesionalismo). No ratificación integral del borrador 0.1.
+
+En análisis, preparación y ejecución autorizada, la IA aplicará ese criterio para justificar controles adicionales y reutilizar evidencia pertinente. No impondrá nuevas rondas de diagnóstico ni aislamiento avanzado como requisito genérico de una suite local conocida; distinguirá riesgo concreto de hipótesis y controles indispensables de mejoras propuestas. La selección de un procedimiento sencillo no elimina autorización específica de pruebas, veracidad de resultados, revisión independiente, metodología adversarial, MC-01–MC-07 ni puerta de cierre §12. El registro de esta decisión no autoriza ejecutar I-05B o I-06.

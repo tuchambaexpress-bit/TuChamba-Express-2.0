@@ -977,3 +977,19 @@ Siguiente actividad técnica PROPUESTA, pendiente de autorización delimitada PO
 Control actual MC-01–MC-07/§12: preflight limpio y staging vacío, master y HEAD local/origin/master/GitHub 259ba2edb18175e9aa651f1cdd56ff678d2cfce0, divergencia 0/0. Solo cuatro maestros modificados; verificación documental/estática y git diff --check. Final autorizado: cuatro archivos locales sin staging, commit ni push; **PENDIENTE DE RESPALDO / PENDIENTE DE SINCRONIZACIÓN**. El PO autoriza expresamente esta retención local; MC-07 y obligación de respaldo permanecen, sin presumir cumplimiento remoto. Master actualiza Production según PO: ningún push autorizado ahora, tampoco por ser documental. Cualquier operación Git posterior requiere autorización independiente y evaluación previa de efectos automáticos.
 
 PO-REC-FASES-01 conserva cuatro fases; sin quinta fase ni cierres. P01–P40/subcasos/nueve experimentos y pruebas de producto NO EJECUTADOS en esta actividad; contratos, matrices 27/14 e inventarios conservados. No código/pruebas/gobernanzas, Supabase, secretos, configuración, despliegue/promoción/reversión. Entregar informe y detenerse.
+
+
+## GOV-SIMPLE-01 — continuidad operativa de I-05B
+
+Fuente: mandato ratificado PO «GOV-SIMPLE-01: simplificación operativa y continuidad de I-05B», base develop/tce2-recuperacion/d0eb9b87b5ff3aaf4832c99c59b75b744ab4a273. Regla general GOBERNANZA_MAESTRA §11; aplicación IA §14; evidencia HALLAZGOS, criterios SPEC y protocolo PLAN. Referencias de actividad dentro de REC-F2-004/006, relacionadas con REC-F2-001 y TCE-004; no nuevas tareas ni fases.
+
+- I-05A: diagnóstico completado, sin ejecución de pruebas.
+- I-05B-00: disponibilidad de Node v22.22.3 y TypeScript v5.9.3 comprobada; reutilización propuesta sin instalación.
+- I-05B-01: diagnóstico Windows completado; sus límites no se convierten en autorización ni garantía de aislamiento.
+- I-05B: 13 casos de reset NO EJECUTADOS. AppContainer/LPAC + Job Object descartado como requisito previo obligatorio de esta suite por decisión PO, sin implementación ni descarte universal del aislamiento reforzado.
+- Continuidad preferida: solicitar autorización específica del protocolo local controlado de PLAN, tras revalidación breve de riesgos e integridad. No repetir diagnósticos completos sin causa técnica nueva.
+- I-06: PENDIENTE, sin publicación ni aceptación autorizadas por esta decisión.
+
+REC-F2-001 y REC-F2-004 continúan EN_CURSO, REC-F2-006 PENDIENTE, TCE-004 EN_VALIDACION; parche **PUBLICADO EN PRODUCCIÓN, NO VALIDADO TÉCNICAMENTE**. Ningún PASS o cierre por esta actualización. P01–P40/subcasos/nueve experimentos y estados históricos conservados.
+
+GOV-SIMPLE-01 incorporada en seis documentos existentes; la actividad actual no permite ejecutar el protocolo. Final autorizado: cambios locales sin staging, commit o push, **PENDIENTE DE RESPALDO / SINCRONIZACIÓN** de este incremento. La evidencia de respaldo I-04B pertenece al commit base y no respalda estas nuevas ediciones. Original master y respaldo I-03 se conservan intactos. Cierre §12 mediante informe; detenerse para revisión PO.

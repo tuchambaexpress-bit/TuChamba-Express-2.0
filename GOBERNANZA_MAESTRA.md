@@ -138,3 +138,25 @@ Ante posible filtración, acceso indebido o comportamiento agentivo fuera de lí
 Confirmar identidad y facultades de aprobadores, infraestructura real, responsables legales, políticas de retención, SLAs, presupuesto, umbrales de riesgo y procedimiento de despliegue. No presumir que la documentación histórica describe producción actual.
 
 La ratificación deberá identificar la versión y el alcance aprobados, el propietario que aprueba, la fecha de vigencia, las reservas o excepciones y la decisión documental que la sustenta. La incorporación de una decisión puntual no ratifica automáticamente el resto de esta gobernanza ni los demás documentos.
+
+
+## 11. GOV-SIMPLE-01 — sencillez, eficiencia y profesionalismo
+
+**RATIFICADA POR EL PRODUCT OWNER. Incorporación puntual, versión 1.** Fuente: mandato expreso «GOV-SIMPLE-01: simplificación operativa y continuidad de I-05B», sesión de incorporación sobre develop/tce2-recuperacion, base d0eb9b87b5ff3aaf4832c99c59b75b744ab4a273. Esta sección es la norma general única; complementa el procedimiento de cambios y las clases de riesgo de las secciones 4 y 5, sin ratificar íntegramente el borrador 0.1. Justificación: evitar repetición de diagnósticos e infraestructura sin evidencia material adicional; impacto: seleccionar controles según riesgo concreto, conservando autorización, trazabilidad y protección de producción.
+
+**Principio: la complejidad de cada control debe ser proporcional al riesgo concreto que mitiga.**
+
+1. Utilizar primero herramientas y pruebas existentes.
+2. No construir infraestructura adicional si un procedimiento más sencillo ofrece evidencia suficiente para el objetivo autorizado.
+3. No repetir auditorías o diagnósticos sin una causa técnica nueva. Revalidar solo hechos susceptibles de cambio que afecten la siguiente operación; reutilizar evidencia anterior con versión, alcance y límites.
+4. Distinguir controles indispensables, recomendables y opcionales. Un control recomendable u opcional no se convierte en bloqueo por el solo hecho de poder añadirse.
+5. Exigir justificación del riesgo antes de introducir controles complejos.
+6. Priorizar actividades que permitan cerrar tareas reales del PLAN/TASKS, sin anticipar aceptación ni omitir criterios de cierre.
+7. Mantener evidencia verificable, criterios PASS/FAIL y trazabilidad.
+8. No confundir simplicidad con ausencia de seguridad.
+9. No exigir aislamiento avanzado por defecto a pruebas locales conocidas y revisadas.
+10. Exigir aislamiento reforzado cuando existan riesgos concretos de acceso a producción, secretos, escrituras peligrosas o ejecución de código no confiable.
+
+Para cualquier control adicional significativo, registrar brevemente: riesgo mitigado; evidencia que lo justifica; alternativa más sencilla; costo y complejidad añadidos; riesgo residual; decisión y autorización correspondiente. Una justificación breve es suficiente cuando permite evaluar esos puntos; no crear matrices extensas por rutina.
+
+Permanecen las facultades PO y autorizaciones por operación de las secciones 2 y 5.1, los invariantes de la sección 3, revisión independiente, MC-01–MC-07 y puerta §12 de GOBERNANZA_IA, metodología Regla → Contraejemplo → Riesgo → Invariante → Control → Prueba y GIT-DEPLOY-01. Simplificar no concede permisos, elimina evidencia ni habilita producción como laboratorio. Riesgo concreto no mitigado exige informar y detener la operación afectada conforme MC-05; la mera posibilidad abstracta no justifica por sí sola construir infraestructura.

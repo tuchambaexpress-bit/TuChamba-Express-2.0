@@ -2156,3 +2156,14 @@ El parche 259ba2edb18175e9aa651f1cdd56ff678d2cfce0 queda **PUBLICADO EN PRODUCCI
 La evaluación técnica Git/CI/CD/Vercel de PLAN es PROPUESTA, no estrategia adoptada ni configuración modificada. Compatibilidad con el plan gratuito existente pendiente de contraste autorizado, sin prestaciones asumidas. Incorporación posterior de esta decisión en gobernanzas requiere autorización independiente; no se modifican ahora.
 
 REC-F2-001 EN_CURSO, REC-F2-004 EN_CURSO/aceptación integral pendiente, REC-F2-006 PENDIENTE y TCE-004 EN_VALIDACION. Se preservan PO-REC-FASES-01, contratos, decisiones, matrices e inventarios históricos; P01–P40/subcasos/nueve experimentos NO EJECUTADOS en esta actividad. No cierre de F2 ni reparación aceptada. Cambios documentales actuales locales sin staging/commit/push, **PENDIENTES DE RESPALDO / SINCRONIZACIÓN** por mandato expreso; cualquier operación Git posterior exige autorización independiente y evaluación de efectos automáticos.
+
+
+## GOV-SIMPLE-01 — criterio de validación mínima para TCE-004
+
+Norma general por remisión a GOBERNANZA_MAESTRA §11 y aplicación IA §14; decisión PO «GOV-SIMPLE-01: simplificación operativa y continuidad de I-05B», base develop/tce2-recuperacion/d0eb9b87b5ff3aaf4832c99c59b75b744ab4a273. Evidencias y límites en HALLAZGOS; protocolo único en PLAN; estados TASKS. No cambio de contratos I/A, matrices o criterios de aceptación globales.
+
+Para los 13 casos conocidos de contención, son indispensables autorización específica, integridad/equivalencia de suite y fuentes, dependencia identificada, entorno sin credenciales reales, revisión dirigida de operaciones de red/archivos, selección exclusiva y evidencia de resultados/efectos. AppContainer/LPAC + Job Object no es condición previa obligatoria de esta suite; no generalizar esa decisión a código desconocido, servicios reales o escrituras peligrosas. Verificación independiente y regresión ampliada conservan su puerta para aceptación; no son equivalentes a ejecutar el subconjunto.
+
+PASS del subconjunto futuro requiere exactamente 13 casos seleccionados satisfactorios, código de salida cero y ningún efecto no autorizado; FAIL si falla una aserción o se infringe un control; BLOQUEADO/ERROR si integridad, entorno, dependencia o ejecución no permiten obtener evidencia válida. Casos omitidos no cuentan como validados. Mocks prueban comportamiento bajo simulación, no aislamiento del SO, funcionamiento de Next real, Supabase efectivo o producción.
+
+Las 13 pruebas siguen NO EJECUTADAS; el parche continúa **PUBLICADO EN PRODUCCIÓN, NO VALIDADO TÉCNICAMENTE**. No cierre de TCE-004/REC-F2-004 ni otras tareas F2; I-06 pendiente. Preparar este criterio no autoriza pruebas ni publicación. Cambios actuales sin staging/commit/push y pendientes de respaldo por alcance PO.
