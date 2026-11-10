@@ -957,3 +957,23 @@ REC-F2-001 sigue EN_CURSO, ahora con este incremento de código preparado sin ac
 
 Control MC-07 de esta actividad: preflight local limpio/staging vacío, master y HEAD esperado; origin/master local y consulta directa GitHub coinciden con la base, divergencia 0/0. Verificación estática y git diff --check antes de staging exclusivo de los seis archivos; git diff --cached --check antes del commit fix(rec-f2): prepare administrative password reset containment. Reconsultar remoto antes del push normal, comprobar sincronización HEAD/origin/master/GitHub y limpieza final; ante fallo detener y reportar. Resultado de commit/push y SHA final se entregan en el informe §12, sin presumir éxito en este registro previo al commit.
 Continuidad actual de las tareas existentes: preparación del cuerpo POST y adaptación de suite/documentación realizadas; validación y aceptación pendientes. No crear tarea nueva. REC-F2-001 EN_CURSO con incremento preparado; REC-F2-006 PENDIENTE con suite actualizada, sin ejecución. Las expectativas anteriores de integración de TCE-004 «tal como está» se refieren a su versión histórica: la siguiente integración autorizada debe identificar este parche y distinguir resultados previos de los nuevos. Próxima actividad autorizable propuesta: revisión independiente del parche por PO/revisor y delimitación de pruebas aisladas/dependencias 004; ninguna prueba queda autorizada por esta propuesta. Detenerse tras informe y esperar PO.
+
+
+## GIT-DEPLOY-01 — continuidad documental y respaldo pendiente, 2026-11-09
+
+**Decisión PO RATIFICADA: Separación entre desarrollo, respaldo y publicación.** Fuente: mandato expreso homónimo de esta sesión; base master/259ba2edb18175e9aa651f1cdd56ff678d2cfce0. Registro rector/evidencias en HALLAZGOS; ocho criterios normativos en SPEC; contraejemplos y propuesta de evaluación técnica en PLAN. No nueva tarea, fase o duplicación de backlog.
+
+Trabajo documental incorporado: publicación del parche en Production/Ready y dominio tu-chamba-express.vercel.app según evidencia visual comunicada por PO, antecedente GitHub production_environment: false conservado con su fuente, distinción de autorización/efecto y GIT-DEPLOY-01. Estado vigente del parche: **PUBLICADO EN PRODUCCIÓN, NO VALIDADO TÉCNICAMENTE**. La publicación no estaba autorizada por el mandato de preparación y no obtiene aprobación retroactiva; no demuestra funcionalidad, seguridad ni acceso público sin autenticación.
+
+Seguimiento dentro de tareas existentes:
+
+- REC-F2-001 EN_CURSO: contratos y contención siguen pendientes de revisión/validación/aceptación; publicación no equivale a cierre.
+- REC-F2-004 EN_CURSO: asociar evaluación Git/CI/CD/Vercel, aislamiento, separación respaldo/publicación y reversión a su alcance de infraestructura/medidas; aceptación integral sigue pendiente. Evaluación PROPUESTA, NO EJECUTADA, sin nueva tarea ni alteración de configuración.
+- REC-F2-006 PENDIENTE: integración/regresión y evidencia por versión siguen pendientes; Ready/success no sustituye pruebas ni autoriza ejecutarlas.
+- TCE-004 EN_VALIDACION: no cerrar ni declarar validado el parche por su despliegue. CT-01/CT-02 ABIERTOS; demás estados y criterios previos intactos.
+
+Siguiente actividad técnica PROPUESTA, pendiente de autorización delimitada PO: evaluar arquitectura Git/CI/CD/Vercel conforme PLAN, con estrategia de ramas, respaldo separado de publicación, promoción/protección, plan gratuito, reversión y efectos Codex/GitHub. No adoptar estrategia, crear ramas, probar o modificar servicios. Incorporación posterior de GIT-DEPLOY-01 en gobernanzas también pendiente de mandato independiente.
+
+Control actual MC-01–MC-07/§12: preflight limpio y staging vacío, master y HEAD local/origin/master/GitHub 259ba2edb18175e9aa651f1cdd56ff678d2cfce0, divergencia 0/0. Solo cuatro maestros modificados; verificación documental/estática y git diff --check. Final autorizado: cuatro archivos locales sin staging, commit ni push; **PENDIENTE DE RESPALDO / PENDIENTE DE SINCRONIZACIÓN**. El PO autoriza expresamente esta retención local; MC-07 y obligación de respaldo permanecen, sin presumir cumplimiento remoto. Master actualiza Production según PO: ningún push autorizado ahora, tampoco por ser documental. Cualquier operación Git posterior requiere autorización independiente y evaluación previa de efectos automáticos.
+
+PO-REC-FASES-01 conserva cuatro fases; sin quinta fase ni cierres. P01–P40/subcasos/nueve experimentos y pruebas de producto NO EJECUTADOS en esta actividad; contratos, matrices 27/14 e inventarios conservados. No código/pruebas/gobernanzas, Supabase, secretos, configuración, despliegue/promoción/reversión. Entregar informe y detenerse.

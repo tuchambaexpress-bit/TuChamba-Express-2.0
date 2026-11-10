@@ -2130,3 +2130,29 @@ REC-F2-001 sigue EN_CURSO, ahora con este incremento de código preparado sin ac
 
 Control MC-07 de esta actividad: preflight local limpio/staging vacío, master y HEAD esperado; origin/master local y consulta directa GitHub coinciden con la base, divergencia 0/0. Verificación estática y git diff --check antes de staging exclusivo de los seis archivos; git diff --cached --check antes del commit fix(rec-f2): prepare administrative password reset containment. Reconsultar remoto antes del push normal, comprobar sincronización HEAD/origin/master/GitHub y limpieza final; ante fallo detener y reportar. Resultado de commit/push y SHA final se entregan en el informe §12, sin presumir éxito en este registro previo al commit.
 Criterio del incremento preparado: cualquier petición al POST, con cualquier rol/destinatario o cuerpo ilegible, obtiene el mismo 503/error sin inspección de entradas ni operaciones Supabase. La indisponibilidad uniforme sucede exclusivamente a las expectativas históricas de éxito/reset de este handler; no elimina requisitos de las otras superficies administrativas. Aceptación técnica PENDIENTE: comprobar resultado y ausencia de efectos con pruebas autorizadas, revisión independiente y decisión PO; no inferir cierre de I-08–I-10/AUT por retirar una sola vía.
+
+
+## GIT-DEPLOY-01 — Separación entre desarrollo, respaldo y publicación, 2026-11-09
+
+**RATIFICADA POR EL PRODUCT OWNER.** Fuente: mandato expreso «GIT-DEPLOY-01, separación entre desarrollo, respaldo y producción», base master/259ba2edb18175e9aa651f1cdd56ff678d2cfce0. HALLAZGOS conserva registro rector de evidencia/publicación y procedencia; esta sección contiene el texto normativo único. PLAN define contraejemplos/procedimiento propuesto; TASKS continuidad. Control transversal sobre riesgos y tareas existentes, sin nuevo contrato de identidad, tarea o fase.
+
+### Criterios obligatorios ratificados
+
+1. Commit local, push remoto y despliegue son operaciones distintas.
+2. La autorización de una operación no autoriza automáticamente las siguientes.
+3. Antes de cualquier push se deben comprobar sus efectos automáticos conocidos, incluyendo integraciones CI/CD y despliegues.
+4. Los cambios pendientes de validación no deben publicarse en producción sin autorización expresa.
+5. La publicación requiere autorización específica del PO.
+6. La ausencia de evidencia suficiente obliga a detenerse.
+7. No se presume que una rama distinta de master sea segura: también deben verificarse sus integraciones.
+8. No se modificará la configuración de producción sin autorización independiente.
+
+Se conserva la jerarquía de GOBERNANZA_MAESTRA.md y MC-01–MC-07: respaldo obligatorio no habilita una operación que active publicación no autorizada. Si no hay evidencia suficiente de efectos o autorización para ellos, detener la operación conforme MC-05 y reportar pendiente; no elegir otra rama, alterar CI/CD o eludir controles por iniciativa propia. Un push de documentación también está sujeto a estos criterios. Las autorizaciones deben distinguir operación y efectos derivados; la revisión técnica no sustituye decisión PO.
+
+### Aplicación y estado de evidencia
+
+El parche 259ba2edb18175e9aa651f1cdd56ff678d2cfce0 queda **PUBLICADO EN PRODUCCIÓN, NO VALIDADO TÉCNICAMENTE**, conforme evidencia del panel proporcionada por el PO y antecedentes GitHub conservados en HALLAZGOS. Production/Ready y asociación de dominio resuelven la incertidumbre de publicación; no resuelven el dato contradictorio GitHub production_environment: false por explicación técnica, ni prueban acceso sin autenticación, ausencia de vulnerabilidades o comportamiento funcional. No aprobación retroactiva del despliegue por registrar su existencia.
+
+La evaluación técnica Git/CI/CD/Vercel de PLAN es PROPUESTA, no estrategia adoptada ni configuración modificada. Compatibilidad con el plan gratuito existente pendiente de contraste autorizado, sin prestaciones asumidas. Incorporación posterior de esta decisión en gobernanzas requiere autorización independiente; no se modifican ahora.
+
+REC-F2-001 EN_CURSO, REC-F2-004 EN_CURSO/aceptación integral pendiente, REC-F2-006 PENDIENTE y TCE-004 EN_VALIDACION. Se preservan PO-REC-FASES-01, contratos, decisiones, matrices e inventarios históricos; P01–P40/subcasos/nueve experimentos NO EJECUTADOS en esta actividad. No cierre de F2 ni reparación aceptada. Cambios documentales actuales locales sin staging/commit/push, **PENDIENTES DE RESPALDO / SINCRONIZACIÓN** por mandato expreso; cualquier operación Git posterior exige autorización independiente y evaluación de efectos automáticos.

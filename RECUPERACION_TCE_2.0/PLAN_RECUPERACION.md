@@ -869,3 +869,42 @@ REC-F2-001 sigue EN_CURSO, ahora con este incremento de código preparado sin ac
 
 Control MC-07 de esta actividad: preflight local limpio/staging vacío, master y HEAD esperado; origin/master local y consulta directa GitHub coinciden con la base, divergencia 0/0. Verificación estática y git diff --check antes de staging exclusivo de los seis archivos; git diff --cached --check antes del commit fix(rec-f2): prepare administrative password reset containment. Reconsultar remoto antes del push normal, comprobar sincronización HEAD/origin/master/GitHub y limpieza final; ante fallo detener y reportar. Resultado de commit/push y SHA final se entregan en el informe §12, sin presumir éxito en este registro previo al commit.
 Secuencia de este incremento: contener POST mediante respuesta constante; sustituir únicamente expectativas incompatibles en suite histórica; registrar alcance/evidencia en cuatro documentos; revisar diff exclusivo de seis archivos y whitespace; staging exclusivo, commit, reconsulta remota, push normal y cierre §12. No arrancar servicios ni ejecutar pruebas. Después de revisión PO, proponer validación aislada de 503/cuerpo uniforme y ausencia de lecturas/efectos, regresión de otros tres handlers e integración según dependencias 004/006; esa secuencia posterior requiere nueva autorización. Revisión independiente debe comprobar especialmente sustitución trazable de casos, exportación compatible y ausencia de reapertura de vías por rol.
+
+
+## GIT-DEPLOY-01 — control previo de efectos y evaluación propuesta, 2026-11-09
+
+Decisión **RATIFICADA POR EL PO — Separación entre desarrollo, respaldo y publicación**, mandato expreso homónimo, base master/259ba2edb18175e9aa651f1cdd56ff678d2cfce0. Rectoría/evidencia en HALLAZGOS; norma única de ocho criterios en SPEC; seguimiento en TASKS. Complementa jerarquía maestra y MC-01–MC-07, sin modificar gobernanzas, matrices canónicas, contratos ni crear fase/tarea nueva.
+
+Estado vigente del parche: **PUBLICADO EN PRODUCCIÓN, NO VALIDADO TÉCNICAMENTE**. Evidencia del panel proporcionada por PO: master actualiza Production, proyecto tu-chamba-express-2-0, Ready, dominio tu-chamba-express.vercel.app y despliegue tu-chamba-express-2-0-6bfzdgh3w-team-reclutamiento.vercel.app. HALLAZGOS conserva la contradicción production_environment: false de GitHub y su fuente; el panel permite precisar publicación productiva, sin inferir protección, acceso público o seguridad. La publicación excedió el mandato de preparación; no se aprueba retroactivamente.
+
+### Contraejemplos → riesgo → invariante → evidencia de control prevista
+
+Casos de control documental, no nuevas filas en matrices de identidad/autorización ni nuevos IDs P. Evidencias/pruebas futuras propuestas, NO EJECUTADAS ahora.
+
+- **Push autorizado que provoca despliegue no autorizado.** Riesgo: respaldo activa cambio operativo sin aprobación. Invariante: comprobar efectos conocidos antes del push; permiso de respaldo no concede publicación. Evidencia: configuración efectiva de integración/disparadores/destinos, SHA y autorización PO de efectos; evidencia insuficiente detiene operación.
+- **Rama de desarrollo que también activa Preview.** Riesgo: exposición de código o servicios fuera del entorno previsto. Invariante: ninguna rama es segura por nombre o por diferir de master. Evidencia: reglas efectivas de ramas/Preview y protección/destinos, con autorización específica de los efectos previstos; futura comprobación aislada solo si se autoriza.
+- **Commit documental que genera despliegue de producción.** Riesgo: un diff sin código activa build/publicación o reasigna alias. Invariante: evaluar el disparador y destino independientemente del tipo de archivo. Evidencia: configuración efectiva de filtros/ignorados y comportamiento por tipo de cambio; no presumir que exista exclusión documental.
+- **Publicación con pruebas incompletas.** Riesgo: Ready/build correcto se toma como aceptación funcional/seguridad. Invariante: cambios pendientes de validación no llegan a producción sin autorización expresa y publicación específica PO. Evidencia: versión/entorno, resultados y NO EJECUTADAS, riesgos, revisión independiente y autorización trazable; success no reemplaza esa evidencia.
+- **Configuración CI/CD modificada sin revisión.** Riesgo: nuevo disparador, privilegio o destino elude controles previos. Invariante: cambios de producción requieren autorización independiente y revisión antes de aplicarse. Evidencia: configuración anterior/propuesta, diff, aprobador, alcance y comprobación posterior autorizada; ninguna modificación en esta actividad.
+- **Despliegue que recibe alias o dominio no previsto.** Riesgo: exposición o sustitución por ruta omitida. Invariante: contrastar SHA/entorno/estado y todos los alias/dominios pertinentes, sin extrapolar protección de una URL. Evidencia: inventario efectivo de dominios/alias y reglas de protección, asignaciones previas/posteriores y autorización de destinos; sin inventario suficiente no afirmar ausencia de exposición.
+- **Rollback que restaura una vulnerabilidad anterior.** Riesgo: reabrir mutación de credenciales o perder controles. Invariante: reversión no es segura por devolver una versión previa ni está autorizada por urgencia. Evidencia: SHA destino, diff de controles, riesgos y compatibilidad, revisión independiente, pruebas pertinentes autorizadas y decisión PO de reversión.
+
+### Siguiente actividad técnica PROPUESTA — NO EJECUTADA
+
+Bajo REC-F2-004, con relación a REC-F2-001/TCE-004 y REC-F2-006, proponer al PO una evaluación acotada de arquitectura Git/CI/CD/Vercel. Antes de ejecutarla, delimitar lectura, responsables/revisor, proyecto/repositorio/entornos, datos no sensibles y operaciones permitidas; sin credenciales nuevas ni cambios implícitos. Entregables propuestos:
+
+1. Inventario efectivo de ramas, integraciones, disparadores, entornos, promoción, dominios/alias y protección; separar observado de desconocido. Contrastar master→Production informado por PO.
+2. Comparación de estrategias de ramas y separación entre respaldo y publicación, incluidos efectos de Preview; alternativas justificadas, sin adoptar ninguna ni crear ramas.
+3. Propuesta de controles de promoción a Production y prevención de despliegues accidentales, con autorización PO por operación/efectos, revisión y evidencia; cambios de configuración sujetos a autorización independiente.
+4. Contraste de compatibilidad con el plan gratuito existente y sus límites mediante fuentes/metadatos autorizados vigentes; no asumir capacidades ni contratar/instalar servicios.
+5. Procedimiento propuesto de reversión controlada por SHA/artefacto, riesgos de reabrir vulnerabilidades, dominios/protección/compatibilidad, revisión y autorización; no revertir.
+6. Efectos sobre Codex/GitHub: preflight y evidencia antes de cualquier push, respaldo pendiente cuando no hay vía autorizada, separación de permisos de commit/push/publicación y reporte posterior por versión/entorno; ninguna herramienta adquiere autoridad por acceso.
+7. Propuesta de incorporación versionada de GIT-DEPLOY-01 en gobernanzas, pendiente de autorización independiente; conservarlas intactas ahora.
+
+No modificar GitHub Actions/Vercel, código, pruebas o infraestructura por esta propuesta. No evaluar técnicamente ni ejecutar pruebas de producto en la actividad documental actual. El futuro diseño requiere revisión independiente/decisión PO antes de implementar; una estrategia aún no ratificada no se convierte en norma por describirla.
+
+### Continuidad y cierre autorizado actual
+
+REC-F2-001 EN_CURSO, REC-F2-004 EN_CURSO/aceptación integral pendiente, REC-F2-006 PENDIENTE y TCE-004 EN_VALIDACION. CT-01/CT-02 ABIERTOS; PO-REC-FASES-01, cuatro fases, P01–P40/subcasos/nueve experimentos y estados históricos preservados; pruebas NO EJECUTADAS ahora. Publicación no implica validación ni reparación aceptada.
+
+Solo cuatro maestros editados y verificación estática/git diff --check; dejar cambios locales sin staging, commit o push según mandato PO expreso. **PENDIENTE DE RESPALDO / PENDIENTE DE SINCRONIZACIÓN**, sin cierre de respaldo MC-07. Dado master→Production, no push con esta autorización. Cualquier operación Git posterior exige autorización independiente y evaluación de efectos automáticos; ausencia de evidencia suficiente impone MC-05, sin cambiar ramas/configuración para eludirla. Detenerse tras informe §12.
