@@ -3,27 +3,47 @@ import { NextResponse } from 'next/server'
 import { validarPassword } from '@/lib/validarPassword'
 
 export async function POST(request: Request) {
+  const body = await request.json().catch(() => null)
+  const textoRequerido = (value: unknown): value is string =>
+    typeof value === 'string' && value.trim().length > 0
+
+  if (!body || typeof body !== 'object' || Array.isArray(body) ||
+      !textoRequerido(body.token) || !textoRequerido(body.invitacionId) ||
+      !textoRequerido(body.agencia?.nombre) ||
+      !textoRequerido(body.coordinador?.nombre) ||
+      !textoRequerido(body.coordinador?.email) ||
+      typeof body.password !== 'string' ||
+      (body.coordinador?.telefono != null && typeof body.coordinador.telefono !== 'string')) {
+    return NextResponse.json({ error: 'Solicitud de registro inválida' }, { status: 400 })
+  }
+  const { token, invitacionId, agencia, coordinador, password } = body
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
-  const { token, invitacionId, agencia, coordinador, password } = await request.json()
-
   // Verificar que el token sigue válido
-  const { data: invitacion } = await supabase
+  const { data: invitacion, error: errorInvitacion } = await supabase
     .from('invitaciones')
     .select('id, usado, expira_at, telefono_esperado')
     .eq('token', token)
     .single()
 
-  if (!invitacion) {
+  if (errorInvitacion || !textoRequerido(invitacion?.id)) {
     return NextResponse.json({ error: 'Token inválido' }, { status: 400 })
   }
+  // El ID del cliente solo confirma compatibilidad; nunca determina la invitación.
+  if (invitacionId !== invitacion.id) {
+    return NextResponse.json({ error: 'Datos incorrectos para registro' }, { status: 400 })
+  }
+  const invitacionIdValidada = invitacion.id
+
   if (invitacion.usado) {
     return NextResponse.json({ error: 'Este link ya fue utilizado' }, { status: 400 })
   }
-  if (new Date(invitacion.expira_at) < new Date()) {
+  const expiraAt = typeof invitacion.expira_at === 'string' ? Date.parse(invitacion.expira_at) : NaN
+  if (!Number.isFinite(expiraAt) || expiraAt <= Date.now()) {
     return NextResponse.json({ error: 'Este link ha expirado' }, { status: 400 })
   }
 
@@ -59,7 +79,7 @@ export async function POST(request: Request) {
     .insert({
       nombre: agencia.nombre,
       status: 'pendiente_aprobacion',
-      invitacion_id: invitacionId
+      invitacion_id: invitacionIdValidada
     })
     .select('id')
     .single()
@@ -92,7 +112,7 @@ export async function POST(request: Request) {
   await supabase
     .from('invitaciones')
     .update({ usado: true, agencia_id: nuevaAgencia.id })
-    .eq('id', invitacionId)
+    .eq('id', invitacionIdValidada)
 
   return NextResponse.json({ ok: true })
 }
