@@ -331,3 +331,38 @@ test('reset does not inspect the request, parse JSON or require configuration', 
   assert.deepEqual(h.queries, [])
   assert.deepEqual(h.clients, [])
 })
+
+// REC-F2-001: code-only access stays blocked regardless of request or identity.
+const recruiterLoginRoute = 'app/api/reclutador/login/route.ts'
+for (const [name, scenario, unreadable] of [
+  ['known synthetic code', { body: { codigo: 'MOCK-KNOWN' } }, false],
+  ['unknown synthetic code', { body: { codigo: 'MOCK-UNKNOWN' } }, false],
+  ['missing code', {}, false],
+  ['unreadable request', {}, true],
+  ['missing configuration', { env: {
+    NEXT_PUBLIC_APP_URL: undefined,
+    NEXT_PUBLIC_SUPABASE_URL: undefined,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: undefined,
+    SUPABASE_SERVICE_ROLE_KEY: undefined,
+  } }, false],
+]) {
+  test('recruiter login unavailable without effects: ' + name, async () => {
+    // Neither code is queried: the endpoint must not distinguish account existence.
+    const h = harness(recruiterLoginRoute, scenario)
+    const response = unreadable
+      ? await h.invoke(new Proxy({}, {
+        get() { throw new Error('Contained recruiter login must not inspect the request') },
+      }))
+      : await h.invoke()
+    assert.equal(response.status, 503)
+    assert.deepEqual(await response.json(), {
+      error: 'Acceso de reclutadores temporalmente no disponible',
+    })
+    assert.deepEqual(h.privileged, [])
+    assert.deepEqual(h.writes, [])
+    assert.deepEqual(h.queries, [])
+    assert.deepEqual(h.clients, [])
+    assert.deepEqual(h.cookieWrites, [])
+    assert.deepEqual(h.events, [])
+  })
+}
