@@ -83,6 +83,13 @@ function harness(file, scenario = {}) {
             return { data, error }
           }
           contract(identityVerified && authorized, 'business read before authorization')
+          if (table === 'invitaciones') {
+            const inserted = q.calls.find(c => c.method === 'insert')?.args[0]
+            return {
+              data: scenario.insertNoData ? null : { token: inserted?.token },
+              error: scenario.insertError ?? null,
+            }
+          }
           if (table === 'coordinadores') return { data: { auth_user_id: 'mock-target' }, error: null }
           if (table === 'reclutadores') return { data: [], error: null }
           return { data: { id: 'mock-record', token: 'mock-invitation' }, error: null }
@@ -95,7 +102,8 @@ function harness(file, scenario = {}) {
               if (['insert', 'update', 'delete', 'upsert'].includes(method)) {
                 privilegedCall(table + ':' + method, args, kind)
                 contract(table !== 'administradores', 'unexpected administrator write')
-                contract(kind === (file === routes[3] ? 'anon' : 'service'), 'wrong business client privilege')
+                // Invitation emission now reuses the authorized service client.
+                contract(kind === 'service', 'wrong business client privilege')
                 writes.push(table + ':' + method)
               }
               if (method === 'single' || method === 'maybeSingle') return Promise.resolve().then(result)
@@ -228,6 +236,59 @@ for (const file of routes.filter(file => file !== routes[2])) {
     })
   }
 }
+
+for (const rol of ['maestro', 'limitado']) {
+  test(`${routes[3]}: service emission preserves server fields and response for ${rol}`, async () => {
+    const before = new Date()
+    before.setDate(before.getDate() + 7)
+    const h = harness(routes[3], { admin: { rol, status: 'activo' }, body: {
+      telefonoEsperado: '5550000000', token: 'client-token', expira_at: '2000-01-01',
+      tipo: 'client-type', usado: true, rol: 'client-role',
+    } })
+    const response = await h.invoke()
+    const after = new Date()
+    after.setDate(after.getDate() + 7)
+    assert.equal(response.status, 200)
+    const result = await response.json()
+    assert.deepEqual(h.clients, [{ kind: 'service' }])
+    assert.deepEqual(h.writes, ['invitaciones:insert'])
+    assert.equal(h.privileged.length, 1)
+    assert.equal(h.privileged[0].kind, 'service')
+    assert(h.events.indexOf('admin-checked') < h.events.indexOf('privileged:invitaciones:insert'))
+    const q = h.queries.find(q => q.table === 'invitaciones')
+    const inserted = q.calls.find(c => c.method === 'insert').args[0]
+    assert.match(inserted.token, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)
+    assert(Date.parse(inserted.expira_at) >= before.getTime())
+    assert(Date.parse(inserted.expira_at) <= after.getTime())
+    assert.deepEqual(inserted, { token: result.token, tipo: 'nueva_agencia', usado: false,
+      expira_at: result.expira, telefono_esperado: '5550000000' })
+    assert.deepEqual(q.calls.map(c => c.method), ['insert', 'select', 'single'])
+    assert.deepEqual(q.calls.find(c => c.method === 'select').args, ['token'])
+    assert.deepEqual(result, { token: inserted.token, url: `${origin}/invitacion/${inserted.token}`, expira: inserted.expira_at })
+    assert(!JSON.stringify(result).includes('mock-service'))
+    assert(!JSON.stringify(result).includes('mock-anon'))
+  })
+}
+
+for (const [name, scenario] of [
+  ['insert error', { insertError: { message: 'private mock-service detail' } }],
+  ['missing insert result', { insertNoData: true }],
+]) {
+  test(`${routes[3]}: ${name} returns generic failure`, async () => {
+    const h = harness(routes[3], scenario)
+    const response = await h.invoke()
+    assert.equal(response.status, 500)
+    assert.deepEqual(await response.json(), { error: 'Error al crear invitación' })
+    assert.deepEqual(h.writes, ['invitaciones:insert'])
+    assert.equal(h.privileged[0].kind, 'service')
+  })
+}
+
+test(`${routes[3]}: optional phone remains null`, async () => {
+  const h = harness(routes[3])
+  assert.equal((await h.invoke()).status, 200)
+  assert.equal(h.privileged[0].args[0].telefono_esperado, null)
+})
 
 test('old authorization and public credential removed from all six files', () => {
   for (const file of [...routes, 'components/admin/SolicitudesPanel.tsx', 'components/admin/InvitacionesPanel.tsx']) {

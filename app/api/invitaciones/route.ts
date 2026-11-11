@@ -64,17 +64,12 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}))
   const telefonoEsperado: string | null = body?.telefonoEsperado || null
 
-  // Preserve the existing invitation client's privilege level after authorization.
-  const invitationClient = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-
   const token = crypto.randomUUID()
   const expira = new Date()
   expira.setDate(expira.getDate() + 7)
 
-  const { data, error } = await invitationClient
+  // Reuse the service client only after origin, identity and admin authorization.
+  const { data, error } = await supabase
     .from('invitaciones')
     .insert({
       token,
