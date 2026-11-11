@@ -366,3 +366,111 @@ for (const [name, scenario, unreadable] of [
     assert.deepEqual(h.events, [])
   })
 }
+
+// Pure policy module, loaded with the same in-memory TypeScript/VM mechanism.
+function loadRecruiterAccess() {
+  const file = 'lib/supabase/reclutador-access.ts'
+  const compiled = ts.transpileModule(fs.readFileSync(path.join(__dirname, '..', file), 'utf8'), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+    reportDiagnostics: true,
+  })
+  assert.equal((compiled.diagnostics ?? []).filter(d => d.category === ts.DiagnosticCategory.Error).length, 0)
+  const exports = {}
+  vm.runInNewContext(compiled.outputText, {
+    exports,
+    require(name) { throw new Error('Unexpected policy import: ' + name) },
+    fetch() { throw new Error('Network forbidden in policy test') },
+  }, { filename: file })
+  return exports.canAccessReclutador
+}
+
+function recruiterAccessSnapshot() {
+  return {
+    auth: { userId: 'mock-auth', verified: true },
+    bindings: [{ authUserId: 'mock-auth', identityId: 'mock-identity' }],
+    identity: { id: 'mock-identity', enabled: true },
+    session: { authUserId: 'mock-auth', identityId: 'mock-identity', valid: true },
+    agencyId: 'agency-a', permission: 'read',
+    memberships: [{ identityId: 'mock-identity', agencyId: 'agency-a', active: true,
+      permissions: [{ permission: 'read', active: true }] }],
+  }
+}
+
+for (const [name, change] of [
+  ['missing binding', s => { s.bindings = [] }],
+  ['ambiguous binding', s => { s.bindings.push({ ...s.bindings[0] }) }],
+  ['different Auth subject', s => { s.auth.userId = 'other-auth' }],
+  ['different identity binding', s => { s.bindings[0].identityId = 'other-identity' }],
+  ['unverified Auth', s => { s.auth.verified = false }],
+  ['suspended global identity', s => { s.identity.enabled = false }],
+  ['invalid session', s => { s.session.valid = false }],
+  ['session for another subject', s => { s.session.authUserId = 'other-auth' }],
+  ['session for another identity', s => { s.session.identityId = 'other-identity' }],
+  ['foreign agency', s => { s.agencyId = 'agency-b' }],
+  ['missing explicit agency', s => { delete s.agencyId }],
+  ['suspended membership', s => { s.memberships[0].active = false }],
+  ['foreign membership owner', s => { s.memberships[0].identityId = 'other-identity' }],
+  ['missing permission', s => { s.memberships[0].permissions = [] }],
+  ['revoked permission', s => { s.memberships[0].permissions[0].active = false }],
+  ['different permission', s => { s.permission = 'write' }],
+  ['missing operation', s => { delete s.permission }],
+  ['ambiguous memberships', s => { s.memberships.push(structuredClone(s.memberships[0])) }],
+  ['contradictory memberships', s => { s.memberships.push({ ...structuredClone(s.memberships[0]), active: false }) }],
+  ['duplicate grants', s => { s.memberships[0].permissions.push({ permission: 'read', active: true }) }],
+  ['contradictory grants', s => { s.memberships[0].permissions.push({ permission: 'read', active: false }) }],
+  ['unexpected boolean type', s => { s.memberships[0].active = 'true' }],
+  ['unexpected session type', s => { s.session.valid = 1 }],
+  ['unexpected membership collection', s => { s.memberships = {} }],
+  ['null membership', s => { s.memberships = [null] }],
+  ['null grant', s => { s.memberships[0].permissions = [null] }],
+  ['empty identifier', s => { s.auth.userId = '' }],
+  ['implicit normalization', s => { s.agencyId = ' agency-a ' }],
+]) {
+  test('recruiter access denies ' + name, () => {
+    const decide = loadRecruiterAccess()
+    const snapshot = recruiterAccessSnapshot()
+    change(snapshot)
+    const before = structuredClone(snapshot)
+    assert.equal(decide(snapshot), false)
+    assert.deepEqual(snapshot, before)
+  })
+}
+
+test('recruiter access allows explicit valid permission without input mutation', () => {
+  const decide = loadRecruiterAccess()
+  const snapshot = recruiterAccessSnapshot()
+  const before = structuredClone(snapshot)
+  assert.equal(decide(snapshot), true)
+  assert.equal(decide(snapshot), true)
+  assert.deepEqual(snapshot, before)
+})
+
+test('recruiter access denies malformed top-level input and missing fields', () => {
+  const decide = loadRecruiterAccess()
+  for (const value of [undefined, null, false, 1, 'valid', [], {}]) assert.equal(decide(value), false)
+  for (const key of Object.keys(recruiterAccessSnapshot())) {
+    const snapshot = recruiterAccessSnapshot()
+    delete snapshot[key]
+    assert.equal(decide(snapshot), false, key)
+  }
+})
+
+test('recruiter access keeps two agency authorizations independent', () => {
+  const decide = loadRecruiterAccess()
+  const snapshot = recruiterAccessSnapshot()
+  snapshot.memberships.push({ identityId: 'mock-identity', agencyId: 'agency-b', active: true,
+    permissions: [{ permission: 'read', active: true }] })
+  assert.equal(decide(snapshot), true)
+  snapshot.agencyId = 'agency-b'
+  assert.equal(decide(snapshot), true)
+  snapshot.memberships[0].active = false
+  assert.equal(decide(snapshot), true)
+  snapshot.agencyId = 'agency-a'
+  assert.equal(decide(snapshot), false)
+  snapshot.memberships.reverse()
+  assert.equal(decide(snapshot), false)
+  snapshot.agencyId = 'agency-b'
+  assert.equal(decide(snapshot), true)
+  snapshot.identity.enabled = false
+  assert.equal(decide(snapshot), false)
+})
