@@ -28,36 +28,10 @@ export async function GET(request: Request) {
   })
 }
 
-// POST /api/reclutador/perfil — body: { reclutadorId, redesSociales }
-// Actualiza ÚNICAMENTE la columna redes_sociales (ver spec.md CA-26.7) —
-// mismo criterio de service_role que reclutador/login/route.ts, porque
-// esta tabla también guarda email/telefono/codigo.
-export async function POST(request: Request) {
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+// POST: temporary containment until verified ownership authorization exists.
+export async function POST(_request: Request) {
+  return NextResponse.json(
+    { error: 'Actualización de redes sociales temporalmente no disponible' },
+    { status: 503 }
   )
-
-  const { reclutadorId, redesSociales } = await request.json()
-
-  if (!reclutadorId) {
-    return NextResponse.json({ error: 'reclutadorId requerido' }, { status: 400 })
-  }
-  if (!validarRedesSociales(redesSociales)) {
-    return NextResponse.json(
-      { error: 'redesSociales inválido — máximo 6, plataforma reconocida, URL con http(s)' },
-      { status: 400 }
-    )
-  }
-
-  const { error } = await supabase
-    .from('reclutadores')
-    .update({ redes_sociales: redesSociales })
-    .eq('id', reclutadorId)
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
-  }
-
-  return NextResponse.json({ ok: true })
 }

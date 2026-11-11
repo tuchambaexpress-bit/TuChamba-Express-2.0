@@ -474,3 +474,56 @@ test('recruiter access keeps two agency authorizations independent', () => {
   snapshot.identity.enabled = false
   assert.equal(decide(snapshot), false)
 })
+
+const socialProfileRoutes = ['app/api/reclutador/perfil/route.ts', 'app/api/reclutador/route.ts']
+const socialProfileUnavailable = { error: 'Actualización de redes sociales temporalmente no disponible' }
+for (const file of socialProfileRoutes) {
+  for (const [name, scenario, unreadable] of [
+    ['own synthetic ID', { body: { reclutadorId: 'mock-self', redesSociales: [] } }, false],
+    ['foreign synthetic ID', { body: { reclutadorId: 'mock-other', redesSociales: [] } }, false],
+    ['missing ID', {}, false],
+    ['unreadable body', {}, true],
+    ['missing Supabase configuration', { env: {
+      NEXT_PUBLIC_SUPABASE_URL: undefined,
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: undefined,
+      SUPABASE_SERVICE_ROLE_KEY: undefined,
+    } }, false],
+  ]) {
+    test('social profile POST contained: ' + file + ': ' + name, async () => {
+      const h = harness(file, scenario)
+      const response = unreadable
+        ? await h.invoke(new Proxy({}, {
+          get() { throw new Error('Contained social profile POST must not inspect the request') },
+        }))
+        : await h.invoke()
+      assert.equal(response.status, 503)
+      assert.deepEqual(await response.json(), socialProfileUnavailable)
+      for (const effects of [h.clients, h.queries, h.writes, h.privileged, h.cookieWrites, h.events]) {
+        assert.deepEqual(effects, [])
+      }
+    })
+  }
+  test('social profile GET unchanged structurally: ' + file, () => {
+    const source = fs.readFileSync(path.join(__dirname, '..', file), 'utf8').replace(/\r\n/g, '\n')
+    const start = source.indexOf('export async function GET(')
+    const end = source.indexOf('// POST', start)
+    assert(start >= 0 && end > start)
+    // Baseline GET source hash captured before this containment; line endings excluded.
+    const digest = require('node:crypto').createHash('sha256').update(source.slice(start, end).trimEnd()).digest('hex')
+    assert.equal(digest, '7ff8a99ae4380556f485519aad4d736aba01520952b22fea5a004de52f4b8dfb')
+  })
+}
+
+test('social profile POST responses are uniform across both endpoints', async () => {
+  const results = []
+  for (const file of socialProfileRoutes) {
+    const h = harness(file, { body: { reclutadorId: 'mock-target', redesSociales: [] } })
+    const response = await h.invoke()
+    results.push({ status: response.status, body: await response.json() })
+    for (const effects of [h.clients, h.queries, h.writes, h.privileged, h.cookieWrites, h.events]) {
+      assert.deepEqual(effects, [])
+    }
+  }
+  assert.deepEqual(results[0], { status: 503, body: socialProfileUnavailable })
+  assert.deepEqual(results[1], results[0])
+})
