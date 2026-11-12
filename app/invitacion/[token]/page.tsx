@@ -1,18 +1,31 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@supabase/supabase-js'
 import FormularioInvitacion from '@/components/invitacion/FormularioInvitacion'
+
+// Always revalidate invitation state on the server; never cache a privileged read.
+export const dynamic = 'force-dynamic'
 
 interface Props {
   params: { token: string }
 }
 
 export default async function InvitacionPage({ params }: Props) {
-  const supabase = await createClient()
-
-  const { data: invitacion } = await supabase
-    .from('invitaciones')
-    .select('id, token, usado, expira_at')
-    .eq('token', params.token)
-    .single()
+  let invitacion: { id: string; usado: boolean | null; expira_at: string } | null = null
+  try {
+    // Server Component: visitor cookies never authorize this service query.
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } }
+    )
+    const { data, error } = await supabase
+      .from('invitaciones')
+      .select('id, usado, expira_at')
+      .eq('token', params.token)
+      .single()
+    if (!error && typeof data?.id === 'string' && data.id.trim()) invitacion = data
+  } catch {
+    // Fail closed without exposing backend errors or privileged configuration.
+  }
 
   // Token inválido
   if (!invitacion) {
@@ -45,7 +58,8 @@ export default async function InvitacionPage({ params }: Props) {
   }
 
   // Token expirado
-  if (new Date(invitacion.expira_at) < new Date()) {
+  const expiraAt = Date.parse(invitacion.expira_at)
+  if (!Number.isFinite(expiraAt) || expiraAt <= Date.now()) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl p-8 max-w-sm w-full text-center shadow-sm">
