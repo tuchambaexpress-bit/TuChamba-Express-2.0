@@ -2167,3 +2167,32 @@ Para los 13 casos conocidos de contención, son indispensables autorización esp
 PASS del subconjunto futuro requiere exactamente 13 casos seleccionados satisfactorios, código de salida cero y ningún efecto no autorizado; FAIL si falla una aserción o se infringe un control; BLOQUEADO/ERROR si integridad, entorno, dependencia o ejecución no permiten obtener evidencia válida. Casos omitidos no cuentan como validados. Mocks prueban comportamiento bajo simulación, no aislamiento del SO, funcionamiento de Next real, Supabase efectivo o producción.
 
 Las 13 pruebas siguen NO EJECUTADAS; el parche continúa **PUBLICADO EN PRODUCCIÓN, NO VALIDADO TÉCNICAMENTE**. No cierre de TCE-004/REC-F2-004 ni otras tareas F2; I-06 pendiente. Preparar este criterio no autoriza pruebas ni publicación. Cambios actuales sin staging/commit/push y pendientes de respaldo por alcance PO.
+
+## REC-F2-001/002 — precisión sucesora de contratos, implementación y evidencia, 2026-11-12
+
+Registro rector: HALLAZGOS_RECUPERACION.md, sección «REC-F2-001/002 — registro rector de incrementos respaldados y actualización sucesora de TCE-014, 2026-11-12». Esta precisión complementa el diagnóstico TCE-014 y los contratos existentes; no los sustituye ni ratifica implementaciones adicionales.
+
+### Correspondencia entre contratos e incrementos
+
+| Contrato o garantía existente | Estado del incremento | Garantía que no se declara satisfecha |
+|---|---|---|
+| Separación entre privilegio técnico y autorización de negocio | A implementa emisión con cliente de servicio después de las comprobaciones existentes de origen, sesión y administrador activo; probada localmente y respaldada en Git | No acredita todas las facultades administrativas específicas, cierre de autorización por operación ni restricción de acceso directo a invitaciones |
+| Correspondencia token–ID, incluida A-05 | El registro deriva vínculo y consumo del ID de la invitación validada y rechaza ID cliente discrepante | No acredita reserva atómica, consumo único concurrente o finalización transaccional |
+| Aislamiento y entrega mínima en apertura | B implementa consulta privilegiada mínima en servidor, filtro exacto, manejo de errores y declaración dinámica; probada localmente y respaldada en Git | No acredita ejecución integrada de Next.js, eficacia productiva de cachés ni cierre de exposición pública de la tabla |
+| Contención de INSERT público de coordinadores | Migración preparada y respaldada; pruebas históricas estáticas y PostgreSQL aisladas acreditadas por el PO según registro rector | No aplicada a Supabase real; no demuestra eliminación del riesgo en ese entorno ni autorización correcta de todas las operaciones de servicio |
+
+Se conservan identidad global y membresías independientes, autoridad administrativa específica y separación de autorización de negocio respecto de la clave de servicio. No se declaran implementados por estos incrementos los contratos completos de identidad, sesiones, membresías, delegación o recuperación.
+
+A-04/A-05 y las garantías de consumo único, atomicidad, revocación y seguridad de invitaciones mantienen sus exigencias y reservas. La emisión de nueva agencia conserva en código una vigencia de siete días; este dato no sustituye la regla funcional de 24 horas de la activación inicial por correo del reclutador ni declara implementado ese protocolo. No se equiparan ambos flujos por compartir el término invitación.
+
+La exposición pública de `public.invitaciones` permanece sin resolver. C — Listado administrativo y D — Contención RLS/GRANT siguen pendientes. Compilación Next.js e integración no acreditadas; migración de coordinadores no aplicada a Supabase real. Las pruebas estáticas, con dobles o PostgreSQL aislado conservan el alcance descrito en HALLAZGOS y no acreditan producción.
+
+### Precisión histórica de I-05B
+
+La frase anterior «Las 13 pruebas siguen NO EJECUTADAS» corresponde a la preparación del criterio, anterior al resultado registrado. Para el estado posterior prevalece el registro histórico I-05B del 2026-11-10 en HALLAZGOS_RECUPERACION.md, sección «GOV-SIMPLE-01 — procedencia y evidencia para continuidad de I-05B»: 13 casos seleccionados PASS bajo mocks, sin repetición en esta actividad. Se conservan el texto previo y sus criterios; no se cambia retroactivamente el resultado ni se extrapola a casos omitidos, integración o producción.
+
+REC-F2-001/002 permanecen EN_CURSO, REC-F2-006 PENDIENTE, TCE-004 EN_VALIDACION y CT-01/CT-02 ABIERTOS. El estado histórico del parche administrativo publicado en producción no se extiende a los cuatro incrementos del registro rector. No aceptación técnica, cierre contractual ni autorización de pasos pendientes por esta precisión.
+
+Los riesgos de consumo no atómico, concurrencia y doble utilización, validación insuficiente del UPDATE final, consistencia Auth–PostgreSQL, autorización granular, aceptación autenticada de reclutadores y evaluación de seguridad de Next.js 14.1.4 permanecen abiertos conforme al registro rector; TCE-014 sigue abierto.
+
+Actualización documental aplicada localmente bajo autorización del PO en los cuatro maestros; pendiente de revisión y aceptación del PO, versionado y sincronización Git. Sin staging, sin commit, sin push y sin nueva sincronización remota de estos cambios. El respaldo Git queda pendiente de autorización posterior.

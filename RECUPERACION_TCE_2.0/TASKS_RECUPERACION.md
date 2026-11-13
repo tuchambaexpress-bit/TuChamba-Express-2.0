@@ -1001,3 +1001,32 @@ Contención unitaria demostrada bajo mocks: HTTP 503 y respuesta uniforme; ausen
 Controles aplicados: entorno mínimo sin credenciales heredadas, datos sintéticos, revisión dirigida de carga superior e importaciones, captura en memoria y límite temporal. Sin errores ni efectos inesperados observados. Fuentes y dependencia sin cambios tras ejecutar; desarrollo limpio, staging vacío y rama/HEAD intactos; original conserva sus cuatro cambios documentales previos, hashes de documentos y respaldo I-03 coincidentes con manifiesto. Sin publicación ni despliegue por la sesión.
 
 I-05B: ejecución unitaria completada. TCE-004: EN_VALIDACION; REC-F2-004: EN_CURSO; REC-F2-006: PENDIENTE; I-06: PENDIENTE. Sin cierre automático ni aceptación de producción. Mandato documental actual: solo HALLAZGOS, TASKS y PLAN; sin repetir pruebas ni iniciar actividades nuevas. Cambios locales sin staging, commit ni push, PENDIENTE DE RESPALDO / SINCRONIZACIÓN.
+
+## REC-F2-001/002 — actualización sucesora de avance y estados, 2026-11-12
+
+Registro rector de commits, archivos, metodología, pruebas y límites: HALLAZGOS_RECUPERACION.md, sección «REC-F2-001/002 — registro rector de incrementos respaldados y actualización sucesora de TCE-014, 2026-11-12». Esta nota precisa las filas 001/002/006 de «Estado de ejecución consolidado» y las continuidades históricas incompatibles con los incrementos posteriores. Conserva objetivos, IDs y criterios de cierre; no crea tareas.
+
+| Tarea existente | Estado global conservado | Avance que debe leerse conjuntamente con la ficha | Pendientes y condición de aceptación |
+|---|---|---|---|
+| REC-F2-001 | EN_CURSO, sin aceptación final | Ya no exclusivamente diseño: incluye corrección token–ID y A/B implementadas y respaldadas; A/B probadas localmente según checkpoint PO | Contratos completos de identidad, sesiones, membresías y autoridad específica sin cumplimiento integral acreditado; integración, revisión independiente y aceptación PO pendientes |
+| REC-F2-002 | EN_CURSO, sin aceptación final | Ya no exclusivamente conceptual: incluye migración de contención INSERT coordinadores preparada y respaldada, con antecedente PO de pruebas estáticas y PostgreSQL aislado PASS | Migración no aplicada a Supabase real; modelo efectivo, permisos y garantías globales no aceptados; exposición pública de invitaciones y D pendientes |
+| REC-F2-006 | PENDIENTE | Existen nuevos incrementos y pruebas locales de alcance limitado para incorporarlos al protocolo de integración autorizado | Compilación Next.js e integración no acreditadas; las pruebas históricas no satisfacen por sí solas la aceptación de integración/regresión |
+
+### Condiciones diferenciadas por incremento
+
+| Incremento | Implementado o preparado | Probado localmente | Respaldado en Git | Integrado | Aplicado a Supabase real | Cerrado formalmente |
+|---|---|---|---|---|---|---|
+| Contención INSERT coordinadores | SQL preparado en `7e3c6f7`; no contención real declarada | PO acredita 8/8 estáticas y 8/8 escenarios PostgreSQL aislados PASS; no repetidos | Sí, según preflight anterior | Integración con aplicación no acreditada | No | No se declara cierre formal |
+| Correspondencia token–ID | Código implementado en `0c80606` | PO acredita 15/15 pruebas sintéticas PASS en `tests/registro-agencia.test.cjs`: correspondencia token–ID, rechazo de discrepancias y uso del ID validado en servidor; no repetidas en esta intervención documental; no acreditan atomicidad, concurrencia, integración ni producción | Sí, según preflight anterior | No acreditado | No acreditado | No se declara cierre formal |
+| A — Emisión de invitaciones | Código implementado en `3c0500b` | Sí, según checkpoint PO; no repetido | Sí, según preflight anterior | No acreditado | No acreditado | No se declara cierre formal |
+| B — Apertura de invitaciones | Código implementado en `cb43736` | Sí, según checkpoint PO; no repetido | Sí, según preflight anterior | No acreditado | No acreditado | No se declara cierre formal |
+
+Los SHA completos y rutas están en el registro rector. Respaldo Git no implica integración, aplicación de migraciones, despliegue o aceptación técnica. Las afirmaciones históricas de falta de respaldo de actividades anteriores conservan su fecha; el preflight anterior confirmó que el HEAD auditado y sus cuatro incrementos estaban respaldados.
+
+C — Listado administrativo y D — Contención RLS/GRANT siguen pendientes. No se crean IDs de tarea para estas denominaciones ni se inicia su implementación. La contención INSERT de coordinadores no satisface D y no resuelve la exposición pública de `public.invitaciones`.
+
+REC-F2-003/005/007 mantienen sus estados; REC-F2-004 continúa EN_CURSO con aceptación integral pendiente; TCE-004 EN_VALIDACION; TCE-014 abierto; CT-01/CT-02 ABIERTOS. Los resultados I-05B y demás pruebas históricas conservan su alcance, sin cierre por asociación.
+
+Permanecen abiertos consumo no atómico, concurrencia y doble utilización, validación insuficiente del UPDATE final, consistencia Auth–PostgreSQL, autorización granular, aceptación autenticada de reclutadores y evaluación de seguridad de Next.js 14.1.4, conforme al registro rector.
+
+Actualización documental aplicada localmente bajo autorización del PO en los cuatro maestros; cambios pendientes de revisión y aceptación del PO, versionado y sincronización Git. Sin staging, sin commit, sin push y sin nueva sincronización remota de estos cambios. El respaldo Git requiere autorización posterior y no se declara completado hasta comprobar commit, push e igualdad local-remoto. La preparación de la propuesta del 2026-11-12 fue de solo lectura; esta actividad posterior aplica exclusivamente las notas documentales autorizadas. Ninguna continuación técnica queda autorizada por esta nota.

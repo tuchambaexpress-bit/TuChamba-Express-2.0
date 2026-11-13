@@ -1538,3 +1538,78 @@ Contención unitaria demostrada bajo mocks: HTTP 503 y respuesta uniforme; ausen
 Controles aplicados: entorno mínimo sin credenciales heredadas, datos sintéticos, revisión dirigida de carga superior e importaciones, captura en memoria y límite temporal. Sin errores ni efectos inesperados observados. Fuentes y dependencia sin cambios tras ejecutar; desarrollo limpio, staging vacío y rama/HEAD intactos; original conserva sus cuatro cambios documentales previos, hashes de documentos y respaldo I-03 coincidentes con manifiesto. Sin publicación ni despliegue por la sesión.
 
 I-05B: ejecución unitaria completada. TCE-004: EN_VALIDACION; REC-F2-004: EN_CURSO; REC-F2-006: PENDIENTE; I-06: PENDIENTE. Sin cierre automático ni aceptación de producción. Mandato documental actual: solo HALLAZGOS, TASKS y PLAN; sin repetir pruebas ni iniciar actividades nuevas. Cambios locales sin staging, commit ni push, PENDIENTE DE RESPALDO / SINCRONIZACIÓN.
+
+## REC-F2-001/002 — registro rector de incrementos respaldados y actualización sucesora de TCE-014, 2026-11-12
+
+Fuente: checkpoints y mandatos expresos del Product Owner, auditoría documental de solo lectura, propuesta exacta de sincronización documental y mandato de aplicación documental controlada del 2026-11-12. Base local verificada: develop/tce2-recuperacion/cb43736f8e91acf65d006d6b060ec1e23a2b3869, worktree TCE2-develop-recuperacion, árbol limpio y staging vacío antes de editar. El preflight anterior confirmó igualdad con la referencia remota de esa rama; la preparación de la propuesta y esta edición documental no repitieron la consulta remota.
+
+Este registro concentra la evidencia técnica de los cuatro incrementos siguientes. Complementa las fichas y decisiones existentes; no crea tareas, hallazgos, fases ni contratos nuevos, no acepta técnicamente las tareas globales y no autoriza C, D, despliegues o aplicación de migraciones.
+
+### Fuentes y límites de evidencia
+
+- Evidencia inspeccionada en Git durante la auditoría previa: presencia, ascendencia, diffs, archivos de implementación y pruebas versionadas de los cuatro commits. Forman una cadena consecutiva hasta el HEAD indicado y están incluidos en la rama cuyo respaldo remoto confirmó aquel preflight.
+- Evidencia histórica comunicada y acreditada por el PO: la contención INSERT de coordinadores tiene antecedente de 8/8 pruebas estáticas y 8/8 escenarios PostgreSQL aislados PASS; la correspondencia token–ID tiene antecedente de 15/15 pruebas sintéticas PASS; A y B están implementadas, probadas localmente y respaldadas en Git. Estas ejecuciones no fueron repetidas por la auditoría, la preparación de la propuesta ni esta intervención documental.
+- Pruebas ejecutadas en la auditoría documental, en la preparación de la propuesta y en esta intervención documental: NINGUNA. Se realizaron inspecciones y comprobaciones estáticas documentales; no se ejecutaron suites, scripts de aplicación, compilaciones ni migraciones.
+- Validaciones pendientes: compilación Next.js e integración no acreditadas; migración de coordinadores no aplicada a Supabase real; eficacia productiva y cierre contractual no demostrados por esta revisión. No se asignan conteos o resultados adicionales a las pruebas históricas sin evidencia disponible.
+
+### Contención INSERT coordinadores
+
+- Commit: `7e3c6f73a188cad4cb6f2b3859500c472d6dd805`.
+- Implementación: `supabase/migrations/20261111000000_rec_f2_contener_insert_coordinadores.sql`.
+- Prueba versionada: `tests/coordinadores-insert-migration.test.cjs`.
+- Regla: el alta de coordinadores no debe quedar habilitada mediante una política pública de INSERT incondicional; el privilegio técnico de servicio no sustituye autorización de negocio.
+- Contraejemplo: una política permisiva para PUBLIC con `WITH CHECK (true)` permite que la autorización del handler no sea el único punto de entrada relevante.
+- Invariante: retirar exclusivamente la política esperada, conservar RLS y las demás políticas y abortar ante diferencias de precondiciones o poscondiciones.
+- Implementación: migración transaccional de una sola aplicación que comprueba tabla, RLS y definición exacta de `coordinadores_insert_publico`, rechaza otras políticas INSERT/ALL, bloquea la tabla con espera limitada, elimina la política objetivo y verifica poscondiciones. Una segunda aplicación aborta; no modifica datos ni GRANT.
+- Prueba: suite estática versionada; antecedente PO de 8/8 pruebas estáticas y 8/8 escenarios PostgreSQL aislados PASS. La suite estática por sí sola no ejecuta PostgreSQL; la evidencia aislada comunicada por el PO no acredita aplicación a Supabase real.
+- Límite: migración preparada y respaldada, no aplicada a Supabase real. El bypass de servicio y su autorización de aplicación permanecen como límites separados. No restaurar automáticamente la política pública como compensación.
+
+### Correspondencia token–ID
+
+- Commit: `0c80606154ea70420fff353e0ff74f75755c2aba`.
+- Implementación: `app/api/registro-agencia/route.ts`.
+- Prueba versionada: `tests/registro-agencia.test.cjs`.
+- Regla: la invitación validada por token determina el ID utilizado para vincular la agencia y consumir la invitación.
+- Contraejemplo: token A válido acompañado por ID B suministrado por el cliente.
+- Invariante: discrepancia implica rechazo antes de mutaciones; vínculo y consumo usan el ID obtenido de la invitación validada en servidor.
+- Implementación: validación de estructura y campos, rechazo de error de consulta o ID no confiable, cotejo obligatorio del ID cliente y uso de `invitacionIdValidada = invitacion.id` para vínculo y consumo; caducidad inválida o vencida se rechaza.
+- Prueba: antecedente histórico comunicado y acreditado por el PO de 15/15 pruebas sintéticas PASS en `tests/registro-agencia.test.cjs`, correspondiente al commit `0c80606154ea70420fff353e0ff74f75755c2aba`. Alcance: correspondencia entre token e ID, rechazo de discrepancias y uso del ID validado en servidor, conforme a los casos acreditados. La suite versionada contiene casos con dobles sobre el handler transpilado en memoria, incluidos ID coincidente/discrepante/ausente, entradas inválidas y rechazo sin escrituras, y comprobación AST de procedencia del ID. Las pruebas no fueron repetidas durante esta intervención documental y no acreditan atomicidad, concurrencia, integración ni producción.
+- Límite: no implementa reserva atómica, consumo único concurrente ni finalización transaccional Auth–BD. El UPDATE final sigue sin comprobar error o filas afectadas.
+
+### A — Emisión de invitaciones
+
+- Commit: `3c0500b1c621bba670d5bc9621fdb833b706a2b6`.
+- Implementación: `app/api/invitaciones/route.ts`.
+- Prueba versionada: `tests/tce004.test.cjs`.
+- Regla: una escritura privilegiada requiere comprobar previamente origen, identidad y autorización del actor.
+- Contraejemplo: efectuar el INSERT con un cliente de servicio antes de autorizar al solicitante o tomar la clave de servicio como autorización suficiente.
+- Invariante: la emisión usa el cliente de servicio únicamente después de las comprobaciones existentes de origen, sesión y administrador activo Maestro/Limitado.
+- Implementación: reutilización del cliente de servicio ya autorizado para INSERT de invitación; conserva token generado en servidor, tipo `nueva_agencia`, estado no usado, vigencia de siete días y contrato de respuesta.
+- Prueba: ampliación versionada de la suite con dobles para cliente y orden de autorización, campos de servidor, roles admitidos, respuesta y fallos de inserción; prueba local acreditada por el checkpoint del PO, no repetida en esta revisión. Resultado histórico acreditado por el PO: 33/33 pruebas locales PASS. Estas pruebas no fueron repetidas durante la presente intervención documental.
+- Límite: A está implementada, probada localmente y respaldada en Git. No acredita todas las facultades administrativas específicas de los contratos ni restringe por sí sola el acceso directo a `public.invitaciones`. Se conserva como riesgo la identificación administrativa por email y la suficiencia de la autorización por operación.
+
+### B — Apertura de invitaciones
+
+- Commit: `cb43736f8e91acf65d006d6b060ec1e23a2b3869`.
+- Implementación: `app/invitacion/[token]/page.tsx`.
+- Prueba versionada: `tests/invitacion-page.test.cjs`.
+- Regla: la apertura entrega únicamente la información necesaria de la invitación solicitada y no expone configuración privilegiada.
+- Contraejemplo: depender de permisos públicos de la tabla, consultar sin filtro exacto o entregar columnas y errores internos innecesarios al formulario.
+- Invariante: consulta privilegiada en servidor limitada al token solicitado y a `id, usado, expira_at`; fallo de consulta o ID inválido no habilita el formulario; invitación usada o caducidad inválida/vencida tampoco lo habilitan.
+- Implementación: cliente de servicio creado en el Server Component sin usar cookies del visitante como autorización de la consulta, opciones de sesión desactivadas, filtro exacto por token, proyección mínima, manejo de errores y `dynamic = 'force-dynamic'`; el formulario conserva únicamente token solicitado e ID validado como propiedades.
+- Prueba: suite versionada con transpilación en memoria y árbol JSX sintético para consulta, proyección, estados inválidos, errores y ausencia de configuración privilegiada en la salida; prueba local acreditada por el checkpoint del PO, no repetida en esta revisión. Resultado histórico acreditado por el PO: 11/11 pruebas locales PASS. Estas pruebas no fueron repetidas durante la presente intervención documental.
+- Límite: B está implementada, probada localmente y respaldada en Git. No acredita ejecución integrada de Next.js, comportamiento efectivo de cachés en despliegue ni cierre de acceso directo a la tabla. El contrato existente de `usado = null` se conserva en código y prueba; no constituye una nueva garantía de estado estricto.
+
+### Actualización sucesora de TCE-014 y riesgos conservados
+
+El diagnóstico del 2026-11-06 permanece como evidencia de aquella versión. En la versión actual, la correspondencia token–ID está implementada; la emisión usa el cliente de servicio tras las comprobaciones existentes y la apertura realiza la consulta privilegiada mínima en servidor. Estas precisiones suceden únicamente a las descripciones incompatibles del código anterior, sin borrar su evidencia ni declarar resuelto TCE-014.
+
+TCE-014 permanece abierto. Continúan pendientes consumo único concurrente, reserva y finalización coherentes, comprobación del resultado final, idempotencia, compensaciones y reconciliación durable de Auth–BD, revocación y política de destinatario. La persistencia legible del token y la recopia de enlaces conservan sus riesgos y decisiones pendientes. No se acredita posesión de teléfono o correo por su mera coincidencia textual o por `email_confirm=true`.
+
+La exposición pública de `public.invitaciones` sigue sin resolverse. C — Listado administrativo y D — Contención RLS/GRANT permanecen pendientes y no iniciadas por esta actividad. La contención INSERT de coordinadores no equivale a D ni demuestra protección de invitaciones.
+
+Permanecen abiertos el consumo no atómico, la concurrencia y doble utilización, la validación insuficiente del UPDATE final, la consistencia Auth–PostgreSQL, la autorización granular y la aceptación autenticada de reclutadores. La compilación Next.js e integración y la evaluación de seguridad de Next.js 14.1.4 siguen pendientes; la migración de coordinadores no está aplicada a Supabase real.
+
+REC-F2-001 y REC-F2-002 permanecen EN_CURSO; REC-F2-006 PENDIENTE; TCE-004 EN_VALIDACION; CT-01/CT-02 ABIERTOS. No se declara integración, aplicación a Supabase real, eficacia productiva, aceptación técnica ni cierre formal. Las pruebas históricas de alcance distinto, P01–P40/subcasos y los nueve experimentos conservan sus estados y reservas; no se consideran ejecutados por asociación con estos incrementos.
+
+Actualización documental aplicada localmente bajo autorización del PO en los cuatro maestros; cambios pendientes de revisión y aceptación del PO, versionado y sincronización Git. Sin staging, sin commit, sin push y sin nueva sincronización remota de estos cambios. El respaldo Git requiere autorización posterior y no se declara completado sin comprobar commit, push e igualdad local-remoto.

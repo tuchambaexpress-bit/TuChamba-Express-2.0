@@ -945,3 +945,38 @@ Contención unitaria demostrada bajo mocks: HTTP 503 y respuesta uniforme; ausen
 Controles aplicados: entorno mínimo sin credenciales heredadas, datos sintéticos, revisión dirigida de carga superior e importaciones, captura en memoria y límite temporal. Sin errores ni efectos inesperados observados. Fuentes y dependencia sin cambios tras ejecutar; desarrollo limpio, staging vacío y rama/HEAD intactos; original conserva sus cuatro cambios documentales previos, hashes de documentos y respaldo I-03 coincidentes con manifiesto. Sin publicación ni despliegue por la sesión.
 
 I-05B: ejecución unitaria completada. TCE-004: EN_VALIDACION; REC-F2-004: EN_CURSO; REC-F2-006: PENDIENTE; I-06: PENDIENTE. Sin cierre automático ni aceptación de producción. Mandato documental actual: solo HALLAZGOS, TASKS y PLAN; sin repetir pruebas ni iniciar actividades nuevas. Cambios locales sin staging, commit ni push, PENDIENTE DE RESPALDO / SINCRONIZACIÓN.
+
+## REC-F2-001/002 — continuidad sucesora y secuencia pendiente de invitaciones, 2026-11-12
+
+Registro rector: HALLAZGOS_RECUPERACION.md, sección «REC-F2-001/002 — registro rector de incrementos respaldados y actualización sucesora de TCE-014, 2026-11-12». Estados de tareas en TASKS, sección «REC-F2-001/002 — actualización sucesora de avance y estados, 2026-11-12»; precisiones contractuales en SPEC. Se conservan las dependencias y gates existentes de REC-F2-001/002/004/005/006, PO-REC-FASES-01 y GIT-DEPLOY-01.
+
+### Avance que precisa la planificación anterior
+
+La derivación del ID desde la invitación validada, antes incluida como corrección futura de TCE-014, está implementada y respaldada en `0c80606`. No corresponde repetir su implementación por conservarse el diagnóstico histórico. Continúan pendientes reserva y consumo único concurrente, comprobación de finalización, idempotencia y compensación/reconciliación Auth–BD. Su integración y aceptación no se infieren del código o de pruebas con dobles.
+
+La migración de contención INSERT coordinadores está preparada y respaldada en `7e3c6f7`, con pruebas históricas estáticas y PostgreSQL aislado acreditadas por el PO según HALLAZGOS. No está aplicada a Supabase real y no equivale a la contención RLS/GRANT de invitaciones.
+
+### Secuencia vigente de seguimiento
+
+| Orden | Actividad | Estado | Límite o gate |
+|---|---|---|---|
+| 1 | A — Emisión de invitaciones | Implementada, probada localmente y respaldada en `3c0500b` | Integración y autorización específica integral no acreditadas por este resultado |
+| 2 | B — Apertura de invitaciones | Implementada, probada localmente y respaldada en `cb43736` | Next.js real, integración y eficacia productiva no acreditados |
+| 3 | Sincronización documental de los cuatro maestros | Actualización documental aplicada localmente bajo autorización del PO; pendiente de revisión, aceptación, versionado y sincronización Git | Sin staging, sin commit, sin push y sin nueva sincronización remota de estos cambios; respaldo Git pendiente de autorización posterior |
+| 4 | C — Listado administrativo | PENDIENTE | Requiere alcance y autorización específica; no iniciada por esta actividad |
+| 5 | D — Contención RLS/GRANT | PENDIENTE | Requiere alcance, precondiciones, pruebas y autorización específica; exposición pública de `public.invitaciones` sin resolver |
+| 6 | Compilación Next.js, integración y aplicación de migraciones | Sin acreditación de ejecución para este conjunto; migración de coordinadores no aplicada a Supabase real | Cada operación conserva sus permisos, entorno, pruebas, revisión y aceptación pertinentes |
+
+Esta secuencia ordena el seguimiento; no concede autorización para ejecutar pasos pendientes ni sustituye sus dependencias técnicas. La fila 6 agrupa validaciones y operaciones pendientes, sin exigir realizarlas juntas ni autorizar aplicación a un entorno real.
+
+### Dependencias y continuidad delimitada
+
+Para la sincronización documental: edición local de las cuatro notas realizada bajo mandato PO → revisión y aceptación PO de los cambios → autorización posterior de versionado y respaldo → control Git y sincronización conforme a esa autorización. No se autorizaron staging, commit ni push en esta actividad. Antes de cualquier push futuro, evaluar los efectos automáticos conforme a GIT-DEPLOY-01; una autorización documental no concede despliegue. No declarar completado el respaldo hasta comprobar commit, push e igualdad local-remoto.
+
+Para C y D: mantener su condición pendiente hasta recibir instrucciones delimitadas. La compatibilidad de los canales legítimos de emisión, apertura y listado con las restricciones de BD deberá quedar acreditada en el alcance autorizado; el uso de servicio no demuestra RLS ni autoridad de negocio. No diseñar ni implementar esas intervenciones por esta nota.
+
+Para compilación e integración: conservar las puertas de entorno, datos sintéticos, permisos, pruebas por versión y revisión independiente de REC-F2-004/006. No exigir repetir automáticamente las pruebas ya acreditadas; reutilizar su evidencia dentro de su alcance y distinguirla de las validaciones que faltan. Ninguna prueba local o aislada acredita por sí sola producción.
+
+Para migraciones: conservar precondiciones, reversión o compensación segura y autorización específica de aplicación. La contención preparada no permite afirmar un cambio en Supabase real ni restaurar automáticamente una política pública insegura.
+
+REC-F2-001/002 siguen EN_CURSO; REC-F2-006 PENDIENTE; TCE-014 abierto; TCE-004 EN_VALIDACION; CT-01/CT-02 ABIERTOS. La exposición pública de invitaciones y los riesgos transaccionales y de autorización permanecen abiertos, incluidos consumo no atómico, concurrencia y doble utilización, validación insuficiente del UPDATE final, consistencia Auth–PostgreSQL, autorización granular y aceptación autenticada de reclutadores. La evaluación de seguridad de Next.js 14.1.4 sigue pendiente. No se inicia C, D, compilación, integración, migración o despliegue mediante esta actualización del plan.
