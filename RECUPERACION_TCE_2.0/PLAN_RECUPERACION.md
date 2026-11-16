@@ -980,3 +980,13 @@ Para compilación e integración: conservar las puertas de entorno, datos sinté
 Para migraciones: conservar precondiciones, reversión o compensación segura y autorización específica de aplicación. La contención preparada no permite afirmar un cambio en Supabase real ni restaurar automáticamente una política pública insegura.
 
 REC-F2-001/002 siguen EN_CURSO; REC-F2-006 PENDIENTE; TCE-014 abierto; TCE-004 EN_VALIDACION; CT-01/CT-02 ABIERTOS. La exposición pública de invitaciones y los riesgos transaccionales y de autorización permanecen abiertos, incluidos consumo no atómico, concurrencia y doble utilización, validación insuficiente del UPDATE final, consistencia Auth–PostgreSQL, autorización granular y aceptación autenticada de reclutadores. La evaluación de seguridad de Next.js 14.1.4 sigue pendiente. No se inicia C, D, compilación, integración, migración o despliegue mediante esta actualización del plan.
+
+## DEC-PO-MC07-20261116 — Excepción de cierre administrativo sin respaldo remoto
+
+El Product Owner autoriza expresamente el 2026-11-16, bajo GOBERNANZA_IA.md §13, MC-07, el cierre administrativo exclusivo del ciclo documental del commit local `24b13d300ebcca382c3ce0aa0bb2b06c3dd63afc` sin respaldo remoto. Registro rector de la decisión, evidencia, motivo y límites: HALLAZGOS_RECUPERACION.md, sección DEC-PO-MC07-20261116; estados administrativos y técnicos conservados en TASKS, sección homónima.
+
+Esta nota sucesora precisa únicamente el cierre administrativo de ese ciclo y su respaldo en la continuidad documental anterior; no altera la secuencia técnica aprobada ni sus dependencias. La sincronización remota permanece **PENDIENTE DE SINCRONIZACIÓN REMOTA** y GIT-DEPLOY-01 **BLOQUEADO PARA PUSH**. La excepción de cierre no dispensa evidencia suficiente de los efectos automáticos ni autorización específica PO para el push y sus efectos derivados; no autoriza anticipadamente su ejecución.
+
+La excepción dura solo este ciclo; su caducidad operativa ocurre al completar y verificar la sincronización conforme a los controles aplicables. Conservar el commit local, la trazabilidad y el bloqueo. No se autoriza push, merge, despliegues, migraciones, modificación de producción, cambios en configuraciones o permisos ni continuación automática. No se infieren aceptación técnica, cierre contractual o integración completa.
+
+El nuevo registro local en HALLAZGOS/TASKS/PLAN queda **PENDIENTE DE VERSIONADO Y RESPALDO**, sin staging, commit ni push y sin extensión automática de la excepción a este registro, futuros commits o ciclos. No se inicia C, D, compilación, integración, migración ni otra tarea. Entregar el reporte y detenerse; cualquier actividad posterior requiere nueva autorización PO.

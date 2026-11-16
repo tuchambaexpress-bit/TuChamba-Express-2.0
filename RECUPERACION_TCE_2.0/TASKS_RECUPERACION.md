@@ -1030,3 +1030,22 @@ REC-F2-003/005/007 mantienen sus estados; REC-F2-004 continúa EN_CURSO con acep
 Permanecen abiertos consumo no atómico, concurrencia y doble utilización, validación insuficiente del UPDATE final, consistencia Auth–PostgreSQL, autorización granular, aceptación autenticada de reclutadores y evaluación de seguridad de Next.js 14.1.4, conforme al registro rector.
 
 Actualización documental aplicada localmente bajo autorización del PO en los cuatro maestros; cambios pendientes de revisión y aceptación del PO, versionado y sincronización Git. Sin staging, sin commit, sin push y sin nueva sincronización remota de estos cambios. El respaldo Git requiere autorización posterior y no se declara completado hasta comprobar commit, push e igualdad local-remoto. La preparación de la propuesta del 2026-11-12 fue de solo lectura; esta actividad posterior aplica exclusivamente las notas documentales autorizadas. Ninguna continuación técnica queda autorizada por esta nota.
+
+## DEC-PO-MC07-20261116 — Excepción de cierre administrativo sin respaldo remoto
+
+Decisión expresa del Product Owner del 2026-11-16, fundamento GOBERNANZA_IA.md §13, MC-07. Registro rector, evidencia de conversación, motivo, duración, caducidad, compensación, riesgos y condiciones: HALLAZGOS_RECUPERACION.md, sección DEC-PO-MC07-20261116. Esta nota cambia únicamente el estado administrativo del ciclo documental del commit local `24b13d300ebcca382c3ce0aa0bb2b06c3dd63afc`, sin cerrar tareas técnicas.
+
+| Objeto | Estado resultante |
+|---|---|
+| Ciclo documental del commit identificado | CERRADO ADMINISTRATIVAMENTE POR EXCEPCIÓN MC-07, sin respaldo remoto |
+| Respaldo de ese commit | PENDIENTE DE SINCRONIZACIÓN REMOTA; obligación local-remoto conservada |
+| GIT-DEPLOY-01 | BLOQUEADO PARA PUSH |
+| REC-F2-001 / REC-F2-002 / REC-F2-004 | EN_CURSO, sin aceptación técnica por esta decisión |
+| REC-F2-006 | PENDIENTE |
+| TCE-004 | EN_VALIDACION |
+| CT-01 / CT-02 | ABIERTOS |
+| Nuevo registro DEC-PO-MC07-20261116 en HALLAZGOS/TASKS/PLAN | PENDIENTE DE VERSIONADO Y RESPALDO |
+
+No se declara integración completa, cumplimiento de GIT-DEPLOY-01 ni sincronización efectiva con GitHub. Permanecen las prohibiciones expresas del registro rector: push, merge, despliegues, migraciones, modificación de producción, cambios en configuraciones o permisos e inicio automático de tareas. No se ejecutan staging, commit ni push. No se alteran otros estados ni resultados históricos.
+
+La excepción se limita al ciclo identificado y no se extiende automáticamente al nuevo registro, futuros commits o ciclos. Detenerse tras el reporte; cualquier actividad posterior requiere nueva autorización PO.

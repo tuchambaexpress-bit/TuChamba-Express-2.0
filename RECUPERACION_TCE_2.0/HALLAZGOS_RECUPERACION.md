@@ -1613,3 +1613,27 @@ Permanecen abiertos el consumo no atómico, la concurrencia y doble utilización
 REC-F2-001 y REC-F2-002 permanecen EN_CURSO; REC-F2-006 PENDIENTE; TCE-004 EN_VALIDACION; CT-01/CT-02 ABIERTOS. No se declara integración, aplicación a Supabase real, eficacia productiva, aceptación técnica ni cierre formal. Las pruebas históricas de alcance distinto, P01–P40/subcasos y los nueve experimentos conservan sus estados y reservas; no se consideran ejecutados por asociación con estos incrementos.
 
 Actualización documental aplicada localmente bajo autorización del PO en los cuatro maestros; cambios pendientes de revisión y aceptación del PO, versionado y sincronización Git. Sin staging, sin commit, sin push y sin nueva sincronización remota de estos cambios. El respaldo Git requiere autorización posterior y no se declara completado sin comprobar commit, push e igualdad local-remoto.
+
+## DEC-PO-MC07-20261116 — Excepción de cierre administrativo sin respaldo remoto
+
+**Registro rector de decisión expresa del PO. Fecha: 2026-11-16. Autoridad y aprobador: Product Owner.** Fundamento: GOBERNANZA_IA.md §13, MC-07, excepción explícita con registro verificable para el cierre sin respaldo remoto; se conservan MC-05, MC-06 y GIT-DEPLOY-01, norma única en SPEC_RECUPERACION.md, sección homónima.
+
+**Evidencia de autorización:** decisión expresa del PO comunicada en esta conversación mediante el mandato «Continúa TuChambaExpress 2.0 — Registro verificable de excepción MC-07». Antecedente: resultados de la revisión previa «Evaluación normativa de excepción GIT-DEPLOY-01», que concluyó excepción para push no acreditada y bloqueo vigente, distinguiendo la excepción de cierre sin respaldo de MC-07. Se reutiliza esa revisión; no se repiten auditorías de Claude, Supabase o Vercel ni se aporta verificación remota nueva.
+
+**Objeto y distinción temporal:** el commit documental local existente `24b13d300ebcca382c3ce0aa0bb2b06c3dd63afc` contiene las notas previas de los cuatro maestros. Esta decisión administrativa es posterior y autoriza exclusivamente el cierre administrativo de su ciclo documental sin respaldo remoto: **CERRADO ADMINISTRATIVAMENTE POR EXCEPCIÓN MC-07**. No modifica ni reinterpreta resultados históricos.
+
+**Motivo:** imposibilidad de acreditar suficientemente los efectos automáticos de las GitHub Apps para ejecutar un push conforme a GIT-DEPLOY-01. La facultad de autorizar este cierre no dispensa los criterios obligatorios de seguridad del push.
+
+**Respaldo del commit identificado: PENDIENTE DE SINCRONIZACIÓN REMOTA. GIT-DEPLOY-01: BLOQUEADO PARA PUSH.** Se mantiene la obligación pendiente de sincronización Git local-remoto. No hay sincronización efectiva con GitHub ni cumplimiento de GIT-DEPLOY-01 por esta decisión; el estado remoto actual no se consultó ni se declara actualizado.
+
+**Duración:** excepción limitada a este ciclo documental; no constituye autorización permanente. **Caducidad operativa:** termina cuando se complete y verifique la sincronización remota conforme a los controles aplicables, sin autorizarla anticipadamente.
+
+**Compensación:** conservar el commit local identificado, su trazabilidad y el bloqueo de operaciones no autorizadas. **Riesgo residual:** persiste la falta de respaldo remoto del ciclo y la incertidumbre sobre los efectos automáticos de las GitHub Apps; el cierre administrativo no elimina esos riesgos ni implica su aceptación para ejecutar un push.
+
+**Condiciones para levantar el bloqueo:** acreditar evidencia suficiente de los efectos automáticos del push, incluidas las integraciones pertinentes, y disponer de autorización específica PO para la operación y sus efectos derivados, conforme a GIT-DEPLOY-01. Si la evidencia sigue siendo insuficiente, mantener el bloqueo. La sincronización solo podrá declararse completada tras su ejecución autorizada y la verificación de igualdad local-remoto; estas condiciones no autorizan ejecutarla ahora.
+
+**Prohibiciones expresas:** el PO NO autoriza push, merge, despliegues, migraciones, modificación de producción, cambios en configuraciones o permisos ni inicio automático de nuevas tareas. La excepción tampoco constituye aceptación técnica de REC-F2-001/002/004/006, cierre de CT-01/CT-02 o declaración de integración completa.
+
+**Trazabilidad local de este registro:** worktree `C:\Users\jgonz\Desktop\BitX\TuChamba\TCE2-develop-recuperacion`; repositorio origin configurado `https://github.com/tuchambaexpress-bit/TuChamba-Express-2.0.git`; rama `develop/tce2-recuperacion`; HEAD inicial `24b13d300ebcca382c3ce0aa0bb2b06c3dd63afc`; preflight con árbol limpio, staging vacío y sin archivos no rastreados. La identidad origin se leyó localmente, sin acceso a GitHub.
+
+**Nuevo registro: PENDIENTE DE VERSIONADO Y RESPALDO.** Esta nota y sus referencias sucesoras en TASKS/PLAN son adiciones locales posteriores al commit objeto de la excepción. No se ejecutan staging, commit ni push; la excepción MC-07 no se extiende automáticamente a este nuevo registro, futuros commits o ciclos. No se modifican SPEC ni las gobernanzas. No se ejecutan pruebas técnicas ni trabajo técnico adicional. Tras el reporte de revisión, detenerse; cualquier actividad posterior requiere nueva autorización PO.
