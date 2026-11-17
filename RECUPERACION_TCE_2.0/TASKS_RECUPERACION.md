@@ -1049,3 +1049,21 @@ Decisión expresa del Product Owner del 2026-11-16, fundamento GOBERNANZA_IA.md 
 No se declara integración completa, cumplimiento de GIT-DEPLOY-01 ni sincronización efectiva con GitHub. Permanecen las prohibiciones expresas del registro rector: push, merge, despliegues, migraciones, modificación de producción, cambios en configuraciones o permisos e inicio automático de tareas. No se ejecutan staging, commit ni push. No se alteran otros estados ni resultados históricos.
 
 La excepción se limita al ciclo identificado y no se extiende automáticamente al nuevo registro, futuros commits o ciclos. Detenerse tras el reporte; cualquier actividad posterior requiere nueva autorización PO.
+
+## GIT-DEPLOY-01 — cierre de sincronización autorizada, 2026-11-17 UTC
+
+Registro rector: HALLAZGOS_RECUPERACION.md, sección homónima; aplicación del control en SPEC y continuidad en PLAN. Nota sucesora de los pendientes de respaldo anteriores y de DEC-PO-MC07-20261116, sin borrar sus estados históricos ni crear una tarea nueva.
+
+| Objeto | Estado sucesor y límite |
+|---|---|
+| Bloqueo específico GIT-DEPLOY-01 de la publicación de `24b13d3` y `919388e` | RESUELTO; operación documental anterior COMPLETADA |
+| Respaldo de esos dos commits | SINCRONIZACIÓN REMOTA CONFIRMADA; local y remoto en `919388edf06d49d1ee5cee98a5b4d4f83bb2da49` |
+| Autorización excepcional de aquel push | CONSUMIDA; sin permiso general para nuevas publicaciones |
+| DEC-PO-MC07-20261116 | Ciclo original cerrado administrativamente; respaldo posterior completado y condición de caducidad operativa cumplida; sin extensión a este cierre |
+| REC-F2-001 / REC-F2-002 / REC-F2-004 | EN_CURSO; sin aceptación técnica por este cierre |
+| REC-F2-006 | PENDIENTE |
+| TCE-004 | EN_VALIDACION |
+| CT-01 / CT-02 | ABIERTOS |
+| Cierre documental actual | Autorizado de forma nueva y limitada: un commit y un push controlado; resultado y SHA definitivos sujetos al informe final de ejecución |
+
+GIT-DEPLOY-01 permanece obligatorio para futuras operaciones; el bloqueo resuelto no elimina sus criterios. No integración completa, despliegue, migración, cierre funcional ni inicio automático de nuevas tareas. Se preservan los demás estados y pendientes existentes. La autorización actual se consumirá al completar su operación; después, detenerse para revisión PO.

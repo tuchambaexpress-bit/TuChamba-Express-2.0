@@ -2196,3 +2196,13 @@ REC-F2-001/002 permanecen EN_CURSO, REC-F2-006 PENDIENTE, TCE-004 EN_VALIDACION 
 Los riesgos de consumo no atómico, concurrencia y doble utilización, validación insuficiente del UPDATE final, consistencia Auth–PostgreSQL, autorización granular, aceptación autenticada de reclutadores y evaluación de seguridad de Next.js 14.1.4 permanecen abiertos conforme al registro rector; TCE-014 sigue abierto.
 
 Actualización documental aplicada localmente bajo autorización del PO en los cuatro maestros; pendiente de revisión y aceptación del PO, versionado y sincronización Git. Sin staging, sin commit, sin push y sin nueva sincronización remota de estos cambios. El respaldo Git queda pendiente de autorización posterior.
+
+## GIT-DEPLOY-01 — cierre de sincronización autorizada, 2026-11-17 UTC
+
+**Aplicación sucesora: BLOQUEO ESPECÍFICO RESUELTO / SINCRONIZACIÓN ANTERIOR COMPLETADA.** Registro rector de autorización, mitigaciones, procedencia, ejecución y límites: HALLAZGOS_RECUPERACION.md, sección homónima. Los ocho criterios ratificados de GIT-DEPLOY-01 permanecen íntegros; esta nota actualiza el estado de una operación, no la norma.
+
+El push autorizado por el PO publicó exclusivamente `24b13d300ebcca382c3ce0aa0bb2b06c3dd63afc` y `919388edf06d49d1ee5cee98a5b4d4f83bb2da49` en `refs/heads/develop/tce2-recuperacion`, con igualdad local-remoto acreditada en el segundo SHA. La autorización excepcional anterior quedó **CONSUMIDA**; el respaldo pendiente de ese ciclo y registro se completó sin otorgar permiso permanente ni aceptación técnica.
+
+La evidencia suficiente para aquella operación combina comprobaciones de lectura y confirmaciones del PO, con sus límites temporales y sin garantía absoluta sobre automatizaciones externas. La excepción MC-07 no autoriza publicar; su condición de caducidad operativa quedó cumplida para el ciclo original. Las restricciones y bloqueos anteriores se conservan como antecedentes.
+
+El cierre documental actual tiene autorización PO nueva y delimitada para un commit y su sincronización controlada; el resultado se acreditará en el informe final. No habilita despliegues, migraciones, cambios de servicios o configuración ni continuidad funcional automática. Estados y pendientes técnicos conservados en TASKS; no cierre de contratos, integración o producción por este registro.

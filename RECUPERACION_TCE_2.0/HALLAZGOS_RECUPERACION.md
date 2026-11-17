@@ -1637,3 +1637,41 @@ Actualización documental aplicada localmente bajo autorización del PO en los c
 **Trazabilidad local de este registro:** worktree `C:\Users\jgonz\Desktop\BitX\TuChamba\TCE2-develop-recuperacion`; repositorio origin configurado `https://github.com/tuchambaexpress-bit/TuChamba-Express-2.0.git`; rama `develop/tce2-recuperacion`; HEAD inicial `24b13d300ebcca382c3ce0aa0bb2b06c3dd63afc`; preflight con árbol limpio, staging vacío y sin archivos no rastreados. La identidad origin se leyó localmente, sin acceso a GitHub.
 
 **Nuevo registro: PENDIENTE DE VERSIONADO Y RESPALDO.** Esta nota y sus referencias sucesoras en TASKS/PLAN son adiciones locales posteriores al commit objeto de la excepción. No se ejecutan staging, commit ni push; la excepción MC-07 no se extiende automáticamente a este nuevo registro, futuros commits o ciclos. No se modifican SPEC ni las gobernanzas. No se ejecutan pruebas técnicas ni trabajo técnico adicional. Tras el reporte de revisión, detenerse; cualquier actividad posterior requiere nueva autorización PO.
+
+## GIT-DEPLOY-01 — cierre de sincronización autorizada, 2026-11-17 UTC
+
+**Registro rector sucesor. Estado: BLOQUEO ESPECÍFICO RESUELTO / SINCRONIZACIÓN ANTERIOR COMPLETADA.** Esta nota conserva los bloqueos y reservas históricos; actualiza únicamente el resultado de la publicación documental de los commits identificados. GIT-DEPLOY-01 continúa como control transversal obligatorio, no como permiso permanente de push.
+
+### Autorización y procedencia
+
+Fuente: decisión expresa del Product Owner en la conversación, mandato «GIT-DEPLOY-01: desbloqueo y sincronización Git controlada», posterior al dictamen **A — APTO PARA SOLICITAR DESBLOQUEO**. El PO autorizó levantar el bloqueo exclusivamente para publicar `24b13d300ebcca382c3ce0aa0bb2b06c3dd63afc` y `919388edf06d49d1ee5cee98a5b4d4f83bb2da49`, en ese orden, en `tuchambaexpress-bit/TuChamba-Express-2.0`, destino `refs/heads/develop/tce2-recuperacion`. Excluyó despliegues, migraciones, merges, cambios de upstream, modificaciones de código, servicios, permisos e integraciones. La aprobación no se dedujo de la excepción MC-07.
+
+### Evidencia pertinente reutilizada y límites
+
+El PO confirmó las instalaciones de la cuenta `tuchambaexpress-bit`: Claude `143636981`, Supabase `150857279` y Vercel `143220128`, guardadas y verificadas después de recargar en **Only select repositories**, únicamente V1 `tuchambaexpress-bit/tuchamba-express` (privado), excluyendo V2 `tuchambaexpress-bit/TuChamba-Express-2.0` (público). No se autorizó aprobar la actualización pendiente de permisos de Claude. Esta evidencia procede del PO, no de una inspección de las instalaciones por Codex.
+
+Revisión de lectura anterior: ausencia de archivos `.github` en HEAD local, rama remota objetivo y master examinados; listado API de ejecuciones de Actions para `develop/tce2-recuperacion` con `total_count: 0`; hook local efectivo `pre-push` ausente. El PO confirmó lista vacía en Settings → Webhooks del repositorio V2. Los antecedentes de proyectos específicos Vercel sin conexión Git y Supabase sin asociación GitHub son históricos y complementarios. La falta de workflows, ejecuciones o webhooks observados no demuestra configuración global de Actions ni inexistencia absoluta de mecanismos externos; no se identificó una vía independiente activa concreta que impidiera el push delimitado.
+
+### Ejecución y resultado acreditados
+
+Evidencia de la ejecución anterior: salida de Git y consultas API de referencias reportadas por Codex, ratificadas como contexto por el PO en el mandato actual. Intervalo **2026-11-17, 05:05:24–05:05:28 UTC**. Un único push explícito, no forzado, con SHA fuente fijo y destino exacto, sin publicación adicional de tags ni submódulos y con hooks locales de push omitidos; código de salida 0.
+
+| Dato | Resultado anterior |
+|---|---|
+| HEAD remoto previo | `cb43736f8e91acf65d006d6b060ec1e23a2b3869` |
+| Commits publicados, en orden | `24b13d300ebcca382c3ce0aa0bb2b06c3dd63afc`; `919388edf06d49d1ee5cee98a5b4d4f83bb2da49` |
+| HEAD local previo y posterior | `919388edf06d49d1ee5cee98a5b4d4f83bb2da49` |
+| HEAD remoto posterior | `919388edf06d49d1ee5cee98a5b4d4f83bb2da49`, confirmado por API |
+| Estado local posterior | Árbol limpio, staging vacío y ningún archivo no rastreado |
+| Upstream | Sin configurar, sin cambios |
+| Otras referencias | Master intacto en `259ba2edb18175e9aa651f1cdd56ff678d2cfce0`; comparación API de ramas/tags sin referencias adicionales publicadas |
+
+Fuentes de lectura: [referencia remota](https://api.github.com/repos/tuchambaexpress-bit/TuChamba-Express-2.0/git/ref/heads/develop/tce2-recuperacion), [ramas](https://api.github.com/repos/tuchambaexpress-bit/TuChamba-Express-2.0/git/matching-refs/heads) y [tags](https://api.github.com/repos/tuchambaexpress-bit/TuChamba-Express-2.0/git/matching-refs/tags). Las URLs de referencias son mutables: los SHA, alcance y momento de la observación constan arriba. El preflight del cierre actual volvió a confirmar por API el HEAD remoto `919388edf06d49d1ee5cee98a5b4d4f83bb2da49` y localmente la misma rama/HEAD, árbol limpio y staging vacío. No se repitió la auditoría de mitigaciones.
+
+### Alcance del cierre y continuidad
+
+La autorización excepcional anterior quedó **CONSUMIDA**. El respaldo pendiente de `24b13d3` y del registro `919388e` quedó satisfecho; se cumplió la condición de caducidad operativa de DEC-PO-MC07-20261116 para el ciclo que cubría. No se elimina ni reescribe su estado histórico, no se extiende aquella excepción al cierre actual y no se concede autorización general para futuros commits o pushes.
+
+La publicación Git está acreditada; no se ejecutaron despliegues ni migraciones desde aquella sesión y los efectos externos posteriores no fueron inspeccionados. Este cierre no valida producción ni cierra REC-F2-001/002/004/006, TCE-004 o CT-01/CT-02. Sus estados se conservan en TASKS.
+
+El mandato actual «Cierre documental de GIT-DEPLOY-01» constituye una autorización **nueva y limitada** para estas adiciones, un único commit documental y un único push no forzado al mismo destino, condicionado a verificaciones previas y posteriores; no deriva del permiso ya consumido. El SHA resultante y la confirmación final de sincronización se entregarán en el informe de ejecución, sin anticipar éxito ni crear otro commit para autorreferenciar este registro. Esta nueva autorización se consumirá al completar la operación especificada. Después, detenerse; cualquier modificación, publicación o actividad adicional requiere autorización independiente. Se preservan MC-01–MC-07, puerta §12 y los ocho criterios de SPEC; no se modifican las gobernanzas.

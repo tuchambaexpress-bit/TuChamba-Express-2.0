@@ -990,3 +990,13 @@ Esta nota sucesora precisa únicamente el cierre administrativo de ese ciclo y s
 La excepción dura solo este ciclo; su caducidad operativa ocurre al completar y verificar la sincronización conforme a los controles aplicables. Conservar el commit local, la trazabilidad y el bloqueo. No se autoriza push, merge, despliegues, migraciones, modificación de producción, cambios en configuraciones o permisos ni continuación automática. No se infieren aceptación técnica, cierre contractual o integración completa.
 
 El nuevo registro local en HALLAZGOS/TASKS/PLAN queda **PENDIENTE DE VERSIONADO Y RESPALDO**, sin staging, commit ni push y sin extensión automática de la excepción a este registro, futuros commits o ciclos. No se inicia C, D, compilación, integración, migración ni otra tarea. Entregar el reporte y detenerse; cualquier actividad posterior requiere nueva autorización PO.
+
+## GIT-DEPLOY-01 — cierre de sincronización autorizada, 2026-11-17 UTC
+
+Registro rector de autorización, evidencias y resultado en HALLAZGOS_RECUPERACION.md; aplicación en SPEC y estados en TASKS, secciones homónimas. La continuidad de sincronización documental anterior queda precisada por el push completado de `24b13d3` y `919388e`, con igualdad local-remoto en `919388edf06d49d1ee5cee98a5b4d4f83bb2da49`. No se modifica la secuencia técnica ni se reabren operaciones concluidas.
+
+El bloqueo específico de aquella sincronización quedó RESUELTO y la autorización excepcional anterior CONSUMIDA. Los pendientes históricos de respaldo de ese ciclo y registro quedaron satisfechos; la excepción MC-07 conserva su alcance original y su condición de caducidad operativa quedó cumplida. GIT-DEPLOY-01 y MC-01–MC-07 siguen vigentes para futuras operaciones.
+
+El PO autoriza ahora un cierre documental distinto y delimitado: adiciones pertinentes → revisión documental y control del diff → un commit documental → comprobación de remoto aún en `919388edf06d49d1ee5cee98a5b4d4f83bb2da49` y un único commit pendiente → un push explícito no forzado a `refs/heads/develop/tce2-recuperacion`, sin tags, submódulos ni upstream → comprobación API de igualdad y estado local → informe final y detención. Si una condición difiere, detenerse; no reintentar automáticamente un push fallido ni corregir sin autorización.
+
+El resultado de esta nueva operación se acreditará en el informe final; no se presume ejecutada al preparar esta nota. La autorización actual se consumirá al completarse y no habilita otra modificación o publicación. C, D, compilación, integración, migraciones y demás actividades funcionales conservan sus dependencias y autorizaciones específicas; no se inician por este cierre.
