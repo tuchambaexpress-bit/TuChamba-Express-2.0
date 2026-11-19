@@ -1067,3 +1067,10 @@ Registro rector: HALLAZGOS_RECUPERACION.md, sección homónima; aplicación del 
 | Cierre documental actual | Autorizado de forma nueva y limitada: un commit y un push controlado; resultado y SHA definitivos sujetos al informe final de ejecución |
 
 GIT-DEPLOY-01 permanece obligatorio para futuras operaciones; el bloqueo resuelto no elimina sus criterios. No integración completa, despliegue, migración, cierre funcional ni inicio automático de nuevas tareas. Se preservan los demás estados y pendientes existentes. La autorización actual se consumirá al completar su operación; después, detenerse para revisión PO.
+
+
+## DEC-PO-REC-F2-001-C — Estado del incremento C
+
+**REC-F2-001 — C — Listado administrativo: PENDIENTE.** Decisión funcional ratificada y especificación documental incorporada en SPEC con doce criterios de aceptación. Implementación y validación pendientes de autorización específica. REC-F2-001 sigue EN_CURSO y TCE-014 permanece abierto.
+
+Dependencias pendientes: equivalencia de permisos de consulta y recuperación; evidencia del vínculo invitación–ámbito, estado de revocación y sesión vigente; forma de recuperar enlaces existentes con auditoría sin secretos; contraste efectivo de RLS/GRANT y mitigación posterior según D para la aceptación de acceso directo. PLAN conserva C antes de D y HALLAZGOS registra las brechas. Esta nota sucede únicamente al alcance funcional abierto de C en las fichas anteriores.

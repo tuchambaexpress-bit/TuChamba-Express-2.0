@@ -1000,3 +1000,14 @@ El bloqueo específico de aquella sincronización quedó RESUELTO y la autorizac
 El PO autoriza ahora un cierre documental distinto y delimitado: adiciones pertinentes → revisión documental y control del diff → un commit documental → comprobación de remoto aún en `919388edf06d49d1ee5cee98a5b4d4f83bb2da49` y un único commit pendiente → un push explícito no forzado a `refs/heads/develop/tce2-recuperacion`, sin tags, submódulos ni upstream → comprobación API de igualdad y estado local → informe final y detención. Si una condición difiere, detenerse; no reintentar automáticamente un push fallido ni corregir sin autorización.
 
 El resultado de esta nueva operación se acreditará en el informe final; no se presume ejecutada al preparar esta nota. La autorización actual se consumirá al completarse y no habilita otra modificación o publicación. C, D, compilación, integración, migraciones y demás actividades funcionales conservan sus dependencias y autorizaciones específicas; no se inician por este cierre.
+
+
+## DEC-PO-REC-F2-001-C — Condiciones de entrada y validación futura
+
+Se conserva la secuencia vigente del 2026-11-12. C es el siguiente incremento funcional pendiente tras el cierre de sincronización documental. D — Contención RLS/GRANT permanece posterior, con alcance y autorización propios.
+
+1. Usar los doce criterios de SPEC para delimitar la propuesta técnica de C. Acreditar si existen permisos equivalentes, el vínculo verificable entre recurso y ámbito, las señales de sesión y revocación, y la compatibilidad de recuperación y auditoría con el almacenamiento vigente. Si falta una equivalencia, presentar la propuesta técnica correspondiente para validación, sin dar por concedido un permiso nuevo.
+2. Someter el alcance delimitado a autorización específica de implementación. Para la futura validación, acordar entorno REC-F2-004, datos sintéticos, permisos, evidencia por versión y revisión independiente conforme a REC-F2-006.
+3. Validar C en su superficie autorizada. Mantener pendientes los criterios 11–12 hasta acreditar las políticas y privilegios efectivos y completar la mitigación aplicable de D si se confirma el acceso directo indebido. Comprobar que las restricciones conservan los canales legítimos de emisión, apertura, listado y recuperación. La validación de la superficie de C no cierra la exposición de la tabla.
+
+Esta formalización no inicia C ni D, ni habilita ejecución de pruebas, consultas de BD, cambios de políticas, migraciones o despliegues.

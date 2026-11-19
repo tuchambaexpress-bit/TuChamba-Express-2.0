@@ -2206,3 +2206,35 @@ El push autorizado por el PO publicó exclusivamente `24b13d300ebcca382c3ce0aa0b
 La evidencia suficiente para aquella operación combina comprobaciones de lectura y confirmaciones del PO, con sus límites temporales y sin garantía absoluta sobre automatizaciones externas. La excepción MC-07 no autoriza publicar; su condición de caducidad operativa quedó cumplida para el ciclo original. Las restricciones y bloqueos anteriores se conservan como antecedentes.
 
 El cierre documental actual tiene autorización PO nueva y delimitada para un commit y su sincronización controlada; el resultado se acreditará en el informe final. No habilita despliegues, migraciones, cambios de servicios o configuración ni continuidad funcional automática. Estados y pendientes técnicos conservados en TASKS; no cierre de contratos, integración o producción por este registro.
+
+
+## DEC-PO-REC-F2-001-C — Consulta administrativa y recuperación de enlaces
+
+**RATIFICADA POR EL PRODUCT OWNER.** Alcance funcional del incremento C de REC-F2-001 para invitaciones de nueva agencia. Procedencia y contraste en HALLAZGOS, secuencia en PLAN y estado en TASKS.
+
+### C-01 — Consulta administrativa
+
+Los administradores con autoridad global o limitada podrán consultar invitaciones exclusivamente dentro de su ámbito autorizado. Cada operación comprueba en servidor identidad, sesión vigente, permiso aplicable, recurso solicitado y ámbito autorizado. El listado ordinario excluye tokens y enlaces completos. Consultar no concede automáticamente emisión, recuperación de enlaces, revocación ni modificación.
+
+### C-02 — Recuperación de enlaces
+
+Volver a copiar un enlace es una operación independiente y requiere un permiso específico adicional al de consulta. Solo procede para una invitación del ámbito autorizado, vigente, sin usar y sin revocar. La operación no extiende la vigencia, cambia el estado, reactiva, emite una invitación o enlace nuevo ni concede permisos adicionales. Debe dejar evidencia auditable sin secretos.
+
+### Criterios de aceptación para validación futura
+
+| Nº | Resultado verificable |
+|---|---|
+| 1 | Una sesión válida con permiso de consulta devuelve únicamente invitaciones del ámbito autorizado, tanto para autoridad global como limitada. |
+| 2 | Una solicitud fuera de ámbito se rechaza sin devolver datos ajenos. |
+| 3 | Una sesión ausente, inválida, vencida o revocada, o un actor suspendido, no obtiene datos ni enlaces. |
+| 4 | Una sesión válida sin permiso de consulta no obtiene el listado. |
+| 5 | Las respuestas y los datos enviados al cliente por el listado ordinario excluyen tokens y enlaces completos. |
+| 6 | La operación independiente recupera el enlace existente solo con permiso de consulta y permiso adicional vigente, para una invitación en ámbito, vigente, sin usar y sin revocar. |
+| 7 | Con permiso de consulta y sin permiso adicional, la recuperación se rechaza sin revelar el enlace. |
+| 8 | Se rechaza la recuperación para invitaciones fuera de ámbito, vencidas, usadas o revocadas, incluso si el actor tiene ambos permisos. |
+| 9 | La recuperación conserva estado y vencimiento, no emite ni reactiva invitaciones y no altera permisos. |
+| 10 | La recuperación deja evidencia correlacionable de actor, recurso y resultado, sin token, enlace completo ni otros secretos en la auditoría. |
+| 11 | La lectura directa no autorizada no devuelve filas ni secretos, incluso fuera del canal administrativo. |
+| 12 | Los canales autorizados de emisión, apertura, listado y recuperación conservan su comportamiento aplicable bajo las restricciones efectivas de RLS/GRANT, con evidencia de rechazos y accesos permitidos en un entorno autorizado. |
+
+Los mecanismos para representar permisos, ámbito, revocación y auditoría quedan pendientes de contraste técnico (1–4 y 6–10). Los criterios 11–12 requieren comprobación efectiva de BD y, si la exposición documentada lo exige, la contención de D. Estos criterios no acreditan resultados ni autorizan implementación o pruebas.
